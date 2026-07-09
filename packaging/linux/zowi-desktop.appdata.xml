@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component type="desktop">
-  <id>zowi-desktop</id>
+<component type="desktop-application">
+  <id>com.zowi.desktop</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
   <name>Zowi Desktop</name>
   <summary>Control and program your Zowi robot</summary>
   <description>
@@ -10,10 +12,6 @@
       visual blocks, and flash new firmware.
     </p>
   </description>
-  <url type="homepage">https://github.com/user/zowi-desktop</url>
-  <screenshots>
-    <screenshot type="default">
-      <image>https://example.com/screenshot.png</image>
-    </screenshot>
-  </screenshots>
+  <launchable type="desktop-id">zowi-desktop.desktop</launchable>
+  <url type="homepage">https://github.com/eduardomillan/ZowiDesktop</url>
 </component>

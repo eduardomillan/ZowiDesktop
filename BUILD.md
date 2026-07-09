@@ -1,0 +1,57 @@
+# Building Zowi Desktop
+
+## Prerequisites
+
+- CMake 3.16+
+- Qt 5.15 (Core, Quick)
+- C++17 compiler (g++ or clang++)
+
+```bash
+# Debian / Ubuntu / Lliurex
+sudo apt install cmake g++ qtbase5-dev libqt5xml5
+```
+
+## Quick start (native Linux)
+
+```bash
+./build.sh
+./build/ZowiDesktop
+```
+
+## Build targets
+
+| Platform | Output | How to build |
+|---|---|---|
+| **Linux (native)** | `build/ZowiDesktop` | `./build.sh` |
+| **Linux (AppImage)** | `build/ZowiDesktop-x86_64.AppImage` | `./packaging/linux/create-appimage.sh` |
+| **Windows (.zip)** | `build-windows/ZowiDesktop-windows-x86_64.zip` | `./packaging/windows/create-portable-zip.sh` |
+
+## Linux AppImage
+
+The script downloads `linuxdeploy` and its Qt plugin automatically, then
+bundles the application and all dependencies into a portable AppImage.
+
+No special privileges required. The resulting file can be run on any
+Linux distribution without installing Qt.
+
+## Windows portable .zip
+
+Cross-compilation requires:
+
+1. **MinGW toolchain**
+   ```bash
+   sudo apt install mingw-w64 mingw-w64-tools
+   ```
+
+2. **Qt 5.15 for MinGW** — download from https://www.qt.io/download-open-source
+   and install selecting *Qt 5.15.x → MinGW 64-bit*.
+
+3. Set `QT_MINGW_PATH` and run the script:
+   ```bash
+   export QT_MINGW_PATH=~/Qt/5.15.2/mingw81_64
+   ./packaging/windows/create-portable-zip.sh
+   ```
+
+The script runs `windeployqt` to collect all required DLLs and packages
+everything into a portable `.zip`. No installation needed on the target
+Windows machine.

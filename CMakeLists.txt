@@ -27,6 +27,7 @@ install(FILES packaging/linux/zowi-desktop.desktop
     DESTINATION share/applications
 )
 
-install(FILES packaging/linux/zowi-desktop.png
+install(FILES images/app_icon.png
     DESTINATION share/icons/hicolor/256x256/apps
+    RENAME zowi-desktop.png
 )
