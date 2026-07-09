@@ -15,7 +15,7 @@ Rectangle {
 
         Image {
             anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/images/scratch/sprite2.png"
+            source: "qrc:/images/scratch/sprite1.png"
             sourceSize.width: 180
             sourceSize.height: 180
             fillMode: Image.PreserveAspectFit

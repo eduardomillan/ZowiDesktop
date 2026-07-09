@@ -22,25 +22,11 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 30
 
-        Item {
+        Image {
             anchors.horizontalCenter: parent.horizontalCenter
-            width: 140
-            height: 140
-
-            Rectangle {
-                anchors.fill: parent
-                radius: 70
-                clip: true
-                color: "#21a69b"
-
-                Image {
-                    anchors.centerIn: parent
-                    width: 140
-                    height: 140
-                    source: "qrc:/images/scratch/sprite2.png"
-                    fillMode: Image.PreserveAspectCrop
-                }
-            }
+            source: "qrc:/images/scratch/sprite2.png"
+            sourceSize.height: 200
+            fillMode: Image.PreserveAspectFit
         }
 
         Text {
@@ -62,73 +48,86 @@ Rectangle {
 
         Item { width: 1; height: 10 }
 
-        Button {
-            id: startButton
+        Row {
             anchors.horizontalCenter: parent.horizontalCenter
-            width: 280
-            height: 56
-            text: tr("START")
+            spacing: 20
 
-            contentItem: Text {
-                text: parent.text
-                font.pixelSize: 18
-                font.bold: true
-                color: "#ffffff"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            Button {
+                id: startButton
+                implicitWidth: 180
+                height: 56
+                text: tr("START")
+
+                contentItem: Text {
+                    text: parent.text
+                    font.pixelSize: 18
+                    font.bold: true
+                    color: "#ffffff"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: 28
+                    color: startButton.pressed ? "#17736c" : "#21a69b"
+                }
+
+                onClicked: welcome.startWizard()
             }
 
-            background: Rectangle {
-                radius: 28
-                color: startButton.pressed ? "#17736c" : "#21a69b"
+            Button {
+                id: demoButton
+                implicitWidth: 180
+                height: 56
+                text: tr("I HAVEN'T GOT A ZOWI")
+
+                contentItem: Text {
+                    text: parent.text
+                    font.pixelSize: 14
+                    font.bold: true
+                    color: "#2d5a2d"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    opacity: 0.8
+                }
+
+                background: Rectangle {
+                    radius: 28
+                    color: "transparent"
+                    border.color: "#2d5a2d"
+                    border.width: 2
+                    opacity: 0.5
+                }
+
+                onClicked: welcome.enterDemoMode()
             }
 
-            onClicked: welcome.startWizard()
-        }
+            Button {
+                id: letterButton
+                implicitWidth: 180
+                height: 56
+                text: tr("Letter to parents")
 
-        Button {
-            id: demoButton
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: 280
-            height: 56
-            text: tr("I HAVEN'T GOT A ZOWI")
+                contentItem: Text {
+                    text: parent.text
+                    font.pixelSize: 14
+                    font.bold: true
+                    color: "#2d5a2d"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    opacity: 0.8
+                }
 
-            contentItem: Text {
-                text: parent.text
-                font.pixelSize: 14
-                font.bold: true
-                color: "#2d5a2d"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                opacity: 0.8
+                background: Rectangle {
+                    radius: 28
+                    color: "transparent"
+                    border.color: "#2d5a2d"
+                    border.width: 2
+                    opacity: 0.5
+                }
+
+                onClicked: letterDialog.open()
             }
-
-            background: Rectangle {
-                radius: 28
-                color: "transparent"
-                border.color: "#2d5a2d"
-                border.width: 2
-                opacity: 0.5
-            }
-
-            onClicked: welcome.enterDemoMode()
-        }
-    }
-
-    Text {
-        anchors {
-            bottom: parent.bottom
-            bottomMargin: 40
-            horizontalCenter: parent.horizontalCenter
-        }
-        text: tr("Letter to parents")
-        color: "#2d5a2d"
-        font.pixelSize: 14
-        opacity: 0.6
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: letterDialog.open()
         }
     }
 
