@@ -5,7 +5,7 @@
     <name>main.qml</name>
     <message>
         <source>Zowi Desktop</source>
-        <translation>Zowi Escriptori</translation>
+        <translation>Zowi Desktop</translation>
     </message>
 </context>
 <context>
@@ -16,7 +16,7 @@
     </message>
     <message>
         <source>Desktop</source>
-        <translation>Escriptori</translation>
+        <translation>Desktop</translation>
     </message>
 </context>
 <context>

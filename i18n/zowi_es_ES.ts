@@ -16,7 +16,7 @@
     </message>
     <message>
         <source>Desktop</source>
-        <translation>Escritorio</translation>
+        <translation>Desktop</translation>
     </message>
 </context>
 <context>
