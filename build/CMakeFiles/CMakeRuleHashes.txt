@@ -1,0 +1,3 @@
+# Hashes of file build rules.
+f705b4b3983b2ec66f2f44f6e4d6bdfe CMakeFiles/ZowiDesktop_autogen
+403f8969d473d9083084c23fc66a6ed9 qrc_resources.cpp
