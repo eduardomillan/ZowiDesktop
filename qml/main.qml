@@ -7,7 +7,7 @@ Window {
     width: 1024
     height: 600
     title: Translator.translate("main.qml", "Zowi Desktop")
-    color: "#702076"
+    color: "#f4f9f4"
 
     StackView {
         id: stack

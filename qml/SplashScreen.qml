@@ -3,7 +3,7 @@ import QtQuick.Controls 2.15
 
 Rectangle {
     id: splash
-    color: "#702076"
+    color: "#f4f9f4"
 
     signal splashFinished()
 
@@ -15,15 +15,16 @@ Rectangle {
 
         Image {
             anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/images/zowi_logo.svg"
+            source: "qrc:/images/scratch/sprite2.png"
             sourceSize.width: 180
             sourceSize.height: 180
+            fillMode: Image.PreserveAspectFit
         }
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: tr("ZOWI")
-            color: "#ffffff"
+            color: "#2d5a2d"
             font.pixelSize: 48
             font.bold: true
             font.family: "monospace"
@@ -32,7 +33,7 @@ Rectangle {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: tr("Desktop")
-            color: "#ffffff"
+            color: "#2d5a2d"
             font.pixelSize: 18
             opacity: 0.7
         }

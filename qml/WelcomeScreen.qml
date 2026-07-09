@@ -3,9 +3,11 @@ import QtQuick.Controls 2.15
 
 Rectangle {
     id: welcome
-    color: "#702076"
+    color: "#f4f9f4"
 
     property bool skipToDemo: false
+
+    function tr(source) { return Translator.translate("WelcomeScreen.qml", source) }
 
     Component.onCompleted: {
         if (skipToDemo) {
@@ -35,7 +37,7 @@ Rectangle {
                     anchors.centerIn: parent
                     width: 140
                     height: 140
-                    source: "qrc:/images/zowi_hello.png"
+                    source: "qrc:/images/scratch/sprite2.png"
                     fillMode: Image.PreserveAspectCrop
                 }
             }
@@ -43,8 +45,8 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "ZOWI"
-            color: "#ffffff"
+            text: tr("ZOWI")
+            color: "#2d5a2d"
             font.pixelSize: 36
             font.bold: true
             font.family: "monospace"
@@ -52,8 +54,8 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: "Zowi says hi!"
-            color: "#ffffff"
+            text: tr("Zowi says hi!")
+            color: "#2d5a2d"
             font.pixelSize: 16
             opacity: 0.8
         }
@@ -65,7 +67,7 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 280
             height: 56
-            text: "START"
+            text: tr("START")
 
             contentItem: Text {
                 text: parent.text
@@ -89,13 +91,13 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 280
             height: 56
-            text: "I HAVEN'T GOT A ZOWI"
+            text: tr("I HAVEN'T GOT A ZOWI")
 
             contentItem: Text {
                 text: parent.text
                 font.pixelSize: 14
                 font.bold: true
-                color: "#ffffff"
+                color: "#2d5a2d"
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 opacity: 0.8
@@ -104,7 +106,7 @@ Rectangle {
             background: Rectangle {
                 radius: 28
                 color: "transparent"
-                border.color: "#ffffff"
+                border.color: "#2d5a2d"
                 border.width: 2
                 opacity: 0.5
             }
@@ -119,8 +121,8 @@ Rectangle {
             bottomMargin: 40
             horizontalCenter: parent.horizontalCenter
         }
-        text: "Letter to parents"
-        color: "#ffffff"
+        text: tr("Letter to parents")
+        color: "#2d5a2d"
         font.pixelSize: 14
         opacity: 0.6
 
@@ -145,40 +147,43 @@ Rectangle {
 
             Text {
                 width: parent.width
-                text: "Letter to parents"
+                text: tr("Letter to parents")
                 font.pixelSize: 22
                 font.bold: true
-                color: "#702076"
+                color: "#2d5a2d"
                 horizontalAlignment: Text.AlignHCenter
             }
 
             Text {
                 width: parent.width
-                text: "Dear parents,"
+                text: tr("Dear parents,")
                 font.pixelSize: 14
                 font.bold: true
                 wrapMode: Text.WordWrap
+                color: "#2d5a2d"
             }
 
             Text {
                 width: parent.width
-                text: "Zowi is a friendly robot that helps children learn about technology and programming in a fun way."
+                text: tr("Zowi is a friendly robot that helps children learn about technology and programming in a fun way.")
                 font.pixelSize: 14
                 wrapMode: Text.WordWrap
                 lineHeight: 1.5
+                color: "#2d5a2d"
             }
 
             Text {
                 width: parent.width
-                text: "The Zowi Team"
+                text: tr("The Zowi Team")
                 font.pixelSize: 14
                 font.bold: true
                 horizontalAlignment: Text.AlignRight
+                color: "#2d5a2d"
             }
 
             Button {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Accept"
+                text: tr("Accept")
 
                 contentItem: Text {
                     text: parent.text
