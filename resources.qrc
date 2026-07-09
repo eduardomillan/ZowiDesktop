@@ -3,6 +3,7 @@
         <file>qml/main.qml</file>
         <file>qml/SplashScreen.qml</file>
         <file>qml/WelcomeScreen.qml</file>
+        <file>qml/AnimatedZowi.qml</file>
         <file>images/zowi_logo.svg</file>
         <file>images/zowi_hello.svg</file>
         <file>images/zowi_hello.png</file>

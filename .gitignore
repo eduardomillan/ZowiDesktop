@@ -1,0 +1,35 @@
+# Build
+build/
+build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.o
+*.obj
+moc_*.cpp
+qrc_*.cpp
+*_autogen/
+
+# IDE
+.vscode/
+.idea/
+*.user
+*.pro.user*
+QtCreator.db
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Packaging
+dist/
+*.AppImage
+*.zip
+*.exe
+
+# Working files
+screenshots/
+qml/AnimatedZowi.qml

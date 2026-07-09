@@ -18,3 +18,15 @@ add_executable(ZowiDesktop
 
 target_include_directories(ZowiDesktop PRIVATE src)
 target_link_libraries(ZowiDesktop PRIVATE Qt5::Core Qt5::Quick)
+
+install(TARGETS ZowiDesktop
+    RUNTIME DESTINATION bin
+)
+
+install(FILES packaging/linux/zowi-desktop.desktop
+    DESTINATION share/applications
+)
+
+install(FILES packaging/linux/zowi-desktop.png
+    DESTINATION share/icons/hicolor/256x256/apps
+)

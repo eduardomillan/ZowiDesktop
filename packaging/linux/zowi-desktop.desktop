@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Zowi Desktop
+Comment=Control and program your Zowi robot
+Categories=Education;Robotics;
+Icon=zowi-desktop
+Exec=ZowiDesktop
+Terminal=false

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>zowi-desktop</id>
+  <name>Zowi Desktop</name>
+  <summary>Control and program your Zowi robot</summary>
+  <description>
+    <p>
+      Zowi Desktop is a cross-platform application to control and program your Zowi robot
+      from a computer. Connect via Bluetooth, control movements, program behaviour with
+      visual blocks, and flash new firmware.
+    </p>
+  </description>
+  <url type="homepage">https://github.com/user/zowi-desktop</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://example.com/screenshot.png</image>
+    </screenshot>
+  </screenshots>
+</component>

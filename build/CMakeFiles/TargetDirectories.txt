@@ -1,4 +1,0 @@
-/home/eduardo/ZowiDesktop/build/CMakeFiles/ZowiDesktop.dir
-/home/eduardo/ZowiDesktop/build/CMakeFiles/edit_cache.dir
-/home/eduardo/ZowiDesktop/build/CMakeFiles/rebuild_cache.dir
-/home/eduardo/ZowiDesktop/build/CMakeFiles/ZowiDesktop_autogen.dir

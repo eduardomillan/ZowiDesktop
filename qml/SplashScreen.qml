@@ -13,12 +13,13 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 20
 
-        Image {
+        AnimatedZowi {
             anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/images/scratch/sprite1.png"
-            sourceSize.width: 180
-            sourceSize.height: 180
-            fillMode: Image.PreserveAspectFit
+            width: 180
+            height: 180
+            frameInterval: 900
+            bounceStrength: 0.07
+            swayAmplitude: 4
         }
 
         Text {
