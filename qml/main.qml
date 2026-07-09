@@ -9,19 +9,41 @@ Window {
     title: Translator.translate("main.qml", "Zowi Desktop")
     color: "#f4f9f4"
 
+    property bool paired: false
+
     StackView {
         id: stack
         anchors.fill: parent
         initialItem: SplashScreen {
             onSplashFinished: {
+                function setupScanScreen(page) {
+                    page.deviceSelected.connect(function(name, addr) {
+                        Session.saveWizardDismissed(true)
+                        Session.saveActiveZowiDeviceAddress(addr)
+                        Session.saveActiveZowiName(name)
+                        // TODO: navigate to mode selection screen
+                    })
+                    page.back.connect(function() {
+                        stack.pop()
+                    })
+                }
+
                 var wiz = Session.hasDismissedWizard()
                 var addr = Session.loadActiveZowiDeviceAddress()
                 if (wiz && addr !== "") {
-                    // Already paired — go directly to main mode
-                    stack.replace("qrc:/qml/WelcomeScreen.qml",
-                                  { skipToDemo: true })
+                    paired = true
+                    var scan = stack.replace("qrc:/qml/ScanScreen.qml",
+                                             { scanOnStart: false })
+                    setupScanScreen(scan)
                 } else {
-                    stack.replace("qrc:/qml/WelcomeScreen.qml")
+                    var welcome = stack.replace("qrc:/qml/WelcomeScreen.qml")
+                    welcome.startWizard.connect(function() {
+                        var scan = stack.push("qrc:/qml/ScanScreen.qml")
+                        setupScanScreen(scan)
+                    })
+                    welcome.enterDemoMode.connect(function() {
+                        paired = true
+                    })
                 }
             }
         }

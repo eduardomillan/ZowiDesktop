@@ -58,4 +58,84 @@
         <translation>Acceptar</translation>
     </message>
 </context>
+<context>
+    <name>ScanScreen.qml</name>
+    <message>
+        <source>Search for Zowi</source>
+        <translation>Buscar Zowi</translation>
+    </message>
+    <message>
+        <source>Make sure Bluetooth is enabled on your computer and Zowi is turned on.</source>
+        <translation>Assegura't que el Bluetooth està activat al teu ordinador i Zowi està encés.</translation>
+    </message>
+    <message>
+        <source>Scanning...</source>
+        <translation>Escanejant...</translation>
+    </message>
+    <message>
+        <source>Scan</source>
+        <translation>Escanéjar</translation>
+    </message>
+    <message>
+        <source>Searching for devices...</source>
+        <translation>Cercant dispositius...</translation>
+    </message>
+    <message>
+        <source>Found %1 devices</source>
+        <translation>%1 dispositius trobats</translation>
+    </message>
+    <message>
+        <source>No devices found.
+Press Scan to start searching.</source>
+        <translation>No s'han trobat dispositius.
+Prem Escanéjar per a començar a buscar.</translation>
+    </message>
+    <message>
+        <source>Connected to %1</source>
+        <translation>Connectat a %1</translation>
+    </message>
+    <message>
+        <source>Device selected. Connecting...</source>
+        <translation>Dispositiu seleccionat. Connectant...</translation>
+    </message>
+    <message>
+        <source>Not connected</source>
+        <translation>No connectat</translation>
+    </message>
+    <message>
+        <source>Disconnect</source>
+        <translation>Desconnectar</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
+    </message>
+    <message>
+        <source>Accept</source>
+        <translation>Acceptar</translation>
+    </message>
+    <message>
+        <source>(no devices found)</source>
+        <translation>(no s'han trobat dispositius)</translation>
+    </message>
+    <message>
+        <source>If a PIN is requested, enter: 1234</source>
+        <translation>Si es demana un PIN, introduïx: 1234</translation>
+    </message>
+</context>
+<context>
+    <name>ZowiBluetoothController</name>
+    <message>
+        <source>Not connected to any device</source>
+        <translation>No connectat a cap dispositiu</translation>
+    </message>
+    <message>
+        <source>Scan error</source>
+        <translation>Error d'escaneig</translation>
+    </message>
+    <message>
+        <source>Connection error</source>
+        <translation>Error de connexió</translation>
+    </message>
+</context>
 </TS>

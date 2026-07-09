@@ -2,14 +2,17 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QLocale>
+#include <QIcon>
 #include "translator.h"
 #include "sessioncontroller.h"
+#include "zowibluetoothcontroller.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     app.setApplicationName("ZowiDesktop");
     app.setOrganizationName("ZowiDesktop");
+    app.setWindowIcon(QIcon(":/images/app_icon.png"));
 
     SessionController session;
     Translator translator;
@@ -20,8 +23,10 @@ int main(int argc, char *argv[])
     translator.load(locale);
 
     QQmlApplicationEngine engine;
+    ZowiBluetoothController bluetooth;
     engine.rootContext()->setContextProperty("Session", &session);
     engine.rootContext()->setContextProperty("Translator", &translator);
+    engine.rootContext()->setContextProperty("Bluetooth", &bluetooth);
 
     engine.load(QUrl("qrc:/qml/main.qml"));
 

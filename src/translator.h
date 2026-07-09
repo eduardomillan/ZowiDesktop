@@ -17,10 +17,14 @@ public:
     Q_INVOKABLE QString translate(const QString &context, const QString &source) const;
     Q_INVOKABLE QString currentLocale() const;
 
+    static void setInstance(Translator *instance);
+    static QString tr(const QString &context, const QString &source);
+
 signals:
     void languageChanged();
 
 private:
+    static Translator *s_instance;
     using TranslationMap = QHash<QString, QHash<QString, QString>>;
     TranslationMap m_translations;
     QString m_currentLocale;

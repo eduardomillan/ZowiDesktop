@@ -3,9 +3,24 @@
 #include <QXmlStreamReader>
 #include <QDebug>
 
+Translator *Translator::s_instance = nullptr;
+
 Translator::Translator(QObject *parent)
     : QObject(parent)
 {
+    s_instance = this;
+}
+
+void Translator::setInstance(Translator *instance)
+{
+    s_instance = instance;
+}
+
+QString Translator::tr(const QString &context, const QString &source)
+{
+    if (s_instance)
+        return s_instance->translate(context, source);
+    return source;
 }
 
 void Translator::load(const QString &locale)
