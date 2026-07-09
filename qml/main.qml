@@ -28,23 +28,14 @@ Window {
                     })
                 }
 
-                var wiz = Session.hasDismissedWizard()
-                var addr = Session.loadActiveZowiDeviceAddress()
-                if (wiz && addr !== "") {
-                    paired = true
-                    var scan = stack.replace("qrc:/qml/ScanScreen.qml",
-                                             { scanOnStart: false })
+                var welcome = stack.replace("qrc:/qml/WelcomeScreen.qml")
+                welcome.startWizard.connect(function() {
+                    var scan = stack.push("qrc:/qml/ScanScreen.qml")
                     setupScanScreen(scan)
-                } else {
-                    var welcome = stack.replace("qrc:/qml/WelcomeScreen.qml")
-                    welcome.startWizard.connect(function() {
-                        var scan = stack.push("qrc:/qml/ScanScreen.qml")
-                        setupScanScreen(scan)
-                    })
-                    welcome.enterDemoMode.connect(function() {
-                        paired = true
-                    })
-                }
+                })
+                welcome.enterDemoMode.connect(function() {
+                    paired = true
+                })
             }
         }
     }

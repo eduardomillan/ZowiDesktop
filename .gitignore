@@ -31,5 +31,4 @@ dist/
 *.exe
 
 # Working files
-screenshots/
-qml/AnimatedZowi.qml
+aqtinstall.log

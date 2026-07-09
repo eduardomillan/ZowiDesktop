@@ -62,7 +62,7 @@ Rectangle {
     }
 
     Timer {
-        interval: 1500
+        interval: 10000
         running: true
         onTriggered: splash.splashFinished()
     }

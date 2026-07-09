@@ -36,6 +36,11 @@ add_executable(ZowiDesktop
     ${RESOURCES}
 )
 
+add_executable(bt_test
+    src/bt_test.cpp
+)
+target_link_libraries(bt_test PRIVATE Qt5::Core Qt5::Bluetooth)
+
 target_include_directories(ZowiDesktop PRIVATE src)
 target_link_libraries(ZowiDesktop PRIVATE Qt5::Core Qt5::Quick Qt5::Bluetooth)
 
