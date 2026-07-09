@@ -6,6 +6,8 @@
         <file>qml/AnimatedZowi.qml</file>
         <file>qml/ScanScreen.qml</file>
         <file>images/app_icon.png</file>
+        <file>images/misc/zowi_baila.jpg</file>
+        <file>images/misc/zowi_hello.png</file>
         <file>images/robot/guardian.png</file>
         <file>images/robot/dancing.jpg</file>
         <file>images/robot/dancing2.jpg</file>
