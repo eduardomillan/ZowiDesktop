@@ -1,26 +1,36 @@
-// WelcomeScreen: Landing screen after the splash.
-// Presents a prompt to turn on Zowi before pairing.
+// StartScreen: Entry screen with two options:
+// Start the pairing wizard or learn more on the project website.
 import QtQuick 6.0
 import QtQuick.Controls 6.0
+import "../components"
 
 Rectangle {
-    id: welcome
+    id: start
     color: "#f4f9f4"
 
-    signal startClicked()
-    signal goBack()
+    signal startWizard()
+    signal knowMoreClicked()
 
-    property string screenName: "WelcomeScreen"
+    property string screenName: "StartScreen"
 
-    function tr(source) { return Translator.translate("WelcomeScreen.qml", source) }
+    function tr(source) { return Translator.translate("StartScreen.qml", source) }
 
     Column {
         anchors.centerIn: parent
         spacing: 20
 
+        AnimatedZowi {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 180
+            height: 180
+            frameInterval: 1200
+            bounceStrength: 0.07
+            swayAmplitude: 4
+        }
+
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("Welcome!")
+            text: tr("ZOWI")
             color: "#2d5a2d"
             font.pixelSize: 36
             font.bold: true
@@ -29,17 +39,10 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("To control Zowi, first turn it on.")
+            text: tr("Your friendly robot companion")
             color: "#2d5a2d"
             font.pixelSize: 16
             opacity: 0.8
-        }
-
-        Image {
-            anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/images/android/welcome_image.png"
-            sourceSize.height: 200
-            fillMode: Image.PreserveAspectFit
         }
 
         Item { width: 1; height: 10 }
@@ -52,11 +55,11 @@ Rectangle {
                 id: startButton
                 implicitWidth: 200
                 height: 56
-                text: tr("It's already on")
+                text: tr("Empezar")
 
                 contentItem: Text {
                     text: parent.text
-                    font.pixelSize: 16
+                    font.pixelSize: 18
                     font.bold: true
                     color: "#ffffff"
                     horizontalAlignment: Text.AlignHCenter
@@ -68,14 +71,14 @@ Rectangle {
                     color: startButton.pressed ? "#17736c" : "#21a69b"
                 }
 
-                onClicked: welcome.startClicked()
+                onClicked: start.startWizard()
             }
 
             Button {
-                id: notReadyButton
+                id: knowMoreButton
                 implicitWidth: 200
                 height: 56
-                text: tr("I don't have a Zowi")
+                text: tr("Saber más")
 
                 contentItem: Text {
                     text: parent.text
@@ -95,7 +98,7 @@ Rectangle {
                     opacity: 0.5
                 }
 
-                onClicked: welcome.goBack()
+                onClicked: start.knowMoreClicked()
             }
         }
     }

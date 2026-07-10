@@ -16,7 +16,7 @@ BluetoothService::~BluetoothService()
 
 bool BluetoothService::isConnected() const
 {
-    return m_socket && m_socket->state() == QBluetoothSocket::ConnectedState;
+    return m_socket && m_socket->state() == QBluetoothSocket::SocketState::ConnectedState;
 }
 
 bool BluetoothService::isScanning() const
@@ -119,7 +119,7 @@ void BluetoothService::disconnectFromDevice()
 
 void BluetoothService::sendData(const QString &data)
 {
-    if (!m_socket || m_socket->state() != QBluetoothSocket::ConnectedState) {
+    if (!m_socket || m_socket->state() != QBluetoothSocket::SocketState::ConnectedState) {
         emit errorOccurred(QStringLiteral("Not connected to any device"));
         return;
     }
@@ -219,7 +219,7 @@ void BluetoothService::startReconnectTimer()
 
 void BluetoothService::reconnectTimerTick()
 {
-    if (m_socket && m_socket->state() != QBluetoothSocket::ConnectedState) {
+    if (m_socket && m_socket->state() != QBluetoothSocket::SocketState::ConnectedState) {
         qDebug() << "Attempting reconnection to" << m_deviceAddress;
         m_socket->connectToService(QBluetoothAddress(m_deviceAddress), SPP_UUID, QIODevice::ReadWrite);
     }

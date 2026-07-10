@@ -16,46 +16,57 @@
     </message>
     <message>
         <source>Desktop</source>
-        <translation>Desktop</translation>
+        <translation>Escritorio</translation>
+    </message>
+    <message>
+        <source>Continuar</source>
+        <translation>Continuar</translation>
+    </message>
+    <message>
+        <source>Salir</source>
+        <translation>Salir</translation>
+    </message>
+    <message>
+        <source>Selecciona idioma</source>
+        <translation>Selecciona idioma</translation>
     </message>
 </context>
 <context>
     <name>WelcomeScreen.qml</name>
     <message>
+        <source>Welcome!</source>
+        <translation>¡Bienvenido!</translation>
+    </message>
+    <message>
+        <source>To control Zowi, first turn it on.</source>
+        <translation>Para poder controlar a Zowi, primero enciéndelo.</translation>
+    </message>
+    <message>
+        <source>It's already on</source>
+        <translation>Ya está encendido</translation>
+    </message>
+    <message>
+        <source>I don't have a Zowi</source>
+        <translation>No tengo un Zowi</translation>
+    </message>
+</context>
+<context>
+    <name>StartScreen.qml</name>
+    <message>
         <source>ZOWI</source>
         <translation>ZOWI</translation>
     </message>
     <message>
-        <source>Zowi says hi!</source>
-        <translation>¡Zowi te saluda!</translation>
+        <source>Your friendly robot companion</source>
+        <translation>Tu robot amigo y compañero</translation>
     </message>
     <message>
-        <source>START</source>
-        <translation>EMPEZAR</translation>
+        <source>Empezar</source>
+        <translation>Empezar</translation>
     </message>
     <message>
-        <source>I HAVEN'T GOT A ZOWI</source>
-        <translation>NO TENGO UN ZOWI</translation>
-    </message>
-    <message>
-        <source>Letter to parents</source>
-        <translation>Carta a los padres</translation>
-    </message>
-    <message>
-        <source>Dear parents,</source>
-        <translation>Estimados padres,</translation>
-    </message>
-    <message>
-        <source>Zowi is a friendly robot that helps children learn about technology and programming in a fun way.</source>
-        <translation>Zowi es un robot amigable que ayuda a los niños a aprender sobre tecnología y programación de una forma divertida.</translation>
-    </message>
-    <message>
-        <source>The Zowi Team</source>
-        <translation>El equipo de Zowi</translation>
-    </message>
-    <message>
-        <source>Accept</source>
-        <translation>Aceptar</translation>
+        <source>Saber más</source>
+        <translation>Saber más</translation>
     </message>
 </context>
 <context>

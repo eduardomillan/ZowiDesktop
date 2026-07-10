@@ -26,6 +26,7 @@ add_library(zowi_controllers STATIC
     src/controllers/TranslatorController.cpp
     src/controllers/SessionController.cpp
     src/controllers/BluetoothController.cpp
+    src/controllers/ConfigController.cpp
 )
 target_include_directories(zowi_controllers PUBLIC src)
 target_link_libraries(zowi_controllers PUBLIC Qt6::Core Qt6::Quick zowi_core zowi_services)

@@ -18,44 +18,55 @@
         <source>Desktop</source>
         <translation>Desktop</translation>
     </message>
+    <message>
+        <source>Continuar</source>
+        <translation>Continue</translation>
+    </message>
+    <message>
+        <source>Salir</source>
+        <translation>Quit</translation>
+    </message>
+    <message>
+        <source>Selecciona idioma</source>
+        <translation>Select language</translation>
+    </message>
 </context>
 <context>
     <name>WelcomeScreen.qml</name>
+    <message>
+        <source>Welcome!</source>
+        <translation>Welcome!</translation>
+    </message>
+    <message>
+        <source>To control Zowi, first turn it on.</source>
+        <translation>To control Zowi, first turn it on.</translation>
+    </message>
+    <message>
+        <source>It's already on</source>
+        <translation>It's already on</translation>
+    </message>
+    <message>
+        <source>I don't have a Zowi</source>
+        <translation>I don't have a Zowi</translation>
+    </message>
+</context>
+<context>
+    <name>StartScreen.qml</name>
     <message>
         <source>ZOWI</source>
         <translation>ZOWI</translation>
     </message>
     <message>
-        <source>Zowi says hi!</source>
-        <translation>Zowi says hi!</translation>
+        <source>Your friendly robot companion</source>
+        <translation>Your friendly robot companion</translation>
     </message>
     <message>
-        <source>START</source>
-        <translation>START</translation>
+        <source>Empezar</source>
+        <translation>Start</translation>
     </message>
     <message>
-        <source>I HAVEN'T GOT A ZOWI</source>
-        <translation>I HAVEN'T GOT A ZOWI</translation>
-    </message>
-    <message>
-        <source>Letter to parents</source>
-        <translation>Letter to parents</translation>
-    </message>
-    <message>
-        <source>Dear parents,</source>
-        <translation>Dear parents,</translation>
-    </message>
-    <message>
-        <source>Zowi is a friendly robot that helps children learn about technology and programming in a fun way.</source>
-        <translation>Zowi is a friendly robot that helps children learn about technology and programming in a fun way.</translation>
-    </message>
-    <message>
-        <source>The Zowi Team</source>
-        <translation>The Zowi Team</translation>
-    </message>
-    <message>
-        <source>Accept</source>
-        <translation>Accept</translation>
+        <source>Saber más</source>
+        <translation>Learn more</translation>
     </message>
 </context>
 <context>

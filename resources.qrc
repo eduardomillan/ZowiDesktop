@@ -3,8 +3,13 @@
         <file>src/views/main.qml</file>
         <file>src/views/screens/SplashScreen.qml</file>
         <file>src/views/screens/WelcomeScreen.qml</file>
+        <file>src/views/screens/StartScreen.qml</file>
         <file>src/views/components/AnimatedZowi.qml</file>
         <file>src/views/screens/ScanScreen.qml</file>
+        <file>src/config.json</file>
+        <file>docs/images/es.svg</file>
+        <file>docs/images/gb.svg</file>
+        <file>docs/images/vl.svg</file>
         <file>images/app_icon.png</file>
         <file>images/misc/zowi_baila.jpg</file>
         <file>images/misc/zowi_hello.png</file>

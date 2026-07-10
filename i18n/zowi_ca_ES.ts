@@ -16,53 +16,64 @@
     </message>
     <message>
         <source>Desktop</source>
-        <translation>Desktop</translation>
+        <translation>Escriptori</translation>
+    </message>
+    <message>
+        <source>Continuar</source>
+        <translation>Segueix</translation>
+    </message>
+    <message>
+        <source>Salir</source>
+        <translation>Ix</translation>
+    </message>
+    <message>
+        <source>Selecciona idioma</source>
+        <translation>Tria una llengua</translation>
     </message>
 </context>
 <context>
     <name>WelcomeScreen.qml</name>
     <message>
+        <source>Welcome!</source>
+        <translation>Benvingut!</translation>
+    </message>
+    <message>
+        <source>To control Zowi, first turn it on.</source>
+        <translation>Per a controlar a Zowi, primer encén-lo.</translation>
+    </message>
+    <message>
+        <source>It's already on</source>
+        <translation>Ja està encés</translation>
+    </message>
+    <message>
+        <source>I don't have a Zowi</source>
+        <translation>No tinc un Zowi</translation>
+    </message>
+</context>
+<context>
+    <name>StartScreen.qml</name>
+    <message>
         <source>ZOWI</source>
         <translation>ZOWI</translation>
     </message>
     <message>
-        <source>Zowi says hi!</source>
-        <translation>Zowi et saluda!</translation>
+        <source>Your friendly robot companion</source>
+        <translation>El teu robot company i amic</translation>
     </message>
     <message>
-        <source>START</source>
-        <translation>COMENÇAR</translation>
+        <source>Empezar</source>
+        <translation>Començar</translation>
     </message>
     <message>
-        <source>I HAVEN'T GOT A ZOWI</source>
-        <translation>NO TINC UN ZOWI</translation>
-    </message>
-    <message>
-        <source>Letter to parents</source>
-        <translation>Carta als pares</translation>
-    </message>
-    <message>
-        <source>Dear parents,</source>
-        <translation>Estimats pares,</translation>
-    </message>
-    <message>
-        <source>Zowi is a friendly robot that helps children learn about technology and programming in a fun way.</source>
-        <translation>Zowi és un robot amigable que ajuda els xiquets a aprendre sobre tecnologia i programació d'una forma divertida.</translation>
-    </message>
-    <message>
-        <source>The Zowi Team</source>
-        <translation>L'equip de Zowi</translation>
-    </message>
-    <message>
-        <source>Accept</source>
-        <translation>Acceptar</translation>
+        <source>Saber más</source>
+        <translation>Saber-ne més</translation>
     </message>
 </context>
 <context>
     <name>ScanScreen.qml</name>
     <message>
         <source>Search for Zowi</source>
-        <translation>Buscar Zowi</translation>
+        <translation>Cercar el Zowi</translation>
     </message>
     <message>
         <source>Make sure Bluetooth is enabled on your computer and Zowi is turned on.</source>
@@ -74,7 +85,7 @@
     </message>
     <message>
         <source>Scan</source>
-        <translation>Escanéjar</translation>
+        <translation>Escanejar</translation>
     </message>
     <message>
         <source>Searching for devices...</source>
@@ -120,7 +131,7 @@ Prem Escanéjar per a començar a buscar.</translation>
     </message>
     <message>
         <source>If a PIN is requested, enter: 1234</source>
-        <translation>Si es demana un PIN, introduïx: 1234</translation>
+        <translation>Si et demana un PIN, introduïx: 1234</translation>
     </message>
 </context>
 <context>
