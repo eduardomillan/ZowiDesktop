@@ -37,7 +37,7 @@ Rectangle {
 
         Image {
             anchors.horizontalCenter: parent.horizontalCenter
-            source: "qrc:/images/android/welcome_image.png"
+            source: Config.get("welcome_image")
             sourceSize.height: 200
             fillMode: Image.PreserveAspectFit
         }

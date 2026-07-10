@@ -31,7 +31,8 @@ Window {
                     })
                 })
                 start.knowMoreClicked.connect(function() {
-                    Qt.openUrlExternally(Config.knowMoreUrl)
+                    var locale = Translator.currentLocale().substring(0, 2)
+                    Qt.openUrlExternally(Config.get("know_more") + "/" + locale)
                 })
             }
             onQuitRequested: Qt.quit()

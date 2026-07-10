@@ -21,13 +21,12 @@ Rectangle {
         anchors.verticalCenterOffset: -60
         spacing: 20
 
-        AnimatedZowi {
+        Image {
             anchors.horizontalCenter: parent.horizontalCenter
-            width: 180
-            height: 180
-            frameInterval: 1200
-            bounceStrength: 0.07
-            swayAmplitude: 4
+            source: Config.get("splash_image")
+            sourceSize.width: 180
+            sourceSize.height: 180
+            fillMode: Image.PreserveAspectFit
         }
 
         Text {

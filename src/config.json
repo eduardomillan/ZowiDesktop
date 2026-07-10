@@ -1,3 +1,6 @@
 {
-    "know_more": "https://eduardomillan.github.io/ZowiDesktop"
+    "know_more": "https://eduardomillan.github.io/ZowiDesktop",
+    "splash_image": "qrc:/images/android/hello_image.png",
+    "start_image": "qrc:/images/android/pressed_animation_sleppy_button.png",
+    "welcome_image": "qrc:/images/android/welcome_image.png"
 }

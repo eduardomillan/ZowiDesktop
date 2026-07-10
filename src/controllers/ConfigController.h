@@ -7,12 +7,11 @@
 class ConfigController : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString knowMoreUrl READ knowMoreUrl CONSTANT)
 
 public:
     explicit ConfigController(QObject *parent = nullptr);
 
-    QString knowMoreUrl() const;
+    Q_INVOKABLE QString get(const QString &key) const;
 
 private:
     void load(const QString &path);

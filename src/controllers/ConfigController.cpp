@@ -10,9 +10,9 @@ ConfigController::ConfigController(QObject *parent)
     load(":/src/config.json");
 }
 
-QString ConfigController::knowMoreUrl() const
+QString ConfigController::get(const QString &key) const
 {
-    return m_config.value("know_more").toString();
+    return m_config.value(key).toString();
 }
 
 void ConfigController::load(const QString &path)
