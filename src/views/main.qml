@@ -1,6 +1,6 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Window 2.15
+import QtQuick 6.0
+import QtQuick.Controls 6.0
+import QtQuick.Window 6.0
 
 Window {
     visible: true
@@ -28,9 +28,9 @@ Window {
                     })
                 }
 
-                var welcome = stack.replace("qrc:/qml/WelcomeScreen.qml")
+                var welcome = stack.replace("qrc:/src/views/screens/WelcomeScreen.qml")
                 welcome.startWizard.connect(function() {
-                    var scan = stack.push("qrc:/qml/ScanScreen.qml")
+                    var scan = stack.push("qrc:/src/views/screens/ScanScreen.qml")
                     setupScanScreen(scan)
                 })
                 welcome.enterDemoMode.connect(function() {

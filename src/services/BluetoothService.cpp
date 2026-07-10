@@ -1,39 +1,45 @@
-#include "zowibluetoothcontroller.h"
-#include "translator.h"
+#include "BluetoothService.h"
 #include <QDebug>
 
 static const QBluetoothUuid SPP_UUID = QBluetoothUuid(QStringLiteral("00001101-0000-1000-8000-00805F9B34FB"));
 
-ZowiBluetoothController::ZowiBluetoothController(QObject *parent)
+BluetoothService::BluetoothService(QObject *parent)
     : QObject(parent)
-    , m_discoveryAgent(nullptr)
-    , m_socket(nullptr)
-    , m_reconnectTimer(nullptr)
-    , m_scanning(false)
 {
 }
 
-bool ZowiBluetoothController::isConnected() const
+BluetoothService::~BluetoothService()
+{
+    stopScan();
+    disconnectFromDevice();
+}
+
+bool BluetoothService::isConnected() const
 {
     return m_socket && m_socket->state() == QBluetoothSocket::ConnectedState;
 }
 
-bool ZowiBluetoothController::isScanning() const
+bool BluetoothService::isScanning() const
 {
     return m_scanning;
 }
 
-QString ZowiBluetoothController::deviceName() const
+QString BluetoothService::deviceName() const
 {
     return m_deviceName;
 }
 
-QString ZowiBluetoothController::deviceAddress() const
+QString BluetoothService::deviceAddress() const
 {
     return m_deviceAddress;
 }
 
-void ZowiBluetoothController::startScan()
+QVector<DeviceInfo> BluetoothService::discoveredDevices() const
+{
+    return m_deviceList;
+}
+
+void BluetoothService::startScan()
 {
     if (m_scanning)
         return;
@@ -45,20 +51,20 @@ void ZowiBluetoothController::startScan()
 
     m_discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
-            this, &ZowiBluetoothController::onDeviceDiscovered);
+            this, &BluetoothService::onDeviceDiscovered);
     connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished,
-            this, &ZowiBluetoothController::onScanFinished);
-    connect(m_discoveryAgent,
-            QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
-            this, &ZowiBluetoothController::onScanError);
+            this, &BluetoothService::onScanFinished);
+    connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred,
+            this, &BluetoothService::onScanError);
 
     m_discoveredDevices.clear();
+    m_deviceList.clear();
     m_scanning = true;
     emit scanningChanged();
     m_discoveryAgent->start(QBluetoothDeviceDiscoveryAgent::ClassicMethod);
 }
 
-void ZowiBluetoothController::stopScan()
+void BluetoothService::stopScan()
 {
     if (m_discoveryAgent && m_scanning) {
         m_discoveryAgent->stop();
@@ -67,7 +73,7 @@ void ZowiBluetoothController::stopScan()
     }
 }
 
-void ZowiBluetoothController::connectToDevice(const QString &address)
+void BluetoothService::connectToDevice(const QString &address)
 {
     if (m_socket) {
         m_socket->disconnectFromService();
@@ -80,20 +86,19 @@ void ZowiBluetoothController::connectToDevice(const QString &address)
 
     m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
     connect(m_socket, &QBluetoothSocket::connected,
-            this, &ZowiBluetoothController::onSocketConnected);
+            this, &BluetoothService::onSocketConnected);
     connect(m_socket, &QBluetoothSocket::disconnected,
-            this, &ZowiBluetoothController::onSocketDisconnected);
-    connect(m_socket,
-            QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
-            this, &ZowiBluetoothController::onSocketError);
+            this, &BluetoothService::onSocketDisconnected);
+    connect(m_socket, &QBluetoothSocket::errorOccurred,
+            this, &BluetoothService::onSocketError);
     connect(m_socket, &QBluetoothSocket::readyRead,
-            this, &ZowiBluetoothController::onDataReady);
+            this, &BluetoothService::onDataReady);
 
     qDebug() << "Connecting to" << address << "via RFCOMM SPP...";
     m_socket->connectToService(QBluetoothAddress(address), SPP_UUID, QIODevice::ReadWrite);
 }
 
-void ZowiBluetoothController::disconnectFromDevice()
+void BluetoothService::disconnectFromDevice()
 {
     if (m_reconnectTimer) {
         m_reconnectTimer->stop();
@@ -112,10 +117,10 @@ void ZowiBluetoothController::disconnectFromDevice()
     }
 }
 
-void ZowiBluetoothController::sendData(const QString &data)
+void BluetoothService::sendData(const QString &data)
 {
     if (!m_socket || m_socket->state() != QBluetoothSocket::ConnectedState) {
-        emit errorOccurred(Translator::tr("ZowiBluetoothController", "Not connected to any device"));
+        emit errorOccurred(QStringLiteral("Not connected to any device"));
         return;
     }
 
@@ -124,7 +129,7 @@ void ZowiBluetoothController::sendData(const QString &data)
     m_socket->write(bytes);
 }
 
-void ZowiBluetoothController::onDeviceDiscovered(const QBluetoothDeviceInfo &device)
+void BluetoothService::onDeviceDiscovered(const QBluetoothDeviceInfo &device)
 {
     if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
         return;
@@ -135,27 +140,32 @@ void ZowiBluetoothController::onDeviceDiscovered(const QBluetoothDeviceInfo &dev
 
     m_discoveredDevices.insert(device.address().toString(), name);
 
-    qDebug() << "Discovered device:" << name << device.address().toString();
-    emit deviceDiscovered(name, device.address().toString());
+    DeviceInfo info;
+    info.name = name;
+    info.address = device.address().toString();
+    m_deviceList.append(info);
+
+    qDebug() << "Discovered device:" << name << info.address;
+    emit deviceDiscovered(info);
 }
 
-void ZowiBluetoothController::onScanFinished()
+void BluetoothService::onScanFinished()
 {
     m_scanning = false;
     emit scanningChanged();
     emit scanFinished();
 }
 
-void ZowiBluetoothController::onScanError(QBluetoothDeviceDiscoveryAgent::Error error)
+void BluetoothService::onScanError(QBluetoothDeviceDiscoveryAgent::Error error)
 {
     Q_UNUSED(error)
     m_scanning = false;
     emit scanningChanged();
-    QString msg = m_discoveryAgent ? m_discoveryAgent->errorString() : Translator::tr("ZowiBluetoothController", "Scan error");
+    QString msg = m_discoveryAgent ? m_discoveryAgent->errorString() : QStringLiteral("Scan error");
     emit errorOccurred(msg);
 }
 
-void ZowiBluetoothController::onSocketConnected()
+void BluetoothService::onSocketConnected()
 {
     qDebug() << "Connected to" << m_deviceAddress;
 
@@ -170,22 +180,22 @@ void ZowiBluetoothController::onSocketConnected()
     emit deviceChanged();
 }
 
-void ZowiBluetoothController::onSocketDisconnected()
+void BluetoothService::onSocketDisconnected()
 {
     qDebug() << "Disconnected from" << m_deviceAddress;
     emit connectionChanged();
     startReconnectTimer();
 }
 
-void ZowiBluetoothController::onSocketError(QBluetoothSocket::SocketError error)
+void BluetoothService::onSocketError(QBluetoothSocket::SocketError error)
 {
     Q_UNUSED(error)
-    QString msg = m_socket ? m_socket->errorString() : Translator::tr("ZowiBluetoothController", "Connection error");
+    QString msg = m_socket ? m_socket->errorString() : QStringLiteral("Connection error");
     qDebug() << "Socket error:" << msg;
     emit errorOccurred(msg);
 }
 
-void ZowiBluetoothController::onDataReady()
+void BluetoothService::onDataReady()
 {
     if (!m_socket)
         return;
@@ -195,19 +205,19 @@ void ZowiBluetoothController::onDataReady()
     emit dataReceived(QString::fromUtf8(data));
 }
 
-void ZowiBluetoothController::startReconnectTimer()
+void BluetoothService::startReconnectTimer()
 {
     if (!m_deviceAddress.isEmpty()) {
         if (!m_reconnectTimer) {
             m_reconnectTimer = new QTimer(this);
             connect(m_reconnectTimer, &QTimer::timeout,
-                    this, &ZowiBluetoothController::reconnectTimerTick);
+                    this, &BluetoothService::reconnectTimerTick);
         }
         m_reconnectTimer->start(3000);
     }
 }
 
-void ZowiBluetoothController::reconnectTimerTick()
+void BluetoothService::reconnectTimerTick()
 {
     if (m_socket && m_socket->state() != QBluetoothSocket::ConnectedState) {
         qDebug() << "Attempting reconnection to" << m_deviceAddress;

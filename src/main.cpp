@@ -3,9 +3,14 @@
 #include <QQmlContext>
 #include <QLocale>
 #include <QIcon>
-#include "translator.h"
-#include "sessioncontroller.h"
-#include "zowibluetoothcontroller.h"
+#include <QDebug>
+
+#include "services/TranslationEngine.h"
+#include "services/SessionService.h"
+#include "services/BluetoothService.h"
+#include "controllers/TranslatorController.h"
+#include "controllers/SessionController.h"
+#include "controllers/BluetoothController.h"
 
 int main(int argc, char *argv[])
 {
@@ -14,21 +19,35 @@ int main(int argc, char *argv[])
     app.setOrganizationName("ZowiDesktop");
     app.setWindowIcon(QIcon(":/images/app_icon.png"));
 
-    SessionController session;
-    Translator translator;
+    // --- Services ---
+    TranslationEngine translationEngine;
+    SessionService sessionService;
+    BluetoothService bluetoothService;
+
     QString locale = QLocale::system().name();
-    QStringList supported = translator.availableLocales();
+    QStringList supported = translationEngine.availableLocales();
     if (!supported.contains(locale))
         locale = "en_US";
-    translator.load(locale);
+    translationEngine.load(locale);
 
+    // --- Controllers (thin QML wrappers) ---
+    TranslatorController translator(&translationEngine);
+    SessionController session(&sessionService);
+    BluetoothController bluetooth(&bluetoothService);
+
+    // --- QML engine ---
     QQmlApplicationEngine engine;
-    ZowiBluetoothController bluetooth;
+
     engine.rootContext()->setContextProperty("Session", &session);
     engine.rootContext()->setContextProperty("Translator", &translator);
     engine.rootContext()->setContextProperty("Bluetooth", &bluetooth);
 
-    engine.load(QUrl("qrc:/qml/main.qml"));
+#ifdef QT_DEBUG
+    qDebug() << "Loading QML from filesystem (hot-reload)";
+    engine.load(QUrl::fromLocalFile("src/views/main.qml"));
+#else
+    engine.load(QUrl("qrc:/src/views/main.qml"));
+#endif
 
     if (engine.rootObjects().isEmpty())
         return -1;

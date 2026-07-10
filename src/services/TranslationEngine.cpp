@@ -1,29 +1,29 @@
-#include "translator.h"
+#include "TranslationEngine.h"
 #include <QFile>
 #include <QXmlStreamReader>
 #include <QDebug>
 
-Translator *Translator::s_instance = nullptr;
+TranslationEngine *TranslationEngine::s_instance = nullptr;
 
-Translator::Translator(QObject *parent)
+TranslationEngine::TranslationEngine(QObject *parent)
     : QObject(parent)
 {
     s_instance = this;
 }
 
-void Translator::setInstance(Translator *instance)
+void TranslationEngine::setInstance(TranslationEngine *instance)
 {
     s_instance = instance;
 }
 
-QString Translator::tr(const QString &context, const QString &source)
+QString TranslationEngine::tr(const QString &context, const QString &source)
 {
     if (s_instance)
         return s_instance->translate(context, source);
     return source;
 }
 
-void Translator::load(const QString &locale)
+void TranslationEngine::load(const QString &locale)
 {
     m_translations.clear();
     m_currentLocale = locale;
@@ -36,8 +36,6 @@ void Translator::load(const QString &locale)
         qWarning() << "Could not load translations for" << locale;
         return;
     }
-
-    qDebug() << "File opened successfully, size:" << file.size();
 
     QXmlStreamReader xml(&file);
     QString currentContext;
@@ -78,12 +76,12 @@ void Translator::load(const QString &locale)
     emit languageChanged();
 }
 
-QStringList Translator::availableLocales() const
+QStringList TranslationEngine::availableLocales() const
 {
     return {"es_ES", "ca_ES", "en_US"};
 }
 
-QString Translator::translate(const QString &context, const QString &source) const
+QString TranslationEngine::translate(const QString &context, const QString &source) const
 {
     if (m_translations.contains(context) && m_translations[context].contains(source)) {
         return m_translations[context][source];
@@ -91,7 +89,7 @@ QString Translator::translate(const QString &context, const QString &source) con
     return source;
 }
 
-QString Translator::currentLocale() const
+QString TranslationEngine::currentLocale() const
 {
     return m_currentLocale;
 }

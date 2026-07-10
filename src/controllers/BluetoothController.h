@@ -1,14 +1,13 @@
-#ifndef ZOWIBLUETOOTHCONTROLLER_H
-#define ZOWIBLUETOOTHCONTROLLER_H
+#ifndef BLUETOOTHCONTROLLER_H
+#define BLUETOOTHCONTROLLER_H
 
 #include <QObject>
-#include <QBluetoothDeviceDiscoveryAgent>
-#include <QBluetoothSocket>
-#include <QBluetoothDeviceInfo>
-#include <QTimer>
-#include <QHash>
+#include <QVector>
 
-class ZowiBluetoothController : public QObject
+class BluetoothService;
+struct DeviceInfo;
+
+class BluetoothController : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectionChanged)
@@ -17,7 +16,7 @@ class ZowiBluetoothController : public QObject
     Q_PROPERTY(QString deviceAddress READ deviceAddress NOTIFY deviceChanged)
 
 public:
-    explicit ZowiBluetoothController(QObject *parent = nullptr);
+    explicit BluetoothController(BluetoothService *service, QObject *parent = nullptr);
 
     bool isConnected() const;
     bool isScanning() const;
@@ -39,28 +38,8 @@ signals:
     void dataReceived(const QString &data);
     void errorOccurred(const QString &message);
 
-private slots:
-    void onDeviceDiscovered(const QBluetoothDeviceInfo &device);
-    void onScanFinished();
-    void onScanError(QBluetoothDeviceDiscoveryAgent::Error error);
-    void onSocketConnected();
-    void onSocketDisconnected();
-    void onSocketError(QBluetoothSocket::SocketError error);
-    void onDataReady();
-    void reconnectTimerTick();
-
 private:
-    void startReconnectTimer();
-
-    QBluetoothDeviceDiscoveryAgent *m_discoveryAgent;
-    QBluetoothSocket *m_socket;
-    QTimer *m_reconnectTimer;
-
-    QHash<QString, QString> m_discoveredDevices;
-
-    bool m_scanning;
-    QString m_deviceName;
-    QString m_deviceAddress;
+    BluetoothService *m_service;
 };
 
 #endif

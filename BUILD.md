@@ -3,12 +3,12 @@
 ## Prerequisites
 
 - CMake 3.16+
-- Qt 5.15 (Core, Quick)
+- Qt 6.2+ (Core, Quick, Bluetooth)
 - C++17 compiler (g++ or clang++)
 
 ```bash
-# Debian / Ubuntu / Lliurex
-sudo apt install cmake g++ qtbase5-dev libqt5xml5
+# Lliurex 23 / Ubuntu Jammy
+sudo apt install cmake g++ qt6-base-dev qt6-declarative-dev qt6-connectivity-dev
 ```
 
 ## Quick start (native Linux)
@@ -43,12 +43,12 @@ Cross-compilation requires:
    sudo apt install mingw-w64 mingw-w64-tools
    ```
 
-2. **Qt 5.15 for MinGW** — download from https://www.qt.io/download-open-source
-   and install selecting *Qt 5.15.x → MinGW 64-bit*.
+2. **Qt 6 for MinGW** — download from https://www.qt.io/download-open-source
+   and install selecting *Qt 6.x → MinGW 64-bit*.
 
 3. Set `QT_MINGW_PATH` and run the script:
    ```bash
-   export QT_MINGW_PATH=~/Qt/5.15.2/mingw81_64
+   export QT_MINGW_PATH=~/Qt/6.5.2/mingw_64
    ./packaging/windows/create-portable-zip.sh
    ```
 

@@ -1,45 +1,45 @@
-#include "sessioncontroller.h"
+#include "SessionService.h"
 
-SessionController::SessionController(QObject *parent)
+SessionService::SessionService(QObject *parent)
     : QObject(parent)
     , m_settings("ZowiDesktop", "ZowiApp")
 {
 }
 
-QString SessionController::loadActiveZowiDeviceAddress()
+QString SessionService::activeZowiDeviceAddress() const
 {
     return m_settings.value("activeZowiDeviceAddress").toString();
 }
 
-QString SessionController::loadActiveZowiName()
+QString SessionService::activeZowiName() const
 {
     return sanitizeZowiName(m_settings.value("activeZowiName", "Zowi").toString());
 }
 
-bool SessionController::hasDismissedWizard()
+bool SessionService::wizardDismissed() const
 {
     return m_settings.value("wizardDismissed", false).toBool();
 }
 
-void SessionController::saveActiveZowiDeviceAddress(const QString &address)
+void SessionService::setActiveZowiDeviceAddress(const QString &address)
 {
     m_settings.setValue("activeZowiDeviceAddress", address);
     emit sessionChanged();
 }
 
-void SessionController::saveActiveZowiName(const QString &name)
+void SessionService::setActiveZowiName(const QString &name)
 {
     m_settings.setValue("activeZowiName", sanitizeZowiName(name));
     emit sessionChanged();
 }
 
-void SessionController::saveWizardDismissed(bool dismissed)
+void SessionService::setWizardDismissed(bool dismissed)
 {
     m_settings.setValue("wizardDismissed", dismissed);
     emit sessionChanged();
 }
 
-QString SessionController::sanitizeZowiName(const QString &name) const
+QString SessionService::sanitizeZowiName(const QString &name) const
 {
     QString normalized = name.trimmed();
     if (normalized.isEmpty()

@@ -23,8 +23,7 @@ int main(int argc, char *argv[])
             qDebug() << "Scan finished";
             QCoreApplication::quit();
         });
-    QObject::connect(agent,
-        QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
+    QObject::connect(agent, &QBluetoothDeviceDiscoveryAgent::errorOccurred,
         [agent](QBluetoothDeviceDiscoveryAgent::Error) {
             qDebug() << "Scan error:" << agent->errorString();
             QCoreApplication::quit();

@@ -1,10 +1,10 @@
 <RCC>
     <qresource prefix="/">
-        <file>qml/main.qml</file>
-        <file>qml/SplashScreen.qml</file>
-        <file>qml/WelcomeScreen.qml</file>
-        <file>qml/AnimatedZowi.qml</file>
-        <file>qml/ScanScreen.qml</file>
+        <file>src/views/main.qml</file>
+        <file>src/views/screens/SplashScreen.qml</file>
+        <file>src/views/screens/WelcomeScreen.qml</file>
+        <file>src/views/components/AnimatedZowi.qml</file>
+        <file>src/views/screens/ScanScreen.qml</file>
         <file>images/app_icon.png</file>
         <file>images/misc/zowi_baila.jpg</file>
         <file>images/misc/zowi_hello.png</file>
