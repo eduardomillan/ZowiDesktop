@@ -2,19 +2,42 @@
 
 > This is a living document. Edit it to reflect the actual roadmap and priorities.
 
+## Release Plan
+
+| Version | Milestone | Description |
+|---------|-----------|-------------|
+| **0.1.0** | M1 | Project scaffold (screens, i18n, config, session) |
+| **0.1.1** | M1 | + First working Windows portable build |
+| **0.2.0** | M2 | Bluetooth discovery + device list |
+| **0.2.1** | M2 | Pairing + SPP connection |
+| **0.2.2** | M2 | Connection status indicator |
+| **0.3.0** | M3 | Basic control pad (directions + actions) |
+| **0.3.1** | M3 | Speed control + face editor |
+| **0.4.0** | M4 | Demo / autonomous mode |
+| **0.4.1** | M4 | Guardian + dancing + sound modes |
+| **0.5.0** | M5 | Firmware flashing (STK500v1) |
+| **0.6.0** | M6 | Visual block editor |
+| **0.7.0** | M7 | Projects & tutorials section |
+| **0.8.0** | M8 | Full i18n + polish |
+| **1.0.0** | — | Final release |
+
 ## Milestones
 
 ### M1 — Project scaffold
-- [x] CMake + Qt5 project building and linking
+- [x] CMake + Qt6 project building and linking
 - [x] QML resource system with images and translations
 - [x] Custom `Translator` class reading `.ts` files (`es_ES`, `ca_ES`, `en_US`)
 - [x] `SessionController` persisting wizard state and active Zowi address
-- [x] Splash screen (`SplashScreen.qml`) with timer and progress bar
-- [x] Welcome screen (`WelcomeScreen.qml`) with START / demo / letter popup
+- [x] Splash screen (`SplashScreen.qml`) with language flags and Continue/Quit
+- [x] Start screen (`StartScreen.qml`) with Start button and know-more link
+- [x] Welcome screen (`WelcomeScreen.qml`) with onboarding choices
+- [x] Scan screen (`ScanScreen.qml`) with Bluetooth device discovery
+- [x] Windows portable build (cross-compiled from Linux)
+- [x] Linux AppImage packaging
 
 ### M2 — Bluetooth connection & device pairing
+- [x] Device discovery list with name, address, signal strength
 - [ ] Implement `QBluetoothSocket` (RFCOMM SPP, UUID `00001101-0000-1000-8000-00805F9B34FB`)
-- [ ] Device discovery list with name, address, signal strength
 - [ ] Pairing flow and persistent storage of paired device
 - [ ] Connection status indicator (connected / disconnected / low battery)
 
