@@ -4,22 +4,22 @@
 
 ## Release Plan
 
-| Version | Milestone | Description |
-|---------|-----------|-------------|
-| **0.1.0** | M1 | Project scaffold (screens, i18n, config, session) |
-| **0.1.1** | M1 | + First working Windows portable build |
-| **0.2.0** | M2 | Bluetooth discovery + device list |
-| **0.2.1** | M2 | Pairing + SPP connection |
-| **0.2.2** | M2 | Connection status indicator |
-| **0.3.0** | M3 | Basic control pad (directions + actions) |
-| **0.3.1** | M3 | Speed control + face editor |
-| **0.4.0** | M4 | Demo / autonomous mode |
-| **0.4.1** | M4 | Guardian + dancing + sound modes |
-| **0.5.0** | M5 | Firmware flashing (STK500v1) |
-| **0.6.0** | M6 | Visual block editor |
-| **0.7.0** | M7 | Projects & tutorials section |
-| **0.8.0** | M8 | Full i18n + polish |
-| **1.0.0** | — | Final release |
+| Version | Milestone | Description | Status |
+|---------|-----------|-------------|--------|
+| **0.1.0** | M1 | Project scaffold (screens, i18n, config, session) | ✅ |
+| **0.1.1** | M1 | + First working Windows portable build | ✅ |
+| **0.2.0** | M2 | Bluetooth discovery + device list | 🔧 |
+| **0.2.1** | M2 | Pairing + SPP connection | |
+| **0.2.2** | M2 | Connection status indicator | |
+| **0.3.0** | M3 | Basic control pad (directions + actions) | |
+| **0.3.1** | M3 | Speed control + face editor | |
+| **0.4.0** | M4 | Demo / autonomous mode | |
+| **0.4.1** | M4 | Guardian + dancing + sound modes | |
+| **0.5.0** | M5 | Firmware flashing (STK500v1) | |
+| **0.6.0** | M6 | Visual block editor | |
+| **0.7.0** | M7 | Projects & tutorials section | |
+| **0.8.0** | M8 | Full i18n + polish | |
+| **1.0.0** | — | Final release | |
 
 ## Milestones
 
