@@ -55,3 +55,16 @@ Cross-compilation requires:
 The script runs `windeployqt` to collect all required DLLs and packages
 everything into a portable `.zip`. No installation needed on the target
 Windows machine.
+
+> **Note:** Cross-compiled builds from Linux do not include working Bluetooth
+> (Qt6 Bluetooth requires WinRT, only available with MSVC).
+> See [bt_native](packaging/windows/bt_native/README.md) for a native Windows
+> Bluetooth DLL that can be compiled separately on Windows with Visual Studio.
+
+## Windows native Bluetooth (bt_native)
+
+For full Bluetooth support on Windows, a native DLL can be compiled on a Windows
+machine with Visual Studio and placed next to `ZowiDesktop.exe`. The app
+auto-detects it at startup.
+
+See: [packaging/windows/bt_native/README.md](packaging/windows/bt_native/README.md)
