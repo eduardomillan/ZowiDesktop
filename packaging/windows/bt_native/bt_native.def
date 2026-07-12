@@ -1,0 +1,11 @@
+LIBRARY bt_native
+EXPORTS
+    bt_init
+    bt_start_discovery
+    bt_stop_discovery
+    bt_connect
+    bt_send
+    bt_start_receive
+    bt_disconnect
+    bt_cleanup
+    bt_last_error

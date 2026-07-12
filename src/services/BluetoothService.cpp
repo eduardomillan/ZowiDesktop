@@ -1,11 +1,33 @@
 #include "BluetoothService.h"
 #include <QDebug>
 
+#ifdef Q_OS_WIN
+#include "BluetoothNativeLoader.h"
+#endif
+
 static const QBluetoothUuid SPP_UUID = QBluetoothUuid(QStringLiteral("00001101-0000-1000-8000-00805F9B34FB"));
 
 BluetoothService::BluetoothService(QObject *parent)
     : QObject(parent)
 {
+#ifdef Q_OS_WIN
+    m_nativeLoader = new BluetoothNativeLoader(this);
+    if (m_nativeLoader->isAvailable()) {
+        m_nativeLoader->init();
+        m_useNative = true;
+        connect(m_nativeLoader, &BluetoothNativeLoader::deviceConnected,
+                this, &BluetoothService::onNativeConnected);
+        connect(m_nativeLoader, &BluetoothNativeLoader::deviceDisconnected,
+                this, &BluetoothService::onNativeDisconnected);
+        connect(m_nativeLoader, &BluetoothNativeLoader::dataReceived,
+                this, &BluetoothService::onNativeDataReceived);
+        connect(m_nativeLoader, &BluetoothNativeLoader::errorOccurred,
+                this, &BluetoothService::errorOccurred);
+        qDebug() << "[Bluetooth] Using native Windows backend";
+    } else {
+        qDebug() << "[Bluetooth] Native DLL not available, using Qt backend";
+    }
+#endif
 }
 
 BluetoothService::~BluetoothService()
@@ -75,14 +97,22 @@ void BluetoothService::stopScan()
 
 void BluetoothService::connectToDevice(const QString &address)
 {
+    m_deviceAddress = address;
+    m_deviceName = m_discoveredDevices.value(address);
+
+#ifdef Q_OS_WIN
+    if (m_useNative) {
+        qDebug() << "Connecting to" << address << "via native backend...";
+        m_nativeLoader->connectDevice(address);
+        return;
+    }
+#endif
+
     if (m_socket) {
         m_socket->disconnectFromService();
         m_socket->deleteLater();
         m_socket = nullptr;
     }
-
-    m_deviceAddress = address;
-    m_deviceName = m_discoveredDevices.value(address);
 
     m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
     connect(m_socket, &QBluetoothSocket::connected,
@@ -107,6 +137,13 @@ void BluetoothService::disconnectFromDevice()
     m_deviceName.clear();
     emit deviceChanged();
 
+#ifdef Q_OS_WIN
+    if (m_useNative) {
+        m_nativeLoader->disconnectDevice();
+        return;
+    }
+#endif
+
     if (m_socket) {
         m_socket->disconnectFromService();
     }
@@ -117,8 +154,26 @@ void BluetoothService::disconnectFromDevice()
     }
 }
 
+bool BluetoothService::isNativeAvailable() const
+{
+#ifdef Q_OS_WIN
+    return m_useNative;
+#else
+    return false;
+#endif
+}
+
 void BluetoothService::sendData(const QString &data)
 {
+#ifdef Q_OS_WIN
+    if (m_useNative) {
+        QByteArray bytes = data.toUtf8();
+        qDebug() << "Sending (native):" << bytes.toHex();
+        m_nativeLoader->sendData(bytes);
+        return;
+    }
+#endif
+
     if (!m_socket || m_socket->state() != QBluetoothSocket::SocketState::ConnectedState) {
         emit errorOccurred(QStringLiteral("Not connected to any device"));
         return;
@@ -224,3 +279,27 @@ void BluetoothService::reconnectTimerTick()
         m_socket->connectToService(QBluetoothAddress(m_deviceAddress), SPP_UUID, QIODevice::ReadWrite);
     }
 }
+
+#ifdef Q_OS_WIN
+void BluetoothService::onNativeConnected()
+{
+    qDebug() << "Connected to" << m_deviceAddress << "(native)";
+    if (m_deviceName.isEmpty())
+        m_deviceName = m_discoveredDevices.value(m_deviceAddress, m_deviceAddress);
+    emit connectionChanged();
+    emit deviceChanged();
+}
+
+void BluetoothService::onNativeDisconnected()
+{
+    qDebug() << "Disconnected from" << m_deviceAddress << "(native)";
+    emit connectionChanged();
+    startReconnectTimer();
+}
+
+void BluetoothService::onNativeDataReceived(const QByteArray &data)
+{
+    qDebug() << "Received (native):" << data.toHex();
+    emit dataReceived(QString::fromUtf8(data));
+}
+#endif

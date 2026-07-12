@@ -21,6 +21,11 @@ add_library(zowi_services STATIC
 target_include_directories(zowi_services PUBLIC src)
 target_link_libraries(zowi_services PUBLIC Qt6::Core Qt6::Bluetooth zowi_core)
 
+# Add native Bluetooth loader on Windows
+if(WIN32)
+    target_sources(zowi_services PRIVATE src/services/BluetoothNativeLoader.cpp)
+endif()
+
 # ── Controllers library: QML bridge ──────────────────────────────────
 add_library(zowi_controllers STATIC
     src/controllers/TranslatorController.cpp

@@ -10,6 +10,10 @@
 #include <QVector>
 #include "core/DeviceInfo.h"
 
+#ifdef Q_OS_WIN
+class BluetoothNativeLoader;
+#endif
+
 class BluetoothService : public QObject
 {
     Q_OBJECT
@@ -23,6 +27,7 @@ public:
     QString deviceName() const;
     QString deviceAddress() const;
     QVector<DeviceInfo> discoveredDevices() const;
+    bool isNativeAvailable() const;
 
     void startScan();
     void stopScan();
@@ -49,6 +54,12 @@ private slots:
     void onDataReady();
     void reconnectTimerTick();
 
+#ifdef Q_OS_WIN
+    void onNativeConnected();
+    void onNativeDisconnected();
+    void onNativeDataReceived(const QByteArray &data);
+#endif
+
 private:
     void startReconnectTimer();
 
@@ -62,6 +73,11 @@ private:
     bool m_scanning = false;
     QString m_deviceName;
     QString m_deviceAddress;
+
+#ifdef Q_OS_WIN
+    BluetoothNativeLoader *m_nativeLoader = nullptr;
+    bool m_useNative = false;
+#endif
 };
 
 #endif
