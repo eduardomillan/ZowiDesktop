@@ -32,7 +32,7 @@
     </message>
 </context>
 <context>
-    <name>WelcomeScreen.qml</name>
+    <name>WizardScreen.qml</name>
     <message>
         <source>Welcome!</source>
         <translation>Welcome!</translation>
@@ -51,7 +51,7 @@
     </message>
 </context>
 <context>
-    <name>StartScreen.qml</name>
+    <name>WelcomeScreen.qml</name>
     <message>
         <source>ZOWI</source>
         <translation>ZOWI</translation>

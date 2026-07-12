@@ -51,6 +51,7 @@ src/
 │   └── DeviceInfo.h                # Plain data struct (name, address, rssi)
 ├── services/                       # Model layer — business logic
 │   ├── BluetoothService.h/.cpp     #   Discovery + SPP socket
+│   ├── BluetoothNativeLoader.h/.cpp#   Dynamic DLL loader for Windows native BT
 │   ├── SessionService.h/.cpp       #   QSettings persistence
 │   └── TranslationEngine.h/.cpp    #   JSON-based i18n engine
 ├── controllers/                    # ViewModel layer — QML bridge
@@ -62,15 +63,23 @@ src/
 │   ├── main.qml                    #   Root window, StackView navigation
 │   ├── screens/
 │   │   ├── SplashScreen.qml        #   Logo + language flags + Continue/Quit
-│   │   ├── StartScreen.qml         #   Start button + know-more link
-│   │   ├── WelcomeScreen.qml       #   Onboarding choices
+│   │   ├── WelcomeScreen.qml       #   Start button + know-more link
+│   │   ├── WizardScreen.qml        #   Onboarding: "Do you have a Zowi?"
 │   │   └── ScanScreen.qml          #   Bluetooth device discovery
 │   └── components/
 │       └── AnimatedZowi.qml        #   Reusable animated sprite
-└── tests/
-    ├── CMakeLists.txt
-    ├── tst_SessionService.cpp
-    └── tst_TranslationEngine.cpp
+├── tests/
+│   ├── CMakeLists.txt
+│   ├── tst_SessionService.cpp
+│   └── tst_TranslationEngine.cpp
+└── packaging/
+    └── windows/
+        └── bt_native/              # Native Windows Bluetooth DLL
+            ├── bt_native.h         #   C API header
+            ├── bt_native.cpp       #   WinRT implementation (stub)
+            ├── bt_native.def       #   DLL exports
+            ├── CMakeLists.txt      #   MSVC build
+            └── README.md           #   Compilation instructions
 ```
 
 ## MVVM Data Flow
@@ -156,18 +165,67 @@ Language changes also trigger `reloadQml()` to re-translate all screens.
 |--------------------|------------------------------|-----------------------------------|
 | `zowi_core`        | Qt6::Core (header-only)      | Core data types change            |
 | `zowi_services`    | Qt6::Core, Qt6::Bluetooth    | Business logic changes            |
-| `zowi_controllers` | Qt6::Core, Qt6::Quick        | ViewModel / QML interface changes |
+| `zowi_controllers` | Qt6::Core, Qt6::Quick, Qt6::QuickControls2 | ViewModel / QML interface changes |
 | `ZowiDesktop` (exe)| links all three              | Only `main.cpp` changes           |
+
+> **Note:** On Windows, `zowi_services` also includes `BluetoothNativeLoader.cpp`
+> (conditionally compiled via `if(WIN32)` in CMakeLists.txt).
 
 ## Screen Navigation
 
 Navigation uses a `StackView` in `main.qml`:
 
 ```
-SplashScreen → StartScreen → WelcomeScreen → ScanScreen
+SplashScreen → WelcomeScreen → WizardScreen → ScanScreen
                     ↑              ↓
                     └──────────────┘  (goBack)
 ```
+
+## View Mapping (Android → Desktop)
+
+ZowiDesktop is the desktop port of [ZowiAppReborn](https://github.com/eduardomillan/ZowiAppReborn) (Android). Views are mapped to maintain naming consistency with the original project.
+
+### Completed screens
+
+| Android Activity | Android Path | Desktop QML | Status |
+|---|---|---|---|
+| `SplashViewActivity` | `views/splash/` | `SplashScreen.qml` | ✅ |
+| `WelcomeViewActivity` | `views/welcome/` | `WelcomeScreen.qml` | ✅ |
+| `WizardViewActivity` | `views/wizard/` | `WizardScreen.qml` + `ScanScreen.qml` | ✅ |
+| — | — | `StartScreen.qml` | ❌ Removed (merged into WelcomeScreen) |
+
+### Planned screens (M3–M8)
+
+| Android Activity | Android Path | Desktop QML | Milestone |
+|---|---|---|---|
+| `HomeViewActivity` | `views/interactive/home/` | `HomeScreen.qml` | M3 |
+| `PadViewActivity` | `views/interactive/pad/` | `PadScreen.qml` | M3 |
+| `TimelineActivity` | `views/interactive/timeline/` | `TimelineScreen.qml` | M3 |
+| `AchievementsViewActivity` | `views/interactive/achievements/` | `AchievementsScreen.qml` | M7 |
+| `ProjectViewActivity` | `views/interactive/projects/` | `ProjectScreen.qml` | M7 |
+| `ProjectQuizViewActivity` | `views/interactive/projects/` | `ProjectQuizScreen.qml` | M7 |
+| `SettingsViewActivity` | `views/interactive/settings/` | `SettingsScreen.qml` | M8 |
+| `CalibrationViewActivity` | `views/interactive/settings/` | `CalibrationScreen.qml` | M8 |
+| `MouthsEditorActivity` | `views/interactive/zowiapps/` | `MouthsEditorScreen.qml` | M6 |
+
+### Naming convention
+
+- **Android:** `{Name}ViewActivity` (e.g., `WizardViewActivity`)
+- **Desktop:** `{Name}Screen.qml` (e.g., `WizardScreen.qml`)
+
+### Desktop-only additions
+
+| Screen | Description | Notes |
+|---|---|---|
+| `ScanScreen.qml` | Bluetooth device discovery (part of Wizard flow) | In Android, scanning is inside WizardViewActivity; on desktop it's a separate screen |
+
+### Android-only screens (not planned for desktop)
+
+| Screen | Description | Reason |
+|---|---|---|
+| `ZowiSaysMinigameActivity` | Zowi Says mini-game | M4 scope; may be deferred |
+| `MouthsMinigameActivity` | Mouths mini-game | M4 scope; may be deferred |
+| `ZowiRunnerMinigameActivity` | Zowi Runner mini-game | M4 scope; may be deferred |
 
 ## When to Add a New Screen
 
