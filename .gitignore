@@ -10,6 +10,7 @@ Makefile
 moc_*.cpp
 qrc_*.cpp
 *_autogen/
+result-win/
 
 # IDE
 .vscode/
