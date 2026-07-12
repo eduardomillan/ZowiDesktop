@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QStandardPaths>
 #include <QTextStream>
+#include <QQuickStyle>
 #ifdef QT_DEBUG
 #include <QFileSystemWatcher>
 #include <QDirIterator>
@@ -47,6 +48,7 @@ static void watchQmlDir(QFileSystemWatcher &watcher, const QString &dir)
 
 int main(int argc, char *argv[])
 {
+    QQuickStyle::setStyle("Basic");
     QGuiApplication app(argc, argv);
     app.setApplicationName("ZowiDesktop");
     app.setOrganizationName("ZowiDesktop");

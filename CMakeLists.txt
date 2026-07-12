@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Quick Bluetooth)
+find_package(Qt6 REQUIRED COMPONENTS Core Quick QuickControls2 Bluetooth)
 
 # ── Core library: pure data models ───────────────────────────────────
 add_library(zowi_core INTERFACE)
@@ -29,7 +29,7 @@ add_library(zowi_controllers STATIC
     src/controllers/ConfigController.cpp
 )
 target_include_directories(zowi_controllers PUBLIC src)
-target_link_libraries(zowi_controllers PUBLIC Qt6::Core Qt6::Quick zowi_core zowi_services)
+target_link_libraries(zowi_controllers PUBLIC Qt6::Core Qt6::Quick Qt6::QuickControls2 zowi_core zowi_services)
 
 # ── Resources ────────────────────────────────────────────────────────
 qt6_add_resources(RESOURCES resources.qrc)
