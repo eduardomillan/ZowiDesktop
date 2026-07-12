@@ -3,7 +3,12 @@
 #include <QQmlContext>
 #include <QLocale>
 #include <QIcon>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QDebug>
+#include <QStandardPaths>
+#include <QTextStream>
 #ifdef QT_DEBUG
 #include <QFileSystemWatcher>
 #include <QDirIterator>
@@ -23,7 +28,6 @@ static QString s_qmlPath;
 static void reloadQml()
 {
     if (!s_engine) return;
-    qDebug() << "[hot-reload] Reloading QML";
     auto roots = s_engine->rootObjects();
     for (auto *obj : roots)
         obj->deleteLater();
@@ -48,6 +52,11 @@ int main(int argc, char *argv[])
     app.setOrganizationName("ZowiDesktop");
     app.setWindowIcon(QIcon(":/images/app_icon.png"));
 
+    QString appDir = QCoreApplication::applicationDirPath();
+
+    // Portable mode: register exe directory as library/plugin path
+    app.addLibraryPath(appDir);
+
     // --- Services ---
     TranslationEngine translationEngine;
     SessionService sessionService;
@@ -59,7 +68,7 @@ int main(int argc, char *argv[])
         locale = "en_US";
     translationEngine.load(locale);
 
-    // --- Controllers (thin QML wrappers) ---
+    // --- Controllers ---
     TranslatorController translator(&translationEngine);
     SessionController session(&sessionService);
     BluetoothController bluetooth(&bluetoothService);
@@ -69,13 +78,15 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     s_engine = &engine;
 
+    // Portable mode: add QML import path
+    engine.addImportPath(appDir + "/Qt/qml");
+
     engine.rootContext()->setContextProperty("Session", &session);
     engine.rootContext()->setContextProperty("Translator", &translator);
     engine.rootContext()->setContextProperty("Bluetooth", &bluetooth);
     engine.rootContext()->setContextProperty("Config", &config);
 
 #ifdef QT_DEBUG
-    qDebug() << "Loading QML from filesystem (hot-reload enabled)";
     s_qmlPath = QUrl::fromLocalFile("src/views/main.qml").toString();
 #else
     s_qmlPath = "qrc:/src/views/main.qml";
@@ -84,7 +95,47 @@ int main(int argc, char *argv[])
     QObject::connect(&translator, &TranslatorController::languageChanged,
                      &reloadQml);
 
+    // Write diagnostics to Desktop
+    QString diagPath = QDir::homePath() + "/Desktop/zowi_debug.log";
+    QFile diagFile(diagPath);
+    QTextStream ts(&diagFile);
+    if (diagFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        ts << "appDir=" << appDir << "\n";
+        ts << "platforms exists=" << QFile::exists(appDir + "/platforms/qwindows.dll") << "\n";
+        ts << "libraryPaths=" << app.libraryPaths().size() << "\n";
+        for (const QString &p : app.libraryPaths())
+            ts << "  lib: " << p << "\n";
+
+        QDir appDirObj(appDir);
+        ts << "DLLs in appDir:\n";
+        for (const QString &f : appDirObj.entryList(QStringList() << "*.dll"))
+            ts << "  " << f << "\n";
+
+        ts << "importPaths=" << engine.importPathList().size() << "\n";
+        for (const QString &p : engine.importPathList())
+            ts << "  import: " << p << "\n";
+
+        QDir qmlDir(appDir + "/Qt/qml");
+        if (qmlDir.exists()) {
+            ts << "QML modules in Qt/qml:\n";
+            for (const QString &d : qmlDir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot))
+                ts << "  " << d << "\n";
+        } else {
+            ts << "Qt/qml does NOT exist\n";
+        }
+    }
+
     reloadQml();
+
+    if (ts.device()) {
+        ts << "rootObjects=" << engine.rootObjects().size() << "\n";
+        if (!engine.rootObjects().isEmpty())
+            ts << "QML loaded OK\n";
+        else
+            ts << "QML FAILED to load\n";
+        ts.flush();
+        diagFile.close();
+    }
 
 #ifdef QT_DEBUG
     QFileSystemWatcher watcher;
@@ -96,7 +147,6 @@ int main(int argc, char *argv[])
     });
     QObject::connect(&watcher, &QFileSystemWatcher::fileChanged,
                      [](const QString &path) {
-        qDebug() << "[hot-reload] Changed:" << path;
         reloadQml();
     });
 #endif

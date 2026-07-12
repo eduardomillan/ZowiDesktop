@@ -1,7 +1,7 @@
 @echo off
 REM ======================================================
 REM  Build Zowi Desktop portable .zip for Windows
-REM  Run this from "Qt 5.15 MinGW" shell (Start menu)
+REM  Run this from "Qt 6.5 MinGW" shell (Start menu)
 REM ======================================================
 
 set APP_NAME=ZowiDesktop
@@ -33,15 +33,17 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 echo.
 echo === Step 5: Create portable zip ===
 cd %DIST_DIR%
-if exist "%APP_NAME%-windows-x86_64.zip" del "%APP_NAME%-windows-x86_64.zip"
-..\..\packaging\windows\zip.exe -r "%APP_NAME%-windows-x86_64.zip" . 2>nul
+for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /value') do set DATETIME=%%I
+set TIMESTAMP=%DATETIME:~0,8%
+if exist "%APP_NAME%-windows-x86_64-build-%TIMESTAMP%.zip" del "%APP_NAME%-windows-x86_64-build-%TIMESTAMP%.zip"
+powershell -command "Compress-Archive -Path * -DestinationPath '%APP_NAME%-windows-x86_64-build-%TIMESTAMP%.zip'"
 if %ERRORLEVEL% neq 0 (
     echo.
-    echo WARNING: zip not found. Manually zip the contents of:
+    echo WARNING: Could not create zip. Manually zip the contents of:
     echo   %CD%
 ) else (
     echo.
-    echo === Done: %APP_NAME%-windows-x86_64.zip ===
+    echo === Done: %APP_NAME%-windows-x86_64-build-%TIMESTAMP%.zip ===
 )
 
 pause
