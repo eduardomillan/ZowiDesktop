@@ -4,6 +4,8 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <fstream>
+#include <functional>
 #include <mutex>
 #include <condition_variable>
 #include <CLI/CLI.hpp>
@@ -20,15 +22,50 @@ static std::string g_appId;
 static float g_battery = -1.0f;
 static bool g_connected = false;
 static bool g_dataReceived = false;
+static std::string g_dataBuffer;
+static constexpr float kLowBatteryThreshold = 50.0f;
+static constexpr const char *kFactoryFirmwarePath = "src/firmware/ZOWI_BASE_v2.hex";
+static constexpr std::size_t kFirmwareChunkSize = 1024;
 
-static void parseRobotMessage(const std::string &msg)
+static void resetRobotState()
+{
+    std::lock_guard<std::mutex> lock(g_mtx);
+    g_robotName.clear();
+    g_appId.clear();
+    g_battery = -1.0f;
+    g_connected = false;
+    g_dataReceived = false;
+    g_dataBuffer.clear();
+}
+
+static std::string trimRobotMessage(const std::string &msg)
 {
     std::string trimmed = msg;
     trimmed.erase(std::remove(trimmed.begin(), trimmed.end(), '\r'), trimmed.end());
     trimmed.erase(std::remove(trimmed.begin(), trimmed.end(), '\n'), trimmed.end());
+    return trimmed;
+}
+
+static void parseRobotMessageUnlocked(const std::string &msg)
+{
+    std::string trimmed = trimRobotMessage(msg);
     if (trimmed.empty()) return;
 
-    std::lock_guard<std::mutex> lock(g_mtx);
+    if (trimmed.size() >= 4 && trimmed[0] == '&' && trimmed[1] == '&' && trimmed[3] == ' ') {
+        char prefix = trimmed[2];
+        std::string value = trimmed.substr(4);
+        if (prefix == 'E') {
+            g_robotName = value;
+            g_dataReceived = true;
+        } else if (prefix == 'I') {
+            g_appId = value;
+            g_dataReceived = true;
+        } else if (prefix == 'B') {
+            try { g_battery = std::stof(value); } catch (...) {}
+            g_dataReceived = true;
+        }
+        return;
+    }
 
     if (trimmed[0] == 'N' && trimmed.size() > 2 && trimmed[1] == ' ') {
         g_robotName = trimmed.substr(2);
@@ -42,57 +79,142 @@ static void parseRobotMessage(const std::string &msg)
     }
 }
 
-static std::string g_dataBuffer;
-
 static void onDataReceived(const std::string &data)
 {
     std::lock_guard<std::mutex> lock(g_mtx);
     g_dataBuffer += data;
 
-    // Robot protocol: &&E <name>%%, &&I <appId>%%, &&B <battery>%%
-    // Messages arrive in arbitrary chunks; look for "%%" terminators
+    // Robot protocol can arrive either as &&E <name>%% / &&I <appId>%% / &&B <battery>%%
+    // or as line-based N / U / B messages.
     while (true) {
-        auto pos = g_dataBuffer.find("%%");
-        if (pos == std::string::npos) break;
-
-        std::string token = g_dataBuffer.substr(0, pos);
-        g_dataBuffer.erase(0, pos + 2);
-
-        // Skip leading whitespace/newlines in token
-        std::string::size_type start = token.find_first_not_of(" \t\r\n");
-        if (start == std::string::npos) continue;
-        token = token.substr(start);
-
-        // Format: &&<prefix> <value>
-        if (token.size() >= 4 && token[0] == '&' && token[1] == '&' && token[3] == ' ') {
-            char prefix = token[2];
-            std::string value = token.substr(4);
-            if (prefix == 'E') {
-                g_robotName = value;
-                g_dataReceived = true;
-            } else if (prefix == 'I') {
-                g_appId = value;
-                g_dataReceived = true;
-            } else if (prefix == 'B') {
-                try { g_battery = std::stof(value); } catch (...) {}
-                g_dataReceived = true;
-            }
+        auto start = g_dataBuffer.find_first_not_of(" \t\r\n");
+        if (start == std::string::npos) {
+            g_dataBuffer.clear();
+            break;
         }
+        if (start > 0) {
+            g_dataBuffer.erase(0, start);
+        }
+
+        if (g_dataBuffer.rfind("&&", 0) == 0) {
+            auto tokenEnd = g_dataBuffer.find("%%");
+            if (tokenEnd == std::string::npos) break;
+
+            std::string token = g_dataBuffer.substr(0, tokenEnd);
+            g_dataBuffer.erase(0, tokenEnd + 2);
+            parseRobotMessageUnlocked(token);
+            continue;
+        }
+
+        auto lineEnd = g_dataBuffer.find('\n');
+        if (lineEnd == std::string::npos) break;
+
+        std::string line = g_dataBuffer.substr(0, lineEnd);
+        g_dataBuffer.erase(0, lineEnd + 1);
+        parseRobotMessageUnlocked(line);
     }
 }
 
-static bool waitForRobotData(zowi::QtBluetoothBackend &bt, int timeoutMs)
+static bool waitUntil(QCoreApplication &qtApp, int timeoutMs, const std::function<bool()> &predicate)
 {
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
     while (std::chrono::steady_clock::now() < deadline) {
-        {
-            std::lock_guard<std::mutex> lock(g_mtx);
-            if (!g_robotName.empty() && !g_appId.empty() && g_battery >= 0)
-                return true;
-        }
+        qtApp.processEvents();
+        if (predicate()) return true;
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     return false;
+}
+
+static bool waitForRobotData(QCoreApplication &qtApp, int timeoutMs)
+{
+    return waitUntil(qtApp, timeoutMs, []() {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        return !g_robotName.empty() && !g_appId.empty() && g_battery >= 0;
+    });
+}
+
+static bool waitForBatteryLevel(QCoreApplication &qtApp, int timeoutMs)
+{
+    return waitUntil(qtApp, timeoutMs, []() {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        return g_battery >= 0;
+    });
+}
+
+static bool waitForAppId(QCoreApplication &qtApp, zowi::QtBluetoothBackend &bt, int timeoutMs)
+{
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
+    auto nextPoll = std::chrono::steady_clock::now();
+
+    while (std::chrono::steady_clock::now() < deadline) {
+        qtApp.processEvents();
+        {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            if (!g_appId.empty()) {
+                return true;
+            }
+        }
+
+        if (g_connected && std::chrono::steady_clock::now() >= nextPoll) {
+            bt.send("U\r\n");
+            nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+
+    return false;
+}
+
+static bool uploadFirmware(zowi::QtBluetoothBackend &bt,
+                           QCoreApplication &qtApp,
+                           const std::string &firmwarePath)
+{
+    std::ifstream firmware(firmwarePath, std::ios::binary | std::ios::ate);
+    if (!firmware.is_open()) {
+        std::cerr << "Failed to open firmware file: " << firmwarePath << std::endl;
+        return false;
+    }
+
+    const auto endPos = firmware.tellg();
+    if (endPos <= 0) {
+        std::cerr << "Firmware file is empty: " << firmwarePath << std::endl;
+        return false;
+    }
+
+    const std::size_t totalSize = static_cast<std::size_t>(endPos);
+    firmware.seekg(0, std::ios::beg);
+
+    char buffer[kFirmwareChunkSize];
+    std::size_t totalSent = 0;
+    int lastPercent = -1;
+
+    std::cout << "Uploading firmware from " << firmwarePath << "..." << std::endl;
+
+    while (firmware.good()) {
+        firmware.read(buffer, sizeof(buffer));
+        const std::streamsize bytesRead = firmware.gcount();
+        if (bytesRead <= 0) break;
+
+        if (!bt.send(std::string(buffer, static_cast<std::size_t>(bytesRead)))) {
+            std::cerr << "Failed to send firmware chunk." << std::endl;
+            return false;
+        }
+
+        totalSent += static_cast<std::size_t>(bytesRead);
+        const int percent = static_cast<int>((100.0 * totalSent) / totalSize);
+        if (percent == 100 || percent >= lastPercent + 5) {
+            std::cout << "\r  Progress: " << percent << "%" << std::flush;
+            lastPercent = percent;
+        }
+
+        qtApp.processEvents();
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+    }
+
+    std::cout << "\r  Progress: 100%" << std::endl;
+    return true;
 }
 
 int main(int argc, char **argv)
@@ -154,6 +276,17 @@ int main(int argc, char **argv)
 
     // ── status subcommand ─────────────────────────────────────
     auto *statusCmd = app.add_subcommand("status", "Show current Zowi connection status");
+
+    // ── restore subcommand ────────────────────────────────────
+    auto *restoreCmd = app.add_subcommand("restore", "Restore the original factory firmware to the paired Zowi robot\nUploads the bundled ZOWI_BASE_v2.hex file unless a custom path is provided.");
+    std::string restoreFirmwarePath = kFactoryFirmwarePath;
+    int restoreTimeout = 10;
+    int restoreBatteryTimeout = 2;
+    bool forceLowBattery = false;
+    restoreCmd->add_option("--firmware,-f", restoreFirmwarePath, "Path to the firmware .hex file to upload")->default_val(kFactoryFirmwarePath);
+    restoreCmd->add_option("--timeout,-t", restoreTimeout, "Seconds to wait for firmware restore confirmation")->default_val(10);
+    restoreCmd->add_option("--battery-timeout", restoreBatteryTimeout, "Seconds to wait for a battery reading before uploading")->default_val(2);
+    restoreCmd->add_flag("--force-low-battery", forceLowBattery, "Continue even if the reported battery level is below 50%");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -281,6 +414,7 @@ int main(int argc, char **argv)
     if (*connectCmd) {
         QCoreApplication qtApp(argc, argv);
         zowi::QtBluetoothBackend bt;
+        resetRobotState();
 
         std::cout << "Connecting to " << connectAddress << "..." << std::endl;
 
@@ -304,18 +438,7 @@ int main(int argc, char **argv)
         bt.connect(connectAddress);
 
         // Process events while waiting for connection + data
-        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(connectTimeout + 2);
-        while (std::chrono::steady_clock::now() < deadline) {
-            qtApp.processEvents();
-
-            {
-                std::lock_guard<std::mutex> lock(g_mtx);
-                if (!g_robotName.empty() && !g_appId.empty() && g_battery >= 0)
-                    break;
-            }
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
+        waitForRobotData(qtApp, (connectTimeout + 2) * 1000);
 
         bt.disconnect();
 
@@ -359,6 +482,7 @@ int main(int argc, char **argv)
     if (*renameCmd) {
         QCoreApplication qtApp(argc, argv);
         zowi::QtBluetoothBackend bt;
+        resetRobotState();
 
         // Load saved address
         zowi::SessionStore session("ZowiDesktop", "ZowiApp");
@@ -409,6 +533,99 @@ int main(int argc, char **argv)
         session.setString("activeZowiName", newName);
         std::cout << "Robot renamed to '" << newName << "'." << std::endl;
         std::cout << "Session updated." << std::endl;
+    }
+
+    // ── restore ───────────────────────────────────────────────
+    if (*restoreCmd) {
+        QCoreApplication qtApp(argc, argv);
+        zowi::QtBluetoothBackend bt;
+        resetRobotState();
+
+        zowi::SessionStore session("ZowiDesktop", "ZowiApp");
+        std::string savedAddr = session.getString("activeZowiDeviceAddress");
+        if (savedAddr.empty()) {
+            std::cerr << "No paired device found. Run 'connect' first." << std::endl;
+            return 1;
+        }
+
+        std::cout << "Connecting to " << savedAddr << " for firmware restore..." << std::endl;
+
+        bt.onDataReceived([](const std::string &data) {
+            onDataReceived(data);
+        });
+
+        bt.onConnectionChanged([&](bool connected) {
+            g_connected = connected;
+            if (connected) {
+                std::cout << "Connected. Checking battery level..." << std::endl;
+                bt.send("B\r\n");
+            } else {
+                std::cout << "Disconnected." << std::endl;
+            }
+        });
+
+        bt.onError([&](const std::string &msg) {
+            std::cerr << "Error: " << msg << std::endl;
+        });
+
+        bt.connect(savedAddr);
+
+        if (!waitUntil(qtApp, 3000, []() { return g_connected; })) {
+            std::cerr << "Failed to connect to the paired Zowi." << std::endl;
+            bt.disconnect();
+            return 1;
+        }
+
+        const bool batteryAvailable = waitForBatteryLevel(qtApp, restoreBatteryTimeout * 1000);
+        if (batteryAvailable) {
+            std::cout << "Battery reported: " << g_battery << "%" << std::endl;
+            if (g_battery < kLowBatteryThreshold && !forceLowBattery) {
+                std::cerr << "Battery is below the recommended " << kLowBatteryThreshold
+                          << "% threshold. Re-run with --force-low-battery to continue." << std::endl;
+                bt.disconnect();
+                return 1;
+            }
+            if (g_battery < kLowBatteryThreshold) {
+                std::cout << "Continuing despite low battery because --force-low-battery was provided." << std::endl;
+            }
+        } else {
+            std::cout << "Battery level was not received before the timeout. Continuing with restore." << std::endl;
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            g_appId.clear();
+            g_dataReceived = false;
+        }
+
+        if (!uploadFirmware(bt, qtApp, restoreFirmwarePath)) {
+            bt.disconnect();
+            return 1;
+        }
+
+        std::cout << "Waiting for the restored firmware to report its app ID..." << std::endl;
+        if (!waitForAppId(qtApp, bt, restoreTimeout * 1000)) {
+            std::cerr << "Firmware upload finished, but no app ID was received within "
+                      << restoreTimeout << "s." << std::endl;
+            bt.disconnect();
+            return 1;
+        }
+
+        if (!g_appId.empty()) {
+            session.setString("activeZowiAppId", g_appId);
+        }
+        if (!g_robotName.empty()) {
+            session.setString("activeZowiName", g_robotName);
+        }
+        if (g_battery >= 0) {
+            session.setInt("activeZowiBattery", static_cast<int>(g_battery));
+        }
+
+        std::cout << "Factory firmware restored." << std::endl;
+        std::cout << "  App ID:  " << g_appId << std::endl;
+        std::cout << "Session updated." << std::endl;
+
+        bt.disconnect();
     }
 
     // ── disconnect ────────────────────────────────────────────

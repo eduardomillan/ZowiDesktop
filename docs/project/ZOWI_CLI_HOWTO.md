@@ -31,6 +31,7 @@ zowi_cli <subcommand> [options]
 | `scan` | Scan for nearby Zowi robots via Bluetooth |
 | `connect` | Connect to a Zowi and receive identification data |
 | `rename` | Rename a paired Zowi robot |
+| `restore` | Restore the original factory firmware/functions |
 | `disconnect` | Disconnect and clear pairing data |
 | `status` | Show current Zowi connection status |
 
@@ -253,6 +254,58 @@ Mi Zowi
 sudo zowi_cli rename "Mi Zowi"
 ```
 
+## Restore
+
+Restore Zowi's original factory firmware and built-in behaviors. This is useful after loading custom firmware such as Alarm/Guardian or Rock-Paper-Scissors variants.
+
+By default, the CLI uploads the bundled factory firmware file:
+
+```text
+src/firmware/ZOWI_BASE_v2.hex
+```
+
+### Basic usage
+
+```bash
+zowi_cli restore
+```
+
+Output:
+
+```text
+Connecting to B4:9D:0B:32:41:0E for firmware restore...
+Connected. Checking battery level...
+Battery reported: 85%
+Uploading firmware from src/firmware/ZOWI_BASE_v2.hex...
+  Progress: 100%
+Waiting for the restored firmware to report its app ID...
+Factory firmware restored.
+  App ID:  ZOWI_BASE_v2
+Session updated.
+```
+
+### Custom firmware path
+
+```bash
+zowi_cli restore -f /path/to/ZOWI_BASE_v2.hex
+```
+
+### Low battery handling
+
+The restore flow follows the Android app's battery warning threshold of **50%**.
+
+If the robot reports less than 50% battery, the command stops unless you explicitly continue:
+
+```bash
+zowi_cli restore --force-low-battery
+```
+
+### Custom timeout
+
+```bash
+zowi_cli restore -t 15
+```
+
 ## Disconnect
 
 Clear all pairing data from the session store.
@@ -324,6 +377,14 @@ Checks if a Zowi is connected and disconnects it, or reports no device.
 ./src/cli/tests/test_disconnect.sh
 ```
 
+### test_restore_factory_firmware.sh
+
+Runs the factory firmware restore flow against the currently paired Zowi and then shows the updated status.
+
+```bash
+./src/cli/tests/test_restore_factory_firmware.sh
+```
+
 ## Examples
 
 ### Full pairing workflow
@@ -354,13 +415,25 @@ Connected. Sending rename command...
 Robot renamed to 'Mi Zowi'.
 Session updated.
 
-# 4. Verify
+# 4. Restore the original firmware if needed
+$ zowi_cli restore
+Connecting to B4:9D:0B:32:41:0E for firmware restore...
+Connected. Checking battery level...
+Battery reported: 85%
+Uploading firmware from src/firmware/ZOWI_BASE_v2.hex...
+  Progress: 100%
+Waiting for the restored firmware to report its app ID...
+Factory firmware restored.
+  App ID:  ZOWI_BASE_v2
+Session updated.
+
+# 5. Verify
 $ zowi_cli session list
 activeZowiDeviceAddress=B4:9D:0B:32:41:0E
 activeZowiName=Mi Zowi
 wizardDismissed=true
 
-# 5. Disconnect when done
+# 6. Disconnect when done
 $ zowi_cli disconnect
 Disconnected from Mi Zowi [B4:9D:0B:32:41:0E]
 Pairing data cleared.
@@ -409,6 +482,7 @@ zowi_cli translate --help    # Translate help
 zowi_cli scan --help         # Scan help
 zowi_cli connect --help      # Connect help
 zowi_cli rename --help       # Rename help
+zowi_cli restore --help      # Restore help
 zowi_cli disconnect --help   # Disconnect help
 zowi_cli status --help       # Status help
 ```
