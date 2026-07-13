@@ -61,12 +61,16 @@ bool SerialBluetoothBackend::connect(const std::string &ttyPath)
     }
     ::tcflush(m_fd, TCIOFLUSH);
 
-    // Auto-reset the MCU into the bootloader by pulsing DTR.
+    // Auto-reset the MCU into the bootloader. On the ZUM BT-328 the reset is
+    // triggered by the HC-05 STATE pin when the SPP connection comes up (i.e. when
+    // this TTY is opened / rfcomm-bound), so the caller must send STK_GET_SYNC
+    // immediately afterwards, racing the bootloader's short post-reset window.
+    // A brief DTR pulse is also sent for boards that wire DTR to RESET.
     pulseReset();
 
-    // Give the bootloader a moment to come up and start listening before the
-    // caller begins streaming the firmware.
-    ::usleep(200 * 1000);
+    // Minimal settle so the bootloader UART is ready; we must not dawdle here or
+    // the bootloader's wait window expires before STK_GET_SYNC is sent.
+    ::usleep(50 * 1000);
 
     m_notifier = new QSocketNotifier(m_fd, QSocketNotifier::Read, this);
     QObject::connect(m_notifier, &QSocketNotifier::activated, this, &SerialBluetoothBackend::onReadyRead);
@@ -123,11 +127,11 @@ void SerialBluetoothBackend::pulseReset()
     // Ensure DTR starts high, then drive it low (the falling edge resets the
     // MCU through the coupling capacitor), then back high.
     ::ioctl(m_fd, TIOCMBIS, &dtr);
-    ::usleep(50 * 1000);
+    ::usleep(10 * 1000);
     ::ioctl(m_fd, TIOCMBIC, &dtr);
-    ::usleep(120 * 1000);
-    ::ioctl(m_fd, TIOCMBIS, &dtr);
     ::usleep(50 * 1000);
+    ::ioctl(m_fd, TIOCMBIS, &dtr);
+    ::usleep(10 * 1000);
 }
 
 } // namespace zowi

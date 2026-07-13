@@ -273,17 +273,25 @@ protocol the official Android app uses (`bq/protocol-stk-500-v1`,
 `STK500v1.programUsingOptiboot(false, 128)`). It is *not* a raw HEX stream.
 
 Zowi's bootloader runs only briefly after a hardware reset. On the ZUM BT-328 board
-the Bluetooth module's DTR line is coupled to the ATmega RESET pin (the classic
-Arduino auto-reset), so **opening a serial port to the robot drops it into the
-bootloader**. The reset is performed by the connection itself (the library does not
-send a software reset sequence), so the serial backend pulses DTR on open.
+the reset is triggered by the **HC‑05 Bluetooth module's STATE pin**, which goes
+active when the SPP serial connection is established — the classic Arduino
+auto‑reset, but driven by the *connection* rather than a host DTR line. The
+bootloader then waits only a short window (~1 s) for the first `STK_GET_SYNC`.
 
-Because the Qt Bluetooth SPP *socket* path cannot toggle DTR, flashing uses a
+This is why flashing must **bind the RFCOMM TTY and open/stream it within the same
+process**: if the SPP connection is established by a separate `rfcomm bind` command,
+the reset fires there and the bootloader window expires long before the CLI opens the
+TTY — you get zero response bytes. So always let the CLI auto‑bind (run with
+`--address`, no `--tty`), as root.
+
+Because the Qt Bluetooth SPP *socket* path cannot open a real TTY, flashing uses a
 **serial (RFCOMM TTY) backend** instead:
 
-1. An RFCOMM TTY is bound to the paired device (see *Serial / TTY requirements* below).
-2. The TTY is opened at 9600 8N1 and **DTR is pulsed low→high**, resetting the ATmega
-   into its bootloader.
+1. The CLI binds an RFCOMM TTY to the paired device in‑process (`rfcomm bind 0 <address> 1`)
+   and opens it immediately, so the connection‑triggered reset and the first
+   `STK_GET_SYNC` land inside the bootloader window. (A brief DTR pulse is also sent
+   for boards that wire DTR to RESET.)
+2. The TTY is opened at 9600 8N1.
 3. The HEX file is parsed (Intel HEX) and programmed over STK500v1:
    `STK_GET_SYNC` → `STK_ENTER_PROGMODE` → chip‑erase (universal `0xAC 0x80`) →
    for each 128‑byte page: `STK_LOAD_ADDRESS` + `STK_PROG_PAGE` (memtype `'F'`) →
@@ -295,25 +303,29 @@ Because the Qt Bluetooth SPP *socket* path cannot toggle DTR, flashing uses a
 
 ### Serial / TTY requirements
 
-Flashing must open a real serial port (so it can pulse DTR), not a Bluetooth socket.
-On Linux that means an RFCOMM TTY device such as `/dev/rfcomm0`. Creating it requires
-`CAP_NET_ADMIN` (typically root):
+Flashing must open a real serial port (so the connection‑triggered reset and the
+first bootloader sync happen in the same process), not a Bluetooth socket. On Linux
+that means an RFCOMM TTY device such as `/dev/rfcomm0`, created with `CAP_NET_ADMIN`
+(typically root).
+
+**Do not** pre‑bind and run in two separate steps — that breaks the bootloader timing
+(see *How it works* above). Instead, run the flashing command as root **without**
+`--tty`; the CLI binds and opens the TTY itself, in‑process:
 
 ```bash
-# Bind an RFCOMM TTY to the paired robot (needs root), then flash as root:
-sudo rfcomm bind 0 B4:9D:0B:32:41:0E 1
-sudo zowi_cli restore --tty /dev/rfcomm0
-sudo rfcomm release 0
+sudo zowi_cli restore --address B4:9D:0B:32:41:0E
+sudo zowi_cli alarm  --address B4:9D:0B:32:41:0E
 ```
 
-If you omit `--tty`, the CLI tries `rfcomm bind 0 <address> 1` itself and releases the
-TTY afterwards — but that still needs to be run as root. Run the flashing commands with
-`sudo` (or as a user with `CAP_NET_ADMIN` and read/write access to the TTY).
+You may omit `--address` if the device was already paired (the CLI reads
+`activeZowiDeviceAddress` from the session). You may pass `--tty /dev/rfcomm0` only if
+that TTY was created in the *same* process right before (not via a prior `rfcomm bind`
+command). The CLI releases the auto‑bound TTY afterwards.
 
 ### Basic usage
 
 ```bash
-sudo zowi_cli restore --tty /dev/rfcomm0
+sudo zowi_cli restore --address B4:9D:0B:32:41:0E
 ```
 
 Output:
@@ -368,10 +380,12 @@ src/firmware/ZOWI_Alarm_v2.hex
 
 ### How it works
 
-Identical to `restore` — it binds an RFCOMM TTY, pulses DTR to reset the robot into its
-bootloader, and streams the raw Intel‑HEX firmware file. See the `restore` section for
-the full description and the *Serial / TTY requirements* (flashing must run as root /
-with `CAP_NET_ADMIN`).
+Identical to `restore` — the CLI auto‑binds an RFCOMM TTY in‑process (so the
+connection‑triggered reset and the first bootloader sync stay inside the bootloader
+window) and streams the Intel‑HEX firmware file over STK500v1. The installed
+`ZOWI_Alarm_v2` firmware **persists** on the robot until you run `restore`. See the
+`restore` section for the full protocol description and *Serial / TTY requirements*
+(flashing must run as root / with `CAP_NET_ADMIN`).
 
 ### Basic usage
 
