@@ -2,9 +2,9 @@
 
 ## Prerequisites
 
-- CMake 3.16+
-- Qt 6.2+ (Core, Quick, Bluetooth)
-- C++17 compiler (g++ or clang++)
+- CMake 3.21+
+- Qt 6.5+ (Core, Quick, QuickControls2, Bluetooth)
+- C++20 compiler (g++ or clang++)
 
 ```bash
 # Lliurex 23 / Ubuntu Jammy
@@ -18,11 +18,36 @@ sudo apt install cmake g++ qt6-base-dev qt6-declarative-dev qt6-connectivity-dev
 ./build/ZowiDesktop
 ```
 
+## Build only the CLI
+
+```bash
+./build_cli.sh
+```
+
+Or manually:
+
+```bash
+cmake -B build -DCMAKE_PREFIX_PATH=~/Qt/6.5.2/gcc_64 -DZOWI_BUILD_GUI=OFF
+cmake --build build --target zowi_cli
+./build/src/cli/zowi_cli --help
+```
+
 ## Build targets
+
+| Target | Type | CMake option |
+|--------|------|-------------|
+| `ZowiDesktop` | Executable (Qt GUI) | `ZOWI_BUILD_GUI=ON` |
+| `zowi_cli` | Executable (terminal) | `ZOWI_BUILD_CLI=ON` |
+| `zowi_core` | Static library | Always built |
+| `zowi_bt_qt` | Static library | `ZOWI_BUILD_GUI=ON` or `ZOWI_BUILD_CLI=ON` |
+| `test_*` | Test executables | `BUILD_TESTS=ON` |
+
+## Platform builds
 
 | Platform | Output | How to build |
 |---|---|---|
 | **Linux (native)** | `build/ZowiDesktop` | `./build.sh` |
+| **Linux (CLI only)** | `build/src/cli/zowi_cli` | `./build_cli.sh` |
 | **Linux (AppImage)** | `build/ZowiDesktop-x86_64.AppImage` | `./packaging/linux/create-appimage.sh` |
 | **Windows (.zip)** | `build-windows/ZowiDesktop-windows-x86_64.zip` | `./packaging/windows/create-portable-zip.sh` |
 
