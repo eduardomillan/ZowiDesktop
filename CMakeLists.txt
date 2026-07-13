@@ -50,7 +50,7 @@ if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
 endif()
 
 if(ZOWI_BUILD_GUI)
-    find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Quick QuickControls2)
+    find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Gui Qml Quick QuickControls2)
 endif()
 
 # ── Qt Bluetooth backend ─────────────────────────────────────────
