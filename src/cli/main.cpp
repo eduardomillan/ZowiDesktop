@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <thread>
 #include <chrono>
 #include <atomic>
@@ -46,7 +47,9 @@ int main(int argc, char **argv)
     // ── scan subcommand ───────────────────────────────────────
     auto *scanCmd = app.add_subcommand("scan", "Scan for nearby Zowi robots (5s)\nRun with sudo to avoid CAP_NET_ADMIN warning.");
     int scanTimeout = 5;
+    bool scanAll = false;
     scanCmd->add_option("--timeout,-t", scanTimeout, "Scan duration in seconds")->default_val(5);
+    scanCmd->add_flag("--all,-a", scanAll, "Show all Bluetooth devices (not just Zowi)");
 
     CLI11_PARSE(app, argc, argv);
 
@@ -121,6 +124,13 @@ int main(int argc, char **argv)
         std::atomic<int> deviceCount{0};
 
         bt.onDeviceFound([&](const zowi::DeviceInfo &dev) {
+            // Filter: only show devices with "Zowi" in name unless --all
+            if (!scanAll) {
+                std::string nameLower = dev.name;
+                std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+                if (nameLower.find("zowi") == std::string::npos)
+                    return;
+            }
             deviceCount++;
             std::cout << dev.name << " [" << dev.address << "]" << std::endl;
         });
