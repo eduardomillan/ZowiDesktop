@@ -34,6 +34,8 @@ zowi_cli <subcommand> [options]
 | `restore` | Restore the original factory firmware/functions |
 | `disconnect` | Disconnect and clear pairing data |
 | `status` | Show current Zowi connection status |
+| `restore` | Restore the original factory firmware |
+| `alarm` | Install the Robot Alarm firmware |
 
 ## Session
 
@@ -264,18 +266,63 @@ By default, the CLI uploads the bundled factory firmware file:
 src/firmware/ZOWI_BASE_v2.hex
 ```
 
+### How it works
+
+The robot is flashed with the **STK500v1 / Optiboot** bootloader protocol — the same
+protocol the official Android app uses (`bq/protocol-stk-500-v1`,
+`STK500v1.programUsingOptiboot(false, 128)`). It is *not* a raw HEX stream.
+
+Zowi's bootloader runs only briefly after a hardware reset. On the ZUM BT-328 board
+the Bluetooth module's DTR line is coupled to the ATmega RESET pin (the classic
+Arduino auto-reset), so **opening a serial port to the robot drops it into the
+bootloader**. The reset is performed by the connection itself (the library does not
+send a software reset sequence), so the serial backend pulses DTR on open.
+
+Because the Qt Bluetooth SPP *socket* path cannot toggle DTR, flashing uses a
+**serial (RFCOMM TTY) backend** instead:
+
+1. An RFCOMM TTY is bound to the paired device (see *Serial / TTY requirements* below).
+2. The TTY is opened at 9600 8N1 and **DTR is pulsed low→high**, resetting the ATmega
+   into its bootloader.
+3. The HEX file is parsed (Intel HEX) and programmed over STK500v1:
+   `STK_GET_SYNC` → `STK_ENTER_PROGMODE` → chip‑erase (universal `0xAC 0x80`) →
+   for each 128‑byte page: `STK_LOAD_ADDRESS` + `STK_PROG_PAGE` (memtype `'F'`) →
+   `STK_LEAVE_PROGMODE` (the bootloader then reboots into the new firmware).
+4. The CLI waits for the robot to report its new app ID (`&&I <appId>%%`).
+
+`--protocol stk` is the default. `--protocol raw` streams the HEX verbatim instead
+(kept only for experimenting with non‑Optiboot bootloaders).
+
+### Serial / TTY requirements
+
+Flashing must open a real serial port (so it can pulse DTR), not a Bluetooth socket.
+On Linux that means an RFCOMM TTY device such as `/dev/rfcomm0`. Creating it requires
+`CAP_NET_ADMIN` (typically root):
+
+```bash
+# Bind an RFCOMM TTY to the paired robot (needs root), then flash as root:
+sudo rfcomm bind 0 B4:9D:0B:32:41:0E 1
+sudo zowi_cli restore --tty /dev/rfcomm0
+sudo rfcomm release 0
+```
+
+If you omit `--tty`, the CLI tries `rfcomm bind 0 <address> 1` itself and releases the
+TTY afterwards — but that still needs to be run as root. Run the flashing commands with
+`sudo` (or as a user with `CAP_NET_ADMIN` and read/write access to the TTY).
+
 ### Basic usage
 
 ```bash
-zowi_cli restore
+sudo zowi_cli restore --tty /dev/rfcomm0
 ```
 
 Output:
 
 ```text
 Connecting to B4:9D:0B:32:41:0E for firmware restore...
-Connected. Checking battery level...
-Battery reported: 85%
+Serial connection open.
+Bootloader mode: skipping battery check and uploading immediately.
+Streaming firmware to bootloader...
 Uploading firmware from src/firmware/ZOWI_BASE_v2.hex...
   Progress: 100%
 Waiting for the restored firmware to report its app ID...
@@ -283,6 +330,9 @@ Factory firmware restored.
   App ID:  ZOWI_BASE_v2
 Session updated.
 ```
+
+If the bootloader cannot be reached (e.g. the TTY was not reset into the bootloader),
+double-check that the RFCOMM TTY was created and that the robot was reachable.
 
 ### Custom firmware path
 
@@ -304,6 +354,65 @@ zowi_cli restore --force-low-battery
 
 ```bash
 zowi_cli restore -t 15
+```
+
+## Alarm
+
+Install the Robot Alarm firmware (project "Robot Alarma") on the paired Zowi. This is one of the custom firmware variants that the factory restore can revert.
+
+By default, the CLI uploads the bundled alarm firmware file:
+
+```text
+src/firmware/ZOWI_Alarm_v2.hex
+```
+
+### How it works
+
+Identical to `restore` — it binds an RFCOMM TTY, pulses DTR to reset the robot into its
+bootloader, and streams the raw Intel‑HEX firmware file. See the `restore` section for
+the full description and the *Serial / TTY requirements* (flashing must run as root /
+with `CAP_NET_ADMIN`).
+
+### Basic usage
+
+```bash
+zowi_cli alarm
+```
+
+Output:
+
+```text
+Connecting to B4:9D:0B:32:41:0E for Alarm firmware installation...
+Connected. Checking battery level...
+Battery reported: 85%
+Entering bootloader...
+Bootloader synchronized.
+Uploading firmware from src/firmware/ZOWI_Alarm_v2.hex...
+  Progress: 100%
+Waiting for the updated firmware to report its app ID...
+Alarm firmware installed.
+  App ID:  ZOWI_Alarm_v2
+Session updated.
+```
+
+### Custom firmware path
+
+```bash
+zowi_cli alarm -f /path/to/ZOWI_Alarm_v2.hex
+```
+
+### Low battery handling
+
+The alarm flow follows the same 50% battery warning threshold as restore:
+
+```bash
+zowi_cli alarm --force-low-battery
+```
+
+### Custom timeout
+
+```bash
+zowi_cli alarm -t 15
 ```
 
 ## Disconnect
@@ -383,6 +492,14 @@ Runs the factory firmware restore flow against the currently paired Zowi and the
 
 ```bash
 ./src/cli/tests/test_restore_factory_firmware.sh
+```
+
+### test_install_alarm.sh
+
+Runs the Robot Alarm firmware install flow against the currently paired Zowi and then shows the updated status.
+
+```bash
+./src/cli/tests/test_install_alarm.sh
 ```
 
 ## Examples
@@ -485,4 +602,6 @@ zowi_cli rename --help       # Rename help
 zowi_cli restore --help      # Restore help
 zowi_cli disconnect --help   # Disconnect help
 zowi_cli status --help       # Status help
+zowi_cli restore --help      # Restore help
+zowi_cli alarm --help        # Alarm help
 ```

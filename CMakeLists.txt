@@ -44,6 +44,9 @@ FetchContent_MakeAvailable(cli11 json)
 # ── Core library (pure C++ — no Qt) ─────────────────────────────
 add_subdirectory(src/core)
 
+# ── Firmware upload library (STK500v1 / Optiboot, pure C++) ─────
+add_subdirectory(src/firmware)
+
 # ── Qt (needed by GUI and CLI's BT backend) ──────────────────────
 if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
     find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Core Bluetooth)
@@ -56,6 +59,11 @@ endif()
 # ── Qt Bluetooth backend ─────────────────────────────────────────
 if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
     add_subdirectory(src/backends/bt_qt)
+endif()
+
+# ── Serial (RFCOMM TTY + DTR auto-reset) backend ────────────────
+if(ZOWI_BUILD_CLI)
+    add_subdirectory(src/backends/bt_serial)
 endif()
 
 # ── CLI executable ──────────────────────────────────────────────
