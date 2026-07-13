@@ -1,14 +1,26 @@
 cmake_minimum_required(VERSION 3.21)
 project(ZowiDesktop VERSION 0.2.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
+# ── Qt version selection ──────────────────────────────────────────
+set(ZOWI_QT_VERSION 6 CACHE STRING "Qt version to build against (5 or 6)")
+if(NOT ZOWI_QT_VERSION MATCHES "^[56]$")
+    message(FATAL_ERROR "ZOWI_QT_VERSION must be 5 or 6, got: ${ZOWI_QT_VERSION}")
+endif()
+
+# C++20 for Qt6, C++17 for Qt5
+if(ZOWI_QT_VERSION EQUAL 6)
+    set(CMAKE_CXX_STANDARD 20)
+else()
+    set(CMAKE_CXX_STANDARD 17)
+endif()
+
 # ── Build options ────────────────────────────────────────────────
-option(ZOWI_BUILD_GUI   "Build Qt6 GUI application" ON)
-option(ZOWI_BUILD_CLI   "Build command-line tool"    ON)
-option(BUILD_TESTS      "Build unit tests"           ON)
+option(ZOWI_BUILD_GUI   "Build Qt${ZOWI_QT_VERSION} GUI application" ON)
+option(ZOWI_BUILD_CLI   "Build command-line tool"                    ON)
+option(BUILD_TESTS      "Build unit tests"                           ON)
 
 # ── Third-party (via FetchContent) ──────────────────────────────
 include(FetchContent)
@@ -34,11 +46,11 @@ add_subdirectory(src/core)
 
 # ── Qt (needed by GUI and CLI's BT backend) ──────────────────────
 if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
-    find_package(Qt6 REQUIRED COMPONENTS Core Bluetooth)
+    find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Core Bluetooth)
 endif()
 
 if(ZOWI_BUILD_GUI)
-    find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2)
+    find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Quick QuickControls2)
 endif()
 
 # ── Qt Bluetooth backend ─────────────────────────────────────────

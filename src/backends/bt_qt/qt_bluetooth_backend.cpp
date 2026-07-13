@@ -39,8 +39,14 @@ void QtBluetoothBackend::startDiscovery()
                      this, &QtBluetoothBackend::onDeviceDiscovered);
     QObject::connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished,
                      this, &QtBluetoothBackend::onScanFinished);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     QObject::connect(m_discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred,
                      this, &QtBluetoothBackend::onScanError);
+#else
+    QObject::connect(m_discoveryAgent,
+        QOverload<QBluetoothDeviceDiscoveryAgent::Error>::of(&QBluetoothDeviceDiscoveryAgent::error),
+        this, &QtBluetoothBackend::onScanError);
+#endif
 
     m_discoveredDevices.clear();
     m_scanning = true;
@@ -71,8 +77,14 @@ bool QtBluetoothBackend::connect(const std::string &address)
                      this, &QtBluetoothBackend::onSocketConnected);
     QObject::connect(m_socket, &QBluetoothSocket::disconnected,
                      this, &QtBluetoothBackend::onSocketDisconnected);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     QObject::connect(m_socket, &QBluetoothSocket::errorOccurred,
                      this, &QtBluetoothBackend::onSocketError);
+#else
+    QObject::connect(m_socket,
+        QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
+        this, &QtBluetoothBackend::onSocketError);
+#endif
     QObject::connect(m_socket, &QBluetoothSocket::readyRead,
                      this, &QtBluetoothBackend::onDataReady);
 

@@ -1,8 +1,8 @@
 // SplashScreen: Initial screen shown on app launch.
 // Displays the Zowi logo and provides Continue/Quit buttons
 // along with language selector flags (ES, CA, EN).
-import QtQuick 6.0
-import QtQuick.Controls 6.0
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 import "../components"
 
 Rectangle {

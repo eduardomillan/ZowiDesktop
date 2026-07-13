@@ -1,4 +1,4 @@
-import QtQuick 6.0
+import QtQuick 2.15
 
 /**
  * AnimatedZowi — Componente animado para Zowi basado en los sprites de scratch.

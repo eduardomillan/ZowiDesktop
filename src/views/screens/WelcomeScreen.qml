@@ -1,7 +1,7 @@
 // WelcomeScreen: Entry screen with two options:
 // Start the pairing wizard or learn more on the project website.
-import QtQuick 6.0
-import QtQuick.Controls 6.0
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 import "../components"
 
 Rectangle {

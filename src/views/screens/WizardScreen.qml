@@ -1,7 +1,7 @@
 // WizardScreen: Bluetooth pairing wizard entry.
 // Presents a prompt to turn on Zowi before pairing.
-import QtQuick 6.0
-import QtQuick.Controls 6.0
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 Rectangle {
     id: wizard

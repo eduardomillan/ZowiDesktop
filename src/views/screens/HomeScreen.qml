@@ -1,7 +1,7 @@
 // HomeScreen: Main dashboard with two swipeable pages:
 // Page 0 - Zowi Apps (games/modes), Page 1 - Projects.
-import QtQuick 6.0
-import QtQuick.Controls 6.0
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 Rectangle {
     id: home

@@ -1,8 +1,8 @@
 // ScanScreen: Bluetooth device discovery and connection screen.
 // Scans for nearby Zowi devices, lists them, and allows the user
 // to select and connect to one via Bluetooth SPP.
-import QtQuick 6.0
-import QtQuick.Controls 6.0
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 Rectangle {
     id: scanScreen

@@ -4,7 +4,7 @@ add_library(zowi_bt_qt STATIC
 )
 
 target_link_libraries(zowi_bt_qt
-    PUBLIC  Zowi::core Qt6::Core Qt6::Bluetooth
+    PUBLIC  Zowi::core Qt${ZOWI_QT_VERSION}::Core Qt${ZOWI_QT_VERSION}::Bluetooth
 )
 
 target_include_directories(zowi_bt_qt
