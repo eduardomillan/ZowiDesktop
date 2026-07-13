@@ -309,8 +309,26 @@ that means an RFCOMM TTY device such as `/dev/rfcomm0`, created with `CAP_NET_AD
 (typically root).
 
 **Do not** pre‑bind and run in two separate steps — that breaks the bootloader timing
-(see *How it works* above). Instead, run the flashing command as root **without**
-`--tty`; the CLI binds and opens the TTY itself, in‑process:
+(see *How it works* above).
+
+### Recommended: run without sudo (setcap)
+
+Grant the binary the `CAP_NET_ADMIN` capability once, then run **all** commands
+(including flashing) as your normal user. This avoids the root/user session split
+that makes `status`/`connect` report a stale `ZOWI_BASE_v2` after a `sudo` flash:
+
+```bash
+sudo setcap cap_net_admin+ep build/src/cli/zowi_cli
+./build/src/cli/zowi_cli restore --address B4:9D:0B:32:41:0E
+./build/src/cli/zowi_cli alarm  --address B4:9D:0B:32:41:0E
+./build/src/cli/zowi_cli status        # reads the same (user) session, live
+```
+
+### Alternative: run as root
+
+If you prefer not to set the capability, run the flashing command as root **without**
+`--tty`; the CLI binds and opens the TTY itself, in‑process. Remember to run
+`status`/`connect` as root too, or they will read a different (user) session:
 
 ```bash
 sudo zowi_cli restore --address B4:9D:0B:32:41:0E
