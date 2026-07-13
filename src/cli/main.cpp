@@ -28,6 +28,7 @@ static std::string g_appId;
 static float g_battery = -1.0f;
 static bool g_connected = false;
 static bool g_dataReceived = false;
+static bool g_finalAck = false;
 static std::string g_dataBuffer;
 // When true, incoming bytes are raw bootloader traffic, not the &&/N-U-B protocol.
 static bool g_uploadMode = false;
@@ -44,6 +45,7 @@ static void resetRobotState()
     g_battery = -1.0f;
     g_connected = false;
     g_dataReceived = false;
+    g_finalAck = false;
     g_dataBuffer.clear();
 }
 
@@ -71,6 +73,12 @@ static void parseRobotMessageUnlocked(const std::string &msg)
             g_dataReceived = true;
         } else if (prefix == 'B') {
             try { g_battery = std::stof(value); } catch (...) {}
+            g_dataReceived = true;
+        } else if (prefix == 'A' || prefix == 'F') {
+            // Software ack (&&A) / final ack (&&F) from the robot. The firmware
+            // sends &&F only after it has processed the command (e.g. after the
+            // EEPROM write in 'R'), so it confirms the operation completed.
+            g_finalAck = true;
             g_dataReceived = true;
         }
         return;
@@ -668,17 +676,28 @@ int main(int argc, char **argv)
 
         bt.connect(savedAddr);
 
-        // Wait for connection + robot data (name updates after rename)
+        // Wait for the robot to acknowledge the rename with a final ack (&&F),
+        // which the firmware sends only AFTER writing the new name to EEPROM.
+        // (g_dataReceived is already true from the identity messages on connect,
+        // so it alone would let us disconnect before the write completes.)
+        bool renamed = false;
         auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(connectTimeout + 2);
         while (std::chrono::steady_clock::now() < deadline) {
             qtApp.processEvents();
             {
                 std::lock_guard<std::mutex> lock(g_mtx);
-                if (renameSent && g_dataReceived) break;
+                if (renameSent && g_finalAck) { renamed = true; break; }
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
         }
 
+        if (!renamed) {
+            std::cerr << "Warning: the robot did not acknowledge the rename; the new name may not have been saved." << std::endl;
+        }
+
+        // Give the firmware a moment to finish the EEPROM write before we drop
+        // the connection.
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
         bt.disconnect();
 
         // Save new name
