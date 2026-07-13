@@ -455,7 +455,15 @@ wizardDismissed=false
 
 ## Status
 
-Show current Zowi connection status from the session store.
+Show the current Zowi connection status. `status` opens a **live** Bluetooth
+connection to the paired robot and reports its real running firmware (name, app ID,
+battery), refreshing the session cache. If the robot cannot be reached it falls back
+to the last known (cached) values and marks them `(cached)`.
+
+> Note: run `status` as the **same user** that ran `connect`/`restore`/`alarm`. Those
+> flashing commands need `CAP_NET_ADMIN`, so either run them with `sudo` (which writes
+> the *root* session) or grant the binary the capability and run everything as your
+> user — see *Serial / TTY requirements*.
 
 ### Basic usage
 

@@ -791,11 +791,47 @@ int main(int argc, char **argv)
             return 0;
         }
 
+        // Attempt a live connection so the reported state reflects the robot's
+        // actual running firmware rather than the (possibly stale) session cache.
+        bool live = false;
+        {
+            QCoreApplication qtApp(argc, argv);
+            zowi::QtBluetoothBackend bt;
+            resetRobotState();
+
+            bt.onDataReceived([](const std::string &data) { onDataReceived(data); });
+            bt.onConnectionChanged([](bool connected) {
+                if (connected) std::cout << "Connected. Reading live status..." << std::endl;
+            });
+            bt.onError([](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
+
+            std::cout << "Connecting to " << addr << "..." << std::endl;
+            bt.connect(addr);
+            if (waitForRobotData(qtApp, (connectTimeout + 2) * 1000)) {
+                live = true;
+                if (!g_robotName.empty()) name = g_robotName;
+                if (!g_appId.empty()) appId = g_appId;
+                if (g_battery >= 0) battery = static_cast<int>(g_battery);
+
+                // Refresh the session cache so future reads stay consistent.
+                store.setString("activeZowiName", name);
+                store.setString("activeZowiAppId", appId);
+                store.setInt("activeZowiBattery", battery);
+            }
+            bt.disconnect();
+        }
+
+        if (!live) {
+            std::cout << "Could not reach the robot; showing last known (cached) state." << std::endl;
+        }
+
         std::cout << "Zowi connected:" << std::endl;
         std::cout << "  Name:    " << (name.empty() ? "(unknown)" : name) << std::endl;
         std::cout << "  Address: " << addr << std::endl;
-        std::cout << "  App ID:  " << (appId.empty() ? "(unknown)" : appId) << std::endl;
-        std::cout << "  Battery: " << (battery >= 0 ? std::to_string(battery) + "%" : "(unknown)") << std::endl;
+        std::cout << "  App ID:  " << (appId.empty() ? "(unknown)" : appId)
+                  << (live ? "" : "  (cached)") << std::endl;
+        std::cout << "  Battery: " << (battery >= 0 ? std::to_string(battery) + "%" : "(unknown)")
+                  << (live ? "" : "  (cached)") << std::endl;
         std::cout << "  Wizard:  " << (dismissed ? "completed" : "not completed") << std::endl;
     }
 
