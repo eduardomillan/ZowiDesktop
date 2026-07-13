@@ -3,6 +3,7 @@ add_library(zowi_core STATIC
     src/session_store.cpp
     src/config_store.cpp
     src/translation_engine.cpp
+    src/robot_commands.cpp
 )
 
 target_include_directories(zowi_core

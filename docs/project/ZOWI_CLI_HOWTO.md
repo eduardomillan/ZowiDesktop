@@ -2,20 +2,6 @@
 
 The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionality without launching the GUI.
 
-## Building
-
-```bash
-# Build CLI only (fast, no Qt GUI needed)
-./build.sh --cli
-
-# Build everything (GUI + CLI)
-./build.sh
-
-# Build CLI with Qt 5
-./build.sh -5 --cli
-```
-
-The binary is at `build/src/cli/zowi_cli`.
 
 ## Quick reference
 
@@ -34,8 +20,30 @@ zowi_cli <subcommand> [options]
 | `restore` | Restore the original factory firmware/functions |
 | `disconnect` | Disconnect and clear pairing data |
 | `status` | Show current Zowi connection status |
+| `control` | Interactive keyboard minigame to drive the robot |
 | `restore` | Restore the original factory firmware |
 | `alarm` | Install the Robot Alarm firmware |
+
+
+
+## Help
+
+```bash
+zowi_cli --help              # General help
+zowi_cli session --help      # Session subcommand help
+zowi_cli config --help       # Config subcommand help
+zowi_cli translate --help    # Translate help
+zowi_cli scan --help         # Scan help
+zowi_cli connect --help      # Connect help
+zowi_cli rename --help       # Rename help
+zowi_cli restore --help      # Restore help
+zowi_cli disconnect --help   # Disconnect help
+zowi_cli status --help      # Status help
+zowi_cli control --help      # Control (minigame) help
+zowi_cli restore --help      # Restore help
+zowi_cli alarm --help        # Alarm help
+```
+
 
 ## Session
 
@@ -646,19 +654,79 @@ $ zowi_cli translate -l en_US -s "Welcome"
 Welcome
 ```
 
-## Help
+
+
+
+## Control
+
+Interactive keyboard minigame that drives the Zowi robot in real time. Connects
+to the paired robot (or to an explicit `--address`) and reads the cursor keys
+from the terminal, sending one movement command per key press. Movement
+commands follow the firmware serial protocol documented in
+`docs/firmware/PROTOCOL.md` (the `M <MoveID> <T>` movement command and the `S`
+stop command).
+
+### Controls
+
+| Key            | Action        | Firmware command        |
+|----------------|---------------|-------------------------|
+| `↑` (Up)       | Walk forward  | `M 1 <T>`               |
+| `↓` (Down)     | Walk backward | `M 2 <T>`               |
+| `←` (Left)     | Turn left     | `M 3 <T>`               |
+| `→` (Right)    | Turn right    | `M 4 <T>`               |
+| `ESC` or `q`   | Quit          | `S` (stop) on exit      |
+
+The terminal is switched to raw mode while the minigame runs, so the cursor
+keys are delivered immediately (no Enter needed) and are not echoed. The
+original terminal settings are restored on exit (including on `Ctrl-C`).
+
+### Basic usage (paired device)
 
 ```bash
-zowi_cli --help              # General help
-zowi_cli session --help      # Session subcommand help
-zowi_cli config --help       # Config subcommand help
-zowi_cli translate --help    # Translate help
-zowi_cli scan --help         # Scan help
-zowi_cli connect --help      # Connect help
-zowi_cli rename --help       # Rename help
-zowi_cli restore --help      # Restore help
-zowi_cli disconnect --help   # Disconnect help
-zowi_cli status --help       # Status help
-zowi_cli restore --help      # Restore help
-zowi_cli alarm --help        # Alarm help
+zowi_cli control
 ```
+
+### Connect to a specific robot
+
+```bash
+zowi_cli control --address B4:9D:0B:32:41:0E
+```
+
+### Choose a movement speed
+
+```bash
+zowi_cli control --speed slow     # also: medium (default), fast
+```
+
+Speed maps to the firmware period `T` in ms: `slow` = 1600, `medium` = 1000,
+`fast` = 600 (larger = slower gait).
+
+### Custom connection timeout
+
+```bash
+zowi_cli control -t 5    # wait up to 5 seconds for the connection
+```
+
+### Behavior notes
+
+- Each key press sends a single gait cycle; hold the key (OS auto-repeat) to
+  keep moving.
+- On exit the robot receives a stop command (`S`) and the terminal is restored.
+- If the battery is below 50% a warning is printed (movement is still allowed).
+- If stdin is not a terminal, the minigame refuses to start (it needs the
+  keyboard) and exits without driving the robot.
+
+## Building
+
+```bash
+# Build CLI only (fast, no Qt GUI needed)
+./build.sh --cli
+
+# Build everything (GUI + CLI)
+./build.sh
+
+# Build CLI with Qt 5
+./build.sh -5 --cli
+```
+
+The binary is at `build/src/cli/zowi_cli`.

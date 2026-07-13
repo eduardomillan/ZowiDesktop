@@ -3,6 +3,7 @@
 // to select and connect to one via Bluetooth SPP.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import "../components"
 
 Rectangle {
     id: scanScreen
@@ -18,9 +19,21 @@ Rectangle {
 
     function tr(source) { return Translator.translate("ScanScreen.qml", source) }
 
-    Column {
+    // Connection status bar (top of the screen)
+    StatusBar {
+        id: statusBar
         anchors {
             top: parent.top
+            left: parent.left
+            right: parent.right
+            topMargin: 5
+        }
+    }
+
+    Column {
+        id: topColumn
+        anchors {
+            top: statusBar.bottom
             left: parent.left
             right: parent.right
             margins: 30
@@ -62,6 +75,36 @@ Rectangle {
                 font.pixelSize: 24
                 font.bold: true
                 font.family: "monospace"
+            }
+
+            Item {
+                width: Math.max(8, parent.width - backButton.width - 320)
+                height: 1
+            }
+
+            Button {
+                id: disconnectBtn
+                visible: Bluetooth.connected
+                implicitWidth: 100
+                height: 32
+
+                text: tr("Disconnect")
+
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.bold: true
+                    font.pixelSize: 11
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: 16
+                    color: disconnectBtn.pressed ? "#c0392b" : "#e74c3c"
+                }
+
+                onClicked: Bluetooth.disconnectFromDevice()
             }
         }
 
@@ -141,11 +184,11 @@ Rectangle {
 
     Rectangle {
         anchors {
-            top: parent.top
+            top: topColumn.bottom
             left: parent.left
             right: parent.right
-            bottom: statusBar.top
-            topMargin: 170
+            bottom: parent.bottom
+            topMargin: 20
             leftMargin: 30
             rightMargin: 30
         }
@@ -182,74 +225,6 @@ Rectangle {
                 opacity: 0.4
                 horizontalAlignment: Text.AlignHCenter
                 visible: deviceList.count === 0
-            }
-        }
-    }
-
-    Rectangle {
-        id: statusBar
-        anchors {
-            left: parent.left
-            right: parent.right
-            bottom: parent.bottom
-        }
-        height: 50
-        color: Bluetooth.connected ? "#e8f5e8" : "#fff3e0"
-
-        Row {
-            anchors {
-                left: parent.left
-                right: parent.right
-                margins: 20
-                verticalCenter: parent.verticalCenter
-            }
-            spacing: 10
-
-            Rectangle {
-                width: 10
-                height: 10
-                radius: 5
-                anchors.verticalCenter: parent.verticalCenter
-                color: Bluetooth.connected ? "#2d5a2d" : (Bluetooth.deviceAddress !== "" ? "#e67e22" : "#cccccc")
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: Bluetooth.connected
-                      ? tr("Connected to %1").arg(Bluetooth.deviceName ? Bluetooth.deviceName : Bluetooth.deviceAddress)
-                      : (Bluetooth.deviceAddress !== ""
-                         ? tr("Device selected. Connecting...")
-                         : tr("Not connected"))
-                color: "#2d5a2d"
-                font.pixelSize: 13
-                elide: Text.ElideRight
-                width: parent.width - 120
-            }
-
-            Button {
-                id: disconnectBtn
-                anchors.verticalCenter: parent.verticalCenter
-                visible: Bluetooth.connected
-                implicitWidth: 90
-                height: 32
-
-                text: tr("Disconnect")
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "#ffffff"
-                    font.bold: true
-                    font.pixelSize: 11
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                background: Rectangle {
-                    radius: 16
-                    color: disconnectBtn.pressed ? "#c0392b" : "#e74c3c"
-                }
-
-                onClicked: Bluetooth.disconnectFromDevice()
             }
         }
     }
@@ -367,9 +342,8 @@ Rectangle {
         function onConnectionChanged() {
             if (Bluetooth.connected) {
                 Session.saveActiveZowiDeviceAddress(Bluetooth.deviceAddress)
-                Session.saveActiveZowiName(Bluetooth.deviceName)
-                // Navigate to main/mode screen
-                scanScreen.deviceSelected(Bluetooth.deviceName, Bluetooth.deviceAddress)
+                // Configure the robot name before finishing setup.
+                namePanel.open()
             }
         }
 
@@ -431,6 +405,161 @@ Rectangle {
                 }
 
                 onClicked: errorDialog.close()
+            }
+        }
+    }
+
+    Popup {
+        id: namePanel
+        anchors.centerIn: parent
+        width: parent.width * 0.6
+        height: 260
+        modal: true
+        closePolicy: Popup.NoAutoClose
+
+        // Last accepted (valid) value, used to revert invalid live input.
+        property string lastValid: "OpenZowi"
+        // Guards against onTextChanged re-entrancy when we revert programmatically.
+        property bool suppress: false
+
+        function isValidName(name) {
+            return name.match(/^[A-Za-z]{1,10}$/) !== null
+        }
+
+        onOpened: {
+            var dn = Bluetooth.deviceName
+            nameField.text = (dn !== "" && dn !== "#") ? dn : "OpenZowi"
+            lastValid = nameField.text
+            warningText.visible = false
+        }
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 14
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: tr("Nombre del robot")
+                color: "#2d5a2d"
+                font.bold: true
+                font.pixelSize: 18
+                font.family: "monospace"
+            }
+
+            TextField {
+                id: nameField
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: namePanel.width - 80
+                maximumLength: 10
+                placeholderText: tr("OpenZowi")
+                selectByMouse: true
+
+                background: Rectangle {
+                    radius: 8
+                    border.color: "#21a69b"
+                    border.width: 1
+                    color: "#ffffff"
+                }
+
+                // Live filtering: only A-Za-z and <=10 chars. Invalid input is
+                // reverted to the last valid value and a warning is shown.
+                onTextChanged: {
+                    if (namePanel.suppress) { namePanel.suppress = false; return }
+                    var t = nameField.text
+                    if (t === "") {
+                        namePanel.lastValid = ""
+                        warningText.visible = false
+                        return
+                    }
+                    if (namePanel.isValidName(t)) {
+                        namePanel.lastValid = t
+                        warningText.visible = false
+                        return
+                    }
+                    warningText.text = tr("Solo letras (A-Z), máximo 10 caracteres")
+                    warningText.visible = true
+                    namePanel.suppress = true
+                    nameField.text = namePanel.lastValid
+                }
+            }
+
+            Text {
+                id: warningText
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: tr("Solo letras (A-Z), máximo 10 caracteres")
+                color: "#e74c3c"
+                font.pixelSize: 12
+                visible: false
+            }
+
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 16
+
+                Button {
+                    implicitWidth: 150
+                    height: 44
+                    text: tr("Renombrar")
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#ffffff"
+                        font.bold: true
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    background: Rectangle {
+                        radius: 22
+                        color: parent.pressed ? "#17736c" : "#21a69b"
+                    }
+
+                    onClicked: {
+                        var nm = nameField.text.trim()
+                        if (nm === "") nm = "OpenZowi" // empty -> default, no validation
+                        if (!namePanel.isValidName(nm)) {
+                            warningText.text = tr("Nombre no válido")
+                            warningText.visible = true
+                            return
+                        }
+                        Bluetooth.sendData("R " + nm + "\r\n") // configure the robot
+                        Bluetooth.setDeviceName(nm)
+                        Session.saveActiveZowiName(nm)
+                        namePanel.close()
+                        scanScreen.deviceSelected(nm, Bluetooth.deviceAddress)
+                    }
+                }
+
+                Button {
+                    implicitWidth: 150
+                    height: 44
+                    text: tr("Continuar")
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#ffffff"
+                        font.bold: true
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    background: Rectangle {
+                        radius: 22
+                        color: parent.pressed ? "#17736c" : "#21a69b"
+                    }
+
+                    onClicked: {
+                        var nm = nameField.text.trim()
+                        if (nm === "") nm = "OpenZowi"
+                        // Proceed accepting the chosen name (no rename command sent).
+                        Bluetooth.setDeviceName(nm)
+                        Session.saveActiveZowiName(nm)
+                        namePanel.close()
+                        scanScreen.deviceSelected(nm, Bluetooth.deviceAddress)
+                    }
+                }
             }
         }
     }

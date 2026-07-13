@@ -8,9 +8,9 @@
 |---------|-----------|-------------|--------|
 | **0.1.0** | M1 | Project scaffold (screens, i18n, config, session) | ✅ |
 | **0.1.1** | M1 | + First working Windows portable build | ✅ |
-| **0.2.0** | M2 | Bluetooth discovery + device list | 🔧 |
-| **0.2.1** | M2 | Pairing + SPP connection | |
-| **0.2.2** | M2 | Connection status indicator | |
+| **0.2.0** | M2 | Bluetooth discovery + device list | ✅ |
+| **0.2.1** | M2 | Pairing + SPP connection | ✅ |
+| **0.2.2** | M2 | Connection status indicator | ✅ |
 | **0.3.0** | M3 | Basic control pad (directions + actions) | |
 | **0.3.1** | M3 | Speed control + face editor | |
 | **0.4.0** | M4 | Demo / autonomous mode | |
@@ -37,16 +37,17 @@
 
 ### M2 — Bluetooth connection & device pairing
 - [x] Device discovery list with name, address, signal strength
-- [ ] Implement `QBluetoothSocket` (RFCOMM SPP, UUID `00001101-0000-1000-8000-00805F9B34FB`)
-- [ ] Pairing flow and persistent storage of paired device
-- [ ] Connection status indicator (connected / disconnected / low battery)
+- [x] Implement `QBluetoothSocket` (RFCOMM SPP, UUID `00001101-0000-1000-8000-00805F9B34FB`) — `src/backends/bt_qt/qt_bluetooth_backend.cpp`
+- [x] Pairing flow and persistent storage of paired device (CLI `connect`/`disconnect` + GUI `SessionController`)
+- [x] Connection status indicator (connected / disconnected) — shown in GUI `HomeScreen.qml` and `ScanScreen.qml`
+- [x] Low-battery indicator in the GUI status bar — `BluetoothController` exposes `battery` (parsed from `&&B`/`B`); `StatusBar.qml` shows the percentage and turns red below 50%
 
 ### M3 — Zowi control pad
-- [ ] Directional movement pad (forward, backward, turn left/right)
+- [x] Directional movement pad (forward, backward, turn left/right) — implemented in `zowi_cli control` minigame and shared `zowi::robot_commands` builder (docs/firmware/PROTOCOL.md)
 - [ ] Action buttons (bend, crusaito, flapping, jitter, shake leg, swing, updown, tip-toe, moonwalker, etc.)
-- [ ] Speed control (slow / medium / fast)
+- [x] Speed control (slow / medium / fast)
 - [ ] Face/mouth editor
-- [ ] Real-time command sending over Bluetooth
+- [x] Real-time command sending over Bluetooth
 
 ### M4 — Pre-programmed modes
 - [ ] Demo / autonomous behaviour mode

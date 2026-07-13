@@ -113,6 +113,26 @@ Rectangle {
         opacity: 0.6
     }
 
+    // TEMPORARY: shown for 1000 ms after pressing Reset. Remove with the Reset
+    // button when the Settings screen is implemented.
+    Text {
+        id: resetMsg
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: 90
+        text: tr("Datos del Zowi borrados. Pulsa Continuar para reconfigurar.")
+        color: "#c0392b"
+        font.pixelSize: 13
+        opacity: 0.85
+        visible: false
+    }
+
+    Timer {
+        id: resetTimer
+        interval: 1000
+        onTriggered: resetMsg.visible = false
+    }
+
     Row {
         id: flagsRow
         anchors.horizontalCenter: parent.horizontalCenter
@@ -150,6 +170,46 @@ Rectangle {
                     }
                 }
             }
+        }
+    }
+
+    // TEMPORARY: Reset button — remove when the Settings screen is implemented.
+    // Clears the paired Zowi from the session and shows a brief confirmation.
+    Button {
+        id: resetButton
+        anchors {
+            left: parent.left
+            bottom: parent.bottom
+            margins: 12
+        }
+        implicitWidth: 90
+        height: 32
+        text: tr("Reset")
+
+        contentItem: Text {
+            text: parent.text
+            color: "#2d5a2d"
+            font.pixelSize: 12
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            opacity: 0.7
+        }
+
+        background: Rectangle {
+            radius: 16
+            color: "transparent"
+            border.color: "#2d5a2d"
+            border.width: 1
+            opacity: 0.4
+        }
+
+        onClicked: {
+            Session.saveActiveZowiDeviceAddress("")
+            Session.saveActiveZowiName("")
+            Session.saveWizardDismissed(false)
+            resetMsg.visible = true
+            resetTimer.restart()
         }
     }
 }

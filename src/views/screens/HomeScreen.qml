@@ -2,6 +2,7 @@
 // Page 0 - Zowi Apps (games/modes), Page 1 - Projects.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import "../components"
 
 Rectangle {
     id: home
@@ -20,7 +21,7 @@ Rectangle {
     Row {
         id: topBar
         anchors {
-            top: parent.top
+            top: statusIndicator.bottom
             left: parent.left
             right: parent.right
             margins: 15
@@ -70,39 +71,14 @@ Rectangle {
         }
     }
 
-    // Connection status bar
-    Rectangle {
+    // Connection status bar (top of the screen)
+    StatusBar {
         id: statusIndicator
         anchors {
-            top: topBar.bottom
+            top: parent.top
             left: parent.left
             right: parent.right
             topMargin: 5
-        }
-        height: 36
-        color: Bluetooth.connected ? "#e8f5e8" : "#fff3e0"
-
-        Row {
-            anchors.centerIn: parent
-            spacing: 8
-
-            Rectangle {
-                width: 8
-                height: 8
-                radius: 4
-                anchors.verticalCenter: parent.verticalCenter
-                color: Bluetooth.connected ? "#2d5a2d" : "#e67e22"
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: Bluetooth.connected
-                      ? tr("Connected to %1").arg(Bluetooth.deviceName ? Bluetooth.deviceName : "")
-                      : tr("Not connected")
-                color: "#2d5a2d"
-                font.pixelSize: 12
-                opacity: 0.7
-            }
         }
     }
 

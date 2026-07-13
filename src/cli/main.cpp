@@ -12,11 +12,15 @@
 #include <mutex>
 #include <unistd.h>
 #include <condition_variable>
+#include <termios.h>
+#include <csignal>
+#include <sys/select.h>
 #include <CLI/CLI.hpp>
 #include <QCoreApplication>
 #include <zowi/session_store.h>
 #include <zowi/translation_engine.h>
 #include <zowi/config_store.h>
+#include <zowi/robot_commands.h>
 #include <zowi/stk500v1.h>
 #include <qt_bluetooth_backend.h>
 #include <serial_bluetooth_backend.h>
@@ -33,6 +37,7 @@ static std::string g_dataBuffer;
 // When true, incoming bytes are raw bootloader traffic, not the &&/N-U-B protocol.
 static bool g_uploadMode = false;
 static std::string g_stkBuffer;
+static std::atomic<bool> g_quit{false};
 static constexpr float kLowBatteryThreshold = 50.0f;
 static constexpr const char *kFactoryFirmwarePath = "src/firmware/ZOWI_BASE_v2.hex";
 static constexpr const char *kAlarmFirmwarePath = "src/firmware/ZOWI_Alarm_v2.hex";
@@ -149,6 +154,75 @@ static bool waitUntil(QCoreApplication &qtApp, int timeoutMs, const std::functio
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     return false;
+}
+
+// ── Interactive keyboard input (raw terminal mode) ───────────
+// The minigame reads the arrow keys directly from stdin. We switch the
+// terminal to raw mode (no line buffering, no echo) and decode the ANSI
+// escape sequences the cursor keys produce:
+//   ↑ = ESC [ A   ↓ = ESC [ B   → = ESC [ C   ← = ESC [ D
+// (Some terminals emit ESC O A/B/C/D instead of ESC [ A/B/C/D.)
+static int g_stdinFd = STDIN_FILENO;
+static struct termios g_origTermios;
+static bool g_rawMode = false;
+
+static bool enableRawMode()
+{
+    if (tcgetattr(g_stdinFd, &g_origTermios) == -1) return false;
+    struct termios raw = g_origTermios;
+    raw.c_lflag &= static_cast<tcflag_t>(~(ECHO | ICANON));
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 0;
+    if (tcsetattr(g_stdinFd, TCSAFLUSH, &raw) == -1) return false;
+    g_rawMode = true;
+    return true;
+}
+
+static void disableRawMode()
+{
+    if (g_rawMode) {
+        tcsetattr(g_stdinFd, TCSAFLUSH, &g_origTermios);
+        g_rawMode = false;
+    }
+}
+
+// Returns a logical key token, or "" if no (complete) key is available.
+static std::string readKey()
+{
+    unsigned char c;
+    ssize_t n = read(g_stdinFd, &c, 1);
+    if (n <= 0) return "";
+
+    if (c == 3) return "quit";          // Ctrl-C
+    if (c != 0x1b) {                    // non-escape: only 'q' quits
+        if (c == 'q' || c == 'Q') return "quit";
+        return "";
+    }
+
+    // Escape sequence: read the rest with a short timeout.
+    auto readByte = [](int ms) -> int {
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(g_stdinFd, &fds);
+        struct timeval tv{0, ms * 1000};
+        if (select(g_stdinFd + 1, &fds, nullptr, nullptr, &tv) <= 0) return -1;
+        unsigned char b;
+        if (read(g_stdinFd, &b, 1) != 1) return -1;
+        return b;
+    };
+
+    int b1 = readByte(50);
+    if (b1 == '[' || b1 == 'O') {
+        int b2 = readByte(50);
+        switch (b2) {
+            case 'A': return "up";
+            case 'B': return "down";
+            case 'C': return "right";
+            case 'D': return "left";
+            default: break;
+        }
+    }
+    return "";
 }
 
 static bool waitForRobotData(QCoreApplication &qtApp, int timeoutMs)
@@ -447,6 +521,15 @@ int main(int argc, char **argv)
     alarmCmd->add_option("--tty", alarmTty, "RFCOMM TTY to use for flashing (e.g. /dev/rfcomm0). If omitted, one is bound automatically (needs root).")->default_val("");
     std::string alarmAddress;
     alarmCmd->add_option("--address,-a", alarmAddress, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
+
+    // ── control subcommand ───────────────────────────────────
+    auto *controlCmd = app.add_subcommand("control", "Interactive keyboard minigame to drive the Zowi robot\nUse the arrow keys to move; press ESC or 'q' to quit.\nConnects to the paired device (or --address).");
+    std::string controlAddress;
+    controlCmd->add_option("--address,-a", controlAddress, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
+    std::string controlSpeed = "medium";
+    controlCmd->add_option("--speed", controlSpeed, "Movement speed: slow, medium, fast")->default_val("medium");
+    int controlTimeout = 3;
+    controlCmd->add_option("--timeout,-t", controlTimeout, "Timeout waiting for connection (seconds)")->default_val(3);
 
     CLI11_PARSE(app, argc, argv);
 
@@ -852,6 +935,109 @@ int main(int argc, char **argv)
         std::cout << "  Battery: " << (battery >= 0 ? std::to_string(battery) + "%" : "(unknown)")
                   << (live ? "" : "  (cached)") << std::endl;
         std::cout << "  Wizard:  " << (dismissed ? "completed" : "not completed") << std::endl;
+    }
+
+    // ── control ───────────────────────────────────────────────
+    if (*controlCmd) {
+        QCoreApplication qtApp(argc, argv);
+        zowi::QtBluetoothBackend bt;
+        resetRobotState();
+
+        zowi::MovementSpeed speed = zowi::MovementSpeed::Medium;
+        if (controlSpeed == "slow") speed = zowi::MovementSpeed::Slow;
+        else if (controlSpeed == "fast") speed = zowi::MovementSpeed::Fast;
+        else if (controlSpeed != "medium") {
+            std::cerr << "Unknown speed '" << controlSpeed << "'; using 'medium'.\n";
+        }
+
+        zowi::SessionStore session("ZowiDesktop", "ZowiApp");
+        const std::string ctrlAddr = controlAddress.empty()
+                                         ? session.getString("activeZowiDeviceAddress")
+                                         : controlAddress;
+        if (ctrlAddr.empty()) {
+            std::cerr << "No paired device found. Run 'connect' first or pass --address." << std::endl;
+            return 1;
+        }
+
+        std::cout << "Connecting to " << ctrlAddr << "..." << std::endl;
+
+        bt.onDataReceived([](const std::string &data) { onDataReceived(data); });
+        bt.onConnectionChanged([&](bool connected) {
+            g_connected = connected;
+            if (connected) {
+                std::cout << "Connected. Drive with the arrow keys (ESC or 'q' to quit)." << std::endl;
+            } else {
+                std::cout << "Disconnected." << std::endl;
+            }
+        });
+        bt.onError([&](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
+
+        bt.connect(ctrlAddr);
+
+        if (!waitUntil(qtApp, controlTimeout * 1000, []() {
+                std::lock_guard<std::mutex> lock(g_mtx);
+                return g_connected;
+            })) {
+            std::cerr << "Could not connect to the robot within " << controlTimeout << "s." << std::endl;
+            bt.disconnect();
+            return 1;
+        }
+
+        // Non-blocking battery warning.
+        if (waitForBatteryLevel(qtApp, 2000) && g_battery >= 0 && g_battery < kLowBatteryThreshold) {
+            std::cout << "Warning: battery is low (" << g_battery << "%). Consider recharging.\n";
+        }
+
+        const bool interactive = isatty(g_stdinFd) && enableRawMode();
+        if (interactive) {
+            std::atexit(disableRawMode);
+            std::signal(SIGINT, [](int) {
+                g_quit.store(true);
+                disableRawMode();
+            });
+        } else {
+            std::cout << "Interactive control requires a terminal; cannot read arrow keys.\n";
+            bt.send(zowi::commandStop());
+            bt.disconnect();
+            return 0;
+        }
+
+        std::cout << "Controls:  UP=forward  DOWN=backward  LEFT=turn left  RIGHT=turn right  (ESC/q=quit)\n";
+
+        while (!g_quit.load()) {
+            {
+                std::lock_guard<std::mutex> lock(g_mtx);
+                if (!g_connected) break;
+            }
+            qtApp.processEvents();
+
+            std::string key = readKey();
+            if (!key.empty()) {
+                if (key == "quit") {
+                    g_quit.store(true);
+                    break;
+                }
+                std::string cmd;
+                std::string action;
+                if (key == "up") { cmd = zowi::commandWalkForward(speed); action = "forward"; }
+                else if (key == "down") { cmd = zowi::commandWalkBackward(speed); action = "backward"; }
+                else if (key == "left") { cmd = zowi::commandTurnLeft(speed); action = "turn left"; }
+                else if (key == "right") { cmd = zowi::commandTurnRight(speed); action = "turn right"; }
+
+                if (!cmd.empty()) {
+                    bt.send(cmd);
+                    std::cout << "\r" << action << "          " << std::flush;
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        }
+
+        // Stop the robot and restore the terminal before leaving.
+        bt.send(zowi::commandStop());
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
+        disableRawMode();
+        bt.disconnect();
+        std::cout << "\nStopped. Disconnected. Bye!\n";
     }
 
     return 0;

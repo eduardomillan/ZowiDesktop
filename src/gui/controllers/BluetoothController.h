@@ -11,6 +11,7 @@ class BluetoothController : public QObject
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY deviceChanged)
     Q_PROPERTY(QString deviceAddress READ deviceAddress NOTIFY deviceChanged)
+    Q_PROPERTY(int battery READ battery NOTIFY batteryChanged)
 
 public:
     explicit BluetoothController(QObject *parent = nullptr);
@@ -19,6 +20,9 @@ public:
     bool isScanning() const;
     QString deviceName() const;
     QString deviceAddress() const;
+    int battery() const;
+
+    Q_INVOKABLE void setDeviceName(const QString &name);
 
     Q_INVOKABLE void startScan();
     Q_INVOKABLE void stopScan();
@@ -32,13 +36,18 @@ signals:
     void connectionChanged();
     void scanningChanged();
     void deviceChanged();
+    void batteryChanged();
     void dataReceived(const QString &data);
     void errorOccurred(const QString &message);
 
 private:
+    void parseIncoming();
+
     std::unique_ptr<zowi::BluetoothApi> m_backend;
     bool m_connected = false;
     bool m_scanning = false;
     QString m_deviceName;
     QString m_deviceAddress;
+    float m_battery = -1.0f;
+    std::string m_rxBuffer;
 };
