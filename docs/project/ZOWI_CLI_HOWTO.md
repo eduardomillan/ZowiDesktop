@@ -29,6 +29,10 @@ zowi_cli <subcommand> [options]
 | `config` | Read app configuration values |
 | `translate` | Translate strings using the i18n engine |
 | `scan` | Scan for nearby Zowi robots via Bluetooth |
+| `connect` | Connect to a Zowi and receive identification data |
+| `rename` | Rename a paired Zowi robot |
+| `disconnect` | Disconnect and clear pairing data |
+| `status` | Show current Zowi connection status |
 
 ## Session
 
@@ -155,8 +159,7 @@ zowi_cli scan -t 3     # 3 seconds
 ### Show all Bluetooth devices
 
 ```bash
-zowi_cli scan --all
-zowi_cli scan -a        # short form
+zowi_cli scan --no-filter-name --no-filter-mac
 ```
 
 ### Avoid CAP_NET_ADMIN warning
@@ -173,7 +176,195 @@ Or grant the capability permanently:
 sudo setcap cap_net_admin+ep build/src/cli/zowi_cli
 ```
 
+## Connect
+
+Connect to a Zowi robot by Bluetooth address, receive its identification data (name, app ID, battery level), and save the pairing to session.
+
+### Basic usage
+
+```bash
+zowi_cli connect B4:9D:0B:32:41:0E
+```
+
+Output:
+
+```
+Connecting to B4:9D:0B:32:41:0E...
+Connected. Waiting for robot data...
+
+  Name:    Zowi
+  App ID:  1
+  Battery: 85.0%
+  Address: B4:9D:0B:32:41:0E
+
+Pairing saved to session.
+```
+
+### Custom timeout
+
+```bash
+zowi_cli connect B4:9D:0B:32:41:0E -t 5    # 5 seconds
+```
+
+### Verify pairing was saved
+
+```bash
+$ zowi_cli session list
+activeZowiDeviceAddress=B4:9D:0B:32:41:0E
+activeZowiName=Zowi
+wizardDismissed=true
+```
+
+### Avoid CAP_NET_ADMIN warning
+
+```bash
+sudo zowi_cli connect B4:9D:0B:32:41:0E
+```
+
+## Rename
+
+Rename a paired Zowi robot. Connects to the saved device, sends the rename command, and updates the session with the new name.
+
+### Basic usage
+
+```bash
+zowi_cli rename "Mi Zowi"
+```
+
+Output:
+
+```
+Connecting to B4:9D:0B:32:41:0E...
+Connected. Sending rename command...
+Robot renamed to 'Mi Zowi'.
+Session updated.
+```
+
+### Verify name was updated
+
+```bash
+$ zowi_cli session get activeZowiName
+Mi Zowi
+```
+
+### Avoid CAP_NET_ADMIN warning
+
+```bash
+sudo zowi_cli rename "Mi Zowi"
+```
+
+## Disconnect
+
+Clear all pairing data from the session store.
+
+### Basic usage
+
+```bash
+zowi_cli disconnect
+```
+
+Output:
+
+```
+Disconnected from Mi Zowi [B4:9D:0B:32:41:0E]
+Pairing data cleared.
+```
+
+### Verify pairing was cleared
+
+```bash
+$ zowi_cli session list
+wizardDismissed=false
+```
+
+## Status
+
+Show current Zowi connection status from the session store.
+
+### Basic usage
+
+```bash
+zowi_cli status
+```
+
+Output when connected:
+
+```
+Zowi connected:
+  Name:    Mi Zowi
+  Address: B4:9D:0B:32:41:0E
+  App ID:  1
+  Battery: 85%
+  Wizard:  completed
+```
+
+Output when no device is paired:
+
+```
+No Zowi connected.
+```
+
+## Test Scripts
+
+Shell scripts for testing CLI commands are in `src/cli/tests/`.
+
+### test_connect_rename.sh
+
+Scans for a Zowi, connects, checks status, renames to "TestZowi", verifies status again, and disconnects.
+
+```bash
+./src/cli/tests/test_connect_rename.sh
+```
+
+### test_disconnect.sh
+
+Checks if a Zowi is connected and disconnects it, or reports no device.
+
+```bash
+./src/cli/tests/test_disconnect.sh
+```
+
 ## Examples
+
+### Full pairing workflow
+
+```bash
+# 1. Scan for nearby robots
+$ zowi_cli scan
+Scanning for 5s...
+Zowi [B4:9D:0B:32:41:0E]
+1 device(s) found.
+
+# 2. Connect and pair
+$ zowi_cli connect B4:9D:0B:32:41:0E
+Connecting to B4:9D:0B:32:41:0E...
+Connected. Waiting for robot data...
+
+  Name:    Zowi
+  App ID:  1
+  Battery: 85.0%
+  Address: B4:9D:0B:32:41:0E
+
+Pairing saved to session.
+
+# 3. Rename the robot
+$ zowi_cli rename "Mi Zowi"
+Connecting to B4:9D:0B:32:41:0E...
+Connected. Sending rename command...
+Robot renamed to 'Mi Zowi'.
+Session updated.
+
+# 4. Verify
+$ zowi_cli session list
+activeZowiDeviceAddress=B4:9D:0B:32:41:0E
+activeZowiName=Mi Zowi
+wizardDismissed=true
+
+# 5. Disconnect when done
+$ zowi_cli disconnect
+Disconnected from Mi Zowi [B4:9D:0B:32:41:0E]
+Pairing data cleared.
+```
 
 ### Check if wizard was completed
 
@@ -216,4 +407,8 @@ zowi_cli session --help      # Session subcommand help
 zowi_cli config --help       # Config subcommand help
 zowi_cli translate --help    # Translate help
 zowi_cli scan --help         # Scan help
+zowi_cli connect --help      # Connect help
+zowi_cli rename --help       # Rename help
+zowi_cli disconnect --help   # Disconnect help
+zowi_cli status --help       # Status help
 ```

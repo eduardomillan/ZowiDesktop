@@ -9,6 +9,7 @@ Rectangle {
     color: "#f4f9f4"
 
     property bool scanOnStart: true
+    property string macPrefix: Config.get("zowi_mac_prefix")
 
     signal deviceSelected(string name, string address)
     signal back()
@@ -341,11 +342,20 @@ Rectangle {
         target: Bluetooth
 
         function onDeviceDiscovered(name, address) {
+            // Check for duplicates
             for (var i = 0; i < devicesModel.count; i++) {
                 if (devicesModel.get(i).address === address)
                     return;
             }
-            devicesModel.append({ deviceName: name, address: address })
+
+            // Filter: name contains "Zowi" OR address starts with MAC prefix
+            var nameMatch = name.toLowerCase().indexOf("zowi") !== -1
+            var macMatch = macPrefix !== "" &&
+                           address.toUpperCase().indexOf(macPrefix.toUpperCase()) === 0
+
+            if (nameMatch || macMatch) {
+                devicesModel.append({ deviceName: name, address: address })
+            }
         }
 
         function onScanFinished() {
