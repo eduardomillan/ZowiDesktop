@@ -313,12 +313,29 @@ that means an RFCOMM TTY device such as `/dev/rfcomm0`, created with `CAP_NET_AD
 
 ### Recommended: run without sudo (setcap)
 
-Grant the binary the `CAP_NET_ADMIN` capability once, then run **all** commands
+Grant the binary the `CAP_NET_ADMIN` capability, then run **all** commands
 (including flashing) as your normal user. This avoids the root/user session split
-that makes `status`/`connect` report a stale `ZOWI_BASE_v2` after a `sudo` flash:
+that makes `status`/`connect` report a stale `ZOWI_BASE_v2` after a `sudo` flash.
+
+The build applies the capability automatically on every (re)compile via a
+post‑build step in `src/cli/CMakeLists.txt` (using `sudo -n`, so it only succeeds
+when you already have cached/non‑interactive sudo rights). If it can't, the build
+prints a reminder instead of failing:
 
 ```bash
+# If the automatic step didn't apply it (e.g. no cached sudo), do it once manually:
 sudo setcap cap_net_admin+ep build/src/cli/zowi_cli
+```
+
+For fully passwordless builds, allow `setcap` without a password:
+
+```bash
+sudo visudo   # add:  youruser ALL=(root) NOPASSWD: /sbin/setcap
+```
+
+Then all commands run as your user, no `sudo`:
+
+```bash
 ./build/src/cli/zowi_cli restore --address B4:9D:0B:32:41:0E
 ./build/src/cli/zowi_cli alarm  --address B4:9D:0B:32:41:0E
 ./build/src/cli/zowi_cli status        # reads the same (user) session, live
