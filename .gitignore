@@ -33,3 +33,4 @@ dist/
 
 # Working files
 aqtinstall.log
+.qtcreator/

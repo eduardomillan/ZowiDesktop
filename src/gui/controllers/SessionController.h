@@ -1,16 +1,14 @@
-#ifndef SESSIONCONTROLLER_H
-#define SESSIONCONTROLLER_H
+#pragma once
 
 #include <QObject>
-
-class SessionService;
+#include <zowi/session_store.h>
 
 class SessionController : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit SessionController(SessionService *service, QObject *parent = nullptr);
+    explicit SessionController(QObject *parent = nullptr);
 
     Q_INVOKABLE QString loadActiveZowiDeviceAddress();
     Q_INVOKABLE QString loadActiveZowiName();
@@ -24,7 +22,5 @@ signals:
     void sessionChanged();
 
 private:
-    SessionService *m_service;
+    zowi::SessionStore m_store;
 };
-
-#endif

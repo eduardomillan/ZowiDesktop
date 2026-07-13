@@ -1,8 +1,7 @@
-#ifndef CONFIGCONTROLLER_H
-#define CONFIGCONTROLLER_H
+#pragma once
 
 #include <QObject>
-#include <QVariantMap>
+#include <zowi/config_store.h>
 
 class ConfigController : public QObject
 {
@@ -14,8 +13,5 @@ public:
     Q_INVOKABLE QString get(const QString &key) const;
 
 private:
-    void load(const QString &path);
-    QVariantMap m_config;
+    zowi::ConfigStore m_store;
 };
-
-#endif

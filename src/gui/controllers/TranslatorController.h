@@ -1,16 +1,15 @@
-#ifndef TRANSLATORCONTROLLER_H
-#define TRANSLATORCONTROLLER_H
+#pragma once
 
 #include <QObject>
-
-class TranslationEngine;
+#include <QStringList>
+#include <zowi/translation_engine.h>
 
 class TranslatorController : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit TranslatorController(TranslationEngine *engine, QObject *parent = nullptr);
+    explicit TranslatorController(QObject *parent = nullptr);
 
     Q_INVOKABLE void load(const QString &locale);
     Q_INVOKABLE QStringList availableLocales() const;
@@ -21,7 +20,5 @@ signals:
     void languageChanged();
 
 private:
-    TranslationEngine *m_engine;
+    zowi::TranslationEngine m_engine;
 };
-
-#endif

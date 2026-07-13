@@ -1,11 +1,8 @@
-#ifndef BLUETOOTHCONTROLLER_H
-#define BLUETOOTHCONTROLLER_H
+#pragma once
 
 #include <QObject>
-#include <QVector>
-
-class BluetoothService;
-struct DeviceInfo;
+#include <memory>
+#include <zowi/bluetooth_api.h>
 
 class BluetoothController : public QObject
 {
@@ -16,7 +13,7 @@ class BluetoothController : public QObject
     Q_PROPERTY(QString deviceAddress READ deviceAddress NOTIFY deviceChanged)
 
 public:
-    explicit BluetoothController(BluetoothService *service, QObject *parent = nullptr);
+    explicit BluetoothController(QObject *parent = nullptr);
 
     bool isConnected() const;
     bool isScanning() const;
@@ -39,7 +36,9 @@ signals:
     void errorOccurred(const QString &message);
 
 private:
-    BluetoothService *m_service;
+    std::unique_ptr<zowi::BluetoothApi> m_backend;
+    bool m_connected = false;
+    bool m_scanning = false;
+    QString m_deviceName;
+    QString m_deviceAddress;
 };
-
-#endif

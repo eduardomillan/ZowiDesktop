@@ -15,9 +15,6 @@
 #include <QDirIterator>
 #endif
 
-#include "services/TranslationEngine.h"
-#include "services/SessionService.h"
-#include "services/BluetoothService.h"
 #include "controllers/TranslatorController.h"
 #include "controllers/SessionController.h"
 #include "controllers/BluetoothController.h"
@@ -55,32 +52,24 @@ int main(int argc, char *argv[])
     app.setWindowIcon(QIcon(":/images/app_icon.png"));
 
     QString appDir = QCoreApplication::applicationDirPath();
-
-    // Portable mode: register exe directory as library/plugin path
     app.addLibraryPath(appDir);
 
-    // --- Services ---
-    TranslationEngine translationEngine;
-    SessionService sessionService;
-    BluetoothService bluetoothService;
+    // --- Controllers (wrapping core library) ---
+    TranslatorController translator;
+    SessionController session;
+    BluetoothController bluetooth;
+    ConfigController config;
 
     QString locale = QLocale::system().name();
-    QStringList supported = translationEngine.availableLocales();
+    QStringList supported = translator.availableLocales();
     if (!supported.contains(locale))
         locale = "en_US";
-    translationEngine.load(locale);
-
-    // --- Controllers ---
-    TranslatorController translator(&translationEngine);
-    SessionController session(&sessionService);
-    BluetoothController bluetooth(&bluetoothService);
-    ConfigController config;
+    translator.load(locale);
 
     // --- QML engine ---
     QQmlApplicationEngine engine;
     s_engine = &engine;
 
-    // Portable mode: add QML import path
     engine.addImportPath(appDir + "/Qt/qml");
 
     engine.rootContext()->setContextProperty("Session", &session);
@@ -97,47 +86,7 @@ int main(int argc, char *argv[])
     QObject::connect(&translator, &TranslatorController::languageChanged,
                      &reloadQml);
 
-    // Write diagnostics to Desktop
-    QString diagPath = QDir::homePath() + "/Desktop/zowi_debug.log";
-    QFile diagFile(diagPath);
-    QTextStream ts(&diagFile);
-    if (diagFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        ts << "appDir=" << appDir << "\n";
-        ts << "platforms exists=" << QFile::exists(appDir + "/platforms/qwindows.dll") << "\n";
-        ts << "libraryPaths=" << app.libraryPaths().size() << "\n";
-        for (const QString &p : app.libraryPaths())
-            ts << "  lib: " << p << "\n";
-
-        QDir appDirObj(appDir);
-        ts << "DLLs in appDir:\n";
-        for (const QString &f : appDirObj.entryList(QStringList() << "*.dll"))
-            ts << "  " << f << "\n";
-
-        ts << "importPaths=" << engine.importPathList().size() << "\n";
-        for (const QString &p : engine.importPathList())
-            ts << "  import: " << p << "\n";
-
-        QDir qmlDir(appDir + "/Qt/qml");
-        if (qmlDir.exists()) {
-            ts << "QML modules in Qt/qml:\n";
-            for (const QString &d : qmlDir.entryList(QDir::AllDirs | QDir::NoDotAndDotDot))
-                ts << "  " << d << "\n";
-        } else {
-            ts << "Qt/qml does NOT exist\n";
-        }
-    }
-
     reloadQml();
-
-    if (ts.device()) {
-        ts << "rootObjects=" << engine.rootObjects().size() << "\n";
-        if (!engine.rootObjects().isEmpty())
-            ts << "QML loaded OK\n";
-        else
-            ts << "QML FAILED to load\n";
-        ts.flush();
-        diagFile.close();
-    }
 
 #ifdef QT_DEBUG
     QFileSystemWatcher watcher;
