@@ -21,6 +21,7 @@
 #include <zowi/translation_engine.h>
 #include <zowi/config_store.h>
 #include <zowi/robot_commands.h>
+#include <zowi/protocol.h>
 #include <zowi/stk500v1.h>
 #include <qt_bluetooth_backend.h>
 #include <serial_bluetooth_backend.h>
@@ -67,19 +68,22 @@ static void parseRobotMessageUnlocked(const std::string &msg)
     std::string trimmed = trimRobotMessage(msg);
     if (trimmed.empty()) return;
 
-    if (trimmed.size() >= 4 && trimmed[0] == '&' && trimmed[1] == '&' && trimmed[3] == ' ') {
+    // &&‑prefixed message: &&<cmd>[ <value>]
+    if (trimmed.size() >= 4 && trimmed[0] == zowi::kMessagePrefix[0]
+                             && trimmed[1] == zowi::kMessagePrefix[1]
+                             && trimmed[3] == ' ') {
         char prefix = trimmed[2];
         std::string value = trimmed.substr(4);
-        if (prefix == 'E') {
+        if (prefix == zowi::toChar(zowi::Command::GetName)) {
             g_robotName = value;
             g_dataReceived = true;
-        } else if (prefix == 'I') {
+        } else if (prefix == zowi::toChar(zowi::Command::GetProgramId)) {
             g_appId = value;
             g_dataReceived = true;
-        } else if (prefix == 'B') {
+        } else if (prefix == zowi::toChar(zowi::Command::GetBattery)) {
             try { g_battery = std::stof(value); } catch (...) {}
             g_dataReceived = true;
-        } else if (prefix == 'A' || prefix == 'F') {
+        } else if (prefix == zowi::toChar(zowi::Command::Ack) || prefix == zowi::toChar(zowi::Command::FinalAck)) {
             // Software ack (&&A) / final ack (&&F) from the robot. The firmware
             // sends &&F only after it has processed the command (e.g. after the
             // EEPROM write in 'R'), so it confirms the operation completed.
@@ -89,13 +93,14 @@ static void parseRobotMessageUnlocked(const std::string &msg)
         return;
     }
 
-    if (trimmed[0] == 'N' && trimmed.size() > 2 && trimmed[1] == ' ') {
+    // Legacy line-based messages (old firmware, still parsed for compatibility).
+    if (trimmed[0] == zowi::toChar(zowi::Command::LegacyName) && trimmed.size() > 2 && trimmed[1] == ' ') {
         g_robotName = trimmed.substr(2);
         g_dataReceived = true;
-    } else if (trimmed[0] == 'U' && trimmed.size() > 2 && trimmed[1] == ' ') {
+    } else if (trimmed[0] == zowi::toChar(zowi::Command::LegacyProgramId) && trimmed.size() > 2 && trimmed[1] == ' ') {
         g_appId = trimmed.substr(2);
         g_dataReceived = true;
-    } else if (trimmed[0] == 'B' && trimmed.size() > 2 && trimmed[1] == ' ') {
+    } else if (trimmed[0] == zowi::toChar(zowi::Command::LegacyBattery) && trimmed.size() > 2 && trimmed[1] == ' ') {
         try { g_battery = std::stof(trimmed.substr(2)); } catch (...) {}
         g_dataReceived = true;
     }
@@ -126,12 +131,12 @@ static void onDataReceived(const std::string &data)
             g_dataBuffer.erase(0, start);
         }
 
-        if (g_dataBuffer.rfind("&&", 0) == 0) {
-            auto tokenEnd = g_dataBuffer.find("%%");
+        if (g_dataBuffer.rfind(zowi::kMessagePrefix, 0) == 0) {
+            auto tokenEnd = g_dataBuffer.find(zowi::kMessageTerminator);
             if (tokenEnd == std::string::npos) break;
 
             std::string token = g_dataBuffer.substr(0, tokenEnd);
-            g_dataBuffer.erase(0, tokenEnd + 2);
+            g_dataBuffer.erase(0, tokenEnd + (sizeof(zowi::kMessageTerminator) - 1));
             parseRobotMessageUnlocked(token);
             continue;
         }
@@ -259,7 +264,7 @@ static bool waitForAppId(QCoreApplication &qtApp, zowi::BluetoothApi &bt, int ti
         }
 
         if (g_connected && std::chrono::steady_clock::now() >= nextPoll) {
-            bt.send("U\r\n");
+            bt.send(zowi::makeCommand(zowi::Command::GetProgramId));
             nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
         }
 
@@ -743,7 +748,7 @@ int main(int argc, char **argv)
             g_connected = connected;
             if (connected) {
                 std::cout << "Connected. Sending rename command..." << std::endl;
-                std::string cmd = "R " + newName + "\r\n";
+                const std::string cmd = zowi::makeCommand(zowi::Command::SetName, newName);
                 bt.send(cmd);
                 renameSent = true;
             }

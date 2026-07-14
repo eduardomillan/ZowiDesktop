@@ -1,4 +1,5 @@
 #include "zowi/robot_commands.h"
+#include "zowi/protocol.h"
 
 #include <sstream>
 
@@ -8,9 +9,8 @@ namespace {
 // Movement command: M <MoveID> <T>\r  (T = period in ms)
 std::string buildMovement(int moveId, int periodMs)
 {
-    std::ostringstream oss;
-    oss << "M " << moveId << ' ' << periodMs << '\r';
-    return oss.str();
+    return makeCommand(Command::Move,
+                        std::to_string(moveId) + ' ' + std::to_string(periodMs));
 }
 } // namespace
 
@@ -36,7 +36,7 @@ std::string commandTurnRight(MovementSpeed speed)
 
 std::string commandStop()
 {
-    return "S\r";
+    return makeCommand(Command::Stop);
 }
 
 } // namespace zowi
