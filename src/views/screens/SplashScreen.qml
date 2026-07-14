@@ -105,7 +105,7 @@ Rectangle {
 
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: flagsRow.top
+        anchors.bottom: langRow.top
         anchors.bottomMargin: 10
         text: tr("Selecciona idioma")
         color: "#2d5a2d"
@@ -113,103 +113,162 @@ Rectangle {
         opacity: 0.6
     }
 
-    // TEMPORARY: shown for 1000 ms after pressing Reset. Remove with the Reset
-    // button when the Settings screen is implemented.
-    Text {
-        id: resetMsg
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.verticalCenter: parent.verticalCenter
-        anchors.verticalCenterOffset: 90
-        text: tr("Datos del Zowi borrados. Pulsa Continuar para reconfigurar.")
-        color: "#c0392b"
-        font.pixelSize: 13
-        opacity: 0.85
-        visible: false
-    }
-
-    Timer {
-        id: resetTimer
-        interval: 1000
-        onTriggered: resetMsg.visible = false
-    }
-
     Row {
-        id: flagsRow
+        id: langRow
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 30
-        spacing: 20
 
-        Repeater {
-            model: [
-                { flag: "qrc:/docs/images/es.svg", locale: "es_ES" },
-                { flag: "qrc:/docs/images/vl.svg", locale: "ca_ES" },
-                { flag: "qrc:/docs/images/gb.svg", locale: "en_US" }
-            ]
+        ComboBox {
+            id: langCombo
+            width: 160
+            height: 36
 
-            delegate: Item {
-                width: 40
-                height: 40
+            model: ListModel {
+                ListElement { text: "Español"; locale: "es_ES" }
+                ListElement { text: "Valencià"; locale: "ca_ES" }
+                ListElement { text: "English"; locale: "en_US" }
+            }
+            textRole: "text"
 
-                Image {
-                    anchors.centerIn: parent
-                    source: modelData.flag
-                    sourceSize.width: 28
-                    sourceSize.height: 28
-                    fillMode: Image.PreserveAspectFit
-                    opacity: Translator.currentLocale() === modelData.locale ? 1.0 : 0.4
+            font.pixelSize: 14
+            font.family: "monospace"
+
+            Component.onCompleted: {
+                var cur = Translator.currentLocale()
+                for (var i = 0; i < model.count; ++i) {
+                    if (model.get(i).locale === cur) {
+                        currentIndex = i
+                        return
+                    }
+                }
+                currentIndex = 2 // fallback: English
+            }
+
+            onActivated: {
+                var loc = model.get(currentIndex).locale
+                if (Translator.currentLocale() !== loc)
+                    Translator.load(loc)
+            }
+
+            contentItem: Text {
+                text: langCombo.displayText
+                color: "#2d5a2d"
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+                font: langCombo.font
+            }
+
+            background: Rectangle {
+                radius: 18
+                border.color: "#2d5a2d"
+                border.width: 1
+                opacity: 0.5
+                color: "transparent"
+                implicitWidth: 160
+                implicitHeight: 36
+            }
+
+            delegate: ItemDelegate {
+                width: langCombo.width
+                height: 36
+
+                contentItem: Text {
+                    text: model.text
+                    color: "#2d5a2d"
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignHCenter
+                    font: langCombo.font
                 }
 
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (Translator.currentLocale() !== modelData.locale) {
-                            Translator.load(modelData.locale)
-                        }
+                background: Rectangle {
+                    color: langCombo.highlightedIndex === index ? "#e0f0e0" : "transparent"
+                }
+            }
+
+            popup: Popup {
+                y: langCombo.height + 2
+                width: langCombo.width
+                padding: 0
+
+                contentItem: ListView {
+                    clip: true
+                    implicitHeight: contentHeight
+                    model: langCombo.delegateModel
+                    currentIndex: langCombo.highlightedIndex
+
+                    ScrollBar.vertical: ScrollBar {
+                        policy: ScrollBar.AsNeeded
                     }
+                }
+
+                background: Rectangle {
+                    color: "#ffffff"
+                    radius: 8
+                    border.color: "#2d5a2d"
+                    border.width: 1
                 }
             }
         }
     }
 
-    // TEMPORARY: Reset button — remove when the Settings screen is implemented.
-    // Clears the paired Zowi from the session and shows a brief confirmation.
-    Button {
-        id: resetButton
-        anchors {
-            left: parent.left
-            bottom: parent.bottom
-            margins: 12
-        }
-        implicitWidth: 90
-        height: 32
-        text: tr("Reset")
+    Item {
+        visible: Config.devMode
 
-        contentItem: Text {
-            text: parent.text
-            color: "#2d5a2d"
-            font.pixelSize: 12
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-            opacity: 0.7
+        Text {
+            id: resetMsg
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: 90
+            text: tr("Datos del Zowi borrados. Pulsa Continuar para reconfigurar.")
+            color: "#c0392b"
+            font.pixelSize: 13
+            opacity: 0.85
+            visible: false
         }
 
-        background: Rectangle {
-            radius: 16
-            color: "transparent"
-            border.color: "#2d5a2d"
-            border.width: 1
-            opacity: 0.4
+        Timer {
+            id: resetTimer
+            interval: 1000
+            onTriggered: resetMsg.visible = false
         }
 
-        onClicked: {
-            Session.saveActiveZowiDeviceAddress("")
-            Session.saveActiveZowiName("")
-            Session.saveWizardDismissed(false)
-            resetMsg.visible = true
-            resetTimer.restart()
+        Button {
+            id: resetButton
+            anchors {
+                left: parent.left
+                bottom: parent.bottom
+                margins: 12
+            }
+            implicitWidth: 90
+            height: 32
+            text: tr("Reset")
+
+            contentItem: Text {
+                text: parent.text
+                color: "#2d5a2d"
+                font.pixelSize: 12
+                font.bold: true
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                opacity: 0.7
+            }
+
+            background: Rectangle {
+                radius: 16
+                color: "transparent"
+                border.color: "#2d5a2d"
+                border.width: 1
+                opacity: 0.4
+            }
+
+            onClicked: {
+                Session.saveActiveZowiDeviceAddress("")
+                Session.saveActiveZowiName("")
+                Session.saveWizardDismissed(false)
+                resetMsg.visible = true
+                resetTimer.restart()
+            }
         }
     }
 }

@@ -5,145 +5,114 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import "../components"
 
-Rectangle {
+ScreenTemplate {
     id: scan
-    color: "#f4f9f4"
+    screenName: "ScanScreen"
 
-    property bool scanOnStart: true
-    property string macPrefix: Config.get("zowi_mac_prefix")
+    title: tr("Searching for Zowis...")
+    subtitle: tr("Searching for your Zowi, this may take a few seconds...")
+
+    showBackButton: false
+    showDisconnectButton: true
+
+    onBackClicked: scan.back()
+    onDisconnectClicked: Bluetooth.disconnectFromDevice()
 
     signal deviceSelected(string name, string address)
     signal back()
 
-    property string screenName: "ScanScreen"
+    property bool scanOnStart: true
+    property string macPrefix: Config.get("zowi_mac_prefix")
 
     function tr(source) { return Translator.translate("ScanScreen.qml", source) }
 
-    // Connection status bar (top of the screen)
-    StatusBar {
-        id: statusBar
-        anchors {
-            top: parent.top
-            left: parent.left
-            right: parent.right
-            topMargin: 5
-        }
-    }
+    Item {
+        anchors.fill: parent
 
-    Column {
-        id: topColumn
-        anchors {
-            top: statusBar.bottom
-            left: parent.left
-            right: parent.right
-            margins: 30
+        Rectangle {
+            id: listBox
+            anchors {
+                top: parent.top
+                bottom: buttonRow.top
+                bottomMargin: 20
+                horizontalCenter: parent.horizontalCenter
+            }
+            width: parent.width * 0.5
+            color: "#ffffff"
+            radius: 12
+            clip: true
+
+            ListView {
+                id: deviceList
+                anchors.fill: parent
+                anchors.margins: 1
+                model: ListModel { id: devicesModel }
+                delegate: deviceDelegate
+                spacing: 2
+
+                ScrollBar.vertical: ScrollBar {
+                    active: true
+                    width: 8
+                    policy: ScrollBar.AlwaysOn
+
+                    contentItem: Rectangle {
+                        radius: 4
+                        color: "#21a69b"
+                        opacity: 0.6
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: tr("No devices found.\nPress Scan to start searching.")
+                    color: "#2d5a2d"
+                    font.pixelSize: 14
+                    opacity: 0.4
+                    horizontalAlignment: Text.AlignHCenter
+                    visible: deviceList.count === 0
+                }
+            }
         }
-        spacing: 20
 
         Row {
-            width: parent.width
-            spacing: 15
+            id: buttonRow
+            anchors {
+                bottom: parent.bottom
+                horizontalCenter: parent.horizontalCenter
+            }
+            spacing: 20
 
             Button {
                 id: backButton
-                width: 40
-                height: 40
-
-                contentItem: Text {
-                    text: "\u2190"
-                    font.pixelSize: 22
-                    color: "#2d5a2d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                background: Rectangle {
-                    radius: 20
-                    color: backButton.pressed ? "#e0f0e0" : "transparent"
-                    border.color: "#2d5a2d"
-                    border.width: 1
-                    opacity: 0.4
-                }
-
-                onClicked: scanScreen.back()
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: tr("Search for Zowi")
-                color: "#2d5a2d"
-                font.pixelSize: 24
-                font.bold: true
-                font.family: "monospace"
-            }
-
-            Item {
-                width: Math.max(8, parent.width - backButton.width - 320)
-                height: 1
-            }
-
-            Button {
-                id: disconnectBtn
-                visible: Bluetooth.connected
-                implicitWidth: 100
-                height: 32
-
-                text: tr("Disconnect")
+                implicitWidth: 160
+                height: 44
+                text: "\u2190 " + tr("Back")
 
                 contentItem: Text {
                     text: parent.text
-                    color: "#ffffff"
+                    font.pixelSize: 14
                     font.bold: true
-                    font.pixelSize: 11
+                    color: "#2d5a2d"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
+                    opacity: 0.8
                 }
 
                 background: Rectangle {
-                    radius: 16
-                    color: disconnectBtn.pressed ? "#c0392b" : "#e74c3c"
+                    radius: 22
+                    color: "transparent"
+                    border.color: "#2d5a2d"
+                    border.width: 2
+                    opacity: 0.5
                 }
 
-                onClicked: Bluetooth.disconnectFromDevice()
+                onClicked: scan.back()
             }
-        }
-
-        Rectangle {
-            width: parent.width
-            height: 1
-            color: "#2d5a2d"
-            opacity: 0.15
-        }
-
-        Text {
-            width: parent.width
-            text: tr("Make sure Bluetooth is enabled on your computer and Zowi is turned on.")
-            color: "#2d5a2d"
-            font.pixelSize: 13
-            wrapMode: Text.WordWrap
-            opacity: 0.6
-            lineHeight: 1.4
-        }
-
-        Text {
-            width: parent.width
-            text: tr("If a PIN is requested, enter: 1234")
-            color: "#e67e22"
-            font.pixelSize: 12
-            font.italic: true
-            wrapMode: Text.WordWrap
-            opacity: 0.8
-        }
-
-        Row {
-            width: parent.width
-            spacing: 15
 
             Button {
                 id: scanButton
                 implicitWidth: 160
                 height: 44
-
                 text: Bluetooth.scanning
                       ? tr("Scanning...")
                       : tr("Scan")
@@ -178,53 +147,6 @@ Rectangle {
                 color: "#2d5a2d"
                 font.pixelSize: 12
                 opacity: 0.5
-            }
-        }
-    }
-
-    Rectangle {
-        anchors {
-            top: topColumn.bottom
-            left: parent.left
-            right: parent.right
-            bottom: parent.bottom
-            topMargin: 20
-            leftMargin: 30
-            rightMargin: 30
-        }
-
-        color: "#ffffff"
-        radius: 12
-        clip: true
-
-        ListView {
-            id: deviceList
-            anchors.fill: parent
-            anchors.margins: 1
-            model: ListModel { id: devicesModel }
-            delegate: deviceDelegate
-            spacing: 2
-
-            ScrollBar.vertical: ScrollBar {
-                active: true
-                width: 8
-                policy: ScrollBar.AlwaysOn
-
-                contentItem: Rectangle {
-                    radius: 4
-                    color: "#21a69b"
-                    opacity: 0.6
-                }
-            }
-
-            Text {
-                anchors.centerIn: parent
-                text: tr("No devices found.\nPress Scan to start searching.")
-                color: "#2d5a2d"
-                font.pixelSize: 14
-                opacity: 0.4
-                horizontalAlignment: Text.AlignHCenter
-                visible: deviceList.count === 0
             }
         }
     }
@@ -317,13 +239,11 @@ Rectangle {
         target: Bluetooth
 
         function onDeviceDiscovered(name, address) {
-            // Check for duplicates
             for (var i = 0; i < devicesModel.count; i++) {
                 if (devicesModel.get(i).address === address)
                     return;
             }
 
-            // Filter: name contains "Zowi" OR address starts with MAC prefix
             var nameMatch = name.toLowerCase().indexOf("zowi") !== -1
             var macMatch = macPrefix !== "" &&
                            address.toUpperCase().indexOf(macPrefix.toUpperCase()) === 0
@@ -342,7 +262,6 @@ Rectangle {
         function onConnectionChanged() {
             if (Bluetooth.connected) {
                 Session.saveActiveZowiDeviceAddress(Bluetooth.deviceAddress)
-                // Configure the robot name before finishing setup.
                 namePanel.open()
             }
         }
@@ -417,9 +336,7 @@ Rectangle {
         modal: true
         closePolicy: Popup.NoAutoClose
 
-        // Last accepted (valid) value, used to revert invalid live input.
         property string lastValid: "OpenZowi"
-        // Guards against onTextChanged re-entrancy when we revert programmatically.
         property bool suppress: false
 
         function isValidName(name) {
@@ -461,8 +378,6 @@ Rectangle {
                     color: "#ffffff"
                 }
 
-                // Live filtering: only A-Za-z and <=10 chars. Invalid input is
-                // reverted to the last valid value and a warning is shown.
                 onTextChanged: {
                     if (namePanel.suppress) { namePanel.suppress = false; return }
                     var t = nameField.text
@@ -517,47 +432,45 @@ Rectangle {
 
                     onClicked: {
                         var nm = nameField.text.trim()
-                        if (nm === "") nm = "OpenZowi" // empty -> default, no validation
+                        if (nm === "") nm = "OpenZowi"
                         if (!namePanel.isValidName(nm)) {
                             warningText.text = tr("Nombre no válido")
                             warningText.visible = true
                             return
                         }
-                        Bluetooth.sendData("R " + nm + "\r\n") // configure the robot
+                        Bluetooth.sendData("R " + nm + "\r\n")
                         Bluetooth.setDeviceName(nm)
                         Session.saveActiveZowiName(nm)
                         namePanel.close()
-                        scanScreen.deviceSelected(nm, Bluetooth.deviceAddress)
+                        scan.deviceSelected(nm, Bluetooth.deviceAddress)
                     }
                 }
 
                 Button {
                     implicitWidth: 150
                     height: 44
-                    text: tr("Continuar")
+                    text: tr("Cancelar")
 
                     contentItem: Text {
                         text: parent.text
-                        color: "#ffffff"
+                        color: "#2d5a2d"
                         font.bold: true
                         font.pixelSize: 14
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
+                        opacity: 0.8
                     }
 
                     background: Rectangle {
                         radius: 22
-                        color: parent.pressed ? "#17736c" : "#21a69b"
+                        color: "transparent"
+                        border.color: "#2d5a2d"
+                        border.width: 2
+                        opacity: 0.5
                     }
 
                     onClicked: {
-                        var nm = nameField.text.trim()
-                        if (nm === "") nm = "OpenZowi"
-                        // Proceed accepting the chosen name (no rename command sent).
-                        Bluetooth.setDeviceName(nm)
-                        Session.saveActiveZowiName(nm)
                         namePanel.close()
-                        scanScreen.deviceSelected(nm, Bluetooth.deviceAddress)
                     }
                 }
             }
@@ -571,7 +484,6 @@ Rectangle {
         } else {
             var storedAddr = Session.loadActiveZowiDeviceAddress()
             if (storedAddr !== "") {
-                // Auto-connect to the previously paired device
                 Bluetooth.connectToDevice(storedAddr)
             }
         }

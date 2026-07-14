@@ -150,43 +150,33 @@ Rectangle {
         // Page 0: Zowi Apps
         GridView {
             id: appsGrid
-            cellWidth: width / 3
-            cellHeight: width / 3
+            cellWidth: Math.floor(width / 3)
+            cellHeight: Math.floor(Math.min(cellWidth,
+                (swipeView.height - 40) / Math.max(Math.ceil(count / 3), 1)))
+            bottomMargin: 40
+            boundsBehavior: Flickable.StopAtBounds
+
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+            }
+
             model: ListModel {
-                ListElement {
-                    name: "Gamepad"
-                    icon: "qrc:/images/android/pad_button.png"
-                }
-                ListElement {
-                    name: "Timeline"
-                    icon: "qrc:/images/android/timeline_button.png"
-                }
-                ListElement {
-                    name: "Zowi Says"
-                    icon: "qrc:/images/android/simon_game_button.png"
-                }
-                ListElement {
-                    name: "Mouths"
-                    icon: "qrc:/images/android/mouths_game_button.png"
-                }
-                ListElement {
-                    name: "Mouths Editor"
-                    icon: "qrc:/images/android/mouths_editor_game_button.png"
-                }
+                id: appsModel
             }
 
             delegate: Item {
                 width: appsGrid.cellWidth
                 height: appsGrid.cellHeight
+                readonly property real cellBox: Math.min(appsGrid.cellWidth * 0.55, 80)
 
                 Column {
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: 6
 
                     Rectangle {
-                        width: 80
-                        height: 80
-                        radius: 16
+                        width: cellBox
+                        height: cellBox
+                        radius: Math.min(cellBox * 0.2, 16)
                         anchors.horizontalCenter: parent.horizontalCenter
                         color: appMouse.containsMouse ? "#e0f0e0" : "#ffffff"
                         border.color: "#21a69b"
@@ -195,8 +185,8 @@ Rectangle {
                         Image {
                             anchors.centerIn: parent
                             source: icon
-                            sourceSize.width: 50
-                            sourceSize.height: 50
+                            sourceSize.width: Math.min(cellBox * 0.65, 50)
+                            sourceSize.height: Math.min(cellBox * 0.65, 50)
                             fillMode: Image.PreserveAspectFit
                         }
 
@@ -213,7 +203,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: name
                         color: "#2d5a2d"
-                        font.pixelSize: 12
+                        font.pixelSize: Math.min(appsGrid.cellWidth * 0.1, 12)
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                     }
@@ -224,59 +214,33 @@ Rectangle {
         // Page 1: Projects
         GridView {
             id: projectsGrid
-            cellWidth: width / 3
-            cellHeight: width / 3
+            cellWidth: Math.floor(width / 3)
+            cellHeight: Math.floor(Math.min(cellWidth,
+                (swipeView.height - 40) / Math.max(Math.ceil(count / 3), 1)))
+            bottomMargin: 40
+            boundsBehavior: Flickable.StopAtBounds
+
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+            }
+
             model: ListModel {
-                ListElement {
-                    name: "Move"
-                    icon: "qrc:/images/android/project_move_image.png"
-                }
-                ListElement {
-                    name: "Choreography"
-                    icon: "qrc:/images/android/project_choreography_image.png"
-                }
-                ListElement {
-                    name: "Form"
-                    icon: "qrc:/images/android/project_form_image.png"
-                }
-                ListElement {
-                    name: "Paint"
-                    icon: "qrc:/images/android/project_bio3_image.png"
-                }
-                ListElement {
-                    name: "Guess"
-                    icon: "qrc:/images/android/project_adivinawi_image.png"
-                }
-                ListElement {
-                    name: "Gravity"
-                    icon: "qrc:/images/android/project_gravity_image.png"
-                }
-                ListElement {
-                    name: "Hello World"
-                    icon: "qrc:/images/android/project_helloworld_image.png"
-                }
-                ListElement {
-                    name: "Bitbloq"
-                    icon: "qrc:/images/android/project_bitbloq2_image.png"
-                }
-                ListElement {
-                    name: "Alarm"
-                    icon: "qrc:/images/android/project_alarm_image.png"
-                }
+                id: projectsModel
             }
 
             delegate: Item {
                 width: projectsGrid.cellWidth
                 height: projectsGrid.cellHeight
+                readonly property real cellBox: Math.min(projectsGrid.cellWidth * 0.55, 80)
 
                 Column {
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: 6
 
                     Rectangle {
-                        width: 80
-                        height: 80
-                        radius: 16
+                        width: cellBox
+                        height: cellBox
+                        radius: Math.min(cellBox * 0.2, 16)
                         anchors.horizontalCenter: parent.horizontalCenter
                         color: projMouse.containsMouse ? "#e0f0e0" : "#ffffff"
                         border.color: "#21a69b"
@@ -285,8 +249,8 @@ Rectangle {
                         Image {
                             anchors.centerIn: parent
                             source: icon
-                            sourceSize.width: 50
-                            sourceSize.height: 50
+                            sourceSize.width: Math.min(cellBox * 0.65, 50)
+                            sourceSize.height: Math.min(cellBox * 0.65, 50)
                             fillMode: Image.PreserveAspectFit
                         }
 
@@ -303,7 +267,7 @@ Rectangle {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: name
                         color: "#2d5a2d"
-                        font.pixelSize: 12
+                        font.pixelSize: Math.min(projectsGrid.cellWidth * 0.1, 12)
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                     }
@@ -312,9 +276,9 @@ Rectangle {
         }
     }
 
-    // DEV: temporary navigation buttons
     Row {
         id: devNav
+        visible: Config.devMode
         anchors.bottom: pageIndicator.top
         anchors.bottomMargin: 8
         anchors.horizontalCenter: parent.horizontalCenter
@@ -387,5 +351,31 @@ Rectangle {
                 }
             }
         }
+    }
+
+    Component.onCompleted: {
+        var apps = [
+            { name: tr("Gamepad"), icon: "qrc:/images/android/pad_button.png" },
+            { name: tr("Timeline"), icon: "qrc:/images/android/timeline_button.png" },
+            { name: tr("Zowi Says"), icon: "qrc:/images/android/simon_game_button.png" },
+            { name: tr("Mouths"), icon: "qrc:/images/android/mouths_game_button.png" },
+            { name: tr("Mouths Editor"), icon: "qrc:/images/android/mouths_editor_game_button.png" }
+        ]
+        for (var i = 0; i < apps.length; i++)
+            appsModel.append(apps[i])
+
+        var projects = [
+            { name: tr("Move"), icon: "qrc:/images/android/project_move_image.png" },
+            { name: tr("Choreography"), icon: "qrc:/images/android/project_choreography_image.png" },
+            { name: tr("Form"), icon: "qrc:/images/android/project_form_image.png" },
+            { name: tr("Paint"), icon: "qrc:/images/android/project_bio3_image.png" },
+            { name: tr("Guess"), icon: "qrc:/images/android/project_adivinawi_image.png" },
+            { name: tr("Gravity"), icon: "qrc:/images/android/project_gravity_image.png" },
+            { name: tr("Hello World"), icon: "qrc:/images/android/project_helloworld_image.png" },
+            { name: tr("Bitbloq"), icon: "qrc:/images/android/project_bitbloq2_image.png" },
+            { name: tr("Alarm"), icon: "qrc:/images/android/project_alarm_image.png" }
+        ]
+        for (var i = 0; i < projects.length; i++)
+            projectsModel.append(projects[i])
     }
 }

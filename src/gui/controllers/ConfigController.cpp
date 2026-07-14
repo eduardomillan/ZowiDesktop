@@ -15,6 +15,18 @@ ConfigController::ConfigController(QObject *parent)
     }
 }
 
+bool ConfigController::devMode() const
+{
+    QString env = qEnvironmentVariable("ZOWI_DEV");
+    if (!env.isEmpty()) {
+        static const QStringList truthy = {"1", "true", "on"};
+        return truthy.contains(env.trimmed().toLower());
+    }
+    QString value = QString::fromStdString(m_store.get("dev_mode"));
+    return value.compare("true", Qt::CaseInsensitive) == 0
+        || value == "1";
+}
+
 QString ConfigController::get(const QString &key) const
 {
     return QString::fromStdString(m_store.get(key.toStdString()));

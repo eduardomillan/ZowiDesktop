@@ -72,12 +72,12 @@
 <context>
     <name>ScanScreen.qml</name>
     <message>
-        <source>Search for Zowi</source>
-        <translation>Cercar el Zowi</translation>
+        <source>Searching for Zowis...</source>
+        <translation>Buscant Zowis...</translation>
     </message>
     <message>
-        <source>Make sure Bluetooth is enabled on your computer and Zowi is turned on.</source>
-        <translation>Assegura't que el Bluetooth està activat al teu ordinador i Zowi està encés.</translation>
+        <source>Searching for your Zowi, this may take a few seconds...</source>
+        <translation>Buscant al teu Zowi, això podria trigar uns segons...</translation>
     </message>
     <message>
         <source>Scanning...</source>
@@ -102,12 +102,8 @@ Press Scan to start searching.</source>
 Prem Escanéjar per a començar a buscar.</translation>
     </message>
     <message>
-        <source>Connected to %1</source>
-        <translation>Connectat a %1</translation>
-    </message>
-    <message>
-        <source>Device selected. Connecting...</source>
-        <translation>Dispositiu seleccionat. Connectant...</translation>
+        <source>Back</source>
+        <translation>Enrere</translation>
     </message>
     <message>
         <source>Not connected</source>
@@ -130,23 +126,102 @@ Prem Escanéjar per a començar a buscar.</translation>
         <translation>(no s'han trobat dispositius)</translation>
     </message>
     <message>
-        <source>If a PIN is requested, enter: 1234</source>
-        <translation>Si et demana un PIN, introduïx: 1234</translation>
+        <source>Nombre del robot</source>
+        <translation>Nom del robot</translation>
+    </message>
+    <message>
+        <source>OpenZowi</source>
+        <translation>OpenZowi</translation>
+    </message>
+    <message>
+        <source>Solo letras (A-Z), máximo 10 caracteres</source>
+        <translation>Només lletres (A-Z), màxim 10 caràcters</translation>
+    </message>
+    <message>
+        <source>Nombre no válido</source>
+        <translation>Nom no vàlid</translation>
+    </message>
+    <message>
+        <source>Renombrar</source>
+        <translation>Reanomenar</translation>
+    </message>
+    <message>
+        <source>Cancelar</source>
+        <translation>Cancel·lar</translation>
     </message>
 </context>
 <context>
-    <name>ZowiBluetoothController</name>
+    <name>ScreenTemplate.qml</name>
     <message>
-        <source>Not connected to any device</source>
-        <translation>No connectat a cap dispositiu</translation>
+        <source>Disconnect</source>
+        <translation>Desconnectar</translation>
+    </message>
+</context>
+<context>
+    <name>HomeScreen.qml</name>
+    <message>
+        <source>Zowi Apps</source>
+        <translation>Apps Zowi</translation>
     </message>
     <message>
-        <source>Scan error</source>
-        <translation>Error d'escaneig</translation>
+        <source>Projects</source>
+        <translation>Projectes</translation>
     </message>
     <message>
-        <source>Connection error</source>
-        <translation>Error de connexió</translation>
+        <source>Gamepad</source>
+        <translation>Gamepad</translation>
+    </message>
+    <message>
+        <source>Timeline</source>
+        <translation>Cronologia</translation>
+    </message>
+    <message>
+        <source>Zowi Says</source>
+        <translation>Zowi Diu</translation>
+    </message>
+    <message>
+        <source>Mouths</source>
+        <translation>Boques</translation>
+    </message>
+    <message>
+        <source>Mouths Editor</source>
+        <translation>Editor de Boques</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>Moviment</translation>
+    </message>
+    <message>
+        <source>Choreography</source>
+        <translation>Coreografia</translation>
+    </message>
+    <message>
+        <source>Form</source>
+        <translation>Forma</translation>
+    </message>
+    <message>
+        <source>Paint</source>
+        <translation>Dibuixar</translation>
+    </message>
+    <message>
+        <source>Guess</source>
+        <translation>Endevina</translation>
+    </message>
+    <message>
+        <source>Gravity</source>
+        <translation>Gravetat</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation>Hola Món</translation>
+    </message>
+    <message>
+        <source>Bitbloq</source>
+        <translation>Bitbloq</translation>
+    </message>
+    <message>
+        <source>Alarm</source>
+        <translation>Alarma</translation>
     </message>
 </context>
 </TS>

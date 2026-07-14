@@ -2,38 +2,23 @@
 // Presents a prompt to turn on Zowi before pairing.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import "../components"
 
-Rectangle {
+ScreenTemplate {
     id: wizard
-    color: "#f4f9f4"
+    screenName: "WizardScreen"
+
+    title: tr("Welcome!")
+    subtitle: tr("To control Zowi, first turn it on.")
 
     signal startClicked()
     signal dismissed()
-
-    property string screenName: "WizardScreen"
 
     function tr(source) { return Translator.translate("WizardScreen.qml", source) }
 
     Column {
         anchors.centerIn: parent
         spacing: 20
-
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("Welcome!")
-            color: "#2d5a2d"
-            font.pixelSize: 36
-            font.bold: true
-            font.family: "monospace"
-        }
-
-        Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("To control Zowi, first turn it on.")
-            color: "#2d5a2d"
-            font.pixelSize: 16
-            opacity: 0.8
-        }
 
         Image {
             anchors.horizontalCenter: parent.horizontalCenter

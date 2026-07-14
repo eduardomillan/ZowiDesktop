@@ -11,4 +11,6 @@ target_include_directories(zowi_firmware
 
 target_compile_features(zowi_firmware PUBLIC cxx_std_20)
 
+set_target_properties(zowi_firmware PROPERTIES AUTOMOC OFF)
+
 add_library(Zowi::firmware ALIAS zowi_firmware)

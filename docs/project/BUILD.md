@@ -14,22 +14,38 @@ sudo apt install cmake g++ qt6-base-dev qt6-declarative-dev qt6-connectivity-dev
 ## Quick start (native Linux)
 
 ```bash
-./build.sh
-./build/ZowiDesktop
+./build.sh               # build everything (GUI + CLI)
+./build/ZowiDesktop      # run the GUI
 ```
 
-## Build only the CLI
+For **CLI only**:
 
 ```bash
-./build_cli.sh
-```
-
-Or manually:
-
-```bash
-cmake -B build -DCMAKE_PREFIX_PATH=~/Qt/6.5.2/gcc_64 -DZOWI_BUILD_GUI=OFF
-cmake --build build --target zowi_cli
+./build.sh --cli
 ./build/src/cli/zowi_cli --help
+```
+
+For **GUI only** (no CLI):
+
+```bash
+./build.sh --gui
+./build/src/gui/ZowiDesktop
+```
+
+## Manual CMake invocations
+
+```bash
+# Everything (GUI + CLI)
+cmake -B build -DZOWI_BUILD_GUI=ON -DZOWI_BUILD_CLI=ON
+cmake --build build
+
+# GUI only
+cmake -B build -DZOWI_BUILD_GUI=ON -DZOWI_BUILD_CLI=OFF
+cmake --build build
+
+# CLI only
+cmake -B build -DZOWI_BUILD_GUI=OFF -DZOWI_BUILD_CLI=ON
+cmake --build build --target zowi_cli
 ```
 
 ## Build targets
@@ -39,7 +55,8 @@ cmake --build build --target zowi_cli
 | `ZowiDesktop` | Executable (Qt GUI) | `ZOWI_BUILD_GUI=ON` |
 | `zowi_cli` | Executable (terminal) | `ZOWI_BUILD_CLI=ON` |
 | `zowi_core` | Static library | Always built |
-| `zowi_bt_qt` | Static library | `ZOWI_BUILD_GUI=ON` or `ZOWI_BUILD_CLI=ON` |
+| `zowi_bt_qt` | Static library (Qt Bluetooth SPP) | `ZOWI_BUILD_GUI=ON` or `ZOWI_BUILD_CLI=ON` |
+| `zowi_bt_serial` | Static library (RFCOMM TTY, POSIX only) | `ZOWI_BUILD_CLI=ON` (excluded on Windows) |
 | `test_*` | Test executables | `BUILD_TESTS=ON` |
 
 ## Platform builds
@@ -47,7 +64,6 @@ cmake --build build --target zowi_cli
 | Platform | Output | How to build |
 |---|---|---|
 | **Linux (native)** | `build/ZowiDesktop` | `./build.sh` |
-| **Linux (CLI only)** | `build/src/cli/zowi_cli` | `./build_cli.sh` |
 | **Linux (AppImage)** | `build/ZowiDesktop-x86_64.AppImage` | `./packaging/linux/create-appimage.sh` |
 | **Windows (.zip)** | `build-windows/ZowiDesktop-windows-x86_64.zip` | `./packaging/windows/create-portable-zip.sh` |
 

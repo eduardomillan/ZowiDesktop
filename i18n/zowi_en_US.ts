@@ -72,12 +72,12 @@
 <context>
     <name>ScanScreen.qml</name>
     <message>
-        <source>Search for Zowi</source>
-        <translation>Search for Zowi</translation>
+        <source>Searching for Zowis...</source>
+        <translation>Searching for Zowis...</translation>
     </message>
     <message>
-        <source>Make sure Bluetooth is enabled on your computer and Zowi is turned on.</source>
-        <translation>Make sure Bluetooth is enabled on your computer and Zowi is turned on.</translation>
+        <source>Searching for your Zowi, this may take a few seconds...</source>
+        <translation>Searching for your Zowi, this may take a few seconds...</translation>
     </message>
     <message>
         <source>Scanning...</source>
@@ -102,12 +102,8 @@ Press Scan to start searching.</source>
 Press Scan to start searching.</translation>
     </message>
     <message>
-        <source>Connected to %1</source>
-        <translation>Connected to %1</translation>
-    </message>
-    <message>
-        <source>Device selected. Connecting...</source>
-        <translation>Device selected. Connecting...</translation>
+        <source>Back</source>
+        <translation>Back</translation>
     </message>
     <message>
         <source>Not connected</source>
@@ -130,8 +126,35 @@ Press Scan to start searching.</translation>
         <translation>(no devices found)</translation>
     </message>
     <message>
-        <source>If a PIN is requested, enter: 1234</source>
-        <translation>If a PIN is requested, enter: 1234</translation>
+        <source>Nombre del robot</source>
+        <translation>Robot name</translation>
+    </message>
+    <message>
+        <source>OpenZowi</source>
+        <translation>OpenZowi</translation>
+    </message>
+    <message>
+        <source>Solo letras (A-Z), máximo 10 caracteres</source>
+        <translation>Letters only (A-Z), max 10 characters</translation>
+    </message>
+    <message>
+        <source>Nombre no válido</source>
+        <translation>Invalid name</translation>
+    </message>
+    <message>
+        <source>Renombrar</source>
+        <translation>Rename</translation>
+    </message>
+    <message>
+        <source>Cancelar</source>
+        <translation>Cancel</translation>
+    </message>
+</context>
+<context>
+    <name>ScreenTemplate.qml</name>
+    <message>
+        <source>Disconnect</source>
+        <translation>Disconnect</translation>
     </message>
 </context>
 <context>
@@ -147,6 +170,73 @@ Press Scan to start searching.</translation>
     <message>
         <source>Connection error</source>
         <translation>Connection error</translation>
+    </message>
+</context>
+<context>
+    <name>HomeScreen.qml</name>
+    <message>
+        <source>Zowi Apps</source>
+        <translation>Zowi Apps</translation>
+    </message>
+    <message>
+        <source>Projects</source>
+        <translation>Projects</translation>
+    </message>
+    <message>
+        <source>Gamepad</source>
+        <translation>Gamepad</translation>
+    </message>
+    <message>
+        <source>Timeline</source>
+        <translation>Timeline</translation>
+    </message>
+    <message>
+        <source>Zowi Says</source>
+        <translation>Zowi Says</translation>
+    </message>
+    <message>
+        <source>Mouths</source>
+        <translation>Mouths</translation>
+    </message>
+    <message>
+        <source>Mouths Editor</source>
+        <translation>Mouths Editor</translation>
+    </message>
+    <message>
+        <source>Move</source>
+        <translation>Move</translation>
+    </message>
+    <message>
+        <source>Choreography</source>
+        <translation>Choreography</translation>
+    </message>
+    <message>
+        <source>Form</source>
+        <translation>Form</translation>
+    </message>
+    <message>
+        <source>Paint</source>
+        <translation>Paint</translation>
+    </message>
+    <message>
+        <source>Guess</source>
+        <translation>Guess</translation>
+    </message>
+    <message>
+        <source>Gravity</source>
+        <translation>Gravity</translation>
+    </message>
+    <message>
+        <source>Hello World</source>
+        <translation>Hello World</translation>
+    </message>
+    <message>
+        <source>Bitbloq</source>
+        <translation>Bitbloq</translation>
+    </message>
+    <message>
+        <source>Alarm</source>
+        <translation>Alarm</translation>
     </message>
 </context>
 </TS>

@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Window 2.15
 import "screens"
+import "components"
 
 Window {
     visible: true
@@ -76,5 +77,8 @@ Window {
         initialItem: SplashScreen {
             Component.onCompleted: connectSplash(this)
         }
+    }
+
+    DevOverlay {
     }
 }

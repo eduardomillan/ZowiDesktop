@@ -16,5 +16,6 @@ target_compile_features(zowi_core PUBLIC cxx_std_20)
 target_link_libraries(zowi_core
     PUBLIC nlohmann_json::nlohmann_json
 )
+set_target_properties(zowi_core PROPERTIES AUTOMOC OFF)
 
 add_library(Zowi::core ALIAS zowi_core)

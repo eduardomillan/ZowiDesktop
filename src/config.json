@@ -3,5 +3,9 @@
     "splash_image": "qrc:/images/android/hello_image.png",
     "start_image": "qrc:/images/android/pressed_animation_sleppy_button.png",
     "welcome_image": "qrc:/images/android/welcome_image.png",
-    "zowi_mac_prefix": "B4:9D:0B:3"
+    "zowi_found_image": "qrc:/images/android/zowi_found_image.png",
+    "zowi_not_found_image": "qrc:/images/android/zowi_not_found_image.png",
+    "zowi_mac_prefix": "B4:9D:0B:3",
+    "zowi_default_name": "OpenZowi",
+    "dev_mode": "true"
 }

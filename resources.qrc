@@ -4,9 +4,11 @@
         <file>src/views/screens/SplashScreen.qml</file>
         <file>src/views/screens/WelcomeScreen.qml</file>
         <file>src/views/screens/WizardScreen.qml</file>
+        <file>src/views/screens/ScreenTemplate.qml</file>
         <file>src/views/screens/HomeScreen.qml</file>
         <file>src/views/components/AnimatedZowi.qml</file>
         <file>src/views/components/StatusBar.qml</file>
+        <file>src/views/components/DevOverlay.qml</file>
         <file>src/views/screens/ScanScreen.qml</file>
         <file>src/config.json</file>
         <file>docs/images/es.svg</file>
