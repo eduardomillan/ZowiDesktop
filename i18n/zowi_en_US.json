@@ -7,7 +7,8 @@
     "select_language": "Select language",
     "reset": "Reset",
     "unpair_success": "Zowi device removed from the app and from the Bluetooth system.",
-    "unpair_app_only": "Device removed from the app, but could not be unpaired from the Bluetooth system."
+    "unpair_app_only": "Device removed from the app, but could not be unpaired from the Bluetooth system.",
+    "reset_no_zowi": "No Zowi is currently registered in the app."
   },
   "StatusBar.qml": {
     "connected": "Connected",
@@ -33,7 +34,7 @@
     "scan": "Scan",
     "searching_devices": "Searching for devices...",
     "found_devices": "Found %1 devices",
-    "no_devices_hint": "No devices found.\nPress Scan to start searching.",
+    "no_devices_hint": "No devices found yet.",
     "back": "Back",
     "no_devices_item": "(no devices found)"
   },

@@ -27,9 +27,10 @@ Rectangle {
         font.bold: true
     }
 
-    function show(text) {
+    function show(text, bg) {
         msgText.text = text || ""
         if (msgText.text === "") return
+        root.color = (bg !== undefined) ? bg : "#17736c"
         root.visible = true
         root.opacity = 1
         hideTimer.restart()

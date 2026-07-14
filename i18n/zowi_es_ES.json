@@ -7,7 +7,8 @@
     "select_language": "Selecciona idioma",
     "reset": "Reiniciar",
     "unpair_success": "Dispositivo Zowi borrado de la app y del sistema Bluetooth.",
-    "unpair_app_only": "Dispositivo borrado de la app, pero no se pudo desenlazar del sistema Bluetooth."
+    "unpair_app_only": "Dispositivo borrado de la app, pero no se pudo desenlazar del sistema Bluetooth.",
+    "reset_no_zowi": "No hay ningún Zowi registrado en la app."
   },
   "StatusBar.qml": {
     "connected": "Conectado",
@@ -33,7 +34,7 @@
     "scan": "Escanear",
     "searching_devices": "Buscando dispositivos...",
     "found_devices": "%1 dispositivos encontrados",
-    "no_devices_hint": "No se encontraron dispositivos.\nPulsa Escanear para empezar a buscar.",
+    "no_devices_hint": "Todavía no se encontraron dispositivos",
     "back": "Atrás",
     "no_devices_item": "(no se encontraron dispositivos)"
   },
@@ -57,7 +58,7 @@
   },
   "WelcomeScreen.qml": {
     "zowi": "ZOWI",
-    "tagline": "Tu robot compañero y amigable",
+    "tagline": "Tu robot compañero y amigo",
     "start": "Empezar",
     "learn_more": "Saber más"
   },

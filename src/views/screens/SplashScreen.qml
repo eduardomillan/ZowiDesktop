@@ -250,8 +250,16 @@ Rectangle {
             onClicked: {
                 var addr = Session.loadActiveZowiDeviceAddress()
                 if (!addr) addr = Bluetooth.deviceAddress
+                if (!addr) {
+                    // No registered Zowi: clear any stale app data and warn.
+                    Session.saveActiveZowiDeviceAddress("")
+                    Session.saveActiveZowiName("")
+                    Session.saveWizardDismissed(false)
+                    msgBar.show(tr("reset_no_zowi"), "#c0392b")
+                    return
+                }
                 if (Bluetooth.connected) Bluetooth.disconnectFromDevice()
-                if (addr) Bluetooth.unpairDevice(addr)
+                Bluetooth.unpairDevice(addr)
                 Session.saveActiveZowiDeviceAddress("")
                 Session.saveActiveZowiName("")
                 Session.saveWizardDismissed(false)

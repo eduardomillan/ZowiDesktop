@@ -7,7 +7,8 @@
     "select_language": "Tria una llengua",
     "reset": "Reinicia",
     "unpair_success": "Dispositiu Zowi eliminat de l'app i del sistema Bluetooth.",
-    "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth."
+    "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth.",
+    "reset_no_zowi": "No hi ha cap Zowi registrat a l'app."
   },
   "StatusBar.qml": {
     "connected": "Connectat",
@@ -33,7 +34,7 @@
     "scan": "Escanejar",
     "searching_devices": "Cercant dispositius...",
     "found_devices": "%1 dispositius trobats",
-    "no_devices_hint": "No s'han trobat dispositius.\nPrem Escanéjar per a començar a buscar.",
+    "no_devices_hint": "No s'han trobat dispositius encara.",
     "back": "Enrere",
     "no_devices_item": "(no s'han trobat dispositius)"
   },
