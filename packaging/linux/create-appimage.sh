@@ -12,6 +12,7 @@ QT_ROOT_DIR="${QT_ROOT_DIR:-/home/eduardo/Qt/6.5.2/gcc_64}"
 echo "=== Step 1: Build project ==="
 cmake -S "$PROJECT_ROOT" -B "$BUILD_DIR" \
     -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
+    -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr
 cmake --build "$BUILD_DIR"
 
