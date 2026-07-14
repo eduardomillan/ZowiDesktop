@@ -29,8 +29,9 @@ jobs:
             cmake ninja-build pkg-config wget ca-certificates build-essential \
             libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev \
             squashfs-tools \
-            qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland \
-            qt6-quickcontrols2-dev qt6-tools-dev
+            qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland qt6-tools-dev \
+            qml6-module-qtqml qml6-module-qtquick2 qml6-module-qtquick-controls \
+            qml6-module-qtquick-window qml6-module-qtquick-layouts
           echo "QT_ROOT_DIR=/usr/lib/x86_64-linux-gnu/qt6" >> "$GITHUB_ENV"
 
       - name: Build AppImage
@@ -63,7 +64,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             cmake ninja-build pkg-config fakeroot debhelper devscripts dpkg-dev build-essential \
             qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland \
-            qt6-quickcontrols2-dev qt6-tools-dev libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev
+            qt6-tools-dev libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev
 
       - name: Bump version to ${{ steps.ver.outputs.version }}
         env:

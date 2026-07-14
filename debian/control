@@ -8,7 +8,7 @@ Homepage: https://github.com/eduardomillan/ZowiDesktop
 
 Package: zowi-desktop
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, bluez, libgl1, libxkbcommon0, qt6-wayland
+Depends: ${shlibs:Depends}, ${misc:Depends}, bluez, libgl1, libxkbcommon0, qt6-wayland, qt6-base, qt6-declarative, qml6-module-qtqml, qml6-module-qtquick2, qml6-module-qtquick-controls, qml6-module-qtquick-window, qml6-module-qtquick-layouts
 Description: Control and program your Zowi robot
  Zowi Desktop is a cross-platform application to control and program your
  Zowi robot from a computer. Connect via Bluetooth (BlueZ), control
