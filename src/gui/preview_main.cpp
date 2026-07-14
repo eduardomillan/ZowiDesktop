@@ -108,7 +108,19 @@ public:
         emit connectionChanged();
     }
 
-    Q_INVOKABLE void sendData(const QString &) {}
+    Q_INVOKABLE void sendData(const QString &data) {
+        // Simulate the firmware's acknowledge flow for the rename command
+        // ("R <name>\r"): it replies with &&A (received) then &&F (final ack
+        // after the EEPROM write). Used by the WizardRenameScreen preview.
+        if (data.startsWith(QStringLiteral("R "))) {
+            QTimer::singleShot(400, this, [this]() {
+                emit dataReceived(QStringLiteral("&&A%%"));
+            });
+            QTimer::singleShot(900, this, [this]() {
+                emit dataReceived(QStringLiteral("&&F%%"));
+            });
+        }
+    }
 
     Q_INVOKABLE void unpairDevice(const QString &) {
         emit unpairFinished(true, QString());

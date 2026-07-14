@@ -12,6 +12,7 @@
         <file>src/views/components/MessageBar.qml</file>
         <file>src/views/screens/ScanScreen.qml</file>
         <file>src/views/screens/WizardFoundScreen.qml</file>
+        <file>src/views/screens/WizardRenameScreen.qml</file>
         <file>src/config.json</file>
         <file>docs/images/es.svg</file>
         <file>docs/images/gb.svg</file>

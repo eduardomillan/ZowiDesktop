@@ -56,9 +56,15 @@ Window {
                 scan.back.connect(function() { stack.pop() })
                 scan.deviceSelected.connect(function() {
                     var found = stack.push("qrc:/src/views/screens/WizardFoundScreen.qml")
+                    found.backClicked.connect(function() { stack.pop() })
                     found.paired.connect(function() {
-                        var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
-                        connectHome(home)
+                        var rename = stack.push("qrc:/src/views/screens/WizardRenameScreen.qml")
+                        rename.backClicked.connect(function() { stack.pop() })
+                        rename.renamed.connect(function(name) {
+                            Session.saveActiveZowiName(name)
+                            var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
+                            connectHome(home)
+                        })
                     })
                 })
             })
