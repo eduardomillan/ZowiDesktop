@@ -77,6 +77,7 @@ Rectangle {
 
         Button {
             id: quitButton
+            visible: Config.get("button_quit_visible") === "true"
             implicitWidth: 200
             height: 50
             text: tr("Salir")

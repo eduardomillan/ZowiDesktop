@@ -91,6 +91,22 @@ ScreenTemplate {
         }
     }
 
+    Timer {
+        id: connectTimer
+        interval: 800
+        onTriggered: {
+            var addr = Session.loadActiveZowiDeviceAddress()
+            if (addr !== "") {
+                wizardFound.pairingAttempt = true
+                errorText.visible = false
+                pairingTimer.restart()
+                Bluetooth.connectToDevice(addr)
+            }
+        }
+    }
+
+    Component.onCompleted: connectTimer.start()
+
     Connections {
         target: Bluetooth
 

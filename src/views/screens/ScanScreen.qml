@@ -167,7 +167,9 @@ ScreenTemplate {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     Bluetooth.stopScan()
-                    Bluetooth.connectToDevice(address)
+                    Session.saveActiveZowiDeviceAddress(address)
+                    Session.saveActiveZowiName(deviceName)
+                    scan.deviceSelected(deviceName, address)
                 }
             }
 
@@ -263,230 +265,14 @@ ScreenTemplate {
         function onConnectionChanged() {
             if (Bluetooth.connected) {
                 Session.saveActiveZowiDeviceAddress(Bluetooth.deviceAddress)
-                namePanel.open()
-            }
-        }
-
-        function onErrorOccurred(message) {
-            errorDialog.text = message
-            errorDialog.open()
-        }
-    }
-
-    Popup {
-        id: errorDialog
-        anchors.centerIn: parent
-        width: parent.width * 0.5
-        height: 180
-        modal: true
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-
-        property string text: ""
-
-        Column {
-            anchors.centerIn: parent
-            spacing: 20
-
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: tr("Error")
-                color: "#e74c3c"
-                font.bold: true
-                font.pixelSize: 18
-                font.family: "monospace"
-            }
-
-            Text {
-                width: errorDialog.width - 60
-                text: errorDialog.text
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-                color: "#2d5a2d"
-                font.pixelSize: 13
-            }
-
-            Button {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: tr("Accept")
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "#ffffff"
-                    font.bold: true
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                background: Rectangle {
-                    radius: 20
-                    color: "#21a69b"
-                    implicitWidth: 100
-                    implicitHeight: 36
-                }
-
-                onClicked: errorDialog.close()
             }
         }
     }
 
-    Popup {
-        id: namePanel
-        anchors.centerIn: parent
-        width: parent.width * 0.6
-        height: 260
-        modal: true
-        closePolicy: Popup.NoAutoClose
 
-        property string lastValid: "OpenZowi"
-        property bool suppress: false
 
-        function isValidName(name) {
-            return name.match(/^[A-Za-z]{1,10}$/) !== null
-        }
-
-        onOpened: {
-            var dn = Bluetooth.deviceName
-            nameField.text = (dn !== "" && dn !== "#") ? dn : "OpenZowi"
-            lastValid = nameField.text
-            warningText.visible = false
-        }
-
-        Column {
-            anchors.centerIn: parent
-            spacing: 14
-
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: tr("Nombre del robot")
-                color: "#2d5a2d"
-                font.bold: true
-                font.pixelSize: 18
-                font.family: "monospace"
-            }
-
-            TextField {
-                id: nameField
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: namePanel.width - 80
-                maximumLength: 10
-                placeholderText: tr("OpenZowi")
-                selectByMouse: true
-
-                background: Rectangle {
-                    radius: 8
-                    border.color: "#21a69b"
-                    border.width: 1
-                    color: "#ffffff"
-                }
-
-                onTextChanged: {
-                    if (namePanel.suppress) { namePanel.suppress = false; return }
-                    var t = nameField.text
-                    if (t === "") {
-                        namePanel.lastValid = ""
-                        warningText.visible = false
-                        return
-                    }
-                    if (namePanel.isValidName(t)) {
-                        namePanel.lastValid = t
-                        warningText.visible = false
-                        return
-                    }
-                    warningText.text = tr("Solo letras (A-Z), máximo 10 caracteres")
-                    warningText.visible = true
-                    namePanel.suppress = true
-                    nameField.text = namePanel.lastValid
-                }
-            }
-
-            Text {
-                id: warningText
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: tr("Solo letras (A-Z), máximo 10 caracteres")
-                color: "#e74c3c"
-                font.pixelSize: 12
-                visible: false
-            }
-
-            Row {
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 16
-
-                Button {
-                    implicitWidth: 150
-                    height: 44
-                    text: tr("Renombrar")
-
-                    contentItem: Text {
-                        text: parent.text
-                        color: "#ffffff"
-                        font.bold: true
-                        font.pixelSize: 14
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                    }
-
-                    background: Rectangle {
-                        radius: 22
-                        color: parent.pressed ? "#17736c" : "#21a69b"
-                    }
-
-                    onClicked: {
-                        var nm = nameField.text.trim()
-                        if (nm === "") nm = "OpenZowi"
-                        if (!namePanel.isValidName(nm)) {
-                            warningText.text = tr("Nombre no válido")
-                            warningText.visible = true
-                            return
-                        }
-                        Bluetooth.sendData("R " + nm + "\r\n")
-                        Bluetooth.setDeviceName(nm)
-                        Session.saveActiveZowiName(nm)
-                        namePanel.close()
-                        scan.deviceSelected(nm, Bluetooth.deviceAddress)
-                    }
-                }
-
-                Button {
-                    implicitWidth: 150
-                    height: 44
-                    text: tr("Cancelar")
-
-                    contentItem: Text {
-                        text: parent.text
-                        color: "#2d5a2d"
-                        font.bold: true
-                        font.pixelSize: 14
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        opacity: 0.8
-                    }
-
-                    background: Rectangle {
-                        radius: 22
-                        color: "transparent"
-                        border.color: "#2d5a2d"
-                        border.width: 2
-                        opacity: 0.5
-                    }
-
-                    onClicked: {
-                        namePanel.close()
-                    }
-                }
-            }
-        }
-    }
-
-    Component.onCompleted: {
+    StackView.onActivated: {
         devicesModel.clear()
-        if (scanOnStart) {
-            Bluetooth.startScan()
-        } else {
-            var storedAddr = Session.loadActiveZowiDeviceAddress()
-            if (storedAddr !== "") {
-                Bluetooth.connectToDevice(storedAddr)
-            }
-        }
+        Bluetooth.startScan()
     }
 }

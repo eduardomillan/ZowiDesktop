@@ -9,5 +9,6 @@
     "zowi_default_name": "OpenZowi",
     "dev_mode": "true",
     "message_duration": 2000,
-    "button_scan_visible": "true"
+    "button_scan_visible": "false",
+    "button_quit_visible": "false"
 }
