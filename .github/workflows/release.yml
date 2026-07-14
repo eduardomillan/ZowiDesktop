@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  pages: write
 
 jobs:
   # ── AppImage (self-contained Qt via aqtinstall, matches dev's 6.5.2) ──
@@ -90,11 +89,17 @@ jobs:
           name: deb
           path: build/zowi-desktop_*.deb
 
-  # ── Publish: GitHub Release + signed apt repo on GitHub Pages ──
+  # ── Publish: GitHub Release + signed apt repo into docs/ (GitHub Pages) ──
   publish:
     needs: [appimage, deb]
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout main (Pages serves the docs/ folder)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -127,12 +132,14 @@ jobs:
           cp -r ~/.aptly/public/. public/
           gpg --export > public/keyring.gpg
 
-      - name: Publish apt repo to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: public
-          publish_branch: gh-pages
-          force_orphan: true
-          user_name: github-actions
-          user_email: github-actions@github.com
+      - name: Publish apt repo into docs/ on main
+        run: |
+          rm -rf docs/dists docs/pool
+          cp -r public/dists docs/
+          cp -r public/pool docs/
+          cp public/keyring.gpg docs/
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add docs
+          git commit -m "apt repo: update to ${{ github.ref_name }}" || echo "no changes"
+          git push origin main
