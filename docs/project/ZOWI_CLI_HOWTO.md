@@ -2,6 +2,24 @@
 
 The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionality without launching the GUI.
 
+## Table of Contents
+
+- [Quick reference](#quick-reference)
+- [Help](#help)
+- [Session](#session)
+- [Config](#config)
+- [Translate](#translate)
+- [Scan](#scan)
+- [Connect](#connect)
+- [Rename](#rename)
+- [Restore](#restore)
+- [Alarm](#alarm)
+- [Disconnect](#disconnect)
+- [Status](#status)
+- [Test Scripts](#test-scripts)
+- [Examples](#examples)
+- [Control](#control)
+- [Building](#building)
 
 ## Quick reference
 
