@@ -5,8 +5,9 @@ import QtQuick.Layouts 1.15
 Item {
     id: root
     visible: Config.devMode
-    width: 320
-    height: Math.min(400, parent ? parent.height * 0.6 : 400)
+    property bool collapsed: true
+    width: collapsed ? 72 : 320
+    height: collapsed ? 28 : Math.min(400, parent ? parent.height * 0.6 : 400)
 
     x: parent ? parent.width - width - 8 : 0
     y: 8
@@ -23,8 +24,11 @@ Item {
             anchors.margins: 6
             spacing: 4
 
+            // Header: always visible. Click to toggle, drag to move.
             RowLayout {
+                id: headerRow
                 Layout.fillWidth: true
+                Layout.preferredHeight: 16
                 spacing: 6
 
                 Text {
@@ -37,108 +41,124 @@ Item {
                 Item { Layout.fillWidth: true }
 
                 Text {
-                    text: "\u22EE\u22EE"
-                    color: "#555"
+                    text: root.collapsed ? "▶" : "▼"
+                    color: "#888"
                     font.pixelSize: 10
                 }
-            }
 
-            Text {
-                color: "#ddd"
-                font.pixelSize: 9
-                elide: Text.ElideRight
-                text: {
-                    var s = Bluetooth.connected ? "\u25cf Connected" : "\u25cf Disconnected"
-                    if (Bluetooth.deviceAddress)
-                        s += "  " + Bluetooth.deviceName + " (" + Bluetooth.deviceAddress + ")"
-                    return s
-                }
-            }
-
-            Text {
-                color: "#ddd"
-                font.pixelSize: 9
-                text: "Battery: " + (Bluetooth.battery >= 0 ? Bluetooth.battery + "%" : "N/A")
-            }
-
-            Text {
-                color: "#aaa"
-                font.pixelSize: 9
-                elide: Text.ElideRight
-                text: "Zowi: " + Session.loadActiveZowiName() + " / " + Session.loadActiveZowiDeviceAddress()
-            }
-
-            Rectangle {
-                height: 1
-                color: "#555"
-                Layout.fillWidth: true
-            }
-
-            RowLayout {
-                Layout.fillWidth: true
-
-                Text {
-                    text: "LOG"
-                    color: "#e67e22"
-                    font.pixelSize: 9
-                    font.bold: true
-                }
-
-                Item { Layout.fillWidth: true }
-
-                Button {
-                    implicitWidth: 40
-                    implicitHeight: 16
-                    font.pixelSize: 8
-                    text: "clear"
-
-                    contentItem: Text {
-                        text: parent.text
-                        color: "#ccc"
-                        font.pixelSize: 8
-                        horizontalAlignment: Text.AlignHCenter
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.OpenHandCursor
+                    drag.target: root
+                    drag.axis: Drag.XAndYAxis
+                    drag.threshold: 4
+                    property point pressPos
+                    onPressed: {
+                        pressPos = Qt.point(mouse.x, mouse.y)
+                        cursorShape = Qt.ClosedHandCursor
                     }
-
-                    background: Rectangle {
-                        color: "#444"
-                        radius: 3
+                    onReleased: {
+                        cursorShape = Qt.OpenHandCursor
+                        if (Math.abs(mouse.x - pressPos.x) < 4 &&
+                            Math.abs(mouse.y - pressPos.y) < 4)
+                            root.collapsed = !root.collapsed
                     }
-
-                    onClicked: logModel.clear()
                 }
             }
 
-            ListView {
-                id: logList
+            // Detailed content — hidden when collapsed
+            ColumnLayout {
+                visible: !root.collapsed
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                clip: true
+                spacing: 4
 
-                model: ListModel { id: logModel }
-
-                delegate: Text {
-                    text: model.text
-                    color: model.isError ? "#e74c3c" : "#aaa"
-                    font.pixelSize: 8
-                    font.family: "monospace"
+                Text {
+                    color: "#ddd"
+                    font.pixelSize: 9
+                    elide: Text.ElideRight
+                    text: {
+                        var s = Bluetooth.connected ? "● Connected" : "● Disconnected"
+                        if (Bluetooth.deviceAddress)
+                            s += "  " + Bluetooth.deviceName + " (" + Bluetooth.deviceAddress + ")"
+                        return s
+                    }
                 }
 
-                ScrollBar.vertical: ScrollBar {
-                    policy: ScrollBar.AsNeeded
+                Text {
+                    color: "#ddd"
+                    font.pixelSize: 9
+                    text: "Battery: " + (Bluetooth.battery >= 0 ? Bluetooth.battery + "%" : "N/A")
+                }
+
+                Text {
+                    color: "#aaa"
+                    font.pixelSize: 9
+                    elide: Text.ElideRight
+                    text: "Zowi: " + Session.loadActiveZowiName() + " / " + Session.loadActiveZowiDeviceAddress()
+                }
+
+                Rectangle {
+                    height: 1
+                    color: "#555"
+                    Layout.fillWidth: true
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: "LOG"
+                        color: "#e67e22"
+                        font.pixelSize: 9
+                        font.bold: true
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        implicitWidth: 40
+                        implicitHeight: 16
+                        font.pixelSize: 8
+                        text: "clear"
+
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#ccc"
+                            font.pixelSize: 8
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        background: Rectangle {
+                            color: "#444"
+                            radius: 3
+                        }
+
+                        onClicked: logModel.clear()
+                    }
+                }
+
+                ListView {
+                    id: logList
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+
+                    model: ListModel { id: logModel }
+
+                    delegate: Text {
+                        text: model.text
+                        color: model.isError ? "#e74c3c" : "#aaa"
+                        font.pixelSize: 8
+                        font.family: "monospace"
+                    }
+
+                    ScrollBar.vertical: ScrollBar {
+                        policy: ScrollBar.AsNeeded
+                    }
                 }
             }
         }
-    }
-
-    MouseArea {
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: 24
-        drag.target: root
-        drag.axis: Drag.XAndYAxis
-        cursorShape: Qt.OpenHandCursor
-        onPressedChanged: cursorShape = pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
     }
 
     Connections {
