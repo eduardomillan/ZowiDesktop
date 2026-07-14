@@ -9,8 +9,8 @@ ScreenTemplate {
     id: scan
     screenName: "ScanScreen"
 
-    title: tr("Searching for Zowis...")
-    subtitle: tr("Searching for your Zowi, this may take a few seconds...")
+    title: tr("searching_title")
+    subtitle: tr("searching_subtitle")
 
     showBackButton: false
     showDisconnectButton: true
@@ -64,7 +64,7 @@ ScreenTemplate {
 
                 Text {
                     anchors.centerIn: parent
-                    text: tr("No devices found.\nPress Scan to start searching.")
+                    text: tr("no_devices_hint")
                     color: "#2d5a2d"
                     font.pixelSize: 14
                     opacity: 0.4
@@ -86,7 +86,7 @@ ScreenTemplate {
                 id: backButton
                 implicitWidth: 160
                 height: 44
-                text: "\u2190 " + tr("Back")
+                text: "\u2190 " + tr("back")
 
                 contentItem: Text {
                     text: parent.text
@@ -115,8 +115,8 @@ ScreenTemplate {
                 height: 44
                 visible: Config.get("button_scan_visible") === "true"
                 text: Bluetooth.scanning
-                      ? tr("Scanning...")
-                      : tr("Scan")
+                      ? tr("scanning")
+                      : tr("scan")
 
                 contentItem: Text {
                     text: parent.text
@@ -143,8 +143,8 @@ ScreenTemplate {
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: Bluetooth.scanning
-                      ? tr("Searching for devices...")
-                      : tr("Found %1 devices").arg(deviceList.count)
+                      ? tr("searching_devices")
+                      : tr("found_devices").arg(deviceList.count)
                 color: "#2d5a2d"
                 font.pixelSize: 12
                 opacity: 0.5
@@ -258,7 +258,7 @@ ScreenTemplate {
 
         function onScanFinished() {
             if (devicesModel.count === 0) {
-                devicesModel.append({ deviceName: tr("(no devices found)"), address: "" })
+                devicesModel.append({ deviceName: tr("no_devices_item"), address: "" })
             }
         }
 

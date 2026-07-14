@@ -10,8 +10,8 @@ ScreenTemplate {
     id: renameScreen
     screenName: "WizardRenameScreen"
 
-    title: tr("¡Dale un nombre!")
-    subtitle: tr("Escribe un nombre para tu Zowi y pulsa Renombrar.")
+    title: tr("title")
+    subtitle: tr("subtitle")
     showBackButton: !renaming
 
     property string defaultName: Config.get("zowi_default_name") || "OpenZowi"
@@ -39,7 +39,7 @@ ScreenTemplate {
             width: 340
             height: 48
             text: renameScreen.defaultName
-            placeholderText: tr("Nombre del Zowi")
+            placeholderText: tr("name_placeholder")
             font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             selectByMouse: true
@@ -52,7 +52,7 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: 260
             height: 56
-            text: renameScreen.renaming ? tr("Renombrando...") : tr("Renombrar")
+            text: renameScreen.renaming ? tr("renaming") : tr("rename")
             enabled: !renameScreen.renaming && nameField.text.trim() !== ""
 
             contentItem: Text {
@@ -74,7 +74,7 @@ ScreenTemplate {
                 if (name === "")
                     return
                 renameScreen.renaming = true
-                statusText.text = tr("Enviando nombre a Zowi...")
+                statusText.text = tr("sending")
                 statusText.color = "#2d5a2d"
                 statusText.visible = true
                 renameTimer.restart()
@@ -101,7 +101,7 @@ ScreenTemplate {
         onTriggered: {
             if (!renameScreen.renameDone) {
                 renameScreen.renaming = false
-                statusText.text = tr("No se pudo renombrar. Inténtalo de nuevo.")
+                statusText.text = tr("rename_failed")
                 statusText.color = "#e74c3c"
                 statusText.visible = true
             }
@@ -122,7 +122,7 @@ ScreenTemplate {
                 renameScreen.renameDone = true
                 renameTimer.stop()
                 renameScreen.renaming = false
-                statusText.text = tr("¡Listo! Zowi ahora se llama %1.").arg(nameField.text.trim())
+                statusText.text = tr("done").arg(nameField.text.trim())
                 statusText.color = "#2d5a2d"
                 statusText.visible = true
                 renameScreen.renamed(nameField.text.trim())

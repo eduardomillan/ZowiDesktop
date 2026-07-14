@@ -35,13 +35,13 @@ Rectangle {
             font.pixelSize: 12
             opacity: 0.8
             text: {
-                if (!Bluetooth.connected) return root.tr("Not connected")
+                if (!Bluetooth.connected) return root.tr("not_connected")
                 var name = Bluetooth.deviceName ? Bluetooth.deviceName : ""
                 if (Bluetooth.battery >= 0)
                     return name !== ""
-                        ? root.tr("Connected · %1 · %2%").arg(name).arg(Bluetooth.battery)
-                        : root.tr("Connected · %1%").arg(Bluetooth.battery)
-                return name !== "" ? root.tr("Connected · %1").arg(name) : root.tr("Connected")
+                        ? root.tr("connected_name_battery").arg(name).arg(Bluetooth.battery)
+                        : root.tr("connected_battery").arg(Bluetooth.battery)
+                return name !== "" ? root.tr("connected_name").arg(name) : root.tr("connected")
             }
         }
     }

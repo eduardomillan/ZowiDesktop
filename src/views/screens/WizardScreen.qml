@@ -8,8 +8,8 @@ ScreenTemplate {
     id: wizard
     screenName: "WizardScreen"
 
-    title: tr("Welcome!")
-    subtitle: tr("To control Zowi, first turn it on.")
+    title: tr("welcome")
+    subtitle: tr("turn_on_hint")
 
     signal startClicked()
     signal dismissed()
@@ -37,7 +37,7 @@ ScreenTemplate {
                 id: startButton
                 implicitWidth: 200
                 height: 56
-                text: tr("It's already on")
+                text: tr("already_on")
 
                 contentItem: Text {
                     text: parent.text
@@ -60,7 +60,7 @@ ScreenTemplate {
                 id: notReadyButton
                 implicitWidth: 200
                 height: 56
-                text: tr("I don't have a Zowi")
+                text: tr("no_zowi")
 
                 contentItem: Text {
                     text: parent.text

@@ -8,8 +8,8 @@ ScreenTemplate {
     id: wizardFound
     screenName: "WizardFoundScreen"
 
-    title: tr("¡Aquí está!")
-    subtitle: tr("Para controlar a Zowi, introduce el código 1234")
+    title: tr("title")
+    subtitle: tr("subtitle")
 
     property string pairingCode: Config.get("pairing_code") || "1234"
     property bool pairingAttempt: false
@@ -47,7 +47,7 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: 260
             height: 56
-            text: tr("Emparejar con %1").arg(wizardFound.pairingCode)
+            text: tr("pair_button").arg(wizardFound.pairingCode)
 
             contentItem: Text {
                 text: parent.text
@@ -81,7 +81,7 @@ ScreenTemplate {
         Text {
             id: errorText
             anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("No se pudo conectar. Asegúrate de que el Zowi está encendido y cerca.")
+            text: tr("connect_error")
             color: "#e74c3c"
             font.pixelSize: 13
             visible: false

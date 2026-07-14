@@ -22,7 +22,8 @@ public:
 
 private:
     using TranslationMap = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
-    TranslationMap m_translations;
+    TranslationMap m_translations;   // current locale
+    TranslationMap m_fallback;       // always English (en_US) when current != en_US
     std::string m_currentLocale;
     std::string m_resourceBasePath;
     ChangedCallback m_onChanged;

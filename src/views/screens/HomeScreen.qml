@@ -98,7 +98,7 @@ Rectangle {
             spacing: 12
 
             Text {
-                text: tr("Zowi Apps")
+                text: tr("zowi_apps")
                 color: swipeView.currentIndex === 0 ? "#21a69b" : "#2d5a2d"
                 font.pixelSize: 18
                 font.bold: swipeView.currentIndex === 0
@@ -119,7 +119,7 @@ Rectangle {
             }
 
             Text {
-                text: tr("Projects")
+                text: tr("projects")
                 color: swipeView.currentIndex === 1 ? "#21a69b" : "#2d5a2d"
                 font.pixelSize: 18
                 font.bold: swipeView.currentIndex === 1
@@ -355,25 +355,25 @@ Rectangle {
 
     Component.onCompleted: {
         var apps = [
-            { name: tr("Gamepad"), icon: "qrc:/images/android/pad_button.png" },
-            { name: tr("Timeline"), icon: "qrc:/images/android/timeline_button.png" },
-            { name: tr("Zowi Says"), icon: "qrc:/images/android/simon_game_button.png" },
-            { name: tr("Mouths"), icon: "qrc:/images/android/mouths_game_button.png" },
-            { name: tr("Mouths Editor"), icon: "qrc:/images/android/mouths_editor_game_button.png" }
+            { name: tr("gamepad"), icon: "qrc:/images/android/pad_button.png" },
+            { name: tr("timeline"), icon: "qrc:/images/android/timeline_button.png" },
+            { name: tr("zowi_says"), icon: "qrc:/images/android/simon_game_button.png" },
+            { name: tr("mouths"), icon: "qrc:/images/android/mouths_game_button.png" },
+            { name: tr("mouths_editor"), icon: "qrc:/images/android/mouths_editor_game_button.png" }
         ]
         for (var i = 0; i < apps.length; i++)
             appsModel.append(apps[i])
 
         var projects = [
-            { name: tr("Move"), icon: "qrc:/images/android/project_move_image.png" },
-            { name: tr("Choreography"), icon: "qrc:/images/android/project_choreography_image.png" },
-            { name: tr("Form"), icon: "qrc:/images/android/project_form_image.png" },
-            { name: tr("Paint"), icon: "qrc:/images/android/project_bio3_image.png" },
-            { name: tr("Guess"), icon: "qrc:/images/android/project_adivinawi_image.png" },
-            { name: tr("Gravity"), icon: "qrc:/images/android/project_gravity_image.png" },
-            { name: tr("Hello World"), icon: "qrc:/images/android/project_helloworld_image.png" },
-            { name: tr("Bitbloq"), icon: "qrc:/images/android/project_bitbloq2_image.png" },
-            { name: tr("Alarm"), icon: "qrc:/images/android/project_alarm_image.png" }
+            { name: tr("move"), icon: "qrc:/images/android/project_move_image.png" },
+            { name: tr("choreography"), icon: "qrc:/images/android/project_choreography_image.png" },
+            { name: tr("form"), icon: "qrc:/images/android/project_form_image.png" },
+            { name: tr("paint"), icon: "qrc:/images/android/project_bio3_image.png" },
+            { name: tr("guess"), icon: "qrc:/images/android/project_adivinawi_image.png" },
+            { name: tr("gravity"), icon: "qrc:/images/android/project_gravity_image.png" },
+            { name: tr("hello_world"), icon: "qrc:/images/android/project_helloworld_image.png" },
+            { name: tr("bitbloq"), icon: "qrc:/images/android/project_bitbloq2_image.png" },
+            { name: tr("alarm"), icon: "qrc:/images/android/project_alarm_image.png" }
         ]
         for (var i = 0; i < projects.length; i++)
             projectsModel.append(projects[i])

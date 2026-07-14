@@ -31,7 +31,7 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("ZOWI")
+            text: tr("zowi")
             color: "#2d5a2d"
             font.pixelSize: 48
             font.bold: true
@@ -40,7 +40,7 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("Desktop")
+            text: tr("desktop")
             color: "#2d5a2d"
             font.pixelSize: 18
             opacity: 0.7
@@ -56,7 +56,7 @@ Rectangle {
             id: continueButton
             implicitWidth: 200
             height: 50
-            text: tr("Continuar")
+            text: tr("continue")
 
             contentItem: Text {
                 text: parent.text
@@ -80,7 +80,7 @@ Rectangle {
             visible: Config.get("button_quit_visible") === "true"
             implicitWidth: 200
             height: 50
-            text: tr("Salir")
+            text: tr("quit")
 
             contentItem: Text {
                 text: parent.text
@@ -108,7 +108,7 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: langRow.top
         anchors.bottomMargin: 10
-        text: tr("Selecciona idioma")
+        text: tr("select_language")
         color: "#2d5a2d"
         font.pixelSize: 13
         opacity: 0.6
@@ -118,7 +118,7 @@ Rectangle {
         id: langRow
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 30
+        anchors.bottomMargin: 52
 
         ComboBox {
             id: langCombo
@@ -226,29 +226,25 @@ Rectangle {
             id: resetButton
             anchors {
                 left: parent.left
-                bottom: parent.bottom
+                bottom: msgBar.top
                 margins: 12
             }
             implicitWidth: 90
             height: 32
-            text: tr("Reset")
+            text: tr("reset")
 
             contentItem: Text {
                 text: parent.text
-                color: "#2d5a2d"
+                color: "#ffffff"
                 font.pixelSize: 12
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
-                opacity: 0.7
             }
 
             background: Rectangle {
                 radius: 16
-                color: "transparent"
-                border.color: "#2d5a2d"
-                border.width: 1
-                opacity: 0.4
+                color: resetButton.pressed ? "#d35400" : "#e67e22"
             }
 
             onClicked: {
@@ -267,9 +263,9 @@ Rectangle {
         target: Bluetooth
         function onUnpairFinished(success, message) {
             if (success)
-                msgBar.show(tr("Dispositivo Zowi borrado de la app y del sistema Bluetooth."))
+                msgBar.show(tr("unpair_success"))
             else
-                msgBar.show(tr("Dispositivo borrado de la app, pero no se pudo desenlazar del sistema Bluetooth."))
+                msgBar.show(tr("unpair_app_only"))
         }
     }
 }

@@ -1,0 +1,79 @@
+{
+  "SplashScreen.qml": {
+    "zowi": "ZOWI",
+    "desktop": "Escriptori",
+    "continue": "Segueix",
+    "quit": "Ix",
+    "select_language": "Tria una llengua",
+    "reset": "Reinicia",
+    "unpair_success": "Dispositiu Zowi eliminat de l'app i del sistema Bluetooth.",
+    "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth."
+  },
+  "StatusBar.qml": {
+    "connected": "Connectat",
+    "connected_name": "Connectat · %1",
+    "connected_battery": "Connectat · %1%",
+    "connected_name_battery": "Connectat · %1 · %2%",
+    "not_connected": "No connectat"
+  },
+  "WizardRenameScreen.qml": {
+    "title": "Posa nom al teu Zowi!",
+    "subtitle": "Escriu un nom per al teu Zowi i prem Reanomenar.",
+    "name_placeholder": "Nom del robot",
+    "rename": "Reanomenar",
+    "renaming": "Reanomenant...",
+    "sending": "Enviant el nom al Zowi...",
+    "done": "Fet! El Zowi ara es diu %1.",
+    "rename_failed": "No s'ha pogut reanomenar. Torna-ho a provar."
+  },
+  "ScanScreen.qml": {
+    "searching_title": "Buscant Zowis...",
+    "searching_subtitle": "Buscant al teu Zowi, això podria trigar uns segons...",
+    "scanning": "Escanejant...",
+    "scan": "Escanejar",
+    "searching_devices": "Cercant dispositius...",
+    "found_devices": "%1 dispositius trobats",
+    "no_devices_hint": "No s'han trobat dispositius.\nPrem Escanéjar per a començar a buscar.",
+    "back": "Enrere",
+    "no_devices_item": "(no s'han trobat dispositius)"
+  },
+  "HomeScreen.qml": {
+    "zowi_apps": "Apps Zowi",
+    "projects": "Projectes",
+    "gamepad": "Gamepad",
+    "timeline": "Cronologia",
+    "zowi_says": "Zowi Diu",
+    "mouths": "Boques",
+    "mouths_editor": "Editor de Boques",
+    "move": "Moviment",
+    "choreography": "Coreografia",
+    "form": "Forma",
+    "paint": "Dibuixar",
+    "guess": "Endevina",
+    "gravity": "Gravetat",
+    "hello_world": "Hola Món",
+    "bitbloq": "Bitbloq",
+    "alarm": "Alarma"
+  },
+  "WelcomeScreen.qml": {
+    "zowi": "ZOWI",
+    "tagline": "El teu robot company i amic",
+    "start": "Començar",
+    "learn_more": "Saber-ne més"
+  },
+  "WizardFoundScreen.qml": {
+    "title": "Allà és!",
+    "subtitle": "Per a controlar a Zowi, introdueix el codi 1234",
+    "pair_button": "Aparellar amb %1",
+    "connect_error": "No s'ha pogut connectar. Assegura't que el Zowi està encès i a prop."
+  },
+  "ScreenTemplate.qml": {
+    "disconnect": "Desconnectar"
+  },
+  "WizardScreen.qml": {
+    "welcome": "Benvingut!",
+    "turn_on_hint": "Per a controlar a Zowi, primer encén-lo.",
+    "already_on": "Ja està encés",
+    "no_zowi": "No tinc un Zowi"
+  }
+}

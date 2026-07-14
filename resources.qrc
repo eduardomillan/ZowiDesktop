@@ -54,9 +54,9 @@
         <file>images/projects/bitbloq_blocks.png</file>
         <file>images/scratch/sprite1.png</file>
         <file>images/scratch/sprite2.png</file>
-        <file>i18n/zowi_es_ES.ts</file>
-        <file>i18n/zowi_ca_ES.ts</file>
-        <file>i18n/zowi_en_US.ts</file>
+        <file>i18n/zowi_es_ES.json</file>
+        <file>i18n/zowi_ca_ES.json</file>
+        <file>i18n/zowi_en_US.json</file>
         <file>images/android/achievements_badge.png</file>
         <file>images/android/achievements_button.png</file>
         <file>images/android/action_button.png</file>

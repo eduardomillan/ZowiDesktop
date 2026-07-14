@@ -29,7 +29,7 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("ZOWI")
+            text: tr("zowi")
             color: "#2d5a2d"
             font.pixelSize: 36
             font.bold: true
@@ -38,7 +38,7 @@ Rectangle {
 
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("Your friendly robot companion")
+            text: tr("tagline")
             color: "#2d5a2d"
             font.pixelSize: 16
             opacity: 0.8
@@ -54,7 +54,7 @@ Rectangle {
                 id: startButton
                 implicitWidth: 200
                 height: 56
-                text: tr("Empezar")
+                text: tr("start")
 
                 contentItem: Text {
                     text: parent.text
@@ -77,7 +77,7 @@ Rectangle {
                 id: knowMoreButton
                 implicitWidth: 200
                 height: 56
-                text: tr("Saber más")
+                text: tr("learn_more")
 
                 contentItem: Text {
                     text: parent.text

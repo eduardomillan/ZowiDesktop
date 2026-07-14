@@ -73,7 +73,7 @@ Rectangle {
             margins: 12
         }
 
-        text: root.tr("Disconnect")
+        text: root.tr("disconnect")
 
         contentItem: Text {
             text: parent.text
