@@ -9,9 +9,12 @@ permissions:
   contents: write
 
 jobs:
-  # ── AppImage (self-contained, bundles Qt from the distro's Qt6) ──
+  # ── AppImage: built on the oldest base (22.04/jammy) so the single,
+  #    self-contained image runs on BOTH Lliurex 23 (jammy, glibc 2.35)
+  #    and Lliurex 25 (noble, glibc 2.39) via forward glibc
+  #    compatibility. Bundles Qt 6.2.4. ──
   appimage:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
@@ -46,8 +49,46 @@ jobs:
           name: appimage
           path: build/ZowiDesktop-*.AppImage
 
-  # ── Debian package (built against the distro's Qt6) ──
-  deb:
+  # ── Debian package for Lliurex 23 / Ubuntu 22.04 (jammy) ──
+  deb-jammy:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute version from tag
+        id: ver
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install system Qt6 and packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build pkg-config fakeroot debhelper devscripts dpkg-dev build-essential \
+            qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland \
+            qt6-tools-dev libbluetooth-dev libgl1-mesa-dev nlohmann-json3-dev libcli11-dev
+
+      - name: Bump version to ${{ steps.ver.outputs.version }}
+        env:
+          DEBFULLNAME: GitHub Actions
+          DEBEMAIL: actions@github.com
+        run: |
+          sed -i -E "s/VERSION [0-9]+\.[0-9]+\.[0-9]+/VERSION ${{ steps.ver.outputs.version }}/" CMakeLists.txt
+          dch -v "${{ steps.ver.outputs.version }}-1" -D unstable "Release ${{ steps.ver.outputs.version }}"
+
+      - name: Build .deb
+        run: bash packaging/linux/create-deb.sh
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-jammy
+          path: build/zowi-desktop_*.deb
+
+  # ── Debian package for Lliurex 25 / Ubuntu 24.04 (noble) ──
+  deb-noble:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +106,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             cmake ninja-build pkg-config fakeroot debhelper devscripts dpkg-dev build-essential \
             qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland \
-            qt6-tools-dev libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev nlohmann-json3-dev libcli11-dev
+            qt6-tools-dev libbluetooth-dev libgl1-mesa-dev nlohmann-json3-dev libcli11-dev
 
       - name: Bump version to ${{ steps.ver.outputs.version }}
         env:
@@ -81,12 +122,12 @@ jobs:
       - name: Upload .deb artifact
         uses: actions/upload-artifact@v4
         with:
-          name: deb
+          name: deb-noble
           path: build/zowi-desktop_*.deb
 
-  # ── Publish: GitHub Release + signed apt repo on gh-pages (docs/ folder) ──
+  # ── Publish: GitHub Release + signed apt repo (jammy + noble) on gh-pages ──
   publish:
-    needs: [appimage, deb]
+    needs: [appimage, deb-jammy, deb-noble]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -101,7 +142,8 @@ jobs:
         with:
           files: |
             artifacts/appimage/ZowiDesktop-*.AppImage
-            artifacts/deb/zowi-desktop_*.deb
+            artifacts/deb-jammy/zowi-desktop_*.deb
+            artifacts/deb-noble/zowi-desktop_*.deb
           generate_release_notes: true
 
       - name: Install aptly and GnuPG
@@ -112,13 +154,17 @@ jobs:
       - name: Import GPG signing key
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
 
-      - name: Build signed apt repository
+      - name: Build signed apt repository (jammy + noble)
         env:
           APTLY_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
-          aptly repo create -distribution=stable -component=main zowi
-          aptly repo add zowi artifacts/deb/zowi-desktop_*.deb
-          aptly publish repo -distribution=stable zowi
+          aptly repo create -distribution=jammy -component=main zowi-jammy
+          aptly repo add zowi-jammy artifacts/deb-jammy/zowi-desktop_*.deb
+          aptly publish repo -distribution=jammy zowi-jammy
+
+          aptly repo create -distribution=noble -component=main zowi-noble
+          aptly repo add zowi-noble artifacts/deb-noble/zowi-desktop_*.deb
+          aptly publish repo -distribution=noble zowi-noble
 
       - name: Stage apt repo under docs/ (Pages serves the docs folder)
         run: |

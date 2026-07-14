@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-07-14
+
+### Changed
+- **Multi-distro packaging.** The Debian package is now built separately for
+  **Lliurex 23 / Ubuntu 22.04 (jammy)** and **Lliurex 25 / Ubuntu
+  24.04 (noble)** and published to two APT suites (`jammy` and
+  `noble`) in the same signed repository, because Qt 6 gained the `t64`
+  ABI suffix (and newer glibc/libstdc++) on noble, making a single
+  `.deb` incompatible across both bases.
+- The **AppImage** is built on the older 22.04 base (self-contained Qt
+  6.2.4) so the single image runs on both Lliurex 23 and 25 via
+  forward glibc compatibility.
+
+### Fixed
+- `Depends` used the wrong QML module name `qml6-module-qtquick2`;
+  corrected to `qml6-module-qtquick` (Qt 6).
+
 ## [0.3.0] - 2026-07-14
 
 ### Added
