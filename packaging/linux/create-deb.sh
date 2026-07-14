@@ -6,6 +6,7 @@ BUILD_DIR="$PROJECT_ROOT/build"
 
 echo "=== Building .deb ==="
 cd "$PROJECT_ROOT"
+mkdir -p "$BUILD_DIR"
 dpkg-buildpackage -b -us -uc
 
 echo ""
