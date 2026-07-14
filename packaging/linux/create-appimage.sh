@@ -9,6 +9,10 @@ TOOLS_DIR="$PROJECT_ROOT/build/.tools"
 # Qt6 location — override with: export QT_ROOT_DIR=/path/to/qt6
 QT_ROOT_DIR="${QT_ROOT_DIR:-/home/eduardo/Qt/6.5.2/gcc_64}"
 
+# Packaged builds ship with dev mode OFF. It can be re-enabled at runtime
+# via the ZOWI_DEV environment variable.
+sed -i -E 's/("dev_mode"\s*:\s*")[^"]*(")/\1false\2/' "$PROJECT_ROOT/src/config.json"
+
 echo "=== Step 1: Build project ==="
 cmake -S "$PROJECT_ROOT" -B "$BUILD_DIR" \
     -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \

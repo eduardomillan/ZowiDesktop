@@ -8,7 +8,7 @@
     "zowi_not_found_image": "qrc:/images/android/zowi_not_found_image.png",
     "zowi_mac_prefix": "B4:9D:0B:3",
     "zowi_default_name": "OpenZowi",
-    "dev_mode": "true",
+    "dev_mode": "false",
     "message_duration": 2000,
     "button_scan_visible": "false",
     "button_quit_visible": "false"

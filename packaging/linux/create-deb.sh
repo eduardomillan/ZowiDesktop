@@ -6,6 +6,9 @@ BUILD_DIR="$PROJECT_ROOT/build"
 
 echo "=== Building .deb ==="
 cd "$PROJECT_ROOT"
+# Packaged builds ship with dev mode OFF. It can be re-enabled at runtime
+# via the ZOWI_DEV environment variable.
+sed -i -E 's/("dev_mode"\s*:\s*")[^"]*(")/\1false\2/' "$PROJECT_ROOT/src/config.json"
 mkdir -p "$BUILD_DIR"
 dpkg-buildpackage -b -us -uc
 
