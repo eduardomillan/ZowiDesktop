@@ -1,12 +1,16 @@
 #include "qt_bluetooth_backend.h"
 #include <iostream>
 #include <QDebug>
+#include <QCoreApplication>
 #include <chrono>
+#include <thread>
 #include <QBluetoothAddress>
 #include <QBluetoothUuid>
 #include <QBluetoothServiceInfo>
+#include <QDBusReply>
 
 static const QBluetoothUuid SPP_UUID = QBluetoothUuid(QStringLiteral("00001101-0000-1000-8000-00805F9B34FB"));
+static const QString AGENT_DBUS_PATH = QStringLiteral("/edu/um/ZowiDesktop/agent");
 
 namespace zowi {
 
@@ -82,6 +86,63 @@ void QtBluetoothBackend::stopDiscovery()
     }
 }
 
+// ── BlueZ agent for automatic PIN entry ────────────────────────
+//
+// The HC-05 modules used by Zowi robots require legacy pairing with
+// a fixed PIN ("1234").  Qt's Bluetooth stack shows a GUI dialog for
+// this, which is useless in a CLI context.  We register our own agent
+// on D-Bus so that BlueZ calls us when it needs the PIN, and we reply
+// immediately with "1234".
+
+void QtBluetoothBackend::registerBlueZAgent()
+{
+    if (m_agent)
+        return;
+
+    auto bus = QDBusConnection::systemBus();
+    m_agentPath = AGENT_DBUS_PATH;
+
+    m_agent.reset(new BlueZAgent(QStringLiteral("1234"), this));
+    if (!bus.registerObject(m_agentPath, m_agent.get(), QDBusConnection::ExportAllSlots)) {
+        m_agent.reset();
+        return;
+    }
+
+    QDBusInterface agentMgr(QStringLiteral("org.bluez"), QStringLiteral("/org/bluez"),
+                            QStringLiteral("org.bluez.AgentManager1"), bus);
+    QDBusReply<void> reply = agentMgr.call(QStringLiteral("RegisterAgent"),
+        QVariant::fromValue(QDBusObjectPath(m_agentPath)),
+        QStringLiteral("KeyboardOnly"));
+
+    if (!reply.isValid()) {
+        bus.unregisterObject(m_agentPath);
+        m_agent.reset();
+        return;
+    }
+
+    // Make our agent the default so BlueZ routes PIN requests to it
+    // instead of showing a GUI dialog (which is useless in CLI mode).
+    agentMgr.call(QStringLiteral("RequestDefaultAgent"),
+                  QVariant::fromValue(QDBusObjectPath(m_agentPath)));
+}
+
+void QtBluetoothBackend::unregisterBlueZAgent()
+{
+    if (!m_agent)
+        return;
+
+    auto bus = QDBusConnection::systemBus();
+    QDBusInterface agentMgr(QStringLiteral("org.bluez"), QStringLiteral("/org/bluez"),
+                            QStringLiteral("org.bluez.AgentManager1"), bus);
+    agentMgr.call(QStringLiteral("UnregisterAgent"),
+                  QVariant::fromValue(QDBusObjectPath(m_agentPath)));
+    bus.unregisterObject(m_agentPath);
+    m_agent.reset();
+    m_agentPath.clear();
+}
+
+// ── Connection ─────────────────────────────────────────────────
+
 bool QtBluetoothBackend::connect(const std::string &address)
 {
     m_deviceAddress = QString::fromStdString(address);
@@ -92,6 +153,8 @@ bool QtBluetoothBackend::connect(const std::string &address)
         m_socket->deleteLater();
         m_socket = nullptr;
     }
+
+    registerBlueZAgent();
 
     m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
     QObject::connect(m_socket, &QBluetoothSocket::connected,
@@ -124,7 +187,22 @@ void QtBluetoothBackend::disconnect()
 
     if (m_socket) {
         m_socket->disconnectFromService();
+
+        if (QCoreApplication::instance()) {
+            auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(2000);
+            while (m_socket->state() != QBluetoothSocket::SocketState::UnconnectedState &&
+                   std::chrono::steady_clock::now() < deadline)
+            {
+                QCoreApplication::processEvents(QEventLoop::AllEvents);
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        }
+
+        m_socket->deleteLater();
+        m_socket = nullptr;
     }
+
+    unregisterBlueZAgent();
 
     if (m_reconnectTimer) {
         m_reconnectTimer->deleteLater();
@@ -221,7 +299,6 @@ void QtBluetoothBackend::onSocketConnected()
         m_reconnectTimer->stop();
     }
 
-    // Flush any data that was buffered before the socket connected.
     if (!m_pendingWrite.empty()) {
         QByteArray bytes = QByteArray::fromStdString(m_pendingWrite);
         m_socket->write(bytes);
@@ -274,12 +351,14 @@ void QtBluetoothBackend::reconnectTimerTick()
     if (m_socket && m_socket->state() == QBluetoothSocket::SocketState::ConnectedState)
         return;
 
-    // Create a fresh socket — reusing the old one may not work with BlueZ D-Bus.
     if (m_socket) {
         m_socket->disconnectFromService();
         m_socket->deleteLater();
         m_socket = nullptr;
     }
+
+    registerBlueZAgent();
+
     m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
     QObject::connect(m_socket, &QBluetoothSocket::connected,
                      this, &QtBluetoothBackend::onSocketConnected);

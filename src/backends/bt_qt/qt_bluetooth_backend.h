@@ -8,8 +8,41 @@
 #include <QTimer>
 #include <QHash>
 #include <QVector>
+#include <QDBusConnection>
+#include <QDBusObjectPath>
+#include <QDBusInterface>
+#include <memory>
 
 namespace zowi {
+
+// BlueZ D-Bus agent that responds to PIN requests — required because HC-05
+// modules need pairing with pin "1234" before they accept SPP connections.
+class BlueZAgent : public QObject {
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.bluez.Agent1")
+public:
+    explicit BlueZAgent(const QString &pin, QObject *parent = nullptr)
+        : QObject(parent), m_pin(pin) {}
+
+public slots:
+    QString RequestPinCode(const QDBusObjectPath &device) {
+        Q_UNUSED(device)
+        return m_pin;
+    }
+    void DisplayPinCode(const QDBusObjectPath &device, const QString &pincode) {
+        Q_UNUSED(device) Q_UNUSED(pincode)
+    }
+    void RequestConfirmation(const QDBusObjectPath &device, const QString &passkey) {
+        Q_UNUSED(device) Q_UNUSED(passkey)
+    }
+    void AuthorizeService(const QDBusObjectPath &device, const QString &uuid) {
+        Q_UNUSED(device) Q_UNUSED(uuid)
+    }
+    void Cancel() {}
+
+private:
+    QString m_pin;
+};
 
 class QtBluetoothBackend : public QObject, public BluetoothApi {
     Q_OBJECT
@@ -46,6 +79,8 @@ private slots:
 
 private:
     void startReconnectTimer();
+    void registerBlueZAgent();
+    void unregisterBlueZAgent();
 
     QBluetoothLocalDevice m_localDevice;
     QBluetoothDeviceDiscoveryAgent *m_discoveryAgent = nullptr;
@@ -59,6 +94,8 @@ private:
     std::string m_pendingWrite;
     bool m_autoReconnect = true;
     int m_reconnectInterval = 3000;
+    std::unique_ptr<BlueZAgent> m_agent;
+    QString m_agentPath;
 };
 
 } // namespace zowi

@@ -45,6 +45,7 @@ static std::atomic<bool> g_quit{false};
 static constexpr float kLowBatteryThreshold = 50.0f;
 static constexpr const char *kFactoryFirmwarePath = "src/firmware/ZOWI_BASE_v2.hex";
 static constexpr const char *kAlarmFirmwarePath = "src/firmware/ZOWI_Alarm_v2.hex";
+static constexpr int kDiscoveryTimeoutMs = 4000;
 
 static void resetRobotState()
 {
@@ -163,6 +164,22 @@ static bool waitUntil(QCoreApplication &qtApp, int timeoutMs, const std::functio
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     return false;
+}
+
+// Scan until the given Bluetooth address is discovered by BlueZ, so that a
+// subsequent connectToService() does not fail with "Unknown remote device".
+static bool discoverDevice(QCoreApplication &qtApp, zowi::QtBluetoothBackend &bt,
+                           const std::string &address, int timeoutMs)
+{
+    bool found = false;
+    bt.onDeviceFound([&](const zowi::DeviceInfo &dev) {
+        if (dev.address == address) found = true;
+    });
+    bt.startDiscovery();
+    bool ok = waitUntil(qtApp, timeoutMs, [&]() { return found; });
+    bt.stopDiscovery();
+    bt.onDeviceFound(nullptr);
+    return ok;
 }
 
 // ── Interactive keyboard input (raw terminal mode) ───────────
@@ -712,6 +729,9 @@ int main(int argc, char **argv)
         zowi::QtBluetoothBackend bt;
         resetRobotState();
 
+        std::cout << "Discovering " << connectAddress << "..." << std::endl;
+        discoverDevice(qtApp, bt, connectAddress, kDiscoveryTimeoutMs);
+
         std::cout << "Connecting to " << connectAddress << "..." << std::endl;
 
         bt.onDataReceived([](const std::string &data) {
@@ -788,6 +808,9 @@ int main(int argc, char **argv)
             return 1;
         }
 
+        std::cout << "Discovering " << savedAddr << "..." << std::endl;
+        discoverDevice(qtApp, bt, savedAddr, kDiscoveryTimeoutMs);
+
         std::cout << "Connecting to " << savedAddr << "..." << std::endl;
 
         std::atomic<bool> renameSent{false};
@@ -852,6 +875,10 @@ int main(int argc, char **argv)
                                             : restoreAddress;
         auto bt = prepareFlashBackend(restoreBackend, restoreAddr, restoreTty, connectTarget, boundTty);
         if (!bt) return 1;
+        if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+            std::cout << "Discovering " << connectTarget << "..." << std::endl;
+            discoverDevice(qtApp, *qtBt, connectTarget, kDiscoveryTimeoutMs);
+        }
         bt->setAutoReconnect(true, 100);
         bt->onDataReceived([](const std::string &d) { onDataReceived(d); });
         bt->onConnectionChanged([](bool c) {
@@ -888,6 +915,10 @@ int main(int argc, char **argv)
                                            : alarmAddress;
         auto bt = prepareFlashBackend(alarmBackend, alarmAddr, alarmTty, connectTarget, boundTty);
         if (!bt) return 1;
+        if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+            std::cout << "Discovering " << connectTarget << "..." << std::endl;
+            discoverDevice(qtApp, *qtBt, connectTarget, kDiscoveryTimeoutMs);
+        }
         bt->setAutoReconnect(true, 100);
         bt->onDataReceived([](const std::string &d) { onDataReceived(d); });
         bt->onConnectionChanged([](bool c) {
@@ -992,6 +1023,9 @@ int main(int argc, char **argv)
             });
             bt.onError([](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
 
+            std::cout << "Discovering " << addr << "..." << std::endl;
+            discoverDevice(qtApp, bt, addr, kDiscoveryTimeoutMs);
+
             std::cout << "Connecting to " << addr << "..." << std::endl;
             bt.connect(addr);
             if (waitForRobotData(qtApp, (connectTimeout + 2) * 1000)) {
@@ -1043,6 +1077,9 @@ int main(int argc, char **argv)
             std::cerr << "No paired device found. Run 'connect' first or pass --address." << std::endl;
             return 1;
         }
+
+        std::cout << "Discovering " << ctrlAddr << "..." << std::endl;
+        discoverDevice(qtApp, bt, ctrlAddr, kDiscoveryTimeoutMs);
 
         std::cout << "Connecting to " << ctrlAddr << "..." << std::endl;
 
