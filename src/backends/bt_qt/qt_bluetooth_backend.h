@@ -81,6 +81,8 @@ private:
     void startReconnectTimer();
     void registerBlueZAgent();
     void unregisterBlueZAgent();
+    QString adapterPath();
+    void ensurePairedAndTrusted(const QString &address);
 
     QBluetoothLocalDevice m_localDevice;
     QBluetoothDeviceDiscoveryAgent *m_discoveryAgent = nullptr;

@@ -126,6 +126,50 @@ void QtBluetoothBackend::registerBlueZAgent()
                   QVariant::fromValue(QDBusObjectPath(m_agentPath)));
 }
 
+QString QtBluetoothBackend::adapterPath()
+{
+    auto bus = QDBusConnection::systemBus();
+    QDBusInterface manager(QStringLiteral("org.bluez"), QStringLiteral("/"),
+                           QStringLiteral("org.freedesktop.DBus.ObjectManager"), bus);
+    QDBusReply<QMap<QDBusObjectPath, QMap<QString, QMap<QString, QVariant>>>> reply =
+        manager.call(QStringLiteral("GetManagedObjects"));
+    if (!reply.isValid())
+        return QString();
+    const auto &objects = reply.value();
+    for (auto it = objects.begin(); it != objects.end(); ++it) {
+        if (it.value().contains(QStringLiteral("org.bluez.Adapter1")))
+            return it.key().path();
+    }
+    return QString();
+}
+
+// Ensure the device is paired and trusted.  An untrusted (but paired) device
+// still triggers a service-authorization prompt from BlueZ on every SPP
+// connect; on a desktop session that prompt is routed to the DE's default
+// agent (not ours), which has no usable PIN dialog and fails with
+// "Cannot connect to profile/service".  Marking the device Trusted makes
+// BlueZ skip the authorization prompt entirely.
+void QtBluetoothBackend::ensurePairedAndTrusted(const QString &address)
+{
+    auto bus = QDBusConnection::systemBus();
+    QString ap = adapterPath();
+    if (ap.isEmpty())
+        return;
+
+    QString devPath = ap + QStringLiteral("/dev_") + address.toUpper().replace(':', '_');
+    QDBusInterface dev(QStringLiteral("org.bluez"), devPath,
+                       QStringLiteral("org.bluez.Device1"), bus);
+    if (!dev.isValid())
+        return;
+
+    dev.setProperty("Trusted", true);
+
+    if (!dev.property("Paired").toBool()) {
+        // Pairing uses our registered default agent for the legacy PIN.
+        dev.asyncCall(QStringLiteral("Pair"));
+    }
+}
+
 void QtBluetoothBackend::unregisterBlueZAgent()
 {
     if (!m_agent)
@@ -155,6 +199,7 @@ bool QtBluetoothBackend::connect(const std::string &address)
     }
 
     registerBlueZAgent();
+    ensurePairedAndTrusted(m_deviceAddress);
 
     m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
     QObject::connect(m_socket, &QBluetoothSocket::connected,
@@ -356,6 +401,7 @@ void QtBluetoothBackend::reconnectTimerTick()
     }
 
     registerBlueZAgent();
+    ensurePairedAndTrusted(m_deviceAddress);
 
     m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
     QObject::connect(m_socket, &QBluetoothSocket::connected,
