@@ -132,5 +132,8 @@ echo "=== Moving AppImage to build directory ==="
 mv "$PROJECT_ROOT/$APPIMAGE_NAME" "$PROJECT_ROOT/build/" 2>/dev/null || true
 
 echo ""
+# Restore dev mode for the development tree so it is not left OFF after packaging
+git checkout -- src/config.json 2>/dev/null || true
+
 echo "=== Done ==="
 ls -lh "$BUILD_DIR/$APPIMAGE_NAME"
