@@ -58,10 +58,12 @@ void test_available_locales() {
 
     zowi::TranslationEngine engine;
     auto locales = engine.availableLocales();
-    assert(locales.size() == 3);
+    assert(locales.size() == 5);
     assert(locales[0] == "es_ES");
     assert(locales[1] == "ca_ES");
     assert(locales[2] == "en_US");
+    assert(locales[3] == "fr_FR");
+    assert(locales[4] == "bg_BG");
 
     std::cout << "OK" << std::endl;
 }

@@ -1,0 +1,83 @@
+{
+  "SplashScreen.qml": {
+    "zowi": "ZOWI",
+    "desktop": "Bureau",
+    "continue": "Continuer",
+    "quit": "Quitter",
+    "select_language": "Choisir la langue",
+    "reset": "Réinitialiser",
+    "unpair_success": "Appareil Zowi supprimé de l'application et du système Bluetooth.",
+    "unpair_app_only": "Appareil supprimé de l'application, mais impossible de le désapparier du système Bluetooth.",
+    "reset_no_zowi": "Aucun Zowi n'est actuellement enregistré dans l'application."
+  },
+  "StatusBar.qml": {
+    "connected": "Connecté",
+    "connected_name": "Connecté · %1",
+    "connected_battery": "Connecté · %1 %",
+    "connected_name_battery": "Connecté · %1 · %2 %",
+    "not_connected": "Non connecté",
+    "status_connecting": "Connexion…",
+    "status_unavailable": "Zowi indisponible",
+    "status_reconnect": "Reconnecter"
+  },
+  "WizardRenameScreen.qml": {
+    "title": "Nommez votre Zowi !",
+    "subtitle": "Saisissez un nom pour votre Zowi et appuyez sur Renommer.",
+    "name_placeholder": "Nom du Zowi",
+    "rename": "Renommer",
+    "renaming": "Renommage…",
+    "sending": "Envoi du nom au Zowi…",
+    "done": "Terminé ! Le Zowi s'appelle désormais %1.",
+    "rename_failed": "Impossible de renommer. Réessayez."
+  },
+  "ScanScreen.qml": {
+    "searching_title": "Recherche de Zowis…",
+    "searching_subtitle": "Recherche de votre Zowi, cela peut prendre quelques secondes…",
+    "scanning": "Analyse…",
+    "scan": "Analyser",
+    "searching_devices": "Recherche d'appareils…",
+    "found_devices": "%1 appareils trouvés",
+    "no_devices_hint": "Aucun appareil trouvé pour l'instant.",
+    "back": "Retour",
+    "no_devices_item": "(aucun appareil trouvé)"
+  },
+  "HomeScreen.qml": {
+    "zowi_apps": "Applications Zowi",
+    "projects": "Projets",
+    "gamepad": "Manette",
+    "timeline": "Chronologie",
+    "zowi_says": "Zowi dit",
+    "mouths": "Bouches",
+    "mouths_editor": "Éditeur de bouches",
+    "move": "Bouger",
+    "choreography": "Chorégraphie",
+    "form": "Formulaire",
+    "paint": "Peindre",
+    "guess": "Devinette",
+    "gravity": "Gravité",
+    "hello_world": "Bonjour le monde",
+    "bitbloq": "Bitbloq",
+    "alarm": "Alarme"
+  },
+  "WelcomeScreen.qml": {
+    "zowi": "ZOWI",
+    "tagline": "Votre compagnon robot sympathique",
+    "start": "Commencer",
+    "learn_more": "En savoir plus"
+  },
+  "WizardFoundScreen.qml": {
+    "title": "Le voilà !",
+    "subtitle": "Pour contrôler Zowi, saisissez le code 1234",
+    "pair_button": "Apparier avec %1",
+    "connect_error": "Impossible de se connecter. Assurez-vous que Zowi est allumé et à proximité."
+  },
+  "ScreenTemplate.qml": {
+    "disconnect": "Déconnecter"
+  },
+  "WizardScreen.qml": {
+    "welcome": "Bienvenue !",
+    "turn_on_hint": "Pour contrôler Zowi, allumez-le d'abord.",
+    "already_on": "Il est déjà allumé",
+    "no_zowi": "Je n'ai pas de Zowi"
+  }
+}

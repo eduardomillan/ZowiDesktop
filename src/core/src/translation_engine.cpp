@@ -85,7 +85,7 @@ std::string TranslationEngine::currentLocale() const {
 }
 
 std::vector<std::string> TranslationEngine::availableLocales() const {
-    return {"es_ES", "ca_ES", "en_US"};
+    return {"es_ES", "ca_ES", "en_US", "fr_FR", "bg_BG"};
 }
 
 } // namespace zowi

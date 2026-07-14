@@ -1,0 +1,83 @@
+{
+  "SplashScreen.qml": {
+    "zowi": "ZOWI",
+    "desktop": "Десктоп",
+    "continue": "Продължи",
+    "quit": "Изход",
+    "select_language": "Избор на език",
+    "reset": "Нулиране",
+    "unpair_success": "Zowi устройството е премахнато от приложението и от Bluetooth системата.",
+    "unpair_app_only": "Устройството е премахнато от приложението, но не можа да бъде раздвоено от Bluetooth системата.",
+    "reset_no_zowi": "В момента няма регистриран Zowi в приложението."
+  },
+  "StatusBar.qml": {
+    "connected": "Свързан",
+    "connected_name": "Свързан · %1",
+    "connected_battery": "Свързан · %1 %",
+    "connected_name_battery": "Свързан · %1 · %2 %",
+    "not_connected": "Не е свързан",
+    "status_connecting": "Свързване…",
+    "status_unavailable": "Zowi недостъпен",
+    "status_reconnect": "Свържи отново"
+  },
+  "WizardRenameScreen.qml": {
+    "title": "Наречете вашия Zowi!",
+    "subtitle": "Въведете име за вашия Zowi и натиснете Преименуване.",
+    "name_placeholder": "Име на Zowi",
+    "rename": "Преименуване",
+    "renaming": "Преименуване…",
+    "sending": "Изпращане на името към Zowi…",
+    "done": "Готово! Zowi вече се казва %1.",
+    "rename_failed": "Неуспешно преименуване. Опитайте отново."
+  },
+  "ScanScreen.qml": {
+    "searching_title": "Търсене на Zowi…",
+    "searching_subtitle": "Търсене на вашия Zowi, това може да отнеме няколко секунди…",
+    "scanning": "Сканиране…",
+    "scan": "Сканиране",
+    "searching_devices": "Търсене на устройства…",
+    "found_devices": "Намерени %1 устройства",
+    "no_devices_hint": "Все още няма намерени устройства.",
+    "back": "Назад",
+    "no_devices_item": "(няма намерени устройства)"
+  },
+  "HomeScreen.qml": {
+    "zowi_apps": "Приложения Zowi",
+    "projects": "Проекти",
+    "gamepad": "Джойстик",
+    "timeline": "Хронология",
+    "zowi_says": "Zowi казва",
+    "mouths": "Усти",
+    "mouths_editor": "Редактор на усти",
+    "move": "Движение",
+    "choreography": "Хореография",
+    "form": "Формуляр",
+    "paint": "Рисуване",
+    "guess": "Познай",
+    "gravity": "Гравитация",
+    "hello_world": "Здравей свят",
+    "bitbloq": "Bitbloq",
+    "alarm": "Аларма"
+  },
+  "WelcomeScreen.qml": {
+    "zowi": "ZOWI",
+    "tagline": "Вашият приятелски робот-компаньон",
+    "start": "Старт",
+    "learn_more": "Научете повече"
+  },
+  "WizardFoundScreen.qml": {
+    "title": "Ето го!",
+    "subtitle": "За да управлявате Zowi, въведете кода 1234",
+    "pair_button": "Сдвояване с %1",
+    "connect_error": "Не може да се свърже. Уверете се, че Zowi е включен и наблизо."
+  },
+  "ScreenTemplate.qml": {
+    "disconnect": "Разкачи"
+  },
+  "WizardScreen.qml": {
+    "welcome": "Добре дошли!",
+    "turn_on_hint": "За да управлявате Zowi, първо го включете.",
+    "already_on": "Вече е включен",
+    "no_zowi": "Нямам Zowi"
+  }
+}
