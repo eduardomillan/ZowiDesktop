@@ -106,7 +106,11 @@ export DEPLOYQt_VERSION=6
 export LINUXDEPLOY_QT_ROOT="$QT_ROOT_DIR"
 export QT_PLUGIN_PATH="$QT_ROOT_DIR/plugins"
 export QML2_IMPORT_PATH="$QT_ROOT_DIR/qml"
-export QMAKE="$QT_ROOT_DIR/bin/qmake6"
+if [ -x "$QT_ROOT_DIR/bin/qmake6" ]; then
+    export QMAKE="$QT_ROOT_DIR/bin/qmake6"
+else
+    export QMAKE="$(command -v qmake6 || command -v qmake)"
+fi
 export PATH="$QT_ROOT_DIR/bin:$PATH"
 export QML_SOURCES_PATHS="$PROJECT_ROOT/src/views"
 export EXTRA_QT_MODULES="qml;quick"

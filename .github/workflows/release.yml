@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  # ── AppImage (self-contained Qt via aqtinstall, matches dev's 6.5.2) ──
+  # ── AppImage (self-contained, bundles Qt from the distro's Qt6) ──
   appimage:
     runs-on: ubuntu-24.04
     steps:
@@ -22,23 +22,16 @@ jobs:
           VERSION="${VERSION#v}"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Install aqtinstall
-        run: pip install aqtinstall
-
-      - name: Install Qt 6.5.2 (gcc_64)
-        run: |
-          python3 -m aqt install-qt linux desktop 6.5.2 gcc_64 \
-            -O "${{ runner.temp }}/Qt" \
-            -m qtbase qtdeclarative qtconnectivity qtwayland qtquickcontrols2
-          echo "QT_ROOT_DIR=${{ runner.temp }}/Qt/6.5.2/gcc_64" >> "$GITHUB_ENV"
-
-      - name: Install system build dependencies
+      - name: Install Qt6 and build dependencies (system)
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            cmake ninja-build pkg-config wget ca-certificates \
+            cmake ninja-build pkg-config wget ca-certificates build-essential \
             libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev \
-            squashfs-tools
+            squashfs-tools \
+            qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland \
+            qt6-quickcontrols2-dev qt6-tools-dev
+          echo "QT_ROOT_DIR=/usr/lib/x86_64-linux-gnu/qt6" >> "$GITHUB_ENV"
 
       - name: Build AppImage
         env:
@@ -68,9 +61,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            cmake ninja-build pkg-config fakeroot debhelper devscripts dpkg-dev \
+            cmake ninja-build pkg-config fakeroot debhelper devscripts dpkg-dev build-essential \
             qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland \
-            qt6-tools-dev libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev
+            qt6-quickcontrols2-dev qt6-tools-dev libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev
 
       - name: Bump version to ${{ steps.ver.outputs.version }}
         env:
