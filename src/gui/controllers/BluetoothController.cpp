@@ -43,6 +43,10 @@ BluetoothController::BluetoothController(QObject *parent)
         emit errorOccurred(QString::fromStdString(msg));
     });
 
+    backend->onUnpairResult([this](bool ok, const std::string &msg) {
+        emit unpairFinished(ok, QString::fromStdString(msg));
+    });
+
     m_backend = std::move(backend);
 }
 
@@ -172,6 +176,12 @@ void BluetoothController::disconnectFromDevice()
     m_deviceAddress.clear();
     m_deviceName.clear();
     emit deviceChanged();
+}
+
+void BluetoothController::unpairDevice(const QString &address)
+{
+    if (!m_backend || address.isEmpty()) return;
+    m_backend->unpair(address.toStdString());
 }
 
 void BluetoothController::sendData(const QString &data)

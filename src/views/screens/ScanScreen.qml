@@ -113,6 +113,7 @@ ScreenTemplate {
                 id: scanButton
                 implicitWidth: 160
                 height: 44
+                visible: Config.get("button_scan_visible") === "true"
                 text: Bluetooth.scanning
                       ? tr("Scanning...")
                       : tr("Scan")

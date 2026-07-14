@@ -2,6 +2,7 @@
 
 #include <zowi/bluetooth_api.h>
 #include <QObject>
+#include <QBluetoothLocalDevice>
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothSocket>
 #include <QTimer>
@@ -26,6 +27,7 @@ public:
     bool isConnected() const override;
     std::string lastError() const override;
     void setAutoReconnect(bool enabled, int reconnectIntervalMs = 3000) override;
+    void unpair(const std::string &address) override;
 
     // Extra Qt-specific getters for the bridge layer
     QString deviceName() const;
@@ -45,6 +47,7 @@ private slots:
 private:
     void startReconnectTimer();
 
+    QBluetoothLocalDevice m_localDevice;
     QBluetoothDeviceDiscoveryAgent *m_discoveryAgent = nullptr;
     QBluetoothSocket *m_socket = nullptr;
     QTimer *m_reconnectTimer = nullptr;

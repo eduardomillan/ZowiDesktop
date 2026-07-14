@@ -15,6 +15,7 @@ public:
     using DataCallback      = std::function<void(const std::string &)>;
     using ConnectCallback   = std::function<void(bool connected)>;
     using ErrorCallback     = std::function<void(const std::string &)>;
+    using UnpairResultCallback = std::function<void(bool success, const std::string &message)>;
 
     virtual bool init() = 0;
     virtual void startDiscovery() = 0;
@@ -25,17 +26,20 @@ public:
     virtual bool isConnected() const = 0;
     virtual std::string lastError() const = 0;
     virtual void setAutoReconnect(bool enabled, int reconnectIntervalMs = 3000) = 0;
+    virtual void unpair(const std::string &address) = 0;
 
     void onDeviceFound(DeviceCallback cb)       { m_onDevice = std::move(cb); }
     void onDataReceived(DataCallback cb)        { m_onData = std::move(cb); }
     void onConnectionChanged(ConnectCallback cb){ m_onConnect = std::move(cb); }
     void onError(ErrorCallback cb)              { m_onError = std::move(cb); }
+    void onUnpairResult(UnpairResultCallback cb){ m_onUnpairResult = std::move(cb); }
 
 protected:
     DeviceCallback   m_onDevice;
     DataCallback     m_onData;
     ConnectCallback  m_onConnect;
     ErrorCallback    m_onError;
+    UnpairResultCallback m_onUnpairResult;
 };
 
 } // namespace zowi

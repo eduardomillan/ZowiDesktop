@@ -32,6 +32,12 @@ public:
     bool isConnected() const override { return m_fd >= 0; }
     std::string lastError() const override { return m_lastError; }
     void setAutoReconnect(bool, int = 3000) override {}
+    void unpair(const std::string &) override {
+        if (m_onUnpairResult) {
+            auto cb = std::move(m_onUnpairResult);
+            cb(false, "Unpair not supported on serial backend");
+        }
+    }
 
 private slots:
     void onReadyRead();

@@ -8,10 +8,8 @@ Item {
     width: 320
     height: Math.min(400, parent ? parent.height * 0.6 : 400)
 
-    Component.onCompleted: {
-        x = (parent ? parent.width : 0) - width - 8
-        y = 8
-    }
+    x: parent ? parent.width - width - 8 : 0
+    y: 8
 
     Rectangle {
         anchors.fill: parent

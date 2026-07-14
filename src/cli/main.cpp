@@ -17,6 +17,8 @@
 #include <sys/select.h>
 #include <CLI/CLI.hpp>
 #include <QCoreApplication>
+#include <QEventLoop>
+#include <QTimer>
 #include <zowi/session_store.h>
 #include <zowi/translation_engine.h>
 #include <zowi/config_store.h>
@@ -530,7 +532,7 @@ int main(int argc, char **argv)
     renameCmd->add_option("--timeout,-t", connectTimeout, "Timeout waiting for robot response (seconds)")->default_val(3);
 
     // ── disconnect subcommand ─────────────────────────────────
-    auto *disconnectCmd = app.add_subcommand("disconnect", "Disconnect and clear saved pairing data");
+    auto *disconnectCmd = app.add_subcommand("disconnect", "Disconnect and remove the Zowi robot from the system Bluetooth paired devices\nClears all saved pairing data and removes the device from BlueZ.");
 
     // ── status subcommand ─────────────────────────────────────
     auto *statusCmd = app.add_subcommand("status", "Show current Zowi connection status");
@@ -919,18 +921,46 @@ int main(int argc, char **argv)
         std::string savedName = store.getString("activeZowiName");
         std::string savedAddr = store.getString("activeZowiDeviceAddress");
 
-        store.setString("activeZowiDeviceAddress", "");
-        store.setString("activeZowiName", "");
-        store.setBool("wizardDismissed", false);
-
         if (!savedAddr.empty()) {
             std::string label = savedName.empty() ? "(unknown)" : savedName;
-            std::cout << "Disconnected from " << label
-                      << " [" << savedAddr << "]" << std::endl;
+            std::cout << "Disconnecting from " << label
+                      << " [" << savedAddr << "]..." << std::endl;
+
+            QCoreApplication qtApp(argc, argv);
+            zowi::QtBluetoothBackend bt;
+
+            bool unpairOk = false;
+            std::string unpairMsg;
+            QEventLoop loop;
+            QTimer timer;
+            timer.setSingleShot(true);
+            bt.onUnpairResult([&](bool ok, const std::string &msg) {
+                unpairOk = ok;
+                unpairMsg = msg;
+                loop.quit();
+            });
+            QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+            timer.start(5000);
+            bt.unpair(savedAddr);
+            loop.exec();
+
+            if (timer.isActive()) timer.stop();
+            if (unpairOk) {
+                std::cout << "  Bluetooth device removed from system." << std::endl;
+            } else {
+                std::cout << "  Warning: could not remove Bluetooth device"
+                          << (!unpairMsg.empty() ? ": " + unpairMsg : "")
+                          << std::endl;
+            }
+
+            std::cout << "  Pairing data cleared." << std::endl;
         } else {
             std::cout << "No device was paired." << std::endl;
         }
-        std::cout << "Pairing data cleared." << std::endl;
+
+        store.setString("activeZowiDeviceAddress", "");
+        store.setString("activeZowiName", "");
+        store.setBool("wizardDismissed", false);
     }
 
     // ── status ────────────────────────────────────────────────

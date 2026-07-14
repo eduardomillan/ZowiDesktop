@@ -41,3 +41,12 @@ target_link_libraries(zowi_screen_preview PRIVATE
     Qt${ZOWI_QT_VERSION}::Quick
     Qt${ZOWI_QT_VERSION}::QuickControls2
 )
+
+# Grant CAP_NET_ADMIN so the GUI can connect via BlueZ SPP without root.
+find_program(SETCAP_PROGRAM setcap)
+if(SETCAP_PROGRAM)
+    add_custom_command(TARGET ZowiDesktop POST_BUILD
+        COMMAND bash -c "sudo -n ${SETCAP_PROGRAM} cap_net_admin+ep '$<TARGET_FILE:ZowiDesktop>' 2>/dev/null || echo 'NOTE: could not auto-apply CAP_NET_ADMIN (run: sudo setcap cap_net_admin+ep $<TARGET_FILE:ZowiDesktop>)'"
+        COMMENT "Granting CAP_NET_ADMIN to ZowiDesktop (needs sudo)"
+        VERBATIM)
+endif()

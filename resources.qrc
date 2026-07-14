@@ -9,7 +9,9 @@
         <file>src/views/components/AnimatedZowi.qml</file>
         <file>src/views/components/StatusBar.qml</file>
         <file>src/views/components/DevOverlay.qml</file>
+        <file>src/views/components/MessageBar.qml</file>
         <file>src/views/screens/ScanScreen.qml</file>
+        <file>src/views/screens/WizardFoundScreen.qml</file>
         <file>src/config.json</file>
         <file>docs/images/es.svg</file>
         <file>docs/images/gb.svg</file>

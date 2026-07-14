@@ -28,6 +28,7 @@ public:
     Q_INVOKABLE void stopScan();
     Q_INVOKABLE void connectToDevice(const QString &address);
     Q_INVOKABLE void disconnectFromDevice();
+    Q_INVOKABLE void unpairDevice(const QString &address);
     Q_INVOKABLE void sendData(const QString &data);
 
 signals:
@@ -39,6 +40,7 @@ signals:
     void batteryChanged();
     void dataReceived(const QString &data);
     void errorOccurred(const QString &message);
+    void unpairFinished(bool success, const QString &message);
 
 private:
     void parseIncoming();

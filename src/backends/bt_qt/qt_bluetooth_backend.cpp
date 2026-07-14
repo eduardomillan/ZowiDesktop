@@ -13,6 +13,25 @@ namespace zowi {
 QtBluetoothBackend::QtBluetoothBackend(QObject *parent)
     : QObject(parent)
 {
+    QObject::connect(&m_localDevice, &QBluetoothLocalDevice::pairingFinished,
+            this, [this](const QBluetoothAddress &, QBluetoothLocalDevice::Pairing pairing) {
+        if (m_onUnpairResult) {
+            auto cb = std::move(m_onUnpairResult);
+            cb(pairing == QBluetoothLocalDevice::Unpaired, {});
+        }
+    });
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QObject::connect(&m_localDevice, &QBluetoothLocalDevice::errorOccurred,
+#else
+    QObject::connect(&m_localDevice,
+            QOverload<QBluetoothLocalDevice::Error>::of(&QBluetoothLocalDevice::error),
+#endif
+            this, [this](QBluetoothLocalDevice::Error) {
+        if (m_onUnpairResult) {
+            auto cb = std::move(m_onUnpairResult);
+            cb(false, "failed to unpair device");
+        }
+    });
 }
 
 QtBluetoothBackend::~QtBluetoothBackend()
@@ -278,6 +297,13 @@ void QtBluetoothBackend::reconnectTimerTick()
                      this, &QtBluetoothBackend::onDataReady);
 
     m_socket->connectToService(QBluetoothAddress(m_deviceAddress), SPP_UUID, QIODevice::ReadWrite);
+}
+
+void QtBluetoothBackend::unpair(const std::string &address)
+{
+    m_localDevice.requestPairing(
+        QBluetoothAddress(QString::fromStdString(address)),
+        QBluetoothLocalDevice::Unpaired);
 }
 
 } // namespace zowi

@@ -110,6 +110,10 @@ public:
 
     Q_INVOKABLE void sendData(const QString &) {}
 
+    Q_INVOKABLE void unpairDevice(const QString &) {
+        emit unpairFinished(true, QString());
+    }
+
 signals:
     void deviceDiscovered(const QString &name, const QString &address);
     void scanFinished();
@@ -118,6 +122,7 @@ signals:
     void deviceChanged();
     void dataReceived(const QString &data);
     void errorOccurred(const QString &message);
+    void unpairFinished(bool success, const QString &message);
 
 private:
     bool m_connected = false;

@@ -15,7 +15,7 @@ sudo apt install cmake g++ qt6-base-dev qt6-declarative-dev qt6-connectivity-dev
 
 ```bash
 ./build.sh               # build everything (GUI + CLI)
-./build/ZowiDesktop      # run the GUI
+./build/src/gui/ZowiDesktop      # run the GUI
 ```
 
 For **CLI only**:

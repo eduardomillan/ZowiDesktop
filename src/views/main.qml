@@ -51,10 +51,9 @@ Window {
     function connectWelcome(welcome) {
         welcome.startWizard.connect(function() {
             var wizard = stack.push("qrc:/src/views/screens/WizardScreen.qml")
-            wizard.startClicked.connect(function() {
-                var scan = stack.push("qrc:/src/views/screens/ScanScreen.qml")
-                scan.back.connect(function() { stack.pop() })
-                scan.deviceSelected.connect(function() {
+            wizard.deviceSelected.connect(function() {
+                var found = stack.push("qrc:/src/views/screens/WizardFoundScreen.qml")
+                found.paired.connect(function() {
                     var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
                     connectHome(home)
                 })

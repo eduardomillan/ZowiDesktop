@@ -213,24 +213,12 @@ Rectangle {
     }
 
     Item {
+        anchors.fill: parent
         visible: Config.devMode
 
-        Text {
-            id: resetMsg
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.verticalCenterOffset: 90
-            text: tr("Datos del Zowi borrados. Pulsa Continuar para reconfigurar.")
-            color: "#c0392b"
-            font.pixelSize: 13
-            opacity: 0.85
-            visible: false
-        }
-
-        Timer {
-            id: resetTimer
-            interval: 1000
-            onTriggered: resetMsg.visible = false
+        MessageBar {
+            id: msgBar
+            duration: parseInt(Config.get("message_duration")) || 2000
         }
 
         Button {
@@ -263,12 +251,24 @@ Rectangle {
             }
 
             onClicked: {
+                var addr = Session.loadActiveZowiDeviceAddress()
+                if (!addr) addr = Bluetooth.deviceAddress
+                if (Bluetooth.connected) Bluetooth.disconnectFromDevice()
+                if (addr) Bluetooth.unpairDevice(addr)
                 Session.saveActiveZowiDeviceAddress("")
                 Session.saveActiveZowiName("")
                 Session.saveWizardDismissed(false)
-                resetMsg.visible = true
-                resetTimer.restart()
             }
+        }
+    }
+
+    Connections {
+        target: Bluetooth
+        function onUnpairFinished(success, message) {
+            if (success)
+                msgBar.show(tr("Dispositivo Zowi borrado de la app y del sistema Bluetooth."))
+            else
+                msgBar.show(tr("Dispositivo borrado de la app, pero no se pudo desenlazar del sistema Bluetooth."))
         }
     }
 }
