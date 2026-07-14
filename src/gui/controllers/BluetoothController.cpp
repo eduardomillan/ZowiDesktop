@@ -24,7 +24,9 @@ BluetoothController::BluetoothController(QObject *parent)
     backend->onConnectionChanged([this](bool connected) {
         m_connected = connected;
         emit connectionChanged();
-        if (!connected) {
+        if (connected) {
+            setConnecting(false);
+        } else {
             m_deviceName.clear();
             m_deviceAddress.clear();
             m_battery = -1.0f;
@@ -123,6 +125,18 @@ bool BluetoothController::isConnected() const
     return m_backend && m_backend->isConnected();
 }
 
+bool BluetoothController::isConnecting() const
+{
+    return m_connecting;
+}
+
+void BluetoothController::setConnecting(bool value)
+{
+    if (m_connecting == value) return;
+    m_connecting = value;
+    emit connectingChanged();
+}
+
 bool BluetoothController::isScanning() const
 {
     return m_scanning;
@@ -171,6 +185,7 @@ void BluetoothController::connectToDevice(const QString &address)
 {
     if (!m_backend) return;
     m_deviceAddress = address;
+    setConnecting(true);
     m_backend->connect(address.toStdString());
     emit deviceChanged();
 }
@@ -179,6 +194,7 @@ void BluetoothController::disconnectFromDevice()
 {
     if (!m_backend) return;
     m_backend->disconnect();
+    setConnecting(false);
     m_deviceAddress.clear();
     m_deviceName.clear();
     emit deviceChanged();

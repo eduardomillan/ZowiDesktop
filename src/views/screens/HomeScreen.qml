@@ -354,6 +354,12 @@ Rectangle {
     }
 
     Component.onCompleted: {
+        // Auto-connect to the saved Zowi on launch (mirrors ZowiAppReborn's
+        // onResume -> manageConnection). The backend auto-reconnects every
+        // 3s, so it will connect as soon as the robot is powered on.
+        if (!Bluetooth.connected && Session.loadActiveZowiDeviceAddress() !== "")
+            Bluetooth.connectToDevice(Session.loadActiveZowiDeviceAddress())
+
         var apps = [
             { name: tr("gamepad"), icon: "qrc:/images/android/pad_button.png" },
             { name: tr("timeline"), icon: "qrc:/images/android/timeline_button.png" },

@@ -15,7 +15,10 @@
     "connected_name": "Conectado · %1",
     "connected_battery": "Conectado · %1%",
     "connected_name_battery": "Conectado · %1 · %2%",
-    "not_connected": "No conectado"
+    "not_connected": "No conectado",
+    "status_connecting": "Conectando…",
+    "status_unavailable": "Zowi no disponible",
+    "status_reconnect": "Reconectar"
   },
   "WizardRenameScreen.qml": {
     "title": "¡Dale un nombre!",
