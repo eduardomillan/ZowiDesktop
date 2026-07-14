@@ -1,66 +1,66 @@
-# Relación con zowiLibs
+# Relationship with zowiLibs
 
-[zowiLibs](https://github.com/eduardomillan/zowiLibs) es el proyecto **hermano** de
-ZowiDesktop: contiene el firmware que se ejecuta en el robot Zowi (versión original de
-BQ, adaptada por el mismo autor) y las librerías Arduino que lo acompañan. Ambos
-proyectos se mantienen en repositorios GitHub independientes.
+[zowiLibs](https://github.com/eduardomillan/zowiLibs) is ZowiDesktop's **sister
+project**: it contains the firmware that runs on the Zowi robot (the original BQ
+version, adapted by the same author) and the Arduino libraries that support it.
+Both projects live in separate, independent GitHub repositories.
 
-## ¿Qué aporta zowiLibs a ZowiDesktop?
+## What zowiLibs provides to ZowiDesktop
 
-| Componente | En zowiLibs | En ZowiDesktop | Relación |
+| Component | In zowiLibs | In ZowiDesktop | Relationship |
 |---|---|---|---|
-| Firmware `ZOWI_BASE_v2.hex` | `code .hex/ZOWI_BASE_v2.hex` | `src/firmware/ZOWI_BASE_v2.hex` | Byte-idéntico (solo difiere CRLF→LF). Se copia y normaliza mediante el script `scripts/sync_firmware_from_zowiLibs.sh`. |
-| Firmware `ZOWI_Alarm_v2.hex` | compilado desde `code .ino/games/ZOWI_Alarm_v2/` | `src/firmware/ZOWI_Alarm_v2.hex` | Derivado de la fuente de zowiLibs. |
-| Protocolo de comunicación | `ZowiSerialCommand` ( `&&`/`%%` ) y comandos `S/L/T/M/H/K/C/G/R/E/D/N/B/I/A/F` | `src/core/include/zowi/protocol.h` | El header `protocol.h` define las constantes (**única fuente de verdad**) y `makeCommand()` para construir comandos host. |
-| Librerías Arduino (Zowi, Oscillator, LedMatrix, US, BatReader, EnableInterrupt) | `arduino libraries/` | — | **No se reutilizan.** Son específicas de AVR/Arduino y corren en el robot, no en la aplicación de escritorio. |
+| Firmware `ZOWI_BASE_v2.hex` | `code .hex/ZOWI_BASE_v2.hex` | `src/firmware/ZOWI_BASE_v2.hex` | Byte-identical (differ only in CRLF→LF). Copied and normalised by `scripts/sync_firmware_from_zowiLibs.sh`. |
+| Firmware `ZOWI_Alarm_v2.hex` | compiled from `code .ino/games/ZOWI_Alarm_v2/` | `src/firmware/ZOWI_Alarm_v2.hex` | Derived from the zowiLibs source. |
+| Communication protocol | `ZowiSerialCommand` (`&&`/`%%`) with commands `S/L/T/M/H/K/C/G/R/E/D/N/B/I/A/F` | `src/core/include/zowi/protocol.h` | The `protocol.h` header defines the constants (**single source of truth**) and `makeCommand()` for building host-side commands. |
+| Arduino libraries (Zowi, Oscillator, LedMatrix, US, BatReader, EnableInterrupt) | `arduino libraries/` | — | **Not reused.** These are AVR/Arduino-specific and run on the robot, not in the desktop application. |
 
-## Las librerías Arduino del robot (no reutilizables)
+## Arduino robot libraries (not reusable)
 
-Las librerías de la carpeta `arduino libraries/` implementan el comportamiento físico
-del robot: control de servos (Oscillator, Zowi), matriz LED (LedMatrix), sensor de
-ultrasonidos (US), lectura de batería (BatReader) e interrupciones externas
-(EnableInterrupt). Están escritas para el ecosistema Arduino/AVR y dependen de
-hardware (`<Servo.h>`, `EEPROM`, `analogRead`, `digitalWrite`, etc.) que no existe
-en una aplicación de escritorio.
+The libraries in `arduino libraries/` implement the robot's physical behaviour:
+servo control (Oscillator, Zowi), LED matrix (LedMatrix), ultrasound sensor (US),
+battery reading (BatReader) and external interrupts (EnableInterrupt). They are
+written for the Arduino/AVR ecosystem and depend on hardware primitives
+(`<Servo.h>`, `EEPROM`, `analogRead`, `digitalWrite`, etc.) that do not exist in
+a desktop application.
 
-ZowiDesktop modela el robot a través de su propia capa de abstracción:
-`DeviceInfo`, `BluetoothApi` y `robot_commands.h`. No intenta compilar el código
-AVR nativo.
+ZowiDesktop models the robot through its own abstraction layer: `DeviceInfo`,
+`BluetoothApi` and `robot_commands.h`. It does not attempt to compile native AVR
+code.
 
-## Tabla del protocolo
+## Protocol table
 
-| Dirección | Comando | Significado | Respuesta |
+| Direction | Command | Meaning | Reply |
 |---|---|---|---|
 | → robot | `S` | Stop / home | `&&A%%` `&&F%%` |
-| → robot | `L <leds>` | Control matriz LED | `&&A%%` `&&F%%` |
-| → robot | `T <note>` | Zumbador | `&&A%%` `&&F%%` |
-| → robot | `M <id> <T>` | Movimiento (1 walk, 2 backward, 3 turnL, 4 turnR) | `&&A%%` `&&F%%` |
-| → robot | `H <id>` | Gesto | `&&A%%` `&&F%%` |
-| → robot | `K <melody>` | Canción | `&&A%%` `&&F%%` |
-| → robot | `C <trims>` | Ajuste servos | `&&A%%` `&&F%%` |
-| → robot | `G <servo> <angle>` | Servo directo | `&&A%%` `&&F%%` |
-| → robot | `R <nombre>` | Renombrar (escribe EEPROM) | `&&A%%` `&&F%%` |
-| → robot | `E` | Pedir nombre | `&&E <nombre>%%` |
-| → robot | `D` | Pedir distancia | `&&D <cm>%%` |
-| → robot | `N` | Pedir ruido | `&&N <valor>%%` |
-| → robot | `B` | Pedir batería | `&&B <%>%%` |
-| → robot | `I` | Pedir ID de programa | `&&I <id>%%` |
-| ← desktop | `&&A%%` | Ack (comando recibido) | — |
-| ← desktop | `&&F%%` | Final ack (comando procesado) | — |
+| → robot | `L <leds>` | LED matrix control | `&&A%%` `&&F%%` |
+| → robot | `T <note>` | Buzzer | `&&A%%` `&&F%%` |
+| → robot | `M <id> <T>` | Movement (1 walk, 2 backward, 3 turnL, 4 turnR) | `&&A%%` `&&F%%` |
+| → robot | `H <id>` | Gesture | `&&A%%` `&&F%%` |
+| → robot | `K <melody>` | Sing / melody | `&&A%%` `&&F%%` |
+| → robot | `C <trims>` | Servo trim adjustment | `&&A%%` `&&F%%` |
+| → robot | `G <servo> <angle>` | Direct servo control | `&&A%%` `&&F%%` |
+| → robot | `R <name>` | Rename (writes EEPROM) | `&&A%%` `&&F%%` |
+| → robot | `E` | Request name | `&&E <name>%%` |
+| → robot | `D` | Request distance | `&&D <cm>%%` |
+| → robot | `N` | Request noise | `&&N <value>%%` |
+| → robot | `B` | Request battery | `&&B <%>%%` |
+| → robot | `I` | Request program ID | `&&I <id>%%` |
+| ← desktop | `&&A%%` | Ack (command received) | — |
+| ← desktop | `&&F%%` | Final ack (command fully processed) | — |
 
-*Legacy* (formato línea, firmware antiguo): `N <nombre>`, `U <id>`, `B <bat>`.
+*Legacy* (line-based, old firmware): `N <name>`, `U <id>`, `B <batt>`.
 
-## Cómo mantener los HEX sincronizados
+## Keeping the HEX files in sync
 
 ```bash
-# 1. Clonar zowiLibs (si no se tiene):
+# 1. Clone zowiLibs (if you don't have it yet):
 #    git clone https://github.com/eduardomillan/zowiLibs.git
-# 2. Ejecutar el script de sincronización:
-scripts/sync_firmware_from_zowiLibs.sh [/ruta/a/zowiLibs]
-# 3. Verificar el diff, recompilar y probar.
+# 2. Run the synchronisation script:
+scripts/sync_firmware_from_zowiLibs.sh [/path/to/zowiLibs]
+# 3. Review the diff, rebuild and test.
 ```
 
-El script copia los HEX desde zowiLibs a `src/firmware/` y normaliza los saltos de
-línea (CRLF→LF). Los HEX se mantienen commiteados en ZowiDesktop para que el
-proyecto sea autónomo en el build; el script es el mecanismo reproducible de
-mantener la sincronización con la fuente real.
+The script copies the HEX files from zowiLibs into `src/firmware/` and normalises
+line endings (CRLF→LF). The HEX files remain committed in ZowiDesktop so the
+project stays self-contained at build time; the script is the reproducible
+mechanism for staying in sync with the canonical source.
