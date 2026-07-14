@@ -2,6 +2,11 @@
 Type=Application
 Name=Zowi Desktop
 Comment=Control and program your Zowi robot
+Comment[en_US]=Control and program your Zowi robot
+Comment[es_ES]=Controla y programa tu robot Zowi
+Comment[ca_ES]=Controla i programa el teu robot Zowi
+Comment[fr_FR]=Contrôlez et programmez votre robot Zowi
+Comment[bg_BG]=Управлявайте и програмирайте вашия робот Zowi
 Categories=Education;Robotics;
 Icon=zowi-desktop
 Exec=ZowiDesktop

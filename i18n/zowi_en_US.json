@@ -103,5 +103,8 @@
     "turn_on_hint": "To control Zowi, first turn it on.",
     "already_on": "It's already on",
     "no_zowi": "I don't have a Zowi"
+  },
+  "DesktopEntry": {
+    "app_coment": "Control and program your Zowi robot"
   }
 }
