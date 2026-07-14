@@ -26,44 +26,44 @@ Rectangle {
             right: parent.right
             margins: 15
         }
-        height: 50
+        height: 88
 
         Button {
             id: settingsBtn
-            width: 44
-            height: 44
+            width: 88
+            height: 88
 
             contentItem: Image {
                 source: "qrc:/images/android/settings_button.png"
-                sourceSize.width: 28
-                sourceSize.height: 28
+                sourceSize.width: 56
+                sourceSize.height: 56
                 fillMode: Image.PreserveAspectFit
             }
 
             background: Rectangle {
-                radius: 22
+                radius: 44
                 color: settingsBtn.pressed ? "#e0f0e0" : "transparent"
             }
 
             onClicked: home.settingsClicked()
         }
 
-        Item { width: parent.width - 132; height: 1 }
+        Item { width: parent.width - 220; height: 1 }
 
         Button {
             id: achievementsBtn
-            width: 44
-            height: 44
+            width: 88
+            height: 88
 
             contentItem: Image {
                 source: "qrc:/images/android/achievements_button.png"
-                sourceSize.width: 28
-                sourceSize.height: 28
+                sourceSize.width: 56
+                sourceSize.height: 56
                 fillMode: Image.PreserveAspectFit
             }
 
             background: Rectangle {
-                radius: 22
+                radius: 44
                 color: achievementsBtn.pressed ? "#e0f0e0" : "transparent"
             }
 

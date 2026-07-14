@@ -139,16 +139,6 @@ ScreenTemplate {
                         Bluetooth.startScan()
                 }
             }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: Bluetooth.scanning
-                      ? tr("searching_devices")
-                      : tr("found_devices").arg(deviceList.count)
-                color: "#2d5a2d"
-                font.pixelSize: 12
-                opacity: 0.5
-            }
         }
     }
 
@@ -275,4 +265,6 @@ ScreenTemplate {
         devicesModel.clear()
         Bluetooth.startScan()
     }
+
+    StackView.onDeactivated: Bluetooth.stopScan()
 }
