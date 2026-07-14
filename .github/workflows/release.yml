@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  # ── AppImage (self-contained Qt via aqtinstall, matches dev's 6.5.2) ──
+  appimage:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute version from tag
+        id: ver
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install aqtinstall
+        run: pip install aqtinstall
+
+      - name: Install Qt 6.5.2 (gcc_64)
+        run: |
+          python3 -m aqt install-qt linux desktop 6.5.2 gcc_64 \
+            -O "${{ runner.temp }}/Qt" \
+            -m qtbase qtdeclarative qtconnectivity qtwayland qtquickcontrols2
+          echo "QT_ROOT_DIR=${{ runner.temp }}/Qt/6.5.2/gcc_64" >> "$GITHUB_ENV"
+
+      - name: Install system build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build pkg-config wget ca-certificates \
+            libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev \
+            squashfs-tools
+
+      - name: Build AppImage
+        env:
+          APPIMAGE_NAME: "ZowiDesktop-${{ steps.ver.outputs.version }}-x86_64.AppImage"
+        run: bash packaging/linux/create-appimage.sh
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: build/ZowiDesktop-*.AppImage
+
+  # ── Debian package (built against the distro's Qt6) ──
+  deb:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute version from tag
+        id: ver
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install system Qt6 and packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build pkg-config fakeroot debhelper devscripts dpkg-dev \
+            qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland \
+            qt6-tools-dev libbluetooth-dev libxkbcommon-dev libgl1-mesa-dev
+
+      - name: Bump version to ${{ steps.ver.outputs.version }}
+        env:
+          DEBFULLNAME: GitHub Actions
+          DEBEMAIL: actions@github.com
+        run: |
+          sed -i -E "s/VERSION [0-9]+\.[0-9]+\.[0-9]+/VERSION ${{ steps.ver.outputs.version }}/" CMakeLists.txt
+          dch -v "${{ steps.ver.outputs.version }}-1" -D unstable "Release ${{ steps.ver.outputs.version }}"
+
+      - name: Build .deb
+        run: bash packaging/linux/create-deb.sh
+
+      - name: Upload .deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: build/zowi-desktop_*.deb
+
+  # ── Publish: GitHub Release + signed apt repo on GitHub Pages ──
+  publish:
+    needs: [appimage, deb]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/appimage/ZowiDesktop-*.AppImage
+            artifacts/deb/zowi-desktop_*.deb
+          generate_release_notes: true
+
+      - name: Install aptly and GnuPG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends aptly gnupg
+
+      - name: Import GPG signing key
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+
+      - name: Build signed apt repository
+        env:
+          APTLY_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          aptly repo create -distribution=stable -component=main zowi
+          aptly repo add zowi artifacts/deb/zowi-desktop_*.deb
+          aptly publish repo -distribution=stable zowi
+          mkdir -p public
+          cp -r ~/.aptly/public/. public/
+          gpg --export > public/keyring.gpg
+
+      - name: Publish apt repo to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: public
+          publish_branch: gh-pages
+          force_orphan: true
+          user_name: github-actions
+          user_email: github-actions@github.com

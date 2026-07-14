@@ -100,7 +100,8 @@ done
 echo ""
 echo "=== Step 6: Run linuxdeploy ==="
 TIMESTAMP=$(date +%Y%m%d)
-export LDAI_OUTPUT="ZowiDesktop-x86_64-build-${TIMESTAMP}.AppImage"
+APPIMAGE_NAME="${APPIMAGE_NAME:-ZowiDesktop-x86_64-build-${TIMESTAMP}.AppImage}"
+export LDAI_OUTPUT="$APPIMAGE_NAME"
 export DEPLOYQt_VERSION=6
 export LINUXDEPLOY_QT_ROOT="$QT_ROOT_DIR"
 export QT_PLUGIN_PATH="$QT_ROOT_DIR/plugins"
@@ -120,8 +121,8 @@ export LD_LIBRARY_PATH="$QT_ROOT_DIR/lib:$QT_ROOT_DIR/lib/x86_64-linux-gnu:$LD_L
 
 echo ""
 echo "=== Moving AppImage to build directory ==="
-mv "$PROJECT_ROOT/ZowiDesktop-x86_64-build-${TIMESTAMP}.AppImage" "$PROJECT_ROOT/build/" 2>/dev/null || true
+mv "$PROJECT_ROOT/$APPIMAGE_NAME" "$PROJECT_ROOT/build/" 2>/dev/null || true
 
 echo ""
 echo "=== Done ==="
-ls -lh "$BUILD_DIR/ZowiDesktop-x86_64-build-${TIMESTAMP}.AppImage"
+ls -lh "$BUILD_DIR/$APPIMAGE_NAME"
