@@ -22,24 +22,32 @@ option(ZOWI_BUILD_GUI   "Build Qt${ZOWI_QT_VERSION} GUI application" ON)
 option(ZOWI_BUILD_CLI   "Build command-line tool"                    ON)
 option(BUILD_TESTS      "Build unit tests"                           ON)
 
-# ── Third-party (via FetchContent) ──────────────────────────────
-include(FetchContent)
+# ── Third-party ─────────────────────────────────────────────────
+# Prefer system packages (required for offline Debian packaging);
+# fall back to FetchContent when they are not available (local dev builds).
+find_package(nlohmann_json QUIET)
+if(NOT nlohmann_json_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        json
+        GIT_REPOSITORY https://github.com/nlohmann/json
+        GIT_TAG        v3.11.3
+        GIT_SHALLOW    TRUE
+    )
+    FetchContent_MakeAvailable(json)
+endif()
 
-FetchContent_Declare(
-    cli11
-    GIT_REPOSITORY https://github.com/CLIUtils/CLI11
-    GIT_TAG        v2.4.2
-    GIT_SHALLOW    TRUE
-)
-
-FetchContent_Declare(
-    json
-    GIT_REPOSITORY https://github.com/nlohmann/json
-    GIT_TAG        v3.11.3
-    GIT_SHALLOW    TRUE
-)
-
-FetchContent_MakeAvailable(cli11 json)
+find_package(CLI11 QUIET)
+if(NOT CLI11_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+        cli11
+        GIT_REPOSITORY https://github.com/CLIUtils/CLI11
+        GIT_TAG        v2.4.2
+        GIT_SHALLOW    TRUE
+    )
+    FetchContent_MakeAvailable(cli11)
+endif()
 
 # ── Qt Core (needed by core's TranslationEngine, which loads the
 #    compiled-in i18n resources via QFile) ───────────────────────
