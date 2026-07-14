@@ -58,6 +58,8 @@
         <file>i18n/zowi_es_ES.json</file>
         <file>i18n/zowi_ca_ES.json</file>
         <file>i18n/zowi_en_US.json</file>
+        <file>i18n/zowi_fr_FR.json</file>
+        <file>i18n/zowi_bg_BG.json</file>
         <file>images/android/achievements_badge.png</file>
         <file>images/android/achievements_button.png</file>
         <file>images/android/action_button.png</file>

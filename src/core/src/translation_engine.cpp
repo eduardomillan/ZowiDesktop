@@ -1,6 +1,6 @@
 #include <zowi/translation_engine.h>
-#include <fstream>
-#include <sstream>
+#include <QFile>
+#include <QTextStream>
 #include <nlohmann/json.hpp>
 
 namespace zowi {
@@ -11,16 +11,20 @@ namespace {
 // Read a JSON translation file of the form:
 //   { "Context.qml": { "key": "value", ... }, ... }
 // Returns an empty map if the file is missing or malformed.
+// `path` may be a regular filesystem path or a Qt resource URL
+// (e.g. ":/i18n/zowi_es_ES.json") so translations work both during
+// development (filesystem) and in packaged builds (compiled into the
+// binary via the qrc).
 std::unordered_map<std::string, std::unordered_map<std::string, std::string>>
 readJson(const std::string &path) {
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> map;
-    std::ifstream file(path);
-    if (!file.is_open())
+    QFile file(QString::fromStdString(path));
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return map;
 
     nlohmann::json j;
     try {
-        file >> j;
+        j = nlohmann::json::parse(file.readAll().toStdString());
     } catch (...) {
         return map;
     }
@@ -39,6 +43,20 @@ readJson(const std::string &path) {
     }
     return map;
 }
+
+// Resolve the location of a locale's JSON. Prefer a filesystem copy so
+// development edits / hot-reload keep working without rebuilding the qrc,
+// and fall back to the compiled-in Qt resource for packaged builds where
+// the i18n/ directory is not present alongside the binary.
+QString resolvePath(const std::string &basePath, const std::string &locale) {
+    const QString name = QString::fromLatin1("zowi_%1.json").arg(QString::fromStdString(locale));
+    const QString fs = basePath.empty()
+        ? (QStringLiteral("i18n/") + name)
+        : (QString::fromStdString(basePath) + QStringLiteral("/i18n/") + name);
+    if (QFile::exists(fs))
+        return fs;
+    return QStringLiteral(":/i18n/") + name;
+}
 } // namespace
 
 void TranslationEngine::load(const std::string &locale) {
@@ -46,19 +64,12 @@ void TranslationEngine::load(const std::string &locale) {
     m_fallback.clear();
     m_currentLocale = locale;
 
-    std::string path = m_resourceBasePath.empty()
-        ? "i18n/zowi_" + locale + ".json"
-        : m_resourceBasePath + "/i18n/zowi_" + locale + ".json";
-
-    m_translations = readJson(path);
+    m_translations = readJson(resolvePath(m_resourceBasePath, locale).toStdString());
 
     // Always keep English as a fallback so missing translations degrade
     // gracefully instead of showing the raw key.
     if (locale != "en_US") {
-        std::string enPath = m_resourceBasePath.empty()
-            ? "i18n/zowi_en_US.json"
-            : m_resourceBasePath + "/i18n/zowi_en_US.json";
-        m_fallback = readJson(enPath);
+        m_fallback = readJson(resolvePath(m_resourceBasePath, "en_US").toStdString());
     }
 
     if (m_onChanged) m_onChanged();

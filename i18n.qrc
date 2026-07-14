@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>i18n/zowi_en_US.json</file>
+        <file>i18n/zowi_es_ES.json</file>
+        <file>i18n/zowi_ca_ES.json</file>
+        <file>i18n/zowi_fr_FR.json</file>
+        <file>i18n/zowi_bg_BG.json</file>
+    </qresource>
+</RCC>

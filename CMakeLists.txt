@@ -41,15 +41,19 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(cli11 json)
 
-# ── Core library (pure C++ — no Qt) ─────────────────────────────
+# ── Qt Core (needed by core's TranslationEngine, which loads the
+#    compiled-in i18n resources via QFile) ───────────────────────
+find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Core)
+
+# ── Core library ───────────────────────────────────────────────
 add_subdirectory(src/core)
 
 # ── Firmware upload library (STK500v1 / Optiboot, pure C++) ─────
 add_subdirectory(src/firmware)
 
-# ── Qt (needed by GUI and CLI's BT backend) ──────────────────────
+# ── Qt Bluetooth (needed by GUI and CLI's BT backend) ───────────
 if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
-    find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Core Bluetooth)
+    find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Bluetooth)
 endif()
 
 if(ZOWI_BUILD_GUI)
