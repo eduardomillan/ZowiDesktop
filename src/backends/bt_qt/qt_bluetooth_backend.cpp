@@ -219,7 +219,6 @@ bool QtBluetoothBackend::send(const std::string &data)
 
     QByteArray bytes = QByteArray::fromStdString(data);
     m_socket->write(bytes);
-    m_socket->waitForBytesWritten(5000);
     return true;
 }
 
@@ -302,7 +301,6 @@ void QtBluetoothBackend::onSocketConnected()
     if (!m_pendingWrite.empty()) {
         QByteArray bytes = QByteArray::fromStdString(m_pendingWrite);
         m_socket->write(bytes);
-        m_socket->waitForBytesWritten(5000);
         m_pendingWrite.clear();
     }
 

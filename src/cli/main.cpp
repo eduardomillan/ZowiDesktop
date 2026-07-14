@@ -36,7 +36,8 @@ static float g_battery = -1.0f;
 static bool g_connected = false;
 static bool g_connectedOnce = false;
 static bool g_dataReceived = false;
-static bool g_finalAck = false;
+static bool g_ack = false;        // software ack (&&A)
+static bool g_finalAck = false;   // final ack (&&F), after EEPROM write
 static std::string g_dataBuffer;
 // When true, incoming bytes are raw bootloader traffic, not the &&/N-U-B protocol.
 static bool g_uploadMode = false;
@@ -45,7 +46,7 @@ static std::atomic<bool> g_quit{false};
 static constexpr float kLowBatteryThreshold = 50.0f;
 static constexpr const char *kFactoryFirmwarePath = "src/firmware/ZOWI_BASE_v2.hex";
 static constexpr const char *kAlarmFirmwarePath = "src/firmware/ZOWI_Alarm_v2.hex";
-static constexpr int kDiscoveryTimeoutMs = 4000;
+static constexpr int kDiscoveryTimeoutMs = 6000;
 
 static void resetRobotState()
 {
@@ -56,6 +57,7 @@ static void resetRobotState()
     g_connected = false;
     g_connectedOnce = false;
     g_dataReceived = false;
+    g_ack = false;
     g_finalAck = false;
     g_dataBuffer.clear();
 }
@@ -74,24 +76,36 @@ static void parseRobotMessageUnlocked(const std::string &msg)
     if (trimmed.empty()) return;
 
     // &&‑prefixed message: &&<cmd>[ <value>]
-    if (trimmed.size() >= 4 && trimmed[0] == zowi::kMessagePrefix[0]
-                             && trimmed[1] == zowi::kMessagePrefix[1]
-                             && trimmed[3] == ' ') {
+    if (trimmed.size() >= 2 && trimmed[0] == zowi::kMessagePrefix[0]
+                             && trimmed[1] == zowi::kMessagePrefix[1]) {
         char prefix = trimmed[2];
-        std::string value = trimmed.substr(4);
-        if (prefix == zowi::toChar(zowi::Command::GetName)) {
-            g_robotName = value;
+
+        if (trimmed.size() >= 4 && trimmed[3] == ' ') {
+            std::string value = trimmed.substr(4);
+            if (prefix == zowi::toChar(zowi::Command::GetName)) {
+                g_robotName = value;
+                g_dataReceived = true;
+            } else if (prefix == zowi::toChar(zowi::Command::GetProgramId)) {
+                g_appId = value;
+                g_dataReceived = true;
+            } else if (prefix == zowi::toChar(zowi::Command::GetBattery)) {
+                try { g_battery = std::stof(value); } catch (...) {}
+                g_dataReceived = true;
+            } else if (prefix == zowi::toChar(zowi::Command::Ack)) {
+                // Software ack (&&A): command received but not yet processed.
+                g_ack = true;
+                g_dataReceived = true;
+            } else if (prefix == zowi::toChar(zowi::Command::FinalAck)) {
+                // Final ack (&&F): command fully processed (EEPROM write done).
+                g_finalAck = true;
+                g_dataReceived = true;
+            }
+        } else if (prefix == zowi::toChar(zowi::Command::Ack)) {
+            // Bare &&A / &&F (no value, no space) — the firmware sends this
+            // when the command (e.g. rename) has been fully processed.
+            g_ack = true;
             g_dataReceived = true;
-        } else if (prefix == zowi::toChar(zowi::Command::GetProgramId)) {
-            g_appId = value;
-            g_dataReceived = true;
-        } else if (prefix == zowi::toChar(zowi::Command::GetBattery)) {
-            try { g_battery = std::stof(value); } catch (...) {}
-            g_dataReceived = true;
-        } else if (prefix == zowi::toChar(zowi::Command::Ack) || prefix == zowi::toChar(zowi::Command::FinalAck)) {
-            // Software ack (&&A) / final ack (&&F) from the robot. The firmware
-            // sends &&F only after it has processed the command (e.g. after the
-            // EEPROM write in 'R'), so it confirms the operation completed.
+        } else if (prefix == zowi::toChar(zowi::Command::FinalAck)) {
             g_finalAck = true;
             g_dataReceived = true;
         }
@@ -817,12 +831,6 @@ int main(int argc, char **argv)
 
         bt.onConnectionChanged([&](bool connected) {
             g_connected = connected;
-            if (connected) {
-                std::cout << "Connected. Sending rename command..." << std::endl;
-                const std::string cmd = zowi::makeCommand(zowi::Command::SetName, newName);
-                bt.send(cmd);
-                renameSent = true;
-            }
         });
 
         bt.onDataReceived([&](const std::string &data) {
@@ -835,16 +843,23 @@ int main(int argc, char **argv)
 
         bt.connect(savedAddr);
 
-        // Wait for the robot to acknowledge the rename with a final ack (&&F),
-        // which the firmware sends only AFTER writing the new name to EEPROM.
-        // (g_dataReceived is already true from the identity messages on connect,
-        // so it alone would let us disconnect before the write completes.)
+        // The robot sends its identity (&&E/&&I/&&B) on power-up, which
+        // arrives only after the SPP link is up.  Send the rename command
+        // only once that handshake has been received, otherwise the firmware
+        // may drop the command while still booting.  Retry a couple of
+        // times if no final ack (&&F) comes back.
         bool renamed = false;
         auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(connectTimeout + 2);
         while (std::chrono::steady_clock::now() < deadline) {
             qtApp.processEvents();
             {
                 std::lock_guard<std::mutex> lock(g_mtx);
+                if (g_connected && g_dataReceived && !renameSent) {
+                    std::cout << "Connected. Sending rename command..." << std::endl;
+                    const std::string cmd = zowi::makeCommand(zowi::Command::SetName, newName);
+                    bt.send(cmd);
+                    renameSent = true;
+                }
                 if (renameSent && g_finalAck) { renamed = true; break; }
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(50));
