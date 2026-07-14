@@ -3,47 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zowi Desktop</title>
+    <title>Zowi Desktop — User Guide</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
+            max-width: 820px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 30px 20px 60px;
             color: #2d5a2d;
             background: #f4f9f4;
-            line-height: 1.6;
+            line-height: 1.65;
         }
-        h1 { color: #2d5a2d; }
-        hr { border: none; border-top: 1px solid #2d5a2d; opacity: 0.2; }
-        img { max-width: 100%; height: auto; }
-        .lang-nav { text-align: right; margin-bottom: 20px; }
-        .lang-nav a { color: #21a69b; margin-left: 10px; text-decoration: none; }
+        .lang-nav { text-align: right; margin-bottom: 10px; }
+        .lang-nav a {
+            color: #21a69b; margin-left: 12px; text-decoration: none;
+            font-weight: bold; font-size: 0.95em;
+        }
+        .lang-nav a.current { color: #2d5a2d; text-decoration: underline; }
         .lang-nav a:hover { text-decoration: underline; }
+        h1 { color: #2d5a2d; font-size: 2.2em; margin: 0 0 6px; }
+        h2 { color: #21a69b; border-bottom: 2px solid #21a69b55; padding-bottom: 4px; margin-top: 40px; }
+        p { font-size: 1.05em; }
+        .lead { font-size: 1.15em; opacity: 0.85; }
+        .shot { background: #fff; border: 1px solid #2d5a2d33; border-radius: 10px; padding: 10px; margin: 14px 0; text-align: center; }
+        .shot img { max-width: 100%; height: auto; border-radius: 6px; }
+        .shot .cap { font-size: 0.85em; opacity: 0.6; margin-top: 6px; }
+        .row { display: flex; gap: 14px; flex-wrap: wrap; }
+        .row .shot { flex: 1 1 280px; }
+        ul { font-size: 1.05em; }
+        code { background: #2d5a2d18; padding: 1px 6px; border-radius: 4px; }
+        footer { margin-top: 50px; padding-top: 16px; border-top: 1px solid #2d5a2d33; font-size: 0.9em; opacity: 0.7; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="lang-nav">
-    <a href="../es/"><img src="../images/es.svg" alt="Español" width="24"></a>
-    <a href="../ca/"><img src="../images/vl.svg" alt="Valencià" width="24"></a>
+<nav class="lang-nav">
+    <a href="../en/" class="current">EN</a>
+    <a href="../es/">ES</a>
+    <a href="../ca/">CA</a>
+    <a href="../fr/">FR</a>
+    <a href="../bg/">BG</a>
+</nav>
+
+<h1>Zowi Desktop — User Guide</h1>
+<p class="lead"><strong>Zowi Desktop</strong> is a cross-platform application to control and program your Zowi robot from a computer over Bluetooth. This guide walks you through every screen of the app.</p>
+
+<h2>1. Choose your language</h2>
+<p>When the app opens you see the splash screen. Pick your language from the list — <em>Español, Valencià, English, Français, Български</em> — and press <strong>Continue</strong>. You can also <strong>Quit</strong> the app from here.</p>
+<div class="shot"><img src="../screenshots/splash_screen.png" alt="Splash screen"><div class="cap">Splash screen with language selector</div></div>
+
+<h2>2. Welcome</h2>
+<p>The welcome screen introduces Zowi. Press <strong>Start</strong> to begin the setup, or <strong>Learn more</strong> to read about the robot.</p>
+<div class="shot"><img src="../screenshots/welcome_screen.png" alt="Welcome screen"><div class="cap">Welcome screen</div></div>
+
+<h2>3. Turn on your Zowi</h2>
+<p>The setup wizard checks that your Zowi is ready. Make sure it is turned on and nearby. If it is already on, choose <em>“It's already on”</em>. If you don't own a Zowi yet, you can still explore the app without one.</p>
+<div class="shot"><img src="../screenshots/wizard_screen.png" alt="Setup wizard"><div class="cap">Setup wizard — turn on Zowi</div></div>
+
+<h2>4. Connect over Bluetooth</h2>
+<p>The app scans for nearby Zowi devices. When your Zowi appears in the list, tap it. You will be asked to enter the pairing code <code>1234</code> to pair with the robot.</p>
+<div class="row">
+    <div class="shot"><img src="../screenshots/scan_screen.png" alt="Scanning"><div class="cap">Scanning for Zowis</div></div>
+    <div class="shot"><img src="../screenshots/wizard_found_screen.png" alt="Found"><div class="cap">Pair with your Zowi (code 1234)</div></div>
 </div>
 
-<h1>Zowi Desktop</h1>
+<h2>5. Name your Zowi</h2>
+<p>Type a friendly name for your Zowi and press <strong>Rename</strong>. The name is sent to the robot and remembered for next time.</p>
+<div class="shot"><img src="../screenshots/wizard_rename_screen.png" alt="Rename"><div class="cap">Naming your Zowi</div></div>
 
-<p><strong>Zowi Desktop</strong> is a cross-platform application to control and program your Zowi robot from a computer.</p>
+<h2>6. Home screen</h2>
+<p>Once connected you reach the home screen, which has two pages:</p>
+<ul>
+    <li><strong>Zowi Apps</strong> — games and interactive modes.</li>
+    <li><strong>Projects</strong> — programming activities.</li>
+</ul>
+<p>Use the top buttons to open <strong>Settings</strong> and <strong>Achievements</strong>. The status bar at the top shows the current connection state:</p>
+<ul>
+    <li><code>Connected · &lt;name&gt; · &lt;battery&gt;% · &lt;MAC&gt;</code> — your Zowi is ready.</li>
+    <li><code>Connecting…</code> — the app is trying to reach your Zowi.</li>
+    <li><code>Zowi unavailable</code> — your saved Zowi is off or out of range; tap <strong>Reconnect</strong>.</li>
+    <li><code>Not connected</code> — no Zowi has been set up.</li>
+</ul>
+<div class="row">
+    <div class="shot"><img src="../screenshots/home_screen.png" alt="Home"><div class="cap">Home — Zowi Apps</div></div>
+    <div class="shot"><img src="../screenshots/home_screen_2.png" alt="Home projects"><div class="cap">Home — Projects</div></div>
+</div>
 
-<p>Zowi is an open-source quadruped robot designed for education. It walks, dances, reacts to its environment, and helps children and beginners learn the basics of robotics and programming in a fun and hands-on way.</p>
+<h2>7. Automatic reconnection</h2>
+<p>Every time you open the app, Zowi Desktop tries to reconnect to the last used Zowi if it is powered on. If it is off, the status bar will tell you, and you can press <strong>Reconnect</strong> at any time.</p>
 
-<p>This desktop app lets you connect to Zowi via Bluetooth, control its movements, program its behaviour using visual blocks, and flash new firmware — all without needing an Android device or a mobile phone.</p>
+<h2>8. Reset (developer mode)</h2>
+<p>The <strong>Reset</strong> button, shown in developer mode, removes the registered Zowi from the app and from the Bluetooth system. If no Zowi is registered, a warning message is shown instead.</p>
 
-<p>Whether you already own a Zowi or you are just curious about robotics, Zowi Desktop is your companion to explore, play, and learn.</p>
-
-<p><img src="../screenshots/welcome_screen.png" alt="Welcome screen" style="width:50%"></p>
-
-<hr>
-
-<p>Built with Qt and QML.<br>Open source — contributions welcome.</p>
+<footer>Built with Qt and QML. Open source — contributions welcome.</footer>
 
 </body>
 </html>

@@ -3,47 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zowi Desktop</title>
+    <title>Zowi Desktop — Guia d'usuari</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            max-width: 800px;
+            max-width: 820px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 30px 20px 60px;
             color: #2d5a2d;
             background: #f4f9f4;
-            line-height: 1.6;
+            line-height: 1.65;
         }
-        h1 { color: #2d5a2d; }
-        hr { border: none; border-top: 1px solid #2d5a2d; opacity: 0.2; }
-        img { max-width: 100%; height: auto; }
-        .lang-nav { text-align: right; margin-bottom: 20px; }
-        .lang-nav a { color: #21a69b; margin-left: 10px; text-decoration: none; }
+        .lang-nav { text-align: right; margin-bottom: 10px; }
+        .lang-nav a {
+            color: #21a69b; margin-left: 12px; text-decoration: none;
+            font-weight: bold; font-size: 0.95em;
+        }
+        .lang-nav a.current { color: #2d5a2d; text-decoration: underline; }
         .lang-nav a:hover { text-decoration: underline; }
+        h1 { color: #2d5a2d; font-size: 2.2em; margin: 0 0 6px; }
+        h2 { color: #21a69b; border-bottom: 2px solid #21a69b55; padding-bottom: 4px; margin-top: 40px; }
+        p { font-size: 1.05em; }
+        .lead { font-size: 1.15em; opacity: 0.85; }
+        .shot { background: #fff; border: 1px solid #2d5a2d33; border-radius: 10px; padding: 10px; margin: 14px 0; text-align: center; }
+        .shot img { max-width: 100%; height: auto; border-radius: 6px; }
+        .shot .cap { font-size: 0.85em; opacity: 0.6; margin-top: 6px; }
+        .row { display: flex; gap: 14px; flex-wrap: wrap; }
+        .row .shot { flex: 1 1 280px; }
+        ul { font-size: 1.05em; }
+        code { background: #2d5a2d18; padding: 1px 6px; border-radius: 4px; }
+        footer { margin-top: 50px; padding-top: 16px; border-top: 1px solid #2d5a2d33; font-size: 0.9em; opacity: 0.7; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="lang-nav">
-    <a href="../en/"><img src="../images/gb.svg" alt="English" width="24"></a>
-    <a href="../es/"><img src="../images/es.svg" alt="Español" width="24"></a>
+<nav class="lang-nav">
+    <a href="../en/">EN</a>
+    <a href="../es/">ES</a>
+    <a href="../ca/" class="current">CA</a>
+    <a href="../fr/">FR</a>
+    <a href="../bg/">BG</a>
+</nav>
+
+<h1>Zowi Desktop — Guia d'usuari</h1>
+<p class="lead"><strong>Zowi Desktop</strong> és una aplicació multiplataforma per controlar i programar el teu robot Zowi des de l'ordinador mitjançant Bluetooth. Aquesta guia et mostra cada pantalla de l'aplicació.</p>
+
+<h2>1. Trieu el vostre idioma</h2>
+<p>En obrir l'aplicació veus la pantalla d'inici. Trieu el vostre idioma a la llista — <em>Español, Valencià, English, Français, Български</em> — i premeu <strong>Continuar</strong>. També podeu <strong>Sortir</strong> de l'aplicació des d'aquí.</p>
+<div class="shot"><img src="../screenshots/splash_screen.png" alt="Pantalla d'inici"><div class="cap">Pantalla d'inici amb selector d'idioma</div></div>
+
+<h2>2. Benvinguda</h2>
+<p>La pantalla de benvinguda presenta el Zowi. Premeu <strong>Començar</strong> per iniciar la configuració, o <strong>Més informació</strong> per llegir sobre el robot.</p>
+<div class="shot"><img src="../screenshots/welcome_screen.png" alt="Benvinguda"><div class="cap">Pantalla de benvinguda</div></div>
+
+<h2>3. Engega el teu Zowi</h2>
+<p>L'assistent de configuració comprova que el teu Zowi està a punt. Assegura't que està ences i a prop. Si ja està ences, tria <em>“Ja està ences”</em>. Si encara no tens un Zowi, també pots explorar l'aplicació sense ell.</p>
+<div class="shot"><img src="../screenshots/wizard_screen.png" alt="Assistent"><div class="cap">Assistent de configuració — engega el Zowi</div></div>
+
+<h2>4. Connecta't per Bluetooth</h2>
+<p>L'aplicació busca dispositius Zowi propers. Quan el teu Zowi aparega a la llista, prem-lo. Se't demanarà que introduïsques el codi d'aparellament <code>1234</code> per aparellar-lo amb el robot.</p>
+<div class="row">
+    <div class="shot"><img src="../screenshots/scan_screen.png" alt="Buscant"><div class="cap">Buscant Zowis</div></div>
+    <div class="shot"><img src="../screenshots/wizard_found_screen.png" alt="Trobat"><div class="cap">Aparellar amb el teu Zowi (codi 1234)</div></div>
 </div>
 
-<h1>Zowi Desktop</h1>
+<h2>5. Anomena el teu Zowi</h2>
+<p>Escriu un nom per al teu Zowi i prem <strong>Anomena</strong>. El nom s'envia al robot i es recorda la propera vegada.</p>
+<div class="shot"><img src="../screenshots/wizard_rename_screen.png" alt="Anomena"><div class="cap">Anomenant el teu Zowi</div></div>
 
-<p><strong>Zowi Desktop</strong> és una aplicació multiplataforma per a controlar i programar el teu robot Zowi des d'un ordinador.</p>
+<h2>6. Pantalla principal</h2>
+<p>Un cop connectat arribes a la pantalla principal, que té dues pàgines:</p>
+<ul>
+    <li><strong>Aplicacions Zowi</strong> — jocs i modes interactius.</li>
+    <li><strong>Projectes</strong> — activitats de programació.</li>
+</ul>
+<p>Fes servir els botons superiors per obrir <strong>Ajustos</strong> i <strong>Assoliments</strong>. La barra d'estat superior mostra l'estat de connexió:</p>
+<ul>
+    <li><code>Connectat · &lt;nom&gt; · &lt;bateria&gt;% · &lt;MAC&gt;</code> — el teu Zowi està a punt.</li>
+    <li><code>Connectant…</code> — l'aplicació està intentant localitzar el teu Zowi.</li>
+    <li><code>Zowi no disponible</code> — el teu Zowi guardat està apagat o fora d'abast; prem <strong>Reconecta</strong>.</li>
+    <li><code>No connectat</code> — no s'ha configurat cap Zowi.</li>
+</ul>
+<div class="row">
+    <div class="shot"><img src="../screenshots/home_screen.png" alt="Inici"><div class="cap">Inici — Aplicacions Zowi</div></div>
+    <div class="shot"><img src="../screenshots/home_screen_2.png" alt="Inici projectes"><div class="cap">Inici — Projectes</div></div>
+</div>
 
-<p>Zowi és un robot quadrúpede de codi obert dissenyat per a l'educació. Camina, balla, reacciona al seu entorn i ajuda els xiquets i principiants a aprendre els fonaments de la robòtica i la programació d'una forma divertida i pràctica.</p>
+<h2>7. Reconnexió automàtica</h2>
+<p>Cada vegada que obres l'aplicació, Zowi Desktop intenta reconnectar amb l'últim Zowi usat si està ences. Si està apagat, la barra d'estat t'ho indicarà i podràs prémer <strong>Reconecta</strong> en qualsevol moment.</p>
 
-<p>Esta aplicació d'escriptori et permet connectar amb Zowi per Bluetooth, controlar els seus moviments, programar el seu comportament amb blocs visuals i actualitzar el seu firmware — tot sense necessitat d'un dispositiu Android ni un mòbil.</p>
+<h2>8. Restablir (mode desenvolupador)</h2>
+<p>El botó <strong>Restablir</strong>, visible en mode desenvolupador, elimina el Zowi registrat de l'aplicació i del sistema Bluetooth. Si no hi ha cap Zowi registrat, es mostra un missatge d'avís.</p>
 
-<p>Ja tingueres un Zowi o simplement sentes curiositat per la robòtica, Zowi Desktop és el teu company per a explorar, jugar i aprendre.</p>
-
-<p><img src="../screenshots/welcome_screen.png" alt="Pantalla de benvinguda" style="width:50%"></p>
-
-<hr>
-
-<p>Desenvolupat amb Qt i QML.<br>Codi obert — les contribucions són benvingudes.</p>
+<footer>Creat amb Qt i QML. Codi obert — les contribucions són benvingudes.</footer>
 
 </body>
 </html>

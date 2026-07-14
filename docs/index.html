@@ -17,10 +17,10 @@
         }
         h1 { color: #2d5a2d; font-size: 2.5em; margin-bottom: 10px; }
         p { font-size: 1.1em; opacity: 0.8; margin-bottom: 30px; }
-        .lang-list { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        .lang-list { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
         .lang-list a {
             display: inline-block;
-            padding: 12px 30px;
+            padding: 12px 22px;
             background: #21a69b;
             color: #fff;
             text-decoration: none;
@@ -33,16 +33,18 @@
 </head>
 <body>
     <h1>Zowi Desktop</h1>
-    <p>Select your language / Selecciona tu idioma / Selecciona el teu idioma</p>
+    <p>Select your language / Selecciona tu idioma / Selecciona el teu idioma / Choisissez votre langue / Изберете езика си</p>
     <div class="lang-list">
-        <a href="en/"><img src="images/gb.svg" alt="English" width="32"></a>
-        <a href="es/"><img src="images/es.svg" alt="Español" width="32"></a>
-        <a href="ca/"><img src="images/vl.svg" alt="Valencià" width="32"></a>
+        <a href="en/">EN</a>
+        <a href="es/">ES</a>
+        <a href="ca/">CA</a>
+        <a href="fr/">FR</a>
+        <a href="bg/">BG</a>
     </div>
 
     <script>
         var lang = (navigator.language || navigator.userLanguage || '').slice(0, 2);
-        var map = { en: 'en/', es: 'es/', ca: 'ca/' };
+        var map = { en: 'en/', es: 'es/', ca: 'ca/', fr: 'fr/', bg: 'bg/' };
         if (map[lang]) window.location.replace(map[lang]);
     </script>
 </body>
