@@ -24,6 +24,7 @@ public:
     virtual bool send(const std::string &data) = 0;
     virtual bool isConnected() const = 0;
     virtual std::string lastError() const = 0;
+    virtual void setAutoReconnect(bool enabled, int reconnectIntervalMs = 3000) = 0;
 
     void onDeviceFound(DeviceCallback cb)       { m_onDevice = std::move(cb); }
     void onDataReceived(DataCallback cb)        { m_onData = std::move(cb); }

@@ -32,6 +32,7 @@ static std::string g_robotName;
 static std::string g_appId;
 static float g_battery = -1.0f;
 static bool g_connected = false;
+static bool g_connectedOnce = false;
 static bool g_dataReceived = false;
 static bool g_finalAck = false;
 static std::string g_dataBuffer;
@@ -50,6 +51,7 @@ static void resetRobotState()
     g_appId.clear();
     g_battery = -1.0f;
     g_connected = false;
+    g_connectedOnce = false;
     g_dataReceived = false;
     g_finalAck = false;
     g_dataBuffer.clear();
@@ -313,47 +315,59 @@ static bool uploadFirmware(zowi::BluetoothApi &bt,
 
     {
         std::lock_guard<std::mutex> lock(g_mtx);
-        std::cerr << "[debug] bytes received during upload (" << g_stkBuffer.size() << "): ";
-        for (char c : g_stkBuffer) {
-            std::cerr << "0x" << std::hex << (static_cast<int>(c) & 0xFF) << std::dec << " ";
-        }
-        std::cerr << std::endl;
         g_uploadMode = false;
     }
 
     return ok;
 }
 
-// Prepare a serial (RFCOMM TTY) backend for flashing. If ttyOpt is empty, the
-// function binds an RFCOMM TTY to the paired device address (requires
-// CAP_NET_ADMIN/root) and returns the bound device path in boundTty so the
-// caller can release it afterwards. The returned backend is NOT yet connected;
-// the caller sets callbacks and calls connect(tty) (which pulses DTR).
-static std::unique_ptr<zowi::SerialBluetoothBackend> prepareFlashBackend(
+// Prepare a backend for firmware flashing. Returns either a Qt Bluetooth SPP
+// backend (default, no root needed) or a serial RFCOMM TTY backend (used when
+// --tty is given or --backend serial is explicitly requested).
+// On serial, binds an RFCOMM TTY if ttyOpt is empty (needs root/CAP_NET_ADMIN);
+// the bound path is set in boundTty so the caller can release it afterwards.
+// connectTarget is set to the string that should be passed to bt->connect()
+// — either the TTY path (serial) or the Bluetooth address (Qt).
+static std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
+    const std::string &backendName,
     const std::string &address,
     const std::string &ttyOpt,
-    std::string &tty,
+    std::string &connectTarget,
     std::string &boundTty)
 {
-    tty = ttyOpt;
-    if (tty.empty()) {
-        if (address.empty()) {
-            std::cerr << "No paired device found. Run 'connect' first." << std::endl;
-            return nullptr;
+    const bool useSerial = (backendName == "serial" || !ttyOpt.empty());
+
+    if (useSerial) {
+        // ── Serial (RFCOMM TTY) backend ────────────────────────
+        std::string tty = ttyOpt;
+        if (tty.empty()) {
+            if (address.empty()) {
+                std::cerr << "No paired device found. Run 'connect' first." << std::endl;
+                return nullptr;
+            }
+            tty = "/dev/rfcomm0";
+            std::system(("rfcomm bind 0 " + address + " 1").c_str());
+            if (access(tty.c_str(), F_OK) != 0) {
+                std::cerr << "Failed to bind RFCOMM TTY " << tty
+                          << " (need CAP_NET_ADMIN / root).\n"
+                          << "Either run as root, or bind manually:\n"
+                          << "  rfcomm bind 0 " << address << " 1\n"
+                          << "and pass --tty /dev/rfcomm0" << std::endl;
+                return nullptr;
+            }
+            boundTty = tty;
         }
-        tty = "/dev/rfcomm0";
-        std::system(("rfcomm bind 0 " + address + " 1").c_str());
-        if (access(tty.c_str(), F_OK) != 0) {
-            std::cerr << "Failed to bind RFCOMM TTY " << tty
-                      << " (need CAP_NET_ADMIN / root).\n"
-                      << "Either run as root, or bind manually:\n"
-                      << "  rfcomm bind 0 " << address << " 1\n"
-                      << "and pass --tty /dev/rfcomm0" << std::endl;
-            return nullptr;
-        }
-        boundTty = tty;
+        connectTarget = tty;
+        return std::make_unique<zowi::SerialBluetoothBackend>();
     }
-    return std::make_unique<zowi::SerialBluetoothBackend>();
+
+    // ── Qt Bluetooth SPP backend (default) ────────────────────
+    if (address.empty()) {
+        std::cerr << "No paired device found. Run 'connect' first." << std::endl;
+        return nullptr;
+    }
+    connectTarget = address;
+    return std::make_unique<zowi::QtBluetoothBackend>();
 }
 
 static bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
@@ -368,10 +382,38 @@ static bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
 {
     resetRobotState();
 
-    // Note: the backend is expected to be already connected by the caller
-    // (the flashing flow opens an RFCOMM TTY and pulses DTR to reset the robot
-    // into its bootloader before calling this function). The paired device
-    // address is supplied via --address / the session when available.
+    // Enable upload mode early so any bootloader response arriving during the
+    // reconnection phase is routed to g_stkBuffer instead of being parsed as a
+    // protocol message.
+    {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        g_uploadMode = true;
+        g_stkBuffer.clear();
+    }
+
+    // Wait for a stable connection. The first SPP connect triggers the STATE-pin
+    // reset, which may briefly drop the Bluetooth link while the robot reboots.
+    // Allow up to 10 s total; fast reconnect (100 ms interval) is already set on
+    // the backend.
+    for (int attempt = 0; attempt < 10; ++attempt) {
+        if (!waitUntil(qtApp, 5000, []() {
+                std::lock_guard<std::mutex> lock(g_mtx);
+                return g_connectedOnce;
+            })) {
+            std::cerr << "Could not connect to the robot within the timeout." << std::endl;
+            bt.disconnect();
+            return false;
+        }
+        // Give the link a moment to settle after the reset cycle.
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        if (g_connected) break; // still connected → stable
+        // Dropped again (reset cycle), loop to wait for reconnect.
+    }
+    if (!g_connected) {
+        std::cerr << "Could not establish a stable connection to the robot." << std::endl;
+        bt.disconnect();
+        return false;
+    }
 
     const bool bootloaderMode = (protocol == "raw" || protocol == "stk");
     if (!bootloaderMode) {
@@ -466,7 +508,7 @@ int main(int argc, char **argv)
     configGet->add_option("key", configKey, "Config key to read")->required();
 
     // ── scan subcommand ───────────────────────────────────────
-    auto *scanCmd = app.add_subcommand("scan", "Scan for nearby Zowi robots (5s)\nFilters by name and MAC prefix by default.\nRun with sudo to avoid CAP_NET_ADMIN warning.");
+    auto *scanCmd = app.add_subcommand("scan", "Scan for nearby Zowi robots (5s)\nFilters by name and MAC prefix by default.\nUses BlueZ D-Bus; no root needed.");
     int scanTimeout = 5;
     bool filterName = true;
     bool filterMac = true;
@@ -475,7 +517,7 @@ int main(int argc, char **argv)
     scanCmd->add_flag("--no-filter-mac", filterMac, "Disable filtering by MAC prefix");
 
     // ── connect subcommand ────────────────────────────────────
-    auto *connectCmd = app.add_subcommand("connect", "Connect to a Zowi robot by Bluetooth address\nReceives robot name, app ID, and battery level.\nRun with sudo to avoid CAP_NET_ADMIN warning.");
+    auto *connectCmd = app.add_subcommand("connect", "Connect to a Zowi robot by Bluetooth address\nReceives robot name, app ID, and battery level.\nUses BlueZ D-Bus; no root needed.");
     std::string connectAddress;
     connectCmd->add_option("address", connectAddress, "Bluetooth MAC address (e.g. B4:9D:0B:32:41:0E)")->required();
     int connectTimeout = 3;
@@ -509,6 +551,8 @@ int main(int argc, char **argv)
     restoreCmd->add_option("--tty", restoreTty, "RFCOMM TTY to use for flashing (e.g. /dev/rfcomm0). If omitted, one is bound automatically (needs root).")->default_val("");
     std::string restoreAddress;
     restoreCmd->add_option("--address,-a", restoreAddress, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
+    std::string restoreBackend = "auto";
+    restoreCmd->add_option("--backend", restoreBackend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap)")->default_val("auto");
 
     // ── alarm subcommand ──────────────────────────────────────
     auto *alarmCmd = app.add_subcommand("alarm", "Install the Robot Alarm firmware on the paired Zowi robot\nUploads the bundled ZOWI_Alarm_v2.hex file unless a custom path is provided.");
@@ -526,6 +570,8 @@ int main(int argc, char **argv)
     alarmCmd->add_option("--tty", alarmTty, "RFCOMM TTY to use for flashing (e.g. /dev/rfcomm0). If omitted, one is bound automatically (needs root).")->default_val("");
     std::string alarmAddress;
     alarmCmd->add_option("--address,-a", alarmAddress, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
+    std::string alarmBackend = "auto";
+    alarmCmd->add_option("--backend", alarmBackend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap)")->default_val("auto");
 
     // ── control subcommand ───────────────────────────────────
     auto *controlCmd = app.add_subcommand("control", "Interactive keyboard minigame to drive the Zowi robot\nUse the arrow keys to move; press ESC or 'q' to quit.\nConnects to the paired device (or --address).");
@@ -798,20 +844,22 @@ int main(int argc, char **argv)
     if (*restoreCmd) {
         QCoreApplication qtApp(argc, argv);
         zowi::SessionStore session("ZowiDesktop", "ZowiApp");
-        std::string tty, boundTty;
+        std::string connectTarget, boundTty;
         const std::string restoreAddr = restoreAddress.empty()
                                             ? session.getString("activeZowiDeviceAddress")
                                             : restoreAddress;
-        auto bt = prepareFlashBackend(restoreAddr, restoreTty, tty, boundTty);
+        auto bt = prepareFlashBackend(restoreBackend, restoreAddr, restoreTty, connectTarget, boundTty);
         if (!bt) return 1;
+        bt->setAutoReconnect(true, 100);
         bt->onDataReceived([](const std::string &d) { onDataReceived(d); });
         bt->onConnectionChanged([](bool c) {
             g_connected = c;
-            std::cout << (c ? "Serial connection open." : "Disconnected.") << std::endl;
+            if (c) g_connectedOnce = true;
+            std::cout << (c ? "Connection open." : "Disconnected.") << std::endl;
         });
         bt->onError([](const std::string &m) { std::cerr << "Error: " << m << std::endl; });
-        if (!bt->connect(tty)) {
-            std::cerr << "Failed to open serial backend: " << bt->lastError() << std::endl;
+        if (!bt->connect(connectTarget)) {
+            std::cerr << "Failed to connect: " << bt->lastError() << std::endl;
             if (!boundTty.empty()) std::system("rfcomm release 0");
             return 1;
         }
@@ -832,20 +880,22 @@ int main(int argc, char **argv)
     if (*alarmCmd) {
         QCoreApplication qtApp(argc, argv);
         zowi::SessionStore session("ZowiDesktop", "ZowiApp");
-        std::string tty, boundTty;
+        std::string connectTarget, boundTty;
         const std::string alarmAddr = alarmAddress.empty()
-                                          ? session.getString("activeZowiDeviceAddress")
-                                          : alarmAddress;
-        auto bt = prepareFlashBackend(alarmAddr, alarmTty, tty, boundTty);
+                                           ? session.getString("activeZowiDeviceAddress")
+                                           : alarmAddress;
+        auto bt = prepareFlashBackend(alarmBackend, alarmAddr, alarmTty, connectTarget, boundTty);
         if (!bt) return 1;
+        bt->setAutoReconnect(true, 100);
         bt->onDataReceived([](const std::string &d) { onDataReceived(d); });
         bt->onConnectionChanged([](bool c) {
             g_connected = c;
-            std::cout << (c ? "Serial connection open." : "Disconnected.") << std::endl;
+            if (c) g_connectedOnce = true;
+            std::cout << (c ? "Connection open." : "Disconnected.") << std::endl;
         });
         bt->onError([](const std::string &m) { std::cerr << "Error: " << m << std::endl; });
-        if (!bt->connect(tty)) {
-            std::cerr << "Failed to open serial backend: " << bt->lastError() << std::endl;
+        if (!bt->connect(connectTarget)) {
+            std::cerr << "Failed to connect: " << bt->lastError() << std::endl;
             if (!boundTty.empty()) std::system("rfcomm release 0");
             return 1;
         }

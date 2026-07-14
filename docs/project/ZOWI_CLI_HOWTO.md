@@ -191,18 +191,14 @@ zowi_cli scan -t 3     # 3 seconds
 zowi_cli scan --no-filter-name --no-filter-mac
 ```
 
-### Avoid CAP_NET_ADMIN warning
+### Avoid permission warnings
 
-On Linux, Bluetooth scanning requires elevated permissions. Run with `sudo` to suppress the warning:
-
-```bash
-sudo zowi_cli scan
-```
-
-Or grant the capability permanently:
+Bluetooth scanning through BlueZ D‑Bus works for normal users in most setups.
+If your user lacks D‑Bus bluetooth access, add it to the `bluetooth` group:
 
 ```bash
-sudo setcap cap_net_admin+ep build/src/cli/zowi_cli
+sudo usermod -aG bluetooth $USER
+# log out and back in
 ```
 
 ## Connect
@@ -244,10 +240,12 @@ activeZowiName=Zowi
 wizardDismissed=true
 ```
 
-### Avoid CAP_NET_ADMIN warning
+### Avoid permission warnings
+
+Bluetooth connection through BlueZ D‑Bus works for normal users. See the `scan` section for group requirements:
 
 ```bash
-sudo zowi_cli connect B4:9D:0B:32:41:0E
+zowi_cli connect B4:9D:0B:32:41:0E
 ```
 
 ## Rename
@@ -276,10 +274,12 @@ $ zowi_cli session get activeZowiName
 Mi Zowi
 ```
 
-### Avoid CAP_NET_ADMIN warning
+### Avoid permission warnings
+
+Same as `connect` — BlueZ D‑Bus works for normal users:
 
 ```bash
-sudo zowi_cli rename "Mi Zowi"
+zowi_cli rename "Mi Zowi"
 ```
 
 ## Restore
@@ -300,58 +300,73 @@ protocol the official Android app uses (`bq/protocol-stk-500-v1`,
 
 Zowi's bootloader runs only briefly after a hardware reset. On the ZUM BT-328 board
 the reset is triggered by the **HC‑05 Bluetooth module's STATE pin**, which goes
-active when the SPP serial connection is established — the classic Arduino
+active when the SPP connection is established — the classic Arduino
 auto‑reset, but driven by the *connection* rather than a host DTR line. The
 bootloader then waits only a short window (~1 s) for the first `STK_GET_SYNC`.
 
-This is why flashing must **bind the RFCOMM TTY and open/stream it within the same
-process**: if the SPP connection is established by a separate `rfcomm bind` command,
-the reset fires there and the bootloader window expires long before the CLI opens the
-TTY — you get zero response bytes. So always let the CLI auto‑bind (run with
-`--address`, no `--tty`), as root.
+Two backends can perform the flash:
 
-Because the Qt Bluetooth SPP *socket* path cannot open a real TTY, flashing uses a
-**serial (RFCOMM TTY) backend** instead:
+**BlueZ SPP (default, `--backend bluetooth`).** Uses Qt Bluetooth → BlueZ D‑Bus →
+the robot's RFCOMM SPP service. The STATE‑pin reset fires as soon as the SPP
+connection is established, so the first `STK_GET_SYNC` sent right after connection
+arrives inside the bootloader window. **No `CAP_NET_ADMIN` / root needed.** This
+backend replaces the older serial‑TTY approach and is the recommended path.
 
-1. The CLI binds an RFCOMM TTY to the paired device in‑process (`rfcomm bind 0 <address> 1`)
-   and opens it immediately, so the connection‑triggered reset and the first
-   `STK_GET_SYNC` land inside the bootloader window. (A brief DTR pulse is also sent
-   for boards that wire DTR to RESET.)
-2. The TTY is opened at 9600 8N1.
-3. The HEX file is parsed (Intel HEX) and programmed over STK500v1:
+**Serial / RFCOMM TTY (fallback, `--backend serial` / `--tty`).** Binds an RFCOMM
+TTY (`rfcomm bind 0 <address> 1`) and opens it in‑process. The bind itself fires
+the reset, so binding and opening must happen in the same process — do *not*
+pre‑bind with a separate `rfcomm bind` command. Requires `CAP_NET_ADMIN` (root or
+setcap). A brief DTR pulse is also sent for boards that wire DTR→RESET.
+
+Both backends follow the same STK500v1 flow once connected:
+1. Connection opened at 9600 8N1.
+2. The HEX file is parsed (Intel HEX) and programmed over STK500v1:
    `STK_GET_SYNC` → `STK_ENTER_PROGMODE` → chip‑erase (universal `0xAC 0x80`) →
    for each 128‑byte page: `STK_LOAD_ADDRESS` + `STK_PROG_PAGE` (memtype `'F'`) →
    `STK_LEAVE_PROGMODE` (the bootloader then reboots into the new firmware).
-4. The CLI waits for the robot to report its new app ID (`&&I <appId>%%`).
+3. The CLI waits for the robot to report its new app ID (`&&I <appId>%%`).
 
 `--protocol stk` is the default. `--protocol raw` streams the HEX verbatim instead
 (kept only for experimenting with non‑Optiboot bootloaders).
 
-### Serial / TTY requirements
+### Backend selection
 
-Flashing must open a real serial port (so the connection‑triggered reset and the
-first bootloader sync happen in the same process), not a Bluetooth socket. On Linux
-that means an RFCOMM TTY device such as `/dev/rfcomm0`, created with `CAP_NET_ADMIN`
-(typically root).
+| `--backend` | Backend | Needs root / setcap? |
+|---|---|---|
+| `auto` (default) | Qt Bluetooth SPP (BlueZ) | No |
+| `bluetooth` | Qt Bluetooth SPP (BlueZ) | No |
+| `serial` | Serial / RFCOMM TTY (`rfcomm bind`) | Yes (`CAP_NET_ADMIN`) |
 
-**Do not** pre‑bind and run in two separate steps — that breaks the bootloader timing
-(see *How it works* above).
+When `--tty` is given, the serial backend is selected automatically regardless of
+`--backend`.
 
-### Recommended: run without sudo (setcap)
+If using the serial backend, the TTY must be bound and opened in the **same process**
+— do **not** pre‑bind with a separate `rfcomm bind` command, because the bind fires
+the bootloader reset and the ~1 s window expires before the CLI opens the TTY.
 
-Grant the binary the `CAP_NET_ADMIN` capability, then run **all** commands
-(including flashing) as your normal user. This avoids the root/user session split
-that makes `status`/`connect` report a stale `ZOWI_BASE_v2` after a `sudo` flash.
+### Privileges: running as your normal user
+
+The **default BlueZ SPP backend does not need any extra privileges**. Simply run:
+
+```bash
+./build/src/cli/zowi_cli restore --address B4:9D:0B:32:41:0E
+./build/src/cli/zowi_cli alarm  --address B4:9D:0B:32:41:0E
+./build/src/cli/zowi_cli status
+```
+
+All commands share the same user session, so `status` always shows current data.
+
+If you use the serial backend (`--backend serial` or `--tty`), you still need
+`CAP_NET_ADMIN`. Grant it with setcap:
+
+```bash
+sudo setcap cap_net_admin+ep build/src/cli/zowi_cli
+```
 
 The build applies the capability automatically on every (re)compile via a
 post‑build step in `src/cli/CMakeLists.txt` (using `sudo -n`, so it only succeeds
 when you already have cached/non‑interactive sudo rights). If it can't, the build
-prints a reminder instead of failing:
-
-```bash
-# If the automatic step didn't apply it (e.g. no cached sudo), do it once manually:
-sudo setcap cap_net_admin+ep build/src/cli/zowi_cli
-```
+prints a reminder instead of failing.
 
 For fully passwordless builds, allow `setcap` without a password:
 
@@ -359,43 +374,35 @@ For fully passwordless builds, allow `setcap` without a password:
 sudo visudo   # add:  youruser ALL=(root) NOPASSWD: /sbin/setcap
 ```
 
-Then all commands run as your user, no `sudo`:
+### Alternative: run as root (serial backend only)
+
+If you use `--backend serial` (or `--tty`) and prefer not to set the capability,
+run the flashing command as root **without** `--tty`; the CLI binds and opens the
+TTY itself, in‑process. Remember to run `status`/`connect` as root too, or they
+will read a different (user) session:
 
 ```bash
-./build/src/cli/zowi_cli restore --address B4:9D:0B:32:41:0E
-./build/src/cli/zowi_cli alarm  --address B4:9D:0B:32:41:0E
-./build/src/cli/zowi_cli status        # reads the same (user) session, live
+sudo zowi_cli restore --backend serial --address B4:9D:0B:32:41:0E
+sudo zowi_cli alarm  --backend serial --address B4:9D:0B:32:41:0E
 ```
 
-### Alternative: run as root
-
-If you prefer not to set the capability, run the flashing command as root **without**
-`--tty`; the CLI binds and opens the TTY itself, in‑process. Remember to run
-`status`/`connect` as root too, or they will read a different (user) session:
-
-```bash
-sudo zowi_cli restore --address B4:9D:0B:32:41:0E
-sudo zowi_cli alarm  --address B4:9D:0B:32:41:0E
-```
-
-You may omit `--address` if the device was already paired (the CLI reads
-`activeZowiDeviceAddress` from the session). You may pass `--tty /dev/rfcomm0` only if
-that TTY was created in the *same* process right before (not via a prior `rfcomm bind`
-command). The CLI releases the auto‑bound TTY afterwards.
+You may omit `--address` if the device was already paired. You may pass
+`--tty /dev/rfcomm0` only if that TTY was created in the *same* process right
+before (not via a prior `rfcomm bind`). The CLI releases the auto‑bound TTY
+afterwards.
 
 ### Basic usage
 
 ```bash
-sudo zowi_cli restore --address B4:9D:0B:32:41:0E
+./build/src/cli/zowi_cli restore --address B4:9D:0B:32:41:0E
 ```
 
 Output:
 
 ```text
-Connecting to B4:9D:0B:32:41:0E for firmware restore...
-Serial connection open.
+Connecting to B4:9D:0B:32:41:0E...
+Connection open.
 Bootloader mode: skipping battery check and uploading immediately.
-Streaming firmware to bootloader...
 Uploading firmware from src/firmware/ZOWI_BASE_v2.hex...
   Progress: 100%
 Waiting for the restored firmware to report its app ID...
@@ -441,27 +448,24 @@ src/firmware/ZOWI_Alarm_v2.hex
 
 ### How it works
 
-Identical to `restore` — the CLI auto‑binds an RFCOMM TTY in‑process (so the
-connection‑triggered reset and the first bootloader sync stay inside the bootloader
-window) and streams the Intel‑HEX firmware file over STK500v1. The installed
+Identical to `restore` — the CLI connects via the default BlueZ SPP backend
+(sudo‑free) and streams the Intel‑HEX firmware over STK500v1. The installed
 `ZOWI_Alarm_v2` firmware **persists** on the robot until you run `restore`. See the
-`restore` section for the full protocol description and *Serial / TTY requirements*
-(flashing must run as root / with `CAP_NET_ADMIN`).
+`restore` section for the full protocol description, backend selection, and privilege
+requirements.
 
 ### Basic usage
 
 ```bash
-zowi_cli alarm
+./build/src/cli/zowi_cli alarm --address B4:9D:0B:32:41:0E
 ```
 
 Output:
 
 ```text
-Connecting to B4:9D:0B:32:41:0E for Alarm firmware installation...
-Connected. Checking battery level...
-Battery reported: 85%
-Entering bootloader...
-Bootloader synchronized.
+Connecting to B4:9D:0B:32:41:0E...
+Connection open.
+Bootloader mode: skipping battery check and uploading immediately.
 Uploading firmware from src/firmware/ZOWI_Alarm_v2.hex...
   Progress: 100%
 Waiting for the updated firmware to report its app ID...
@@ -617,9 +621,9 @@ Session updated.
 
 # 4. Restore the original firmware if needed
 $ zowi_cli restore
-Connecting to B4:9D:0B:32:41:0E for firmware restore...
-Connected. Checking battery level...
-Battery reported: 85%
+Connecting to B4:9D:0B:32:41:0E...
+Connection open.
+Bootloader mode: skipping battery check and uploading immediately.
 Uploading firmware from src/firmware/ZOWI_BASE_v2.hex...
   Progress: 100%
 Waiting for the restored firmware to report its app ID...

@@ -1,6 +1,6 @@
 # Relationship with zowiLibs
 
-[zowiLibs](https://github.com/eduardomillan/zowiLibs) is ZowiDesktop's **sister
+[zowiLibs](https://github.com/eduardomillan/zowiLibs) is ZowiDesktop's **bro
 project**: it contains the firmware that runs on the Zowi robot (the original BQ
 version, adapted by the same author) and the Arduino libraries that support it.
 Both projects live in separate, independent GitHub repositories.
@@ -64,3 +64,20 @@ The script copies the HEX files from zowiLibs into `src/firmware/` and normalise
 line endings (CRLF→LF). The HEX files remain committed in ZowiDesktop so the
 project stays self-contained at build time; the script is the reproducible
 mechanism for staying in sync with the canonical source.
+
+## Privileges
+
+| Area | Backend | How it connects | Needs `CAP_NET_ADMIN`? |
+|---|---|---|---|
+| Robot control (scan, connect, status, rename, movement, etc.) | `QtBluetoothBackend` (`src/backends/bt_qt/`) | Qt Bluetooth → [BlueZ](https://www.bluez.org/) D-Bus API → `bluetoothd` (system daemon) | **No.** BlueZ mediates all RFCOMM SPP connections via D-Bus and is already running as root, so a normal user can scan and connect without extra privileges. The same backend serves both the CLI and the GUI, which is why `connect`/`rename`/`status` work without `sudo`. |
+| Firmware flashing (default, `--backend bluetooth`) | `QtBluetoothBackend` (`src/backends/bt_qt/`) | Qt Bluetooth → BlueZ D-Bus → RFCOMM SPP (same as control) | **No.** The same BlueZ SPP connection triggers the HC-05 STATE-pin reset, so flashing works root-free. This is the recommended and default path. |
+| Firmware flashing (fallback, `--backend serial` / `--tty`) | `SerialBluetoothBackend` (`src/backends/bt_serial/`) | Opens `/dev/rfcomm*` directly + `ioctl` DTR pulse | **Yes.** Creating the RFCOMM TTY device with `rfcomm bind` requires `CAP_NET_ADMIN` (or root). Used when `--tty` is given or `--backend serial` is explicitly requested. |
+
+### Design rule
+
+**The default BlueZ SPP flashing path runs without extra privileges,** so the CLI
+and (in the future) the GUI can flash firmware using the same backend that
+handles robot control. The serial (RFCOMM TTY) backend is kept as a Linux-only
+fallback for environments where BlueZ SPP is unavailable or the user prefers the
+classic Arduino‑style DTR‑pulse approach.
+

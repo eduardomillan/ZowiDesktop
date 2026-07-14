@@ -25,6 +25,7 @@ public:
     bool send(const std::string &data) override;
     bool isConnected() const override;
     std::string lastError() const override;
+    void setAutoReconnect(bool enabled, int reconnectIntervalMs = 3000) override;
 
     // Extra Qt-specific getters for the bridge layer
     QString deviceName() const;
@@ -52,6 +53,9 @@ private:
     QString m_deviceName;
     QString m_deviceAddress;
     std::string m_lastError;
+    std::string m_pendingWrite;
+    bool m_autoReconnect = true;
+    int m_reconnectInterval = 3000;
 };
 
 } // namespace zowi

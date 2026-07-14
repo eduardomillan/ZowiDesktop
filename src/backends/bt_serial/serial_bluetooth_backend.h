@@ -31,6 +31,7 @@ public:
     bool send(const std::string &data) override;
     bool isConnected() const override { return m_fd >= 0; }
     std::string lastError() const override { return m_lastError; }
+    void setAutoReconnect(bool, int = 3000) override {}
 
 private slots:
     void onReadyRead();

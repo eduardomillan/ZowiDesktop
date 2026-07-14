@@ -4,11 +4,14 @@ add_executable(zowi_cli main.cpp)
 target_link_libraries(zowi_cli PRIVATE
     Zowi::core
     Zowi::bt_qt
-    Zowi::bt_serial
     Zowi::firmware
     Qt${ZOWI_QT_VERSION}::Bluetooth
     CLI11::CLI11
 )
+
+if(NOT WIN32)
+    target_link_libraries(zowi_cli PRIVATE Zowi::bt_serial)
+endif()
 
 # Grant CAP_NET_ADMIN so the CLI can bind RFCOMM / flash firmware without sudo.
 # Applied on every (re)build because the binary is overwritten and loses the

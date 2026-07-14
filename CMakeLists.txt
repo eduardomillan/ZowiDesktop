@@ -62,7 +62,8 @@ if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
 endif()
 
 # ── Serial (RFCOMM TTY + DTR auto-reset) backend ────────────────
-if(ZOWI_BUILD_CLI)
+# POSIX-only (termios, unistd, ioctl). Excluded on Windows.
+if(ZOWI_BUILD_CLI AND NOT WIN32)
     add_subdirectory(src/backends/bt_serial)
 endif()
 

@@ -6,7 +6,7 @@ import QtQuick.Controls 2.15
 import "../components"
 
 Rectangle {
-    id: scanScreen
+    id: scan
     color: "#f4f9f4"
 
     property bool scanOnStart: true

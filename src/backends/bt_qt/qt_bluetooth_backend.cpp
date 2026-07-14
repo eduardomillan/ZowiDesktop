@@ -1,5 +1,7 @@
 #include "qt_bluetooth_backend.h"
+#include <iostream>
 #include <QDebug>
+#include <chrono>
 #include <QBluetoothAddress>
 #include <QBluetoothUuid>
 #include <QBluetoothServiceInfo>
@@ -114,13 +116,13 @@ void QtBluetoothBackend::disconnect()
 bool QtBluetoothBackend::send(const std::string &data)
 {
     if (!m_socket || m_socket->state() != QBluetoothSocket::SocketState::ConnectedState) {
-        m_lastError = "Not connected to any device";
-        if (m_onError) m_onError(m_lastError);
-        return false;
+        m_pendingWrite += data;
+        return true;
     }
 
-    QByteArray bytes = QString::fromStdString(data).toUtf8();
+    QByteArray bytes = QByteArray::fromStdString(data);
     m_socket->write(bytes);
+    m_socket->waitForBytesWritten(5000);
     return true;
 }
 
@@ -132,6 +134,15 @@ bool QtBluetoothBackend::isConnected() const
 std::string QtBluetoothBackend::lastError() const
 {
     return m_lastError;
+}
+
+void QtBluetoothBackend::setAutoReconnect(bool enabled, int reconnectIntervalMs)
+{
+    m_autoReconnect = enabled;
+    m_reconnectInterval = reconnectIntervalMs;
+    if (!enabled && m_reconnectTimer) {
+        m_reconnectTimer->stop();
+    }
 }
 
 QString QtBluetoothBackend::deviceName() const
@@ -191,13 +202,21 @@ void QtBluetoothBackend::onSocketConnected()
         m_reconnectTimer->stop();
     }
 
+    // Flush any data that was buffered before the socket connected.
+    if (!m_pendingWrite.empty()) {
+        QByteArray bytes = QByteArray::fromStdString(m_pendingWrite);
+        m_socket->write(bytes);
+        m_socket->waitForBytesWritten(5000);
+        m_pendingWrite.clear();
+    }
+
     if (m_onConnect) m_onConnect(true);
 }
 
 void QtBluetoothBackend::onSocketDisconnected()
 {
     if (m_onConnect) m_onConnect(false);
-    startReconnectTimer();
+    if (m_autoReconnect) startReconnectTimer();
 }
 
 void QtBluetoothBackend::onSocketError(QBluetoothSocket::SocketError error)
@@ -225,15 +244,40 @@ void QtBluetoothBackend::startReconnectTimer()
             QObject::connect(m_reconnectTimer, &QTimer::timeout,
                              this, &QtBluetoothBackend::reconnectTimerTick);
         }
-        m_reconnectTimer->start(3000);
+        m_reconnectTimer->start(m_reconnectInterval);
     }
 }
 
 void QtBluetoothBackend::reconnectTimerTick()
 {
-    if (m_socket && m_socket->state() != QBluetoothSocket::SocketState::ConnectedState) {
-        m_socket->connectToService(QBluetoothAddress(m_deviceAddress), SPP_UUID, QIODevice::ReadWrite);
+    if (m_deviceAddress.isEmpty())
+        return;
+    if (m_socket && m_socket->state() == QBluetoothSocket::SocketState::ConnectedState)
+        return;
+
+    // Create a fresh socket — reusing the old one may not work with BlueZ D-Bus.
+    if (m_socket) {
+        m_socket->disconnectFromService();
+        m_socket->deleteLater();
+        m_socket = nullptr;
     }
+    m_socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol, this);
+    QObject::connect(m_socket, &QBluetoothSocket::connected,
+                     this, &QtBluetoothBackend::onSocketConnected);
+    QObject::connect(m_socket, &QBluetoothSocket::disconnected,
+                     this, &QtBluetoothBackend::onSocketDisconnected);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    QObject::connect(m_socket, &QBluetoothSocket::errorOccurred,
+                     this, &QtBluetoothBackend::onSocketError);
+#else
+    QObject::connect(m_socket,
+        QOverload<QBluetoothSocket::SocketError>::of(&QBluetoothSocket::error),
+        this, &QtBluetoothBackend::onSocketError);
+#endif
+    QObject::connect(m_socket, &QBluetoothSocket::readyRead,
+                     this, &QtBluetoothBackend::onDataReady);
+
+    m_socket->connectToService(QBluetoothAddress(m_deviceAddress), SPP_UUID, QIODevice::ReadWrite);
 }
 
 } // namespace zowi
