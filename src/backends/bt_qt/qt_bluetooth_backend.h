@@ -8,13 +8,16 @@
 #include <QTimer>
 #include <QHash>
 #include <QVector>
+#ifdef Q_OS_LINUX
 #include <QDBusConnection>
 #include <QDBusObjectPath>
 #include <QDBusInterface>
+#endif
 #include <memory>
 
 namespace zowi {
 
+#ifdef Q_OS_LINUX
 // BlueZ D-Bus agent that responds to PIN requests — required because HC-05
 // modules need pairing with pin "1234" before they accept SPP connections.
 class BlueZAgent : public QObject {
@@ -43,6 +46,7 @@ public slots:
 private:
     QString m_pin;
 };
+#endif
 
 class QtBluetoothBackend : public QObject, public BluetoothApi {
     Q_OBJECT
@@ -96,8 +100,10 @@ private:
     std::string m_pendingWrite;
     bool m_autoReconnect = true;
     int m_reconnectInterval = 3000;
+#ifdef Q_OS_LINUX
     std::unique_ptr<BlueZAgent> m_agent;
     QString m_agentPath;
+#endif
     bool m_unpairPending = false;
 };
 

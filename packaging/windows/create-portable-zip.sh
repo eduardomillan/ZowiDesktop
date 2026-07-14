@@ -27,7 +27,9 @@ cmake -S "$PROJECT_ROOT" -B "$BUILD_DIR" \
     -DCMAKE_TOOLCHAIN_FILE="$PROJECT_ROOT/packaging/windows/mingw-toolchain.cmake" \
     -DCMAKE_PREFIX_PATH="$QT_TARGET_PATH" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DQT_HOST_PATH="$QT_HOST_PATH"
+    -DQT_HOST_PATH="$QT_HOST_PATH" \
+    -DZOWI_BUILD_CLI=OFF \
+    -DBUILD_TESTS=OFF
 
 echo ""
 echo "=== Step 3: Build ==="
@@ -72,7 +74,16 @@ done
 
 echo ""
 echo "=== Step 5: Copy executable ==="
-cp "$BUILD_DIR/${APP_NAME}.exe" "$DIST_DIR/"
+EXE_PATH=$(find "$BUILD_DIR" -maxdepth 4 -name "${APP_NAME}.exe" | head -1)
+if [ -z "$EXE_PATH" ]; then
+    echo "ERROR: $APP_NAME.exe not found in build tree"
+    exit 1
+fi
+echo "  (from $EXE_PATH)"
+cp "$EXE_PATH" "$DIST_DIR/"
+
+echo "=== Step 5b: Copy qt.conf (QML/plugin paths) ==="
+cp "$PROJECT_ROOT/packaging/windows/qt.conf" "$DIST_DIR/"
 
 echo ""
 echo "=== Step 6: Create portable zip ==="

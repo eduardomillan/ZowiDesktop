@@ -15,7 +15,8 @@ Window {
 
     function connectHome(home) {
         home.settingsClicked.connect(function() {
-            console.log("Home: settings")
+            var settings = stack.push("qrc:/src/views/screens/SettingsScreen.qml")
+            connectSettings(settings)
         })
         home.achievementsClicked.connect(function() {
             console.log("Home: achievements")
@@ -32,6 +33,20 @@ Window {
             stack.replace("qrc:/src/views/screens/WelcomeScreen.qml")
             var welcome = stack.currentItem
             connectWelcome(welcome)
+        })
+    }
+
+    function connectSettings(settings) {
+        settings.backClicked.connect(function() {
+            stack.pop()
+        })
+        settings.renameRequested.connect(function() {
+            var rename = stack.push("qrc:/src/views/screens/WizardRenameScreen.qml")
+            rename.backClicked.connect(function() { stack.pop() })
+            rename.renamed.connect(function(name) {
+                Session.saveActiveZowiName(name)
+                stack.pop()
+            })
         })
     }
 

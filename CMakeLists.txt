@@ -97,4 +97,14 @@ if(ZOWI_BUILD_GUI)
         DESTINATION share/icons/hicolor/256x256/apps
         RENAME zowi-desktop.png
     )
+
+    install(FILES packaging/linux/com.zowi.desktop.appdata.xml
+        DESTINATION share/metainfo
+    )
+endif()
+
+if(ZOWI_BUILD_CLI)
+    install(TARGETS zowi_cli
+        RUNTIME DESTINATION bin
+    )
 endif()

@@ -1,0 +1,6 @@
+zowi-desktop (0.2.0-1) unstable; urgency=medium
+
+  * Initial Debian/Lliurex packaging: GUI + CLI, system Qt6, automatic
+    CAP_NET_ADMIN via postinst so BlueZ SPP works without manual setup.
+
+ -- Eduardo Millan <dev@zowi.local>  Tue, 14 Jul 2026 12:00:00 +0200

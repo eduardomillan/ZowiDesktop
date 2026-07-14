@@ -30,6 +30,7 @@ dist/
 *.AppImage
 *.zip
 *.exe
+obj-x86_64-linux-gnu/
 
 # Working files
 aqtinstall.log

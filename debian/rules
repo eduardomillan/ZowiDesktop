@@ -1,0 +1,7 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release -DZOWI_BUILD_GUI=ON -DZOWI_BUILD_CLI=ON -DBUILD_TESTS=OFF

@@ -7,7 +7,9 @@
 #include <QBluetoothAddress>
 #include <QBluetoothUuid>
 #include <QBluetoothServiceInfo>
+#ifdef Q_OS_LINUX
 #include <QDBusReply>
+#endif
 
 static const QBluetoothUuid SPP_UUID = QBluetoothUuid(QStringLiteral("00001101-0000-1000-8000-00805F9B34FB"));
 static const QString AGENT_DBUS_PATH = QStringLiteral("/edu/um/ZowiDesktop/agent");
@@ -94,6 +96,8 @@ void QtBluetoothBackend::stopDiscovery()
 // this, which is useless in a CLI context.  We register our own agent
 // on D-Bus so that BlueZ calls us when it needs the PIN, and we reply
 // immediately with "1234".
+
+#ifdef Q_OS_LINUX
 
 void QtBluetoothBackend::registerBlueZAgent()
 {
@@ -185,6 +189,15 @@ void QtBluetoothBackend::unregisterBlueZAgent()
     m_agent.reset();
     m_agentPath.clear();
 }
+
+#else
+
+void QtBluetoothBackend::registerBlueZAgent() {}
+QString QtBluetoothBackend::adapterPath() { return QString(); }
+void QtBluetoothBackend::ensurePairedAndTrusted(const QString &) {}
+void QtBluetoothBackend::unregisterBlueZAgent() {}
+
+#endif
 
 // ── Connection ─────────────────────────────────────────────────
 
