@@ -36,12 +36,16 @@ Rectangle {
             opacity: 0.8
             text: {
                 if (!Bluetooth.connected) return root.tr("not_connected")
-                var name = Bluetooth.deviceName ? Bluetooth.deviceName : ""
+                var name = Session.loadActiveZowiName() || Bluetooth.deviceName || ""
+                var mac = Bluetooth.deviceAddress ? Bluetooth.deviceAddress : ""
+                function withMac(base) {
+                    return mac !== "" ? base + " · " + mac : base
+                }
                 if (Bluetooth.battery >= 0)
-                    return name !== ""
+                    return withMac(name !== ""
                         ? root.tr("connected_name_battery").arg(name).arg(Bluetooth.battery)
-                        : root.tr("connected_battery").arg(Bluetooth.battery)
-                return name !== "" ? root.tr("connected_name").arg(name) : root.tr("connected")
+                        : root.tr("connected_battery").arg(Bluetooth.battery))
+                return withMac(name !== "" ? root.tr("connected_name").arg(name) : root.tr("connected"))
             }
         }
     }

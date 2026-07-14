@@ -125,6 +125,7 @@ ScreenTemplate {
                 statusText.text = tr("done").arg(nameField.text.trim())
                 statusText.color = "#2d5a2d"
                 statusText.visible = true
+                Bluetooth.setDeviceName(nameField.text.trim())
                 renameScreen.renamed(nameField.text.trim())
             }
         }

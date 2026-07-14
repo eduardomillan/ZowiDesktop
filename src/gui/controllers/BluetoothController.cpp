@@ -47,6 +47,12 @@ BluetoothController::BluetoothController(QObject *parent)
         emit unpairFinished(ok, QString::fromStdString(msg));
     });
 
+    backend->BluetoothApi::onScanFinished([this]() {
+        m_scanning = false;
+        emit scanningChanged();
+        emit scanFinished();
+    });
+
     m_backend = std::move(backend);
 }
 

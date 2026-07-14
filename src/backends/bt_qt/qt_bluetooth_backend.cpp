@@ -19,9 +19,9 @@ QtBluetoothBackend::QtBluetoothBackend(QObject *parent)
 {
     QObject::connect(&m_localDevice, &QBluetoothLocalDevice::pairingFinished,
             this, [this](const QBluetoothAddress &, QBluetoothLocalDevice::Pairing pairing) {
-        if (m_onUnpairResult) {
-            auto cb = std::move(m_onUnpairResult);
-            cb(pairing == QBluetoothLocalDevice::Unpaired, {});
+        if (m_unpairPending && m_onUnpairResult) {
+            m_unpairPending = false;
+            m_onUnpairResult(pairing == QBluetoothLocalDevice::Unpaired, {});
         }
     });
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
@@ -31,9 +31,9 @@ QtBluetoothBackend::QtBluetoothBackend(QObject *parent)
             QOverload<QBluetoothLocalDevice::Error>::of(&QBluetoothLocalDevice::error),
 #endif
             this, [this](QBluetoothLocalDevice::Error) {
-        if (m_onUnpairResult) {
-            auto cb = std::move(m_onUnpairResult);
-            cb(false, "failed to unpair device");
+        if (m_unpairPending && m_onUnpairResult) {
+            m_unpairPending = false;
+            m_onUnpairResult(false, "failed to unpair device");
         }
     });
 }
@@ -51,11 +51,12 @@ bool QtBluetoothBackend::init()
 
 void QtBluetoothBackend::startDiscovery()
 {
-    if (m_scanning)
-        return;
-
+    // Always (re)start a fresh scan. Tear down any in-progress agent so a
+    // re-entered screen always sees up-to-date results instead of being
+    // ignored because the backend still thinks it is scanning.
     if (m_discoveryAgent) {
-        m_discoveryAgent->deleteLater();
+        m_discoveryAgent->stop();
+        delete m_discoveryAgent;
         m_discoveryAgent = nullptr;
     }
 
@@ -323,6 +324,7 @@ void QtBluetoothBackend::onDeviceDiscovered(const QBluetoothDeviceInfo &device)
 void QtBluetoothBackend::onScanFinished()
 {
     m_scanning = false;
+    if (m_onScanFinished) m_onScanFinished();
 }
 
 void QtBluetoothBackend::onScanError(QBluetoothDeviceDiscoveryAgent::Error error)
@@ -332,6 +334,7 @@ void QtBluetoothBackend::onScanError(QBluetoothDeviceDiscoveryAgent::Error error
     QString msg = m_discoveryAgent ? m_discoveryAgent->errorString() : QStringLiteral("Scan error");
     m_lastError = msg.toStdString();
     if (m_onError) m_onError(m_lastError);
+    if (m_onScanFinished) m_onScanFinished();
 }
 
 void QtBluetoothBackend::onSocketConnected()
@@ -424,9 +427,17 @@ void QtBluetoothBackend::reconnectTimerTick()
 
 void QtBluetoothBackend::unpair(const std::string &address)
 {
-    m_localDevice.requestPairing(
-        QBluetoothAddress(QString::fromStdString(address)),
-        QBluetoothLocalDevice::Unpaired);
+    QBluetoothAddress addr(QString::fromStdString(address));
+    m_unpairPending = true;
+    // If the device is already unpaired at the system level, requestPairing
+    // may emit nothing, so report success immediately.
+    if (m_localDevice.pairingStatus(addr) == QBluetoothLocalDevice::Unpaired) {
+        m_unpairPending = false;
+        if (m_onUnpairResult)
+            m_onUnpairResult(true, {});
+        return;
+    }
+    m_localDevice.requestPairing(addr, QBluetoothLocalDevice::Unpaired);
 }
 
 } // namespace zowi

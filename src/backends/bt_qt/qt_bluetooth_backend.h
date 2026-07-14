@@ -98,6 +98,7 @@ private:
     int m_reconnectInterval = 3000;
     std::unique_ptr<BlueZAgent> m_agent;
     QString m_agentPath;
+    bool m_unpairPending = false;
 };
 
 } // namespace zowi
