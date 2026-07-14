@@ -15,6 +15,8 @@ jobs:
   #    compatibility. Bundles Qt 6.2.4. ──
   appimage:
     runs-on: ubuntu-22.04
+    env:
+      DISTRO_SUFFIX: jammy
     steps:
       - uses: actions/checkout@v4
 
@@ -52,6 +54,8 @@ jobs:
   # ── Debian package for Lliurex 23 / Ubuntu 22.04 (jammy) ──
   deb-jammy:
     runs-on: ubuntu-22.04
+    env:
+      DISTRO_SUFFIX: jammy
     steps:
       - uses: actions/checkout@v4
 
@@ -76,7 +80,7 @@ jobs:
           DEBEMAIL: actions@github.com
         run: |
           sed -i -E "s/VERSION [0-9]+\.[0-9]+\.[0-9]+/VERSION ${{ steps.ver.outputs.version }}/" CMakeLists.txt
-          dch -v "${{ steps.ver.outputs.version }}-1" -D unstable "Release ${{ steps.ver.outputs.version }}"
+          dch -v "${{ steps.ver.outputs.version }}-1+${DISTRO_SUFFIX}" -D unstable "Release ${{ steps.ver.outputs.version }}"
 
       - name: Build .deb
         run: bash packaging/linux/create-deb.sh
@@ -90,6 +94,8 @@ jobs:
   # ── Debian package for Lliurex 25 / Ubuntu 24.04 (noble) ──
   deb-noble:
     runs-on: ubuntu-24.04
+    env:
+      DISTRO_SUFFIX: noble
     steps:
       - uses: actions/checkout@v4
 
@@ -114,7 +120,7 @@ jobs:
           DEBEMAIL: actions@github.com
         run: |
           sed -i -E "s/VERSION [0-9]+\.[0-9]+\.[0-9]+/VERSION ${{ steps.ver.outputs.version }}/" CMakeLists.txt
-          dch -v "${{ steps.ver.outputs.version }}-1" -D unstable "Release ${{ steps.ver.outputs.version }}"
+          dch -v "${{ steps.ver.outputs.version }}-1+${DISTRO_SUFFIX}" -D unstable "Release ${{ steps.ver.outputs.version }}"
 
       - name: Build .deb
         run: bash packaging/linux/create-deb.sh
