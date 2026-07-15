@@ -102,6 +102,25 @@ for wl in libwayland-client.so.0 libwayland-cursor.so.0 libwayland-egl.so.1 libf
 done
 
 echo ""
+echo "=== Step 5b: Bundle essential QtQml modules ==="
+# linuxdeploy-plugin-qt bundles QML modules by scanning imports, but it can
+# miss modules that are only pulled in *transitively* (e.g. QtQml.WorkerScript,
+# required by ListModel/ListView). If they are absent, the QML engine aborts
+# with `module "QtQml.WorkerScript" is not installed` and the app never starts
+# on machines that have no system-wide Qt QML modules to fall back on.
+QML_DEST="$APPDIR/usr/qml"
+mkdir -p "$QML_DEST/QtQml"
+for mod in Base Models WorkerScript XmlListModel; do
+    src="$QT_ROOT_DIR/qml/QtQml/$mod"
+    if [ -d "$src" ] && [ ! -d "$QML_DEST/QtQml/$mod" ]; then
+        echo "   Copying QtQml/$mod ..."
+        cp -a "$src" "$QML_DEST/QtQml/"
+    fi
+done
+# QtQml top-level qmldir must be present too.
+[ -f "$QT_ROOT_DIR/qml/QtQml/qmldir" ] && cp -a "$QT_ROOT_DIR/qml/QtQml/qmldir" "$QML_DEST/QtQml/" 2>/dev/null || true
+
+echo ""
 echo "=== Step 6: Run linuxdeploy ==="
 TIMESTAMP=$(date +%Y%m%d)
 APPIMAGE_NAME="${APPIMAGE_NAME:-ZowiDesktop-x86_64-build-${TIMESTAMP}.AppImage}"
@@ -126,6 +145,21 @@ export LD_LIBRARY_PATH="$QT_ROOT_DIR/lib:$QT_ROOT_DIR/lib/x86_64-linux-gnu:$LD_L
     --desktop-file "$APPDIR/usr/share/applications/zowi-desktop.desktop" \
     --icon-file "$APPDIR/zowi-desktop.png" \
     --output appimage
+
+echo ""
+echo "=== Step 6b: Verify critical QML modules are bundled ==="
+# Fail loudly instead of shipping an AppImage that cannot start.
+MISSING=""
+for mod in Base WorkerScript; do
+    if [ ! -f "$APPDIR/usr/qml/QtQml/$mod/qmldir" ]; then
+        MISSING="$MISSING QtQml.$mod"
+    fi
+done
+if [ -n "$MISSING" ]; then
+    echo "ERROR: required QML module(s) missing from AppDir:$MISSING" >&2
+    exit 1
+fi
+echo "   OK: QtQml.Base and QtQml.WorkerScript present."
 
 echo ""
 echo "=== Moving AppImage to build directory ==="

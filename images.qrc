@@ -1,26 +1,19 @@
 <RCC>
+    <!-- Language flags (SVG) -->
     <qresource prefix="/">
-        <file>src/views/main.qml</file>
-        <file>src/views/screens/SplashScreen.qml</file>
-        <file>src/views/screens/WelcomeScreen.qml</file>
-        <file>src/views/screens/WizardScreen.qml</file>
-        <file>src/views/screens/ScreenTemplate.qml</file>
-        <file>src/views/screens/HomeScreen.qml</file>
-        <file>src/views/components/AnimatedZowi.qml</file>
-        <file>src/views/components/StatusBar.qml</file>
-        <file>src/views/components/DevOverlay.qml</file>
-        <file>src/views/components/MessageBar.qml</file>
-        <file>src/views/screens/ScanScreen.qml</file>
-        <file>src/views/screens/WizardFoundScreen.qml</file>
-        <file>src/views/screens/WizardRenameScreen.qml</file>
-        <file>src/views/screens/SettingsScreen.qml</file>
-        <file>src/config.json</file>
         <file>docs/images/es.svg</file>
         <file>docs/images/gb.svg</file>
         <file>docs/images/vl.svg</file>
-        <file>images/app_icon.png</file>
+    </qresource>
+
+    <!-- Miscellaneous -->
+    <qresource prefix="/">
         <file>images/misc/zowi_baila.jpg</file>
         <file>images/misc/zowi_hello.png</file>
+    </qresource>
+
+    <!-- Robot behaviours / modes photos -->
+    <qresource prefix="/">
         <file>images/robot/guardian.png</file>
         <file>images/robot/dancing.jpg</file>
         <file>images/robot/dancing2.jpg</file>
@@ -30,6 +23,10 @@
         <file>images/robot/obstacles.jpg</file>
         <file>images/robot/alarm.jpeg</file>
         <file>images/robot/reprogram.jpg</file>
+    </qresource>
+
+    <!-- Components / assembly -->
+    <qresource prefix="/">
         <file>images/components/overview.png</file>
         <file>images/components/overview_white.jpg</file>
         <file>images/components/overview_noname.jpg</file>
@@ -38,9 +35,17 @@
         <file>images/components/circuit_board.jpg</file>
         <file>images/components/sensors.png</file>
         <file>images/components/preloaded_modes.jpg</file>
+    </qresource>
+
+    <!-- Modes -->
+    <qresource prefix="/">
         <file>images/modes/mode_a.png</file>
         <file>images/modes/mode_b.png</file>
         <file>images/modes/mode_ab.png</file>
+    </qresource>
+
+    <!-- Projects -->
+    <qresource prefix="/">
         <file>images/projects/move_thumb.png</file>
         <file>images/projects/choreography_thumb.png</file>
         <file>images/projects/form_thumb.jpg</file>
@@ -53,13 +58,16 @@
         <file>images/projects/reprogram.jpg</file>
         <file>images/projects/assembly.png</file>
         <file>images/projects/bitbloq_blocks.png</file>
+    </qresource>
+
+    <!-- Scratch sprites -->
+    <qresource prefix="/">
         <file>images/scratch/sprite1.png</file>
         <file>images/scratch/sprite2.png</file>
-        <file>i18n/zowi_es_ES.json</file>
-        <file>i18n/zowi_ca_ES.json</file>
-        <file>i18n/zowi_en_US.json</file>
-        <file>i18n/zowi_fr_FR.json</file>
-        <file>i18n/zowi_bg_BG.json</file>
+    </qresource>
+
+    <!-- Legacy Android app assets -->
+    <qresource prefix="/">
         <file>images/android/achievements_badge.png</file>
         <file>images/android/achievements_button.png</file>
         <file>images/android/action_button.png</file>

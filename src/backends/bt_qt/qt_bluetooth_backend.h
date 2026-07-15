@@ -56,6 +56,7 @@ public:
 
     // BluetoothApi
     bool init() override;
+    bool isAdapterAvailable() const override;
     void startDiscovery() override;
     void stopDiscovery() override;
     bool connect(const std::string &address) override;

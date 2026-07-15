@@ -1,8 +1,14 @@
 # src/gui/CMakeLists.txt
+set(GUI_QRC_FILES
+    ${CMAKE_SOURCE_DIR}/views.qrc
+    ${CMAKE_SOURCE_DIR}/app.qrc
+    ${CMAKE_SOURCE_DIR}/images.qrc
+    ${CMAKE_SOURCE_DIR}/i18n.qrc
+)
 if(ZOWI_QT_VERSION EQUAL 6)
-    qt6_add_resources(GUI_RESOURCES ${CMAKE_SOURCE_DIR}/resources.qrc)
+    qt6_add_resources(GUI_RESOURCES ${GUI_QRC_FILES})
 else()
-    qt5_add_resources(GUI_RESOURCES ${CMAKE_SOURCE_DIR}/resources.qrc)
+    qt5_add_resources(GUI_RESOURCES ${GUI_QRC_FILES})
 endif()
 
 add_executable(ZowiDesktop

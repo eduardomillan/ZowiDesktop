@@ -104,6 +104,32 @@ Rectangle {
         }
     }
 
+    Rectangle {
+        id: noBtBanner
+        visible: !Bluetooth.bluetoothAvailable
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 24
+        width: Math.min(parent.width - 40, 520)
+        height: noBtText.implicitHeight + 24
+        radius: 12
+        color: "#fff4e5"
+        border.color: "#e67e22"
+        border.width: 1
+
+        Text {
+            id: noBtText
+            anchors.fill: parent
+            anchors.margins: 12
+            text: tr("no_bluetooth_demo")
+            color: "#a0522d"
+            font.pixelSize: 13
+            wrapMode: Text.WordWrap
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: langRow.top

@@ -19,6 +19,10 @@ public:
     using ScanFinishedCallback = std::function<void()>;
 
     virtual bool init() = 0;
+    // True when a usable Bluetooth adapter is present on the system.
+    // Default is true so backends that always have transport (e.g. serial)
+    // do not need to override it.
+    virtual bool isAdapterAvailable() const { return true; }
     virtual void startDiscovery() = 0;
     virtual void stopDiscovery() = 0;
     virtual bool connect(const std::string &address) = 0;

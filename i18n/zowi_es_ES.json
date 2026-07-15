@@ -8,7 +8,8 @@
     "reset": "Reiniciar",
     "unpair_success": "Dispositivo Zowi borrado de la app y del sistema Bluetooth.",
     "unpair_app_only": "Dispositivo borrado de la app, pero no se pudo desenlazar del sistema Bluetooth.",
-    "reset_no_zowi": "No hay ningún Zowi registrado en la app."
+    "reset_no_zowi": "No hay ningún Zowi registrado en la app.",
+    "no_bluetooth_demo": "No se ha detectado ningún dispositivo Bluetooth. La aplicación funcionará solo en modo demo."
   },
   "SettingsScreen.qml": {
     "settings": "Ajustes",

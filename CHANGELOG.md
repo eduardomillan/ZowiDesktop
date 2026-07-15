@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Reorganised Qt resources.** The single monolithic `resources.qrc` was
+  split by domain into `views.qrc` (QML), `app.qrc` (config + app icon) and
+  `images.qrc` (images, grouped by subfolder). The GUI now reuses the
+  existing `i18n.qrc` instead of duplicating the translation list. Resource
+  paths (`qrc:/...`) are unchanged, so no code was affected.
+
+### Fixed
+- **AppImage failed to start on machines without a full Qt install.** The
+  bundled AppImage was missing the transitively-imported `QtQml.WorkerScript`
+  QML module (pulled in by `ListModel`/`ListView`), causing
+  `module "QtQml.WorkerScript" is not installed` and the app not to launch.
+  `create-appimage.sh` now explicitly bundles the essential `QtQml` modules
+  (`Base`, `Models`, `WorkerScript`, `XmlListModel`) and verifies they are
+  present before producing the image.
+
+### Added
+- The splash screen now shows an informative banner when no Bluetooth
+  adapter is detected, letting the user know the app will run in demo mode
+  only. Exposed via the new `Bluetooth.bluetoothAvailable` property.
+
 ## [0.3.2] - 2026-07-14
 
 ### Changed

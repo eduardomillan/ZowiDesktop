@@ -120,6 +120,11 @@ void BluetoothController::parseIncoming()
     if (updated) emit batteryChanged();
 }
 
+bool BluetoothController::isBluetoothAvailable() const
+{
+    return m_backend && m_backend->isAdapterAvailable();
+}
+
 bool BluetoothController::isConnected() const
 {
     return m_backend && m_backend->isConnected();

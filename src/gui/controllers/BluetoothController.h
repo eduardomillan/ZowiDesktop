@@ -7,6 +7,7 @@
 class BluetoothController : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool bluetoothAvailable READ isBluetoothAvailable CONSTANT)
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectionChanged)
     Q_PROPERTY(bool connecting READ isConnecting NOTIFY connectingChanged)
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
@@ -17,6 +18,7 @@ class BluetoothController : public QObject
 public:
     explicit BluetoothController(QObject *parent = nullptr);
 
+    bool isBluetoothAvailable() const;
     bool isConnected() const;
     bool isConnecting() const;
     bool isScanning() const;

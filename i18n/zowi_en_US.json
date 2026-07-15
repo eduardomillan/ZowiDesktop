@@ -8,7 +8,8 @@
     "reset": "Reset",
     "unpair_success": "Zowi device removed from the app and from the Bluetooth system.",
     "unpair_app_only": "Device removed from the app, but could not be unpaired from the Bluetooth system.",
-    "reset_no_zowi": "No Zowi is currently registered in the app."
+    "reset_no_zowi": "No Zowi is currently registered in the app.",
+    "no_bluetooth_demo": "No Bluetooth device detected. The app will run in demo mode only."
   },
   "SettingsScreen.qml": {
     "settings": "Settings",
