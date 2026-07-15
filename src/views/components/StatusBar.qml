@@ -25,6 +25,26 @@ Rectangle {
             ? (Bluetooth.battery >= 0 && Bluetooth.battery < 50 ? "#c0392b" : "#2d5a2d")
             : "#e67e22")
 
+    function statusText() {
+        if (Bluetooth.connecting) return root.tr("status_connecting")
+        if (Bluetooth.connected) {
+            var name = Session.loadActiveZowiName() || Bluetooth.deviceName || ""
+            var mac = Bluetooth.deviceAddress ? Bluetooth.deviceAddress : ""
+            function withMac(base) {
+                return mac !== "" ? base + " · " + mac : base
+            }
+            if (Bluetooth.battery >= 0)
+                return withMac(name !== ""
+                    ? root.tr("connected_name_battery").arg(name).arg(Bluetooth.battery)
+                    : root.tr("connected_battery").arg(Bluetooth.battery))
+            return withMac(name !== "" ? root.tr("connected_name").arg(name) : root.tr("connected"))
+        }
+        if (root.hasSavedZowi) return root.tr("status_unavailable")
+        return root.tr("not_connected")
+    }
+
+    property string statusLabel: root.statusText()
+
     Row {
         anchors.centerIn: parent
         spacing: 8
@@ -42,23 +62,7 @@ Rectangle {
             color: root.dotColor
             font.pixelSize: 12
             opacity: 0.8
-            text: {
-                if (Bluetooth.connecting) return root.tr("status_connecting")
-                if (Bluetooth.connected) {
-                    var name = Session.loadActiveZowiName() || Bluetooth.deviceName || ""
-                    var mac = Bluetooth.deviceAddress ? Bluetooth.deviceAddress : ""
-                    function withMac(base) {
-                        return mac !== "" ? base + " · " + mac : base
-                    }
-                    if (Bluetooth.battery >= 0)
-                        return withMac(name !== ""
-                            ? root.tr("connected_name_battery").arg(name).arg(Bluetooth.battery)
-                            : root.tr("connected_battery").arg(Bluetooth.battery))
-                    return withMac(name !== "" ? root.tr("connected_name").arg(name) : root.tr("connected"))
-                }
-                if (root.hasSavedZowi) return root.tr("status_unavailable")
-                return root.tr("not_connected")
-            }
+            text: root.statusLabel
         }
     }
 
@@ -80,5 +84,10 @@ Rectangle {
             cursorShape: Qt.PointingHandCursor
             onClicked: Bluetooth.connectToDevice(Session.loadActiveZowiDeviceAddress())
         }
+    }
+
+    Connections {
+        target: Session
+        function onSessionChanged() { root.statusLabel = root.statusText() }
     }
 }

@@ -26,10 +26,22 @@ public:
     Q_INVOKABLE void saveActiveZowiName(const QString &name) { m_name = name; }
     Q_INVOKABLE void saveWizardDismissed(bool dismissed) { m_wizardDismissed = dismissed; }
 
+    Q_INVOKABLE QStringList keys() const { return m_values.keys(); }
+    Q_INVOKABLE QString getRaw(const QString &key) const { return m_values.value(key); }
+    Q_INVOKABLE void clearActive() {
+        QStringList toRemove;
+        for (const auto &key : m_values.keys())
+            if (key.startsWith("active"))
+                toRemove.append(key);
+        for (const auto &key : toRemove)
+            m_values.remove(key);
+    }
+
 private:
     QString m_address;
     QString m_name;
     bool m_wizardDismissed = false;
+    QVariantMap m_values;
 };
 
 class PreviewBluetooth final : public QObject

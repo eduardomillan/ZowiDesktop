@@ -48,6 +48,10 @@ Window {
                 stack.pop()
             })
         })
+        settings.forgetCompleted.connect(function() {
+            var welcome = stack.replace("qrc:/src/views/screens/WelcomeScreen.qml")
+            connectWelcome(welcome)
+        })
     }
 
     function connectSplash(splash) {

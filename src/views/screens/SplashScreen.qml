@@ -275,21 +275,24 @@ Rectangle {
                 color: resetButton.pressed ? "#d35400" : "#e67e22"
             }
 
+            enabled: !msgBar.visible
+
             onClicked: {
+                if (msgBar.visible) return
                 var addr = Session.loadActiveZowiDeviceAddress()
                 if (!addr) addr = Bluetooth.deviceAddress
                 if (!addr) {
                     // No registered Zowi: clear any stale app data and warn.
-                    Session.saveActiveZowiDeviceAddress("")
-                    Session.saveActiveZowiName("")
+                    Session.clearActive()
                     Session.saveWizardDismissed(false)
                     msgBar.show(tr("reset_no_zowi"), "#c0392b")
                     return
                 }
                 if (Bluetooth.connected) Bluetooth.disconnectFromDevice()
                 Bluetooth.unpairDevice(addr)
-                Session.saveActiveZowiDeviceAddress("")
-                Session.saveActiveZowiName("")
+                // Forget the registered Zowi: drop every "active*" session key
+                // and mark the wizard as not dismissed.
+                Session.clearActive()
                 Session.saveWizardDismissed(false)
             }
         }

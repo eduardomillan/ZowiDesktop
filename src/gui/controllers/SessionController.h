@@ -18,8 +18,13 @@ public:
     Q_INVOKABLE void saveActiveZowiName(const QString &name);
     Q_INVOKABLE void saveWizardDismissed(bool dismissed);
 
+    Q_INVOKABLE QStringList keys() const;
+    Q_INVOKABLE QString getRaw(const QString &key) const;
+    Q_INVOKABLE void clearActive();
+
 signals:
     void sessionChanged();
+
 
 private:
     zowi::SessionStore m_store;

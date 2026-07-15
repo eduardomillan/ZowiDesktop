@@ -43,7 +43,7 @@ ScreenTemplate {
             font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             selectByMouse: true
-            enabled: !renameScreen.renaming
+            enabled: Bluetooth.connected && !renameScreen.renaming
             onAccepted: renameButton.clicked()
         }
 
@@ -52,8 +52,9 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: 260
             height: 56
-            text: renameScreen.renaming ? tr("renaming") : tr("rename")
-            enabled: !renameScreen.renaming && nameField.text.trim() !== ""
+            text: renameScreen.renaming ? tr("renaming")
+                  : (Bluetooth.connected ? tr("rename") : tr("wait_pairing"))
+            enabled: Bluetooth.connected && !renameScreen.renaming && nameField.text.trim() !== ""
 
             contentItem: Text {
                 text: parent.text
@@ -71,7 +72,7 @@ ScreenTemplate {
 
             onClicked: {
                 var name = nameField.text.trim()
-                if (name === "")
+                if (name === "" || !Bluetooth.connected)
                     return
                 renameScreen.renaming = true
                 statusText.text = tr("sending")

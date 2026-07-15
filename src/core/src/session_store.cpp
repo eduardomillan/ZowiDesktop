@@ -71,6 +71,14 @@ std::vector<std::string> SessionStore::keys() const {
     return result;
 }
 
+void SessionStore::removeKey(const std::string &key) {
+    if (!m_data.contains(key))
+        return;
+    m_data.erase(key);
+    save();
+    if (m_onChanged) m_onChanged();
+}
+
 void SessionStore::load() {
     std::ifstream file(m_filePath);
     if (file.is_open()) {

@@ -25,43 +25,44 @@ Item {
             spacing: 4
 
             // Header: always visible. Click to toggle, drag to move.
-            RowLayout {
-                id: headerRow
+            MouseArea {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 16
-                spacing: 6
-
-                Text {
-                    text: "DEV"
-                    color: "#e74c3c"
-                    font.bold: true
-                    font.pixelSize: 11
+                cursorShape: Qt.OpenHandCursor
+                drag.target: root
+                drag.axis: Drag.XAndYAxis
+                drag.threshold: 4
+                property point pressPos
+                function handlePress(mouse) {
+                    pressPos = Qt.point(mouse.x, mouse.y)
+                    cursorShape = Qt.ClosedHandCursor
                 }
-
-                Item { Layout.fillWidth: true }
-
-                Text {
-                    text: root.collapsed ? "▶" : "▼"
-                    color: "#888"
-                    font.pixelSize: 10
+                function handleRelease(mouse) {
+                    cursorShape = Qt.OpenHandCursor
+                    if (Math.abs(mouse.x - pressPos.x) < 4 &&
+                        Math.abs(mouse.y - pressPos.y) < 4)
+                        root.collapsed = !root.collapsed
                 }
+                onPressed: handlePress
+                onReleased: handleRelease
 
-                MouseArea {
+                RowLayout {
                     anchors.fill: parent
-                    cursorShape: Qt.OpenHandCursor
-                    drag.target: root
-                    drag.axis: Drag.XAndYAxis
-                    drag.threshold: 4
-                    property point pressPos
-                    onPressed: {
-                        pressPos = Qt.point(mouse.x, mouse.y)
-                        cursorShape = Qt.ClosedHandCursor
+                    spacing: 6
+
+                    Text {
+                        text: "DEV"
+                        color: "#e74c3c"
+                        font.bold: true
+                        font.pixelSize: 11
                     }
-                    onReleased: {
-                        cursorShape = Qt.OpenHandCursor
-                        if (Math.abs(mouse.x - pressPos.x) < 4 &&
-                            Math.abs(mouse.y - pressPos.y) < 4)
-                            root.collapsed = !root.collapsed
+
+                    Item { Layout.fillWidth: true }
+
+                    Text {
+                        text: root.collapsed ? "▶" : "▼"
+                        color: "#888"
+                        font.pixelSize: 10
                     }
                 }
             }
@@ -96,6 +97,78 @@ Item {
                     font.pixelSize: 9
                     elide: Text.ElideRight
                     text: "Zowi: " + Session.loadActiveZowiName() + " / " + Session.loadActiveZowiDeviceAddress()
+                }
+
+                Rectangle {
+                    height: 1
+                    color: "#555"
+                    Layout.fillWidth: true
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: "SESSION"
+                        color: "#3498db"
+                        font.pixelSize: 9
+                        font.bold: true
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        implicitWidth: 40
+                        implicitHeight: 16
+                        font.pixelSize: 8
+                        text: "refresh"
+
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#ccc"
+                            font.pixelSize: 8
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        background: Rectangle {
+                            color: "#444"
+                            radius: 3
+                        }
+
+                        onClicked: refreshSession()
+                    }
+                }
+
+                Flickable {
+                    id: sessionFlick
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 120
+                    Layout.fillHeight: false
+                    clip: true
+                    contentWidth: sessionCol.width
+                    contentHeight: sessionCol.height
+                    onVisibleChanged: if (visible) refreshSession()
+                    Component.onCompleted: if (visible) refreshSession()
+
+                    Column {
+                        id: sessionCol
+                        width: childrenRect.width
+                        spacing: 2
+
+                        Repeater {
+                            model: ListModel { id: sessionModel }
+                            delegate: Text {
+                                width: paintedWidth
+                                text: model.key + " = " + model.value
+                                color: "#aaa"
+                                font.pixelSize: 8
+                                font.family: "monospace"
+                            }
+                        }
+                    }
+
+                    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                    ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
                 }
 
                 Rectangle {
@@ -177,11 +250,28 @@ Item {
         }
     }
 
+    Connections {
+        target: Session
+
+        function onSessionChanged() {
+            if (!root.collapsed)
+                refreshSession()
+        }
+    }
+
     function appendLog(text, isError) {
         logModel.append({text: text, isError: isError})
         if (logModel.count > 200) {
             logModel.remove(0, logModel.count - 200)
         }
         logList.positionViewAtEnd()
+    }
+
+    function refreshSession() {
+        sessionModel.clear()
+        var ks = Session.keys()
+        for (var i = 0; i < ks.length; ++i) {
+            sessionModel.append({ key: ks[i], value: Session.getRaw(ks[i]) })
+        }
     }
 }

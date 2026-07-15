@@ -63,6 +63,8 @@ ScreenTemplate {
                 color: pairButton.pressed ? "#17736c" : "#21a69b"
             }
 
+            enabled: !wizardFound.pairingAttempt
+
             onClicked: {
                 if (Bluetooth.connected) {
                     wizardFound.paired()

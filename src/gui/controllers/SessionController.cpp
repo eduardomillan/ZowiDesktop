@@ -41,3 +41,24 @@ void SessionController::saveWizardDismissed(bool dismissed)
 {
     m_store.setBool("wizardDismissed", dismissed);
 }
+
+QStringList SessionController::keys() const
+{
+    QStringList result;
+    for (const auto &key : m_store.keys())
+        result.append(QString::fromStdString(key));
+    return result;
+}
+
+QString SessionController::getRaw(const QString &key) const
+{
+    return QString::fromStdString(m_store.getRaw(key.toStdString()));
+}
+
+void SessionController::clearActive()
+{
+    for (const auto &key : m_store.keys()) {
+        if (key.rfind("active", 0) == 0)
+            m_store.removeKey(key);
+    }
+}

@@ -24,6 +24,8 @@ public:
     std::string getRaw(const std::string &key) const;
     std::vector<std::string> keys() const;
 
+    void removeKey(const std::string &key);
+
     using ChangedCallback = std::function<void()>;
     void onChanged(ChangedCallback cb) { m_onChanged = std::move(cb); }
 
