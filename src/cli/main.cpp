@@ -46,6 +46,7 @@ static std::atomic<bool> g_quit{false};
 static constexpr float kLowBatteryThreshold = 50.0f;
 static constexpr const char *kFactoryFirmwarePath = "src/firmware/ZOWI_BASE_v2.hex";
 static constexpr const char *kAlarmFirmwarePath = "src/firmware/ZOWI_Alarm_v2.hex";
+static constexpr const char *kAdivinawiFirmwarePath = "src/firmware/ZOWI_Adivinawi_v2.hex";
 static constexpr int kDiscoveryTimeoutMs = 6000;
 
 static void resetRobotState()
@@ -575,7 +576,7 @@ int main(int argc, char **argv)
     configGet->add_option("key", configKey, "Config key to read")->required();
 
     // ── ports subcommand ──────────────────────────────────────
-    auto *portsCmd = app.add_subcommand("ports", "List available USB serial ports (/dev/ttyUSB*, /dev/ttyACM*)\nUse one of these with 'restore'/'alarm' via --backend usb --tty <port>.");
+    auto *portsCmd = app.add_subcommand("ports", "List available USB serial ports (/dev/ttyUSB*, /dev/ttyACM*)\nUse one of these with 'restore'/'alarm'/'adivinawi' via --backend usb --tty <port>.");
 
     // ── scan subcommand ───────────────────────────────────────
     auto *scanCmd = app.add_subcommand("scan", "Scan for nearby Zowi robots (5s)\nFilters by name and MAC prefix by default.\nUses BlueZ D-Bus; no root needed.");
@@ -646,6 +647,27 @@ int main(int argc, char **argv)
     alarmCmd->add_option("--address,-a", alarmAddress, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
     std::string alarmBackend = "auto";
     alarmCmd->add_option("--backend", alarmBackend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
+
+    // ── adivinawi subcommand ──────────────────────────────────
+    auto *adivinawiCmd = app.add_subcommand("adivinawi", "Install the Adivinawi game firmware on the paired Zowi robot\nUploads the bundled ZOWI_Adivinawi_v2.hex file unless a custom path is provided.");
+    std::string adivinawiFirmwarePath = kAdivinawiFirmwarePath;
+    int adivinawiTimeout = 10;
+    int adivinawiBatteryTimeout = 2;
+    bool forceAdivinawiLowBattery = false;
+    adivinawiCmd->add_option("--firmware,-f", adivinawiFirmwarePath, "Path to the adivinawi firmware .hex file to upload")->default_val(kAdivinawiFirmwarePath);
+    adivinawiCmd->add_option("--timeout,-t", adivinawiTimeout, "Seconds to wait for adivinawi firmware confirmation")->default_val(10);
+    adivinawiCmd->add_option("--battery-timeout", adivinawiBatteryTimeout, "Seconds to wait for a battery reading before uploading")->default_val(2);
+    adivinawiCmd->add_flag("--force-low-battery", forceAdivinawiLowBattery, "Continue even if the reported battery level is below 50%");
+    std::string adivinawiProtocol = "stk";
+    adivinawiCmd->add_option("--protocol", adivinawiProtocol, "Upload protocol: 'raw' (stream HEX to custom bootloader) or 'stk' (STK500v1)")->default_val("stk");
+    std::string adivinawiTty;
+    adivinawiCmd->add_option("--tty", adivinawiTty, "Serial TTY to use for flashing (e.g. /dev/rfcomm0 or /dev/ttyUSB0). If omitted, one is bound (serial) or auto-picked (usb).")->default_val("");
+    int adivinawiBaud = 9600;
+    adivinawiCmd->add_option("--baud", adivinawiBaud, "Serial baud rate (usb Optiboot is typically 57600 or 115200)")->default_val(9600);
+    std::string adivinawiAddress;
+    adivinawiCmd->add_option("--address,-a", adivinawiAddress, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
+    std::string adivinawiBackend = "auto";
+    adivinawiCmd->add_option("--backend", adivinawiBackend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
 
     // ── control subcommand ───────────────────────────────────
     auto *controlCmd = app.add_subcommand("control", "Interactive keyboard minigame to drive the Zowi robot\nUse the arrow keys to move; press ESC or 'q' to quit.\nConnects to the paired device (or --address).");
@@ -1009,6 +1031,46 @@ int main(int argc, char **argv)
                                                     alarmTimeout,
                                                     forceAlarmLowBattery,
                                                     alarmProtocol);
+        if (!boundTty.empty()) std::system("rfcomm release 0");
+        if (!ok) return 1;
+    }
+
+    // ── adivinawi ─────────────────────────────────────────────
+    if (*adivinawiCmd) {
+        QCoreApplication qtApp(argc, argv);
+        zowi::SessionStore session("ZowiDesktop", "ZowiApp");
+        std::string connectTarget, boundTty;
+        const std::string adivinawiAddr = adivinawiAddress.empty()
+                                           ? session.getString("activeZowiDeviceAddress")
+                                           : adivinawiAddress;
+        auto bt = prepareFlashBackend(adivinawiBackend, adivinawiAddr, adivinawiTty, adivinawiBaud, connectTarget, boundTty);
+        if (!bt) return 1;
+        if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+            std::cout << "Discovering " << connectTarget << "..." << std::endl;
+            discoverDevice(qtApp, *qtBt, connectTarget, kDiscoveryTimeoutMs);
+        }
+        bt->setAutoReconnect(true, 100);
+        bt->onDataReceived([](const std::string &d) { onDataReceived(d); });
+        bt->onConnectionChanged([](bool c) {
+            g_connected = c;
+            if (c) g_connectedOnce = true;
+            std::cout << (c ? "Connection open." : "Disconnected.") << std::endl;
+        });
+        bt->onError([](const std::string &m) { std::cerr << "Error: " << m << std::endl; });
+        if (!bt->connect(connectTarget)) {
+            std::cerr << "Failed to connect: " << bt->lastError() << std::endl;
+            if (!boundTty.empty()) std::system("rfcomm release 0");
+            return 1;
+        }
+        const bool ok = installFirmwareToPairedZowi(qtApp,
+                                                    *bt,
+                                                    session,
+                                                    "Adivinawi firmware installation",
+                                                    adivinawiFirmwarePath,
+                                                    adivinawiBatteryTimeout,
+                                                    adivinawiTimeout,
+                                                    forceAdivinawiLowBattery,
+                                                    adivinawiProtocol);
         if (!boundTty.empty()) std::system("rfcomm release 0");
         if (!ok) return 1;
     }

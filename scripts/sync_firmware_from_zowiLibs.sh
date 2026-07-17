@@ -58,15 +58,25 @@ copy_hex() {
 }
 
 echo "Copying firmware HEX files..."
-copy_hex "$ZOWILIBS_SRC/code .hex/ZOWI_BASE_v2.hex" "$DEST/ZOWI_BASE_v2.hex"
 
-# Alarms and other game variants live in code .ino/games/<name>/.
-# If their compiled HEX files exist in zowiLibs they are copied too.
-for hex in "$ZOWILIBS_SRC"/code\ .ino/games/*/compiled/*.hex; do
+# Base (factory) firmware. Support both the current layout (code/base/) and the
+# older "code .hex/" one.
+if [ -f "$ZOWILIBS_SRC/code/base/ZOWI_BASE_v2.hex" ]; then
+    copy_hex "$ZOWILIBS_SRC/code/base/ZOWI_BASE_v2.hex" "$DEST/ZOWI_BASE_v2.hex"
+else
+    copy_hex "$ZOWILIBS_SRC/code .hex/ZOWI_BASE_v2.hex" "$DEST/ZOWI_BASE_v2.hex"
+fi
+
+# Games (Alarm, Adivinawi, …) live under code/games/<name>/<name>.hex in the
+# current layout, or code .ino/games/<name>/compiled/*.hex in the older one.
+shopt -s nullglob
+for hex in "$ZOWILIBS_SRC"/code/games/*/*.hex \
+           "$ZOWILIBS_SRC"/code\ .ino/games/*/compiled/*.hex; do
     if [ -f "$hex" ]; then
         copy_hex "$hex" "$DEST/$(basename "$hex")"
     fi
 done
+shopt -u nullglob
 
 # ── Summary ───────────────────────────────────────────────────
 echo ""

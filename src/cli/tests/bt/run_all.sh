@@ -51,6 +51,7 @@ if [ "$FULL" = "1" ]; then
     run "bt/test_control.sh"                   "$SCRIPT_DIR/test_control.sh"
     run "bt/test_restore_factory_firmware.sh"  "$SCRIPT_DIR/test_restore_factory_firmware.sh"
     run "bt/test_install_alarm.sh"             "$SCRIPT_DIR/test_install_alarm.sh"
+    run "bt/test_install_adivinawi.sh"         "$SCRIPT_DIR/test_install_adivinawi.sh"
 else
     echo ""
     echo "SKIP: connect/rename, control and flashing tests (set ZOWI_BT_FULL=1 with a robot in range)"

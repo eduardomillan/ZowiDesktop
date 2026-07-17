@@ -9,8 +9,9 @@ Both projects live in separate, independent GitHub repositories.
 
 | Component | In zowiLibs | In ZowiDesktop | Relationship |
 |---|---|---|---|
-| Firmware `ZOWI_BASE_v2.hex` | `code .hex/ZOWI_BASE_v2.hex` | `src/firmware/ZOWI_BASE_v2.hex` | Byte-identical (differ only in CRLF→LF). Copied and normalised by `scripts/sync_firmware_from_zowiLibs.sh`. |
-| Firmware `ZOWI_Alarm_v2.hex` | compiled from `code .ino/games/ZOWI_Alarm_v2/` | `src/firmware/ZOWI_Alarm_v2.hex` | Derived from the zowiLibs source. |
+| Firmware `ZOWI_BASE_v2.hex` | `code/base/ZOWI_BASE_v2.hex` | `src/firmware/ZOWI_BASE_v2.hex` | Byte-identical (differ only in CRLF→LF). Copied and normalised by `scripts/sync_firmware_from_zowiLibs.sh`. |
+| Firmware `ZOWI_Alarm_v2.hex` | `code/games/ZOWI_Alarm_v2/ZOWI_Alarm_v2.hex` | `src/firmware/ZOWI_Alarm_v2.hex` | Byte-identical (differ only in CRLF→LF). Copied and normalised by the sync script. |
+| Firmware `ZOWI_Adivinawi_v2.hex` | `code/games/ZOWI_Adivinawi_v2/ZOWI_Adivinawi_v2.hex` | `src/firmware/ZOWI_Adivinawi_v2.hex` | Byte-identical (differ only in CRLF→LF). Copied and normalised by the sync script. |
 | Communication protocol | `ZowiSerialCommand` (`&&`/`%%`) with commands `S/L/T/M/H/K/C/G/R/E/D/N/B/I/A/F` | `src/core/include/zowi/protocol.h` | The `protocol.h` header defines the constants (**single source of truth**) and `makeCommand()` for building host-side commands. |
 | Arduino libraries (Zowi, Oscillator, LedMatrix, US, BatReader, EnableInterrupt) | `arduino libraries/` | — | **Not reused.** These are AVR/Arduino-specific and run on the robot, not in the desktop application. |
 

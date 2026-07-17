@@ -52,6 +52,7 @@ run "usb/test_ports.sh"       "$SCRIPT_DIR/test_ports.sh"
 if [ "$FLASH" = "1" ]; then
     run "usb/test_restore_factory_firmware.sh" "$SCRIPT_DIR/test_restore_factory_firmware.sh"
     run "usb/test_install_alarm.sh"            "$SCRIPT_DIR/test_install_alarm.sh"
+    run "usb/test_install_adivinawi.sh"        "$SCRIPT_DIR/test_install_adivinawi.sh"
 else
     echo ""
     echo "SKIP: flashing tests (set ZOWI_USB_FLASH=1 and connect a robot to run them)"

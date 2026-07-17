@@ -14,6 +14,7 @@ The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionalit
 - [Rename](#rename)
 - [Restore](#restore)
 - [Alarm](#alarm)
+- [Adivinawi](#adivinawi)
 - [Disconnect](#disconnect)
 - [Status](#status)
 - [Test Scripts](#test-scripts)
@@ -41,6 +42,7 @@ zowi_cli <subcommand> [options]
 | `control` | Interactive keyboard minigame to drive the robot |
 | `restore` | Restore the original factory firmware |
 | `alarm` | Install the Robot Alarm firmware |
+| `adivinawi` | Install the Adivinawi game firmware |
 
 
 
@@ -60,6 +62,7 @@ zowi_cli status --help      # Status help
 zowi_cli control --help      # Control (minigame) help
 zowi_cli restore --help      # Restore help
 zowi_cli alarm --help        # Alarm help
+zowi_cli adivinawi --help    # Adivinawi help
 ```
 
 
@@ -502,6 +505,73 @@ zowi_cli alarm --force-low-battery
 zowi_cli alarm -t 15
 ```
 
+## Adivinawi
+
+Install the Adivinawi game firmware (project "Adivinawi") on the paired Zowi. Like Alarm, this is one of the custom firmware variants that the factory restore can revert.
+
+By default, the CLI uploads the bundled Adivinawi firmware file:
+
+```text
+src/firmware/ZOWI_Adivinawi_v2.hex
+```
+
+### How it works
+
+Identical to `alarm`/`restore` — the CLI connects via the default BlueZ SPP backend
+(sudo‑free) and streams the Intel‑HEX firmware over STK500v1. The installed
+`ZOWI_Adivinawi_v2` firmware **persists** on the robot until you run `restore`. See the
+`restore` section for the full protocol description, backend selection, and privilege
+requirements.
+
+### Basic usage
+
+```bash
+./build/src/cli/zowi_cli adivinawi --address B4:9D:0B:32:41:0E
+```
+
+Output:
+
+```text
+Connecting to B4:9D:0B:32:41:0E...
+Connection open.
+Bootloader mode: skipping battery check and uploading immediately.
+Uploading firmware from src/firmware/ZOWI_Adivinawi_v2.hex...
+  Progress: 100%
+Waiting for the updated firmware to report its app ID...
+Adivinawi firmware installed.
+  App ID:  ZOWI_Adivinawi_v2
+Session updated.
+```
+
+### Custom firmware path
+
+```bash
+zowi_cli adivinawi -f /path/to/ZOWI_Adivinawi_v2.hex
+```
+
+### Low battery handling
+
+The Adivinawi flow follows the same 50% battery warning threshold as restore:
+
+```bash
+zowi_cli adivinawi --force-low-battery
+```
+
+### Custom timeout
+
+```bash
+zowi_cli adivinawi -t 15
+```
+
+### USB
+
+Like Alarm, Adivinawi can be flashed over a USB serial link:
+
+```bash
+zowi_cli ports
+zowi_cli adivinawi --backend usb --tty /dev/ttyUSB0 --baud 115200
+```
+
 ## Disconnect
 
 Clear all pairing data from the session store.
@@ -609,6 +679,14 @@ Runs the Robot Alarm firmware install flow against the currently paired Zowi and
 
 ```bash
 ./src/cli/tests/bt/test_install_alarm.sh
+```
+
+### bt/test_install_adivinawi.sh
+
+Runs the Adivinawi game firmware install flow against the currently paired Zowi and then shows the updated status.
+
+```bash
+./src/cli/tests/bt/test_install_adivinawi.sh
 ```
 
 ## Examples

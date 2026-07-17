@@ -145,3 +145,12 @@ Installs the Robot Alarm firmware over USB (`--backend usb`). Requires a robot.
 ZOWI_USB_TTY=/dev/ttyUSB0 ZOWI_USB_BAUD=115200 \
     ./src/cli/tests/usb/test_install_alarm.sh
 ```
+
+### test_install_adivinawi.sh
+
+Installs the Adivinawi game firmware over USB (`--backend usb`). Requires a robot.
+
+```bash
+ZOWI_USB_TTY=/dev/ttyUSB0 ZOWI_USB_BAUD=115200 \
+    ./src/cli/tests/usb/test_install_adivinawi.sh
+```

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **`adivinawi` CLI subcommand.** Install the bundled Adivinawi game firmware
+  (`src/firmware/ZOWI_Adivinawi_v2.hex`) on the paired Zowi, mirroring the
+  existing `alarm` command. Supports the same options (`--firmware`,
+  `--timeout`, `--battery-timeout`, `--force-low-battery`, `--protocol`,
+  `--tty`, `--baud`, `--address`, `--backend`) over Bluetooth or USB, and can
+  be reverted with `restore`.
+- Bluetooth and USB test scripts for the Adivinawi install flow
+  (`src/cli/tests/{bt,usb}/test_install_adivinawi.sh`), wired into `run_all.sh`.
+
+### Changed
+- `scripts/sync_firmware_from_zowiLibs.sh` now matches the current zowiLibs
+  layout (`code/base/` and `code/games/<name>/<name>.hex`) and copies all game
+  firmware, including Adivinawi.
+
 ## [0.5.0] - 2026-07-17
 
 ### Added
