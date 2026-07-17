@@ -35,6 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `docs/tests/ZOWI_CLI_HOWTO.md`.
 
 ### Fixed
+- **USB firmware flashing timed out right after connecting.** The
+  firmware-flash flow reset its connection state and then waited for the
+  connection callback to fire *again*, which only happens on Bluetooth (the
+  STATE-pin reset causes a reconnect). On serial/USB the port is opened
+  synchronously and never reconnects, so `restore`/`alarm` failed with
+  "Could not connect to the robot within the timeout." The flow now seeds its
+  connection state from the backend's actual `isConnected()` status.
 - **AppImage failed to start on machines without a full Qt install.** The
   bundled AppImage was missing the transitively-imported `QtQml.WorkerScript`
   QML module (pulled in by `ListModel`/`ListView`), causing

@@ -436,6 +436,18 @@ static bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
 {
     resetRobotState();
 
+    // The connection callback may have already fired inside bt.connect() (this
+    // is the case for the serial/USB backend, which opens the port synchronously
+    // and never reconnects). resetRobotState() cleared that flag, so seed it
+    // from the backend's actual connection state before waiting.
+    {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        if (bt.isConnected()) {
+            g_connected = true;
+            g_connectedOnce = true;
+        }
+    }
+
     // Enable upload mode early so any bootloader response arriving during the
     // reconnection phase is routed to g_stkBuffer instead of being parsed as a
     // protocol message.
@@ -445,10 +457,11 @@ static bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
         g_stkBuffer.clear();
     }
 
-    // Wait for a stable connection. The first SPP connect triggers the STATE-pin
-    // reset, which may briefly drop the Bluetooth link while the robot reboots.
-    // Allow up to 10 s total; fast reconnect (100 ms interval) is already set on
-    // the backend.
+    // Wait for a stable connection. On Bluetooth the first SPP connect triggers
+    // the STATE-pin reset, which may briefly drop the link while the robot
+    // reboots; the backend reconnects (100 ms interval) and onConnect fires
+    // again. On serial/USB the connection is already open and stable.
+    // Allow up to 10 s total.
     for (int attempt = 0; attempt < 10; ++attempt) {
         if (!waitUntil(qtApp, 5000, []() {
                 std::lock_guard<std::mutex> lock(g_mtx);
