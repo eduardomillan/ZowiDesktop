@@ -1,0 +1,23 @@
+Package: zowi-desktop
+Priority: optional
+Section: education
+Installed-Size: 9481
+Maintainer: Eduardo Millan <dev@zowi.local>
+Architecture: amd64
+Version: 0.4.0-1+jammy
+Depends: libc6 (>= 2.34), libgcc-s1 (>= 3.3.1), libqt6bluetooth6 (>= 6.2.1), libqt6core6 (>= 6.2.0), libqt6dbus6 (>= 6.1.2), libqt6gui6 (>= 6.1.2), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libstdc++6 (>= 11), bluez, libgl1, libxkbcommon0, qt6-wayland, qt6-base, qt6-declarative, qml6-module-qtqml, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-window, qml6-module-qtquick-layouts
+Filename: pool/main/z/zowi-desktop/zowi-desktop_0.4.0-1+jammy_amd64.deb
+Size: 7635564
+MD5sum: fc6de5b5881ff38cddf7cece8c69699e
+SHA1: 63c1bbe460dbd7a8bce86f294c0353422c4abdd2
+SHA256: 2cb470f9d18d0b92fda7386f34c29b97bb251fc694daec45da424d273b92f1be
+SHA512: dd384be588a9475c741f27181a756ce39e7ad141ed7e404943844305f64c2903b81af41ea217f232dc168ad4bd3248ff69fa0f9bec25a78ce07f9fa40bb81295
+Description: Control and program your Zowi robot
+ Zowi Desktop is a cross-platform application to control and program your
+ Zowi robot from a computer. Connect via Bluetooth (BlueZ), control
+ movements, program behaviour, and flash firmware.
+ .
+ This package includes the graphical application (ZowiDesktop) and the
+ command-line tool (zowi_cli).
+Homepage: https://github.com/eduardomillan/ZowiDesktop
+
