@@ -3,11 +3,15 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+#include <vector>
+#include <fstream>
+#include <memory>
 
 #include <QCoreApplication>
 #include <QElapsedTimer>
-
 #include <QFile>
+#include <QTemporaryFile>
+#include <QDir>
 
 #include "qt_bluetooth_backend.h"
 #ifdef ZOWI_HAVE_SERIAL
@@ -16,6 +20,7 @@
 #include <zowi/config_store.h>
 #include <zowi/session_store.h>
 #include <zowi/protocol.h>
+#include <zowi/stk500v1.h>
 
 namespace {
 // How often (ms) to poll for USB port / Bluetooth adapter appearance.
@@ -114,8 +119,17 @@ void BluetoothController::wireBackend()
     });
 
     m_backend->onDataReceived([this](const std::string &data) {
-        m_rxBuffer += data;
-        parseIncoming();
+        // Route data to STK500 buffer during firmware upload, otherwise parse normally
+        {
+            std::lock_guard<std::mutex> lock(m_uploadMutex);
+            if (m_uploadMode) {
+                m_stkBuffer += data;
+            }
+        }
+        if (!m_uploadMode) {
+            m_rxBuffer += data;
+            parseIncoming();
+        }
         emit dataReceived(QString::fromStdString(data));
     });
 
@@ -464,3 +478,81 @@ void BluetoothController::sendData(const QString &data)
     if (!m_backend) return;
     m_backend->send(data.toStdString());
 }
+
+void BluetoothController::restoreFirmware(const QString &firmwarePath)
+{
+    if (firmwarePath.isEmpty()) {
+        emit errorOccurred(tr("Firmware path is empty"));
+        return;
+    }
+
+    if (!m_backend || !m_backend->isConnected()) {
+        emit errorOccurred(tr("Not connected to a Zowi robot"));
+        return;
+    }
+
+    // Convert qrc:/ path to a temporary file for the firmware library
+    QString localPath = firmwarePath;
+    if (firmwarePath.startsWith("qrc:/") || firmwarePath.startsWith(":/")) {
+        QTemporaryFile tmpFile(QDir::tempPath() + "/zowi_firmware_XXXXXX.hex");
+        if (!tmpFile.open()) {
+            emit errorOccurred(tr("Failed to create temporary firmware file"));
+            return;
+        }
+        QFile resFile(firmwarePath);
+        if (!resFile.open(QIODevice::ReadOnly)) {
+            emit errorOccurred(tr("Failed to open firmware resource: %1").arg(firmwarePath));
+            return;
+        }
+        tmpFile.write(resFile.readAll());
+        tmpFile.close();
+        resFile.close();
+        localPath = tmpFile.fileName();
+    }
+
+    // Prepare transport for firmware upload
+    zowi::BootloaderTransport transport;
+    transport.send = [this](const std::vector<uint8_t> &data) -> bool {
+        return m_backend && m_backend->send(std::string(data.begin(), data.end()));
+    };
+    transport.receive = [this](std::vector<uint8_t> &out, std::size_t maxBytes) -> int {
+        if (!m_backend) return -1;
+        std::lock_guard<std::mutex> lock(m_uploadMutex);
+        if (m_stkBuffer.empty()) return 0;
+        const std::size_t n = std::min(m_stkBuffer.size(), maxBytes);
+        out.assign(m_stkBuffer.data(), m_stkBuffer.data() + n);
+        m_stkBuffer.erase(0, n);
+        return static_cast<int>(n);
+    };
+    transport.pump = [this]() {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+    };
+
+    // Enable upload mode so dataReceived routes to m_stkBuffer
+    {
+        std::lock_guard<std::mutex> lock(m_uploadMutex);
+        m_uploadMode = true;
+        m_stkBuffer.clear();
+    }
+
+    // Use STK500v1 protocol (Optiboot) for firmware upload
+    bool ok = zowi::stk500UploadFirmware(transport, localPath.toStdString());
+
+    // Disable upload mode
+    {
+        std::lock_guard<std::mutex> lock(m_uploadMutex);
+        m_uploadMode = false;
+    }
+
+    if (ok) {
+        emit errorOccurred(tr("Firmware restored successfully"));
+    } else {
+        emit errorOccurred(tr("Firmware restore failed"));
+    }
+
+    // Clean up temporary file if we created one
+    if (localPath != firmwarePath) {
+        QFile::remove(localPath);
+    }
+}
+

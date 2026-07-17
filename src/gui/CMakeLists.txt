@@ -25,6 +25,7 @@ target_include_directories(ZowiDesktop PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ZowiDesktop PRIVATE
     Zowi::core
     Zowi::bt_qt
+    Zowi::firmware
     Qt${ZOWI_QT_VERSION}::Core
     Qt${ZOWI_QT_VERSION}::Quick
     Qt${ZOWI_QT_VERSION}::QuickControls2

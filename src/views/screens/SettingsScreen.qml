@@ -23,7 +23,7 @@ ScreenTemplate {
     // (mirrors ZowiAppReborn's zowiDependantViews: rename, restore firmware,
     // calibrate). The rest are always available.
     property var options: [
-        { key: "restore",        desc: "restore_desc",        connGated: true,  action: function() { msgBar.show(tr("restore_stub")) } },
+        { key: "restore",        desc: "restore_desc",        connGated: true,  action: function() { Bluetooth.restoreFirmware(Config.get("factory_firmware_path")) } },
         { key: "rename",         desc: "rename_desc",         connGated: true,  action: function() { settingsScreen.renameRequested() } },
         { key: "update",         desc: "update_desc",         connGated: false, action: function() { msgBar.show(tr("update_stub")) } },
         { key: "achievements",   desc: "achievements_desc",   connGated: false, action: function() { msgBar.show(tr("achievements_stub")) } },

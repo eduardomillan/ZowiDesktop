@@ -5,7 +5,10 @@
 #include <QTimer>
 #include <memory>
 #include <string>
+#include <vector>
+#include <mutex>
 #include <zowi/bluetooth_api.h>
+#include <zowi/stk500v1.h>
 
 // Robot connection controller. Despite its historical name it is transport
 // agnostic: it can talk to the robot either over Bluetooth SPP (the Qt/BlueZ
@@ -63,6 +66,7 @@ public:
     Q_INVOKABLE QStringList listUsbPorts() const;
     Q_INVOKABLE void refreshTransports();
     Q_INVOKABLE void connectUsb(const QString &port = QString());
+    Q_INVOKABLE void restoreFirmware(const QString &firmwarePath);
 
     Q_INVOKABLE void startScan();
     Q_INVOKABLE void stopScan();
@@ -103,6 +107,11 @@ private:
     // once per newly-seen port while disconnected. Returns the port if a Zowi
     // replied, or an empty string otherwise.
     QString probeZowiOnPort(const QString &port);
+
+    // Firmware upload state (mirrors CLI's g_uploadMode / g_stkBuffer).
+    bool m_uploadMode = false;
+    std::string m_stkBuffer;
+    std::mutex m_uploadMutex;
 
     std::unique_ptr<zowi::BluetoothApi> m_backend;
     Transport m_backendKind = Bluetooth;   // which backend is currently built

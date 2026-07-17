@@ -13,5 +13,6 @@
     "dev_mode": "true",
     "message_duration": 2000,
     "button_scan_visible": "false",
-    "button_quit_visible": "false"
+    "button_quit_visible": "false",
+    "factory_firmware_path": "qrc:/firmware/ZOWI_BASE_v2.hex"
 }
