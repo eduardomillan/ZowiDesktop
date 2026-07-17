@@ -35,6 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `docs/tests/ZOWI_CLI_HOWTO.md`.
 
 ### Fixed
+- **AppImage release build failed with "required QML module(s) missing".**
+  `QtQml.Base` and `QtQml.WorkerScript` (and the transitively-required
+  `QtQml.Models`, `QtQuick.Templates`, `QtQuick.Shapes`) live in separate apt
+  packages that were not installed in CI, so they could not be bundled. Added
+  the missing `qml6-module-*` packages and made the AppImage QML bundling and
+  verification steps resilient to the apt Qt layout (where `QtQml.Base` is
+  declared in the top-level `QtQml/qmldir` rather than its own subdirectory).
 - **Release builds (AppImage and `.deb`) failed to compile.** The GUI
   `zowi_screen_preview` target failed with a `QVariant` -> `QString` conversion
   error in `preview_main.cpp` (`QVariantMap::value()` returns a `QVariant`),

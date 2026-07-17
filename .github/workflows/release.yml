@@ -36,8 +36,10 @@ jobs:
             squashfs-tools \
             qt6-base-dev qt6-declarative-dev qt6-connectivity-dev qt6-wayland libqt6opengl6-dev qt6-tools-dev \
             nlohmann-json3-dev libcli11-dev \
-            qml6-module-qtqml qml6-module-qtquick qml6-module-qtquick-controls \
-            qml6-module-qtquick-window qml6-module-qtquick-layouts
+            qml6-module-qtqml qml6-module-qtqml-workerscript qml6-module-qtqml-models \
+            qml6-module-qtquick qml6-module-qtquick-controls \
+            qml6-module-qtquick-window qml6-module-qtquick-layouts \
+            qml6-module-qtquick-templates qml6-module-qtquick-shapes
           echo "QT_ROOT_DIR=/usr/lib/x86_64-linux-gnu/qt6" >> "$GITHUB_ENV"
 
       - name: Build AppImage
