@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-17
+
+### Added
+- **Choose USB or Bluetooth in the GUI.** The desktop app is no longer locked
+  to Bluetooth: a new *Connection* selector in **Settings** lets the user pick
+  **Automatic**, **Bluetooth** or **USB cable**. The `BluetoothController` is
+  now transport-agnostic and can drive either the Qt/BlueZ SPP backend or the
+  serial/USB backend.
+- **Automatic transport detection (hybrid).** In *Automatic* mode the app
+  detects the best available connection at startup and preselects it, giving
+  USB priority when a robot is found on a port. The chosen transport is shown
+  and can be overridden at any time; unavailable options are disabled.
+- **USB robot identification handshake.** Before treating a USB serial port as
+  a robot, the app performs a lightweight `I` (program-id) handshake and only
+  accepts ports that reply with a valid Zowi app id, avoiding false positives
+  from unrelated serial devices. Because opening the port resets the robot
+  (DTR), each port is probed at most once per session and only while
+  disconnected.
+- **USB hotplug awareness.** The app polls for the appearance/removal of USB
+  ports (and Bluetooth adapters) and updates the UI automatically; a manual
+  *Refresh* action is also available.
+- **Active-transport badge** in the status bar (USB / Bluetooth) while
+  connected, and a *Connect via USB* / *Refresh* quick action in Settings.
+- **Persisted transport preference.** The selected transport is remembered
+  across sessions (session store), honoured on next launch when still
+  available. New `transport` and `usb_baud` defaults were added to
+  `config.json`.
+
+### Changed
+- The "no Bluetooth" splash banner now only appears when **neither** a
+  Bluetooth adapter **nor** a USB robot is available, and its message guides
+  the user to plug in via USB or enable Bluetooth.
+- Home-screen auto-connect on launch now connects over USB when USB is the
+  active transport and a robot is present, falling back to the saved Bluetooth
+  device otherwise.
+
 ## [0.4.0] - 2026-07-17
 
 ### Added

@@ -51,11 +51,16 @@ bool QtBluetoothBackend::init()
     return true;
 }
 
+bool QtBluetoothBackend::hasAdapter()
+{
+    return !QBluetoothLocalDevice::allDevices().isEmpty();
+}
+
 bool QtBluetoothBackend::isAdapterAvailable() const
 {
     // A valid, present local adapter address means BlueZ (or the platform
     // stack) exposes at least one usable Bluetooth adapter.
-    return !QBluetoothLocalDevice::allDevices().isEmpty();
+    return hasAdapter();
 }
 
 void QtBluetoothBackend::startDiscovery()

@@ -9,7 +9,8 @@
     "unpair_success": "Dispositiu Zowi eliminat de l'app i del sistema Bluetooth.",
     "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth.",
     "reset_no_zowi": "No hi ha cap Zowi registrat a l'app.",
-    "no_bluetooth_demo": "No s'ha detectat cap dispositiu Bluetooth. L'aplicació funcionarà només en mode demo."
+    "no_bluetooth_demo": "No s'ha detectat cap dispositiu Bluetooth. L'aplicació funcionarà només en mode demo.",
+    "no_connection": "No Bluetooth adapter or USB robot detected. Plug in your Zowi via USB or enable Bluetooth."
   },
   "SettingsScreen.qml": {
     "settings": "Ajustos",
@@ -33,7 +34,20 @@
     "hospital_desc": "Troba ajuda i solucions per al teu Zowi.",
     "reset_no_zowi": "No hi ha cap Zowi registrat a l'app.",
     "unpair_success": "Dispositiu Zowi eliminat de l'app i del sistema Bluetooth.",
-    "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth."
+    "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth.",
+    "connection": "Connection",
+    "connection_desc": "Choose how the app connects to your Zowi.",
+    "transport_auto": "Automatic",
+    "transport_bluetooth": "Bluetooth",
+    "transport_usb": "USB cable",
+    "transport_auto_hint": "Pick the best available connection automatically.",
+    "transport_bt_hint": "Connect wirelessly over Bluetooth.",
+    "transport_usb_hint": "Connect through the USB cable.",
+    "transport_unavailable": "Not available",
+    "usb_no_ports": "No robot detected on USB.",
+    "usb_refresh": "Refresh",
+    "usb_connect": "Connect via USB",
+    "usb_select_port": "Select a USB port"
   },
   "StatusBar.qml": {
     "connected": "Connectat",
@@ -43,15 +57,17 @@
     "not_connected": "No connectat",
     "status_connecting": "Connectant…",
     "status_unavailable": "Zowi no disponible",
-    "status_reconnect": "Reconnecta"
+    "status_reconnect": "Reconnecta",
+    "via_bluetooth": "Bluetooth",
+    "via_usb": "USB"
   },
   "WizardRenameScreen.qml": {
     "title": "Posa nom al teu Zowi!",
     "subtitle": "Escriu un nom per al teu Zowi i prem Reanomenar.",
     "name_placeholder": "Nom del robot",
-  "rename": "Reanomenar",
-  "renaming": "Reanomenant...",
-  "wait_pairing": "S'està esperant que el Zowi es pairi...",
+    "rename": "Reanomenar",
+    "renaming": "Reanomenant...",
+    "wait_pairing": "S'està esperant que el Zowi es pairi...",
     "sending": "Enviant el nom al Zowi...",
     "done": "Fet! El Zowi ara es diu %1.",
     "rename_failed": "No s'ha pogut reanomenar. Torna-ho a provar."

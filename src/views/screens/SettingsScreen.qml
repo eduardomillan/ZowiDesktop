@@ -76,6 +76,108 @@ ScreenTemplate {
             id: optionCol
             width: parent.width
 
+            // --- Connection (transport) selector ---
+            Rectangle {
+                width: optionCol.width
+                height: connCol.implicitHeight + 28
+                color: "#f4f9f4"
+
+                Column {
+                    id: connCol
+                    anchors {
+                        left: parent.left; right: parent.right
+                        top: parent.top; topMargin: 14
+                        leftMargin: 18; rightMargin: 18
+                    }
+                    spacing: 10
+
+                    Text {
+                        text: settingsScreen.tr("connection")
+                        font.bold: true
+                        font.pixelSize: 16
+                        color: "#2d5a2d"
+                    }
+                    Text {
+                        text: settingsScreen.tr("connection_desc")
+                        font.pixelSize: 12
+                        color: "#2d5a2d"
+                        opacity: 0.7
+                        wrapMode: Text.WordWrap
+                        width: parent.width
+                    }
+
+                    // Segmented control: Automatic / Bluetooth / USB.
+                    Row {
+                        spacing: 8
+                        Repeater {
+                            model: [
+                                { t: Bluetooth.TransportAuto,      label: "transport_auto",      hint: "transport_auto_hint", avail: true },
+                                { t: Bluetooth.TransportBluetooth, label: "transport_bluetooth", hint: "transport_bt_hint",   avail: Bluetooth.bluetoothAvailable },
+                                { t: Bluetooth.TransportUsb,       label: "transport_usb",       hint: "transport_usb_hint",  avail: Bluetooth.usbAvailable }
+                            ]
+                            delegate: Rectangle {
+                                property bool isSel: Bluetooth.transport === modelData.t
+                                width: 118
+                                height: 40
+                                radius: 8
+                                enabled: modelData.avail
+                                opacity: modelData.avail ? 1.0 : 0.4
+                                color: isSel ? "#21a69b" : "#ffffff"
+                                border.color: isSel ? "#21a69b" : "#cfe3cf"
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: settingsScreen.tr(modelData.label)
+                                    color: parent.isSel ? "#ffffff" : "#2d5a2d"
+                                    font.pixelSize: 13
+                                    font.bold: parent.isSel
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    enabled: modelData.avail
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: Bluetooth.transport = modelData.t
+                                }
+                            }
+                        }
+                    }
+
+                    // USB quick actions, shown when USB is the chosen/active transport.
+                    Row {
+                        spacing: 10
+                        visible: Bluetooth.transport === Bluetooth.TransportUsb ||
+                                 Bluetooth.activeTransport === Bluetooth.TransportUsb
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            font.pixelSize: 12
+                            color: Bluetooth.usbAvailable ? "#2d5a2d" : "#c0392b"
+                            text: Bluetooth.usbAvailable
+                                  ? settingsScreen.tr("usb_connect")
+                                  : settingsScreen.tr("usb_no_ports")
+                            MouseArea {
+                                anchors.fill: parent
+                                enabled: Bluetooth.usbAvailable && !Bluetooth.connected
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Bluetooth.connectUsb()
+                            }
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: settingsScreen.tr("usb_refresh")
+                            color: "#2980b9"
+                            font.pixelSize: 12
+                            font.underline: true
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: Bluetooth.refreshTransports()
+                            }
+                        }
+                    }
+                }
+            }
+
             Repeater {
                 model: settingsScreen.options
                 delegate: Rectangle {

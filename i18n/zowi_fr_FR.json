@@ -9,7 +9,8 @@
     "unpair_success": "Appareil Zowi supprimé de l'application et du système Bluetooth.",
     "unpair_app_only": "Appareil supprimé de l'application, mais impossible de le désapparier du système Bluetooth.",
     "reset_no_zowi": "Aucun Zowi n'est actuellement enregistré dans l'application.",
-    "no_bluetooth_demo": "Aucun périphérique Bluetooth détecté. L'application fonctionnera uniquement en mode démo."
+    "no_bluetooth_demo": "Aucun périphérique Bluetooth détecté. L'application fonctionnera uniquement en mode démo.",
+    "no_connection": "No Bluetooth adapter or USB robot detected. Plug in your Zowi via USB or enable Bluetooth."
   },
   "SettingsScreen.qml": {
     "settings": "Paramètres",
@@ -33,7 +34,20 @@
     "hospital_desc": "Trouvez de l'aide et des solutions pour votre Zowi.",
     "reset_no_zowi": "Aucun Zowi n'est actuellement enregistré dans l'application.",
     "unpair_success": "Appareil Zowi supprimé de l'application et du système Bluetooth.",
-    "unpair_app_only": "Appareil supprimé de l'application, mais impossible de le désapparier du système Bluetooth."
+    "unpair_app_only": "Appareil supprimé de l'application, mais impossible de le désapparier du système Bluetooth.",
+    "connection": "Connection",
+    "connection_desc": "Choose how the app connects to your Zowi.",
+    "transport_auto": "Automatic",
+    "transport_bluetooth": "Bluetooth",
+    "transport_usb": "USB cable",
+    "transport_auto_hint": "Pick the best available connection automatically.",
+    "transport_bt_hint": "Connect wirelessly over Bluetooth.",
+    "transport_usb_hint": "Connect through the USB cable.",
+    "transport_unavailable": "Not available",
+    "usb_no_ports": "No robot detected on USB.",
+    "usb_refresh": "Refresh",
+    "usb_connect": "Connect via USB",
+    "usb_select_port": "Select a USB port"
   },
   "StatusBar.qml": {
     "connected": "Connecté",
@@ -43,15 +57,17 @@
     "not_connected": "Non connecté",
     "status_connecting": "Connexion…",
     "status_unavailable": "Zowi indisponible",
-    "status_reconnect": "Reconnecter"
+    "status_reconnect": "Reconnecter",
+    "via_bluetooth": "Bluetooth",
+    "via_usb": "USB"
   },
   "WizardRenameScreen.qml": {
     "title": "Nommez votre Zowi !",
     "subtitle": "Saisissez un nom pour votre Zowi et appuyez sur Renommer.",
     "name_placeholder": "Nom du Zowi",
-  "rename": "Renommer",
-  "renaming": "Renommage…",
-  "wait_pairing": "En attente de l'appairage du Zowi...",
+    "rename": "Renommer",
+    "renaming": "Renommage…",
+    "wait_pairing": "En attente de l'appairage du Zowi...",
     "sending": "Envoi du nom au Zowi…",
     "done": "Terminé ! Le Zowi s'appelle désormais %1.",
     "rename_failed": "Impossible de renommer. Réessayez."

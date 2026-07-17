@@ -64,6 +64,30 @@ Rectangle {
             opacity: 0.8
             text: root.statusLabel
         }
+
+        // Active transport pill (only meaningful while connected).
+        Rectangle {
+            visible: Bluetooth.connected
+            anchors.verticalCenter: parent.verticalCenter
+            radius: 8
+            height: 16
+            width: transportText.implicitWidth + 14
+            color: "#ffffff"
+            border.color: root.dotColor
+            border.width: 1
+            opacity: 0.75
+
+            Text {
+                id: transportText
+                anchors.centerIn: parent
+                font.pixelSize: 10
+                font.bold: true
+                color: root.dotColor
+                text: Bluetooth.activeTransport === Bluetooth.TransportUsb
+                      ? root.tr("via_usb")
+                      : root.tr("via_bluetooth")
+            }
+        }
     }
 
     Text {

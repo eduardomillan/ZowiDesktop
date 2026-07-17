@@ -59,8 +59,17 @@ Qt Quick application. Controllers wrap core classes and expose them to QML via c
 |-----------|-------|-------------|
 | `SessionController` | `SessionStore` | `Session` |
 | `TranslatorController` | `TranslationEngine` | `Translator` |
-| `BluetoothController` | `QtBluetoothBackend` | `Bluetooth` |
+| `BluetoothController` | `QtBluetoothBackend` **or** `SerialBluetoothBackend` | `Bluetooth` |
 | `ConfigController` | `ConfigStore` | `Config` |
+
+`BluetoothController` is transport-agnostic: it builds either the Qt/BlueZ SPP
+backend (`QtBluetoothBackend`) or the serial/USB backend
+(`SerialBluetoothBackend`) depending on the selected transport
+(`Automatic` / `Bluetooth` / `USB`, chosen from the Settings screen). In
+`Automatic` mode it auto-detects the best available transport at startup —
+preferring USB when a robot is identified on a serial port via a lightweight
+`I` (program-id) handshake — and polls for USB/Bluetooth hotplug. The chosen
+transport is persisted in the session store (`transport` key).
 
 ### src/cli/ (terminal tool)
 

@@ -4,24 +4,102 @@
 #include <cmath>
 #include <string>
 
-#ifdef Q_OS_WIN
+#include <QCoreApplication>
+#include <QElapsedTimer>
+
+#include <QFile>
+
 #include "qt_bluetooth_backend.h"
-#else
-#include "qt_bluetooth_backend.h"
+#ifdef ZOWI_HAVE_SERIAL
+#include "serial_bluetooth_backend.h"
 #endif
+#include <zowi/config_store.h>
+#include <zowi/session_store.h>
+#include <zowi/protocol.h>
+
+namespace {
+// How often (ms) to poll for USB port / Bluetooth adapter appearance.
+constexpr int kPollIntervalMs = 2500;
+// How long (ms) to wait for a Zowi to answer the identification handshake.
+constexpr int kProbeTimeoutMs = 1800;
+
+BluetoothController::Transport transportFromString(const QString &s)
+{
+    const QString v = s.trimmed().toLower();
+    if (v == "usb") return BluetoothController::Usb;
+    if (v == "bluetooth" || v == "bt") return BluetoothController::Bluetooth;
+    return BluetoothController::Auto;
+}
+} // namespace
 
 BluetoothController::BluetoothController(QObject *parent)
     : QObject(parent)
 {
-    auto backend = std::make_unique<zowi::QtBluetoothBackend>();
+    // The user's transport preference is persisted in the session store; the
+    // USB operating baud rate default comes from the bundled config.json.
+    zowi::SessionStore session;
+    m_transport = transportFromString(
+        QString::fromStdString(session.getString("transport", "auto")));
 
-    backend->onDeviceFound([this](const zowi::DeviceInfo &info) {
+    zowi::ConfigStore cfg;
+    QFile cfgFile(":/src/config.json");
+    if (cfgFile.open(QIODevice::ReadOnly)) {
+        cfg.loadFromString(cfgFile.readAll().toStdString());
+        cfgFile.close();
+    }
+    try {
+        std::string b = cfg.get("usb_baud");
+        if (!b.empty()) m_usbBaud = std::stoi(b);
+    } catch (...) {}
+
+    // Start on the Bluetooth backend by default; detection may switch it.
+    useBluetoothBackend();
+
+    m_pollTimer.setInterval(kPollIntervalMs);
+    connect(&m_pollTimer, &QTimer::timeout, this, &BluetoothController::pollTransports);
+    m_pollTimer.start();
+
+    // Initial availability snapshot + auto-detection.
+    refreshTransports();
+}
+
+// --- Backend construction ---------------------------------------------------
+
+void BluetoothController::useBluetoothBackend()
+{
+    if (m_backend && m_backendKind == Bluetooth) return;
+    m_backend = std::make_unique<zowi::QtBluetoothBackend>();
+    m_backendKind = Bluetooth;
+    wireBackend();
+    setActiveTransport(Bluetooth);
+}
+
+void BluetoothController::useSerialBackend()
+{
+#ifdef ZOWI_HAVE_SERIAL
+    if (m_backend && m_backendKind == Usb) return;
+    auto serial = std::make_unique<zowi::SerialBluetoothBackend>();
+    serial->setBaudRate(m_usbBaud);
+    m_backend = std::move(serial);
+    m_backendKind = Usb;
+    wireBackend();
+    setActiveTransport(Usb);
+#else
+    useBluetoothBackend();
+#endif
+}
+
+void BluetoothController::wireBackend()
+{
+    if (!m_backend) return;
+
+    m_backend->onDeviceFound([this](const zowi::DeviceInfo &info) {
         emit deviceDiscovered(
             QString::fromStdString(info.name),
             QString::fromStdString(info.address));
     });
 
-    backend->onConnectionChanged([this](bool connected) {
+    m_backend->onConnectionChanged([this](bool connected) {
         m_connected = connected;
         emit connectionChanged();
         if (connected) {
@@ -35,28 +113,35 @@ BluetoothController::BluetoothController(QObject *parent)
         }
     });
 
-    backend->onDataReceived([this](const std::string &data) {
+    m_backend->onDataReceived([this](const std::string &data) {
         m_rxBuffer += data;
         parseIncoming();
         emit dataReceived(QString::fromStdString(data));
     });
 
-    backend->onError([this](const std::string &msg) {
+    m_backend->onError([this](const std::string &msg) {
         emit errorOccurred(QString::fromStdString(msg));
     });
 
-    backend->onUnpairResult([this](bool ok, const std::string &msg) {
+    m_backend->onUnpairResult([this](bool ok, const std::string &msg) {
         emit unpairFinished(ok, QString::fromStdString(msg));
     });
 
-    backend->BluetoothApi::onScanFinished([this]() {
+    m_backend->onScanFinished([this]() {
         m_scanning = false;
         emit scanningChanged();
         emit scanFinished();
     });
-
-    m_backend = std::move(backend);
 }
+
+void BluetoothController::setActiveTransport(Transport t)
+{
+    if (m_activeTransport == t) return;
+    m_activeTransport = t;
+    emit activeTransportChanged();
+}
+
+// --- Incoming parsing -------------------------------------------------------
 
 void BluetoothController::parseIncoming()
 {
@@ -120,9 +205,26 @@ void BluetoothController::parseIncoming()
     if (updated) emit batteryChanged();
 }
 
+// --- Property getters -------------------------------------------------------
+
 bool BluetoothController::isBluetoothAvailable() const
 {
-    return m_backend && m_backend->isAdapterAvailable();
+    return m_bluetoothAvailable;
+}
+
+bool BluetoothController::isUsbAvailable() const
+{
+    return m_usbAvailable;
+}
+
+int BluetoothController::transport() const
+{
+    return static_cast<int>(m_transport);
+}
+
+int BluetoothController::activeTransport() const
+{
+    return static_cast<int>(m_activeTransport);
 }
 
 bool BluetoothController::isConnected() const
@@ -170,9 +272,137 @@ void BluetoothController::setDeviceName(const QString &name)
     }
 }
 
+// --- Transport selection ----------------------------------------------------
+
+void BluetoothController::setTransport(int transport)
+{
+    Transport t = static_cast<Transport>(transport);
+    if (t != Auto && t != Bluetooth && t != Usb) return;
+    if (m_transport == t) return;
+    m_transport = t;
+    emit transportChanged();
+
+    // Persist the choice so it is honoured next launch.
+    zowi::SessionStore session;
+    const char *s = (t == Usb) ? "usb" : (t == Bluetooth ? "bluetooth" : "auto");
+    session.setString("transport", s);
+
+    // Switch the live backend immediately when the user is explicit and the
+    // target transport is available (avoid tearing down an active connection).
+    if (isConnected()) return;
+    if (t == Usb && m_usbAvailable) useSerialBackend();
+    else if (t == Bluetooth) useBluetoothBackend();
+    else if (t == Auto) refreshTransports();
+}
+
+QStringList BluetoothController::listUsbPorts() const
+{
+    QStringList out;
+#ifdef ZOWI_HAVE_SERIAL
+    for (const auto &p : zowi::SerialBluetoothBackend::listSerialPorts())
+        out << QString::fromStdString(p);
+#endif
+    return out;
+}
+
+void BluetoothController::refreshTransports()
+{
+    pollTransports();
+
+    // Auto mode: pick the best available transport while disconnected.
+    if (m_transport == Auto && !isConnected() && !m_connecting) {
+        if (m_usbAvailable) {
+            QString port = probeZowiOnPort(m_knownUsbPorts.value(0));
+            if (!port.isEmpty()) {
+                m_usbPort = port;
+                useSerialBackend();
+                return;
+            }
+        }
+        if (m_bluetoothAvailable) {
+            useBluetoothBackend();
+            return;
+        }
+    } else if (m_transport == Usb && m_usbAvailable && !isConnected()) {
+        useSerialBackend();
+    } else if (m_transport == Bluetooth && !isConnected()) {
+        useBluetoothBackend();
+    }
+}
+
+void BluetoothController::pollTransports()
+{
+    // 1) USB port presence (cheap: does not open the port).
+    QStringList ports = listUsbPorts();
+    bool usbChanged = (ports != m_knownUsbPorts);
+    m_knownUsbPorts = ports;
+    // Forget probe results for ports that went away so a re-plug is re-probed.
+    for (int i = m_probedUsbPorts.size() - 1; i >= 0; --i)
+        if (!ports.contains(m_probedUsbPorts.at(i)))
+            m_probedUsbPorts.removeAt(i);
+
+    bool usbAvail = !ports.isEmpty();
+    bool btAvail = zowi::QtBluetoothBackend::hasAdapter();
+
+    bool changed = usbChanged || (usbAvail != m_usbAvailable) || (btAvail != m_bluetoothAvailable);
+    m_usbAvailable = usbAvail;
+    m_bluetoothAvailable = btAvail;
+    if (changed) emit transportsChanged();
+}
+
+QString BluetoothController::probeZowiOnPort(const QString &port)
+{
+#ifndef ZOWI_HAVE_SERIAL
+    Q_UNUSED(port)
+    return QString();
+#else
+    if (port.isEmpty()) return QString();
+    // Only handshake a given port once per session: opening it resets the
+    // robot via DTR, so we must not do it repeatedly during polling.
+    if (m_probedUsbPorts.contains(port)) return QString();
+    m_probedUsbPorts << port;
+
+    zowi::SerialBluetoothBackend probe;
+    probe.setBaudRate(m_usbBaud);
+
+    std::string rx;
+    bool identified = false;
+    probe.onDataReceived([&](const std::string &data) {
+        rx += data;
+        // Accept the &&I <appId>%% framed reply or the legacy "U " line form.
+        if (rx.find("&&I ") != std::string::npos ||
+            rx.find("\nU ") != std::string::npos ||
+            rx.rfind("U ", 0) == 0) {
+            identified = true;
+        }
+    });
+
+    if (!probe.connect(port.toStdString()))
+        return QString();
+
+    // Give the freshly-reset bootloader a moment, then request the program id.
+    QElapsedTimer timer;
+    timer.start();
+    bool sent = false;
+    while (timer.elapsed() < kProbeTimeoutMs && !identified) {
+        if (!sent && timer.elapsed() > 300) {
+            probe.send(zowi::makeCommand(zowi::Command::GetProgramId));
+            sent = true;
+        }
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+    }
+    probe.disconnect();
+    return identified ? port : QString();
+#endif
+}
+
+// --- Connection actions -----------------------------------------------------
+
 void BluetoothController::startScan()
 {
     if (!m_backend) return;
+    // Scanning is a Bluetooth-only concept.
+    if (m_backendKind != Bluetooth) useBluetoothBackend();
     m_scanning = true;
     emit scanningChanged();
     m_backend->startDiscovery();
@@ -188,10 +418,28 @@ void BluetoothController::stopScan()
 
 void BluetoothController::connectToDevice(const QString &address)
 {
-    if (!m_backend) return;
+    if (address.isEmpty()) return;
+    if (m_backendKind != Bluetooth) useBluetoothBackend();
     m_deviceAddress = address;
     setConnecting(true);
     m_backend->connect(address.toStdString());
+    emit deviceChanged();
+}
+
+void BluetoothController::connectUsb(const QString &port)
+{
+    QString target = port;
+    if (target.isEmpty()) target = m_usbPort;
+    if (target.isEmpty()) target = m_knownUsbPorts.value(0);
+    if (target.isEmpty()) {
+        emit errorOccurred(tr("No USB robot detected"));
+        return;
+    }
+    if (m_backendKind != Usb) useSerialBackend();
+    m_usbPort = target;
+    m_deviceAddress = target;
+    setConnecting(true);
+    m_backend->connect(target.toStdString());
     emit deviceChanged();
 }
 

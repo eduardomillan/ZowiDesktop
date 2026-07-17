@@ -30,6 +30,12 @@ target_link_libraries(ZowiDesktop PRIVATE
     Qt${ZOWI_QT_VERSION}::QuickControls2
 )
 
+# Serial/USB transport (POSIX-only). Provides the USB connection option.
+if(NOT WIN32)
+    target_link_libraries(ZowiDesktop PRIVATE Zowi::bt_serial)
+    target_compile_definitions(ZowiDesktop PRIVATE ZOWI_HAVE_SERIAL=1)
+endif()
+
 add_executable(zowi_screen_preview
     preview_main.cpp
     controllers/TranslatorController.cpp

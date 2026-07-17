@@ -55,6 +55,10 @@ public:
     ~QtBluetoothBackend() override;
 
     // BluetoothApi
+    // Cheap static check for a present Bluetooth adapter, usable without
+    // constructing a full backend (e.g. during transport polling).
+    static bool hasAdapter();
+
     bool init() override;
     bool isAdapterAvailable() const override;
     void startDiscovery() override;

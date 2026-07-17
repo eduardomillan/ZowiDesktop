@@ -106,7 +106,7 @@ Rectangle {
 
     Rectangle {
         id: noBtBanner
-        visible: !Bluetooth.bluetoothAvailable
+        visible: !Bluetooth.bluetoothAvailable && !Bluetooth.usbAvailable
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: 24
@@ -121,7 +121,7 @@ Rectangle {
             id: noBtText
             anchors.fill: parent
             anchors.margins: 12
-            text: tr("no_bluetooth_demo")
+            text: tr("no_connection")
             color: "#a0522d"
             font.pixelSize: 13
             wrapMode: Text.WordWrap
