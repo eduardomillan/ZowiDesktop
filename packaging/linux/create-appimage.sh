@@ -168,18 +168,18 @@ echo "=== Step 6b: Verify critical QML modules are bundled ==="
 # Fail loudly instead of shipping an AppImage that cannot start.
 QTQML_QMLDIR="$APPDIR/usr/qml/QtQml/qmldir"
 MISSING=""
-for mod in Base WorkerScript; do
-    # A module is considered present if it ships as its own subdirectory with a
-    # qmldir, OR if it is declared in the top-level QtQml qmldir (how apt-based
-    # Qt packages QtQml.Base and, in some versions, WorkerScript).
-    if [ -f "$APPDIR/usr/qml/QtQml/$mod/qmldir" ]; then
-        continue
+# QtQml.Base is the implicit base module: on the apt Qt layout it is provided by
+# the top-level QtQml module itself (usr/qml/QtQml/qmldir + libqmlplugin.so),
+# not by a QtQml/Base subdirectory. Treat it as present when that qmldir exists.
+if [ ! -f "$QTQML_QMLDIR" ] && [ ! -f "$APPDIR/usr/qml/QtQml/Base/qmldir" ]; then
+    MISSING="$MISSING QtQml.Base"
+fi
+# QtQml.WorkerScript must be bundled as its own module directory.
+if [ ! -f "$APPDIR/usr/qml/QtQml/WorkerScript/qmldir" ]; then
+    if ! { [ -f "$QTQML_QMLDIR" ] && grep -qi "WorkerScript" "$QTQML_QMLDIR"; }; then
+        MISSING="$MISSING QtQml.WorkerScript"
     fi
-    if [ -f "$QTQML_QMLDIR" ] && grep -qi "$mod" "$QTQML_QMLDIR"; then
-        continue
-    fi
-    MISSING="$MISSING QtQml.$mod"
-done
+fi
 if [ -n "$MISSING" ]; then
     echo "ERROR: required QML module(s) missing from AppDir:$MISSING" >&2
     echo "--- Contents of $APPDIR/usr/qml/QtQml ---" >&2
