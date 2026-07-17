@@ -1,11 +1,29 @@
 #include "serial_bluetooth_backend.h"
 
 #include <cerrno>
+#include <algorithm>
+#include <dirent.h>
 
 namespace zowi {
 
 namespace {
-constexpr speed_t kBootBaud = B9600;
+// Map a numeric baud rate to the corresponding termios speed_t constant.
+// Falls back to B9600 for unknown values (the safe bootloader default).
+speed_t baudToSpeed(int baud)
+{
+    switch (baud) {
+        case 1200:   return B1200;
+        case 2400:   return B2400;
+        case 4800:   return B4800;
+        case 9600:   return B9600;
+        case 19200:  return B19200;
+        case 38400:  return B38400;
+        case 57600:  return B57600;
+        case 115200: return B115200;
+        case 230400: return B230400;
+        default:     return B9600;
+    }
+}
 }
 
 SerialBluetoothBackend::SerialBluetoothBackend(QObject *parent)
@@ -36,8 +54,9 @@ bool SerialBluetoothBackend::connect(const std::string &ttyPath)
         return false;
     }
 
-    cfsetospeed(&tty, kBootBaud);
-    cfsetispeed(&tty, kBootBaud);
+    const speed_t speed = baudToSpeed(m_baud);
+    cfsetospeed(&tty, speed);
+    cfsetispeed(&tty, speed);
 
     tty.c_cflag &= ~PARENB;        // 8N1
     tty.c_cflag &= ~CSTOPB;
@@ -132,6 +151,24 @@ void SerialBluetoothBackend::pulseReset()
     ::usleep(50 * 1000);
     ::ioctl(m_fd, TIOCMBIS, &dtr);
     ::usleep(10 * 1000);
+}
+
+std::vector<std::string> SerialBluetoothBackend::listSerialPorts()
+{
+    std::vector<std::string> ports;
+    DIR *dir = ::opendir("/dev");
+    if (!dir) return ports;
+
+    while (struct dirent *ent = ::readdir(dir)) {
+        const std::string name = ent->d_name;
+        if (name.rfind("ttyUSB", 0) == 0 || name.rfind("ttyACM", 0) == 0) {
+            ports.push_back("/dev/" + name);
+        }
+    }
+    ::closedir(dir);
+
+    std::sort(ports.begin(), ports.end());
+    return ports;
 }
 
 } // namespace zowi

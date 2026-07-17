@@ -5,6 +5,7 @@
 #include <QSocketNotifier>
 
 #include <string>
+#include <vector>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
@@ -22,6 +23,17 @@ class SerialBluetoothBackend : public QObject, public BluetoothApi {
 public:
     explicit SerialBluetoothBackend(QObject *parent = nullptr);
     ~SerialBluetoothBackend() override;
+
+    // Set the baud rate used when opening the TTY. Must be called before
+    // connect(). Defaults to 9600 (the RFCOMM/ZUM BT-328 bootloader rate).
+    // Optiboot over a USB serial link typically uses 57600 or 115200.
+    void setBaudRate(int baud) { m_baud = baud; }
+    int baudRate() const { return m_baud; }
+
+    // Enumerate serial ports likely to be a robot's USB/UART link
+    // (/dev/ttyUSB* and /dev/ttyACM*). Static so callers can list ports
+    // without owning a backend instance.
+    static std::vector<std::string> listSerialPorts();
 
     bool init() override { return true; }
     void startDiscovery() override {}
@@ -49,6 +61,7 @@ private:
     void pulseReset();
 
     int m_fd = -1;
+    int m_baud = 9600;
     QSocketNotifier *m_notifier = nullptr;
     std::string m_lastError;
 };

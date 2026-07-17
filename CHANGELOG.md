@@ -7,12 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-17
+
+### Added
+- **USB firmware flashing (no Bluetooth required).** A new `usb` backend mode
+  (`--backend usb`) lets the CLI talk to the robot over a USB serial link
+  (`/dev/ttyUSB*`, `/dev/ttyACM*`), so firmware can be uploaded on machines
+  without a Bluetooth adapter. When no `--tty` is given, the first available
+  port is auto-selected.
+- **Configurable serial baud rate** via `--baud` on the `restore` and `alarm`
+  commands (defaults to 9600 for the RFCOMM/ZUM bootloader; USB Optiboot
+  typically uses 57600 or 115200).
+- **New `ports` subcommand** that enumerates available USB serial ports, the
+  USB analogue of the Bluetooth `scan` command.
+
 ### Changed
 - **Reorganised Qt resources.** The single monolithic `resources.qrc` was
   split by domain into `views.qrc` (QML), `app.qrc` (config + app icon) and
   `images.qrc` (images, grouped by subfolder). The GUI now reuses the
   existing `i18n.qrc` instead of duplicating the translation list. Resource
   paths (`qrc:/...`) are unchanged, so no code was affected.
+- **Reorganised CLI tests by transport.** The existing Bluetooth tests moved to
+  `src/cli/tests/bt/`, and analogous USB tests were added under
+  `src/cli/tests/usb/` (`test_ports.sh`, `test_install_alarm.sh`,
+  `test_restore_factory_firmware.sh`, `test_usb_options.sh`).
 
 ### Fixed
 - **AppImage failed to start on machines without a full Qt install.** The
