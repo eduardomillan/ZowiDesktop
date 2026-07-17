@@ -336,9 +336,17 @@ Both backends follow the same STK500v1 flow once connected:
 | `auto` (default) | Qt Bluetooth SPP (BlueZ) | No |
 | `bluetooth` | Qt Bluetooth SPP (BlueZ) | No |
 | `serial` | Serial / RFCOMM TTY (`rfcomm bind`) | Yes (`CAP_NET_ADMIN`) |
+| `usb` | USB serial (`/dev/ttyUSB*`, `/dev/ttyACM*`) | No |
 
 When `--tty` is given, the serial backend is selected automatically regardless of
 `--backend`.
+
+The `usb` backend talks to the robot over a plain USB serial link (no Bluetooth,
+no `rfcomm bind`), for machines without a Bluetooth adapter. Use `ports` to list
+available serial ports and `--baud` to set the line speed (USB Optiboot is
+typically 57600 or 115200). See
+[`docs/tests/ZOWI_CLI_HOWTO.md`](../tests/ZOWI_CLI_HOWTO.md) for the full USB
+workflow and test scripts.
 
 If using the serial backend, the TTY must be bound and opened in the **same process**
 — do **not** pre‑bind with a separate `rfcomm bind` command, because the bind fires
@@ -555,38 +563,52 @@ No Zowi connected.
 
 ## Test Scripts
 
-Shell scripts for testing CLI commands are in `src/cli/tests/`.
+Shell scripts for testing CLI commands are grouped by transport:
+`src/cli/tests/bt/` (Bluetooth) and `src/cli/tests/usb/` (USB). Each folder has a
+`run_all.sh` that runs its tests in order. The USB scripts and workflow are
+documented in [`docs/tests/ZOWI_CLI_HOWTO.md`](../tests/ZOWI_CLI_HOWTO.md).
 
-### test_connect_rename.sh
+### bt/run_all.sh
+
+Runs the Bluetooth tests in order. By default only tests that degrade gracefully
+without a robot run; set `ZOWI_BT_FULL=1` (with a robot in range) to run the
+connect/rename, control and flashing tests too.
+
+```bash
+./src/cli/tests/bt/run_all.sh
+ZOWI_BT_FULL=1 ./src/cli/tests/bt/run_all.sh
+```
+
+### bt/test_connect_rename.sh
 
 Scans for a Zowi, connects, checks status, renames to "TestZowi", verifies status again, and disconnects.
 
 ```bash
-./src/cli/tests/test_connect_rename.sh
+./src/cli/tests/bt/test_connect_rename.sh
 ```
 
-### test_disconnect.sh
+### bt/test_disconnect.sh
 
 Checks if a Zowi is connected and disconnects it, or reports no device.
 
 ```bash
-./src/cli/tests/test_disconnect.sh
+./src/cli/tests/bt/test_disconnect.sh
 ```
 
-### test_restore_factory_firmware.sh
+### bt/test_restore_factory_firmware.sh
 
 Runs the factory firmware restore flow against the currently paired Zowi and then shows the updated status.
 
 ```bash
-./src/cli/tests/test_restore_factory_firmware.sh
+./src/cli/tests/bt/test_restore_factory_firmware.sh
 ```
 
-### test_install_alarm.sh
+### bt/test_install_alarm.sh
 
 Runs the Robot Alarm firmware install flow against the currently paired Zowi and then shows the updated status.
 
 ```bash
-./src/cli/tests/test_install_alarm.sh
+./src/cli/tests/bt/test_install_alarm.sh
 ```
 
 ## Examples

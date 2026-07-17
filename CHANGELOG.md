@@ -30,7 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Reorganised CLI tests by transport.** The existing Bluetooth tests moved to
   `src/cli/tests/bt/`, and analogous USB tests were added under
   `src/cli/tests/usb/` (`test_ports.sh`, `test_install_alarm.sh`,
-  `test_restore_factory_firmware.sh`, `test_usb_options.sh`).
+  `test_restore_factory_firmware.sh`, `test_usb_options.sh`). Each transport
+  folder now has a `run_all.sh` runner. The USB testing workflow is documented
+  in `docs/tests/ZOWI_CLI_HOWTO.md`.
 
 ### Fixed
 - **AppImage failed to start on machines without a full Qt install.** The

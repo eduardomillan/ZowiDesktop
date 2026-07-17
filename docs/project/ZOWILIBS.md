@@ -72,6 +72,7 @@ mechanism for staying in sync with the canonical source.
 | Robot control (scan, connect, status, rename, movement, etc.) | `QtBluetoothBackend` (`src/backends/bt_qt/`) | Qt Bluetooth → [BlueZ](https://www.bluez.org/) D-Bus API → `bluetoothd` (system daemon) | **No.** BlueZ mediates all RFCOMM SPP connections via D-Bus and is already running as root, so a normal user can scan and connect without extra privileges. The same backend serves both the CLI and the GUI, which is why `connect`/`rename`/`status` work without `sudo`. |
 | Firmware flashing (default, `--backend bluetooth`) | `QtBluetoothBackend` (`src/backends/bt_qt/`) | Qt Bluetooth → BlueZ D-Bus → RFCOMM SPP (same as control) | **No.** The same BlueZ SPP connection triggers the HC-05 STATE-pin reset, so flashing works root-free. This is the recommended and default path. |
 | Firmware flashing (fallback, `--backend serial` / `--tty`) | `SerialBluetoothBackend` (`src/backends/bt_serial/`) | Opens `/dev/rfcomm*` directly + `ioctl` DTR pulse | **Yes.** Creating the RFCOMM TTY device with `rfcomm bind` requires `CAP_NET_ADMIN` (or root). Used when `--tty` is given or `--backend serial` is explicitly requested. |
+| Firmware flashing over USB (`--backend usb`) | `SerialBluetoothBackend` (`src/backends/bt_serial/`) | Opens a USB serial TTY (`/dev/ttyUSB*`, `/dev/ttyACM*`) directly + `ioctl` DTR pulse | **No.** No `rfcomm bind` is involved; only serial-device access is needed (e.g. the `dialout` group). For machines without Bluetooth. |
 
 ### Design rule
 
