@@ -35,6 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in `docs/tests/ZOWI_CLI_HOWTO.md`.
 
 ### Fixed
+- **Release builds (AppImage and `.deb`) failed to compile.** The GUI
+  `zowi_screen_preview` target failed with a `QVariant` -> `QString` conversion
+  error in `preview_main.cpp` (`QVariantMap::value()` returns a `QVariant`),
+  breaking the AppImage and both Debian packages in CI. Added the missing
+  `.toString()` conversion.
 - **USB firmware flashing timed out right after connecting.** The
   firmware-flash flow reset its connection state and then waited for the
   connection callback to fire *again*, which only happens on Bluetooth (the

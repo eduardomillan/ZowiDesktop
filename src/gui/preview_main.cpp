@@ -27,7 +27,7 @@ public:
     Q_INVOKABLE void saveWizardDismissed(bool dismissed) { m_wizardDismissed = dismissed; }
 
     Q_INVOKABLE QStringList keys() const { return m_values.keys(); }
-    Q_INVOKABLE QString getRaw(const QString &key) const { return m_values.value(key); }
+    Q_INVOKABLE QString getRaw(const QString &key) const { return m_values.value(key).toString(); }
     Q_INVOKABLE void clearActive() {
         QStringList toRemove;
         for (const auto &key : m_values.keys())
