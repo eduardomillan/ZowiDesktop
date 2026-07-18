@@ -133,7 +133,6 @@ private:
     // not thread-safe). Only the blocking STK500 upload itself runs on a
     // dedicated worker thread (runUpload) so the UI stays responsive.
     Q_INVOKABLE void continueAfterUpload(bool ok);
-    void runUpload(const QString &localPath);
     void finishRestore(bool success);
     void setRestoring(bool value);
 

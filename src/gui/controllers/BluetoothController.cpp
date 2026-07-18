@@ -742,23 +742,12 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         return;
     }
 
-    // Stable bootloader link: offload the blocking upload to a worker thread.
-    std::thread(&BluetoothController::runUpload, this, localPath).detach();
-}
-
-void BluetoothController::setRestoring(bool value)
-{
-    if (m_restoring == value) return;
-    m_restoring = value;
-    emit restoringChanged();
-}
-
-void BluetoothController::runUpload(const QString &localPath)
-{
-    // Prepare transport for firmware upload. The send/receive callbacks only
-    // touch m_stkBuffer under a lock and call m_backend->send; the GUI thread
-    // keeps its event loop running (it is not blocked here), so the socket
-    // notifier delivers bootloader traffic into m_stkBuffer as usual.
+    // The STK500 upload runs HERE, on the GUI thread. The backend's socket is
+    // not thread-safe (it owns a QSocketNotifier bound to the GUI thread), so we
+    // must not call send/receive from a worker thread. The progress callback
+    // emits between pages and the pump pumps the event loop, so the progress
+    // bar keeps updating and the UI stays responsive for the duration of the
+    // upload (this is the same approach that already worked in Phase 2).
     zowi::BootloaderTransport transport;
     transport.send = [this](const std::vector<uint8_t> &data) -> bool {
         return m_backend && m_backend->send(std::string(data.begin(), data.end()));
@@ -772,11 +761,8 @@ void BluetoothController::runUpload(const QString &localPath)
         m_stkBuffer.erase(0, n);
         return static_cast<int>(n);
     };
-    // The GUI thread processes I/O on its own; pump only needs to yield so we do
-    // not spin the CPU. (We must NOT call QCoreApplication::processEvents here:
-    // that would run the GUI event loop from the worker thread.)
     transport.pump = []() {
-        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
     };
     transport.progress = [this](int percent, std::size_t written, std::size_t total) {
         emit firmwareRestoreProgress(percent, static_cast<int>(written), static_cast<int>(total));
@@ -798,9 +784,14 @@ void BluetoothController::runUpload(const QString &localPath)
         m_uploadMode = false;
     }
 
-    // Continue on the GUI thread (everything below touches the backend).
-    QMetaObject::invokeMethod(this, "continueAfterUpload",
-                              Qt::QueuedConnection, Q_ARG(bool, ok));
+    continueAfterUpload(ok);
+}
+
+void BluetoothController::setRestoring(bool value)
+{
+    if (m_restoring == value) return;
+    m_restoring = value;
+    emit restoringChanged();
 }
 
 void BluetoothController::continueAfterUpload(bool ok)
@@ -825,9 +816,9 @@ void BluetoothController::continueAfterUpload(bool ok)
 
     // --- Phase 3: battery check with confirmation --------------------------
     // The running firmware reports its battery via &&B after the upload; the
-    // GUI parser fills m_battery automatically. Wait briefly for it (on the GUI
-    // thread, so processEvents is fine here), then ask the user to confirm if it
-    // is below the safe threshold, mirroring the CLI's --force-low-battery flow.
+    // GUI parser fills m_battery automatically. Wait briefly for it, then ask
+    // the user to confirm if it is below the safe threshold, mirroring the CLI's
+    // --force-low-battery flow.
     const float kLowBatteryThreshold = 50.0f;
     if (uploadOk) {
         QElapsedTimer batteryTimer;
