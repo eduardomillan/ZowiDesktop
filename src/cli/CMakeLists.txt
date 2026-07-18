@@ -1,6 +1,11 @@
 # src/cli/CMakeLists.txt
 qt6_add_resources(CLI_I18N_RC ${CMAKE_SOURCE_DIR}/i18n.qrc)
-add_executable(zowi_cli main.cpp)
+add_executable(zowi_cli
+    main.cpp
+    cli_state.cpp
+    cli_util.cpp
+    cli_commands.cpp
+)
 
 target_link_libraries(zowi_cli PRIVATE
     Zowi::core
