@@ -10,6 +10,7 @@
     "zowi_default_name": "OpenZowi",
     "transport": "auto",
     "usb_baud": "9600",
+    "usb_bootloader_baud": "115200",
     "dev_mode": "true",
     "message_duration": 2000,
     "button_scan_visible": "false",

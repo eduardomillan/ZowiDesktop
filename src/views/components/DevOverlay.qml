@@ -12,6 +12,8 @@ Item {
     x: parent ? parent.width - width - 8 : 0
     y: 8
 
+    onCollapsedChanged: if (!collapsed) refreshSession()
+
     Rectangle {
         anchors.fill: parent
         color: "#cc1a1a2e"
@@ -43,8 +45,8 @@ Item {
                         Math.abs(mouse.y - pressPos.y) < 4)
                         root.collapsed = !root.collapsed
                 }
-                onPressed: handlePress
-                onReleased: handleRelease
+                onPressed: (mouse) => handlePress(mouse)
+                onReleased: (mouse) => handleRelease(mouse)
 
                 RowLayout {
                     anchors.fill: parent
@@ -96,7 +98,7 @@ Item {
                     color: "#aaa"
                     font.pixelSize: 9
                     elide: Text.ElideRight
-                    text: "Zowi: " + Session.loadActiveZowiName() + " / " + Session.loadActiveZowiDeviceAddress()
+                    text: Session.loadActiveZowiName() + " / " + Session.loadActiveZowiDeviceAddress()
                 }
 
                 Rectangle {

@@ -4,6 +4,6 @@
         <file>images/app_icon.png</file>
     </qresource>
     <qresource prefix="/firmware">
-        <file>src/firmware/ZOWI_BASE_v2.hex</file>
+        <file alias="ZOWI_BASE_v2.hex">src/firmware/ZOWI_BASE_v2.hex</file>
     </qresource>
 </RCC>

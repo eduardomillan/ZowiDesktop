@@ -8,6 +8,7 @@
 #include <memory>
 
 #include <QCoreApplication>
+#include <QDebug>
 #include <QElapsedTimer>
 #include <QFile>
 #include <QTemporaryFile>
@@ -55,6 +56,10 @@ BluetoothController::BluetoothController(QObject *parent)
     try {
         std::string b = cfg.get("usb_baud");
         if (!b.empty()) m_usbBaud = std::stoi(b);
+    } catch (...) {}
+    try {
+        std::string b = cfg.get("usb_bootloader_baud");
+        if (!b.empty()) m_usbBootloaderBaud = std::stoi(b);
     } catch (...) {}
 
     // Start on the Bluetooth backend by default; detection may switch it.
@@ -301,12 +306,17 @@ void BluetoothController::setTransport(int transport)
     const char *s = (t == Usb) ? "usb" : (t == Bluetooth ? "bluetooth" : "auto");
     session.setString("transport", s);
 
-    // Switch the live backend immediately when the user is explicit and the
-    // target transport is available (avoid tearing down an active connection).
-    if (isConnected()) return;
-    if (t == Usb && m_usbAvailable) useSerialBackend();
-    else if (t == Bluetooth) useBluetoothBackend();
-    else if (t == Auto) refreshTransports();
+    // Switch the live backend immediately when the user picks an explicit
+    // transport. Tear down any active connection first (changing the backend
+    // under a live link is a no-op), then reconnect against the chosen one.
+    if (isConnected()) disconnectFromDevice();
+    if (t == Usb && m_usbAvailable) {
+        useSerialBackend();
+    } else if (t == Bluetooth) {
+        useBluetoothBackend();
+    }
+    // Re-run availability + auto-connect logic for the new backend.
+    refreshTransports();
 }
 
 QStringList BluetoothController::listUsbPorts() const
@@ -491,17 +501,35 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         return;
     }
 
+    // Remember the target address before touching the connection: reconnecting
+    // clears the backend's cached address.
+    const std::string targetAddress = m_deviceAddress.toStdString();
+    if (targetAddress.empty()) {
+        emit errorOccurred(tr("Firmware restore failed"));
+        return;
+    }
+
     // Convert qrc:/ path to a temporary file for the firmware library
     QString localPath = firmwarePath;
     if (firmwarePath.startsWith("qrc:/") || firmwarePath.startsWith(":/")) {
+        // QFile understands the ":/..." resource syntax but NOT the "qrc:/..."
+        // URL syntax used by QML, so normalise it before opening.
+        QString resourcePath = firmwarePath;
+        if (resourcePath.startsWith("qrc:/"))
+            resourcePath.remove(0, 3); // "qrc:/foo" -> ":/foo"
+
         QTemporaryFile tmpFile(QDir::tempPath() + "/zowi_firmware_XXXXXX.hex");
+        // QTemporaryFile deletes the file when it goes out of scope; disable
+        // that so the extracted HEX survives until stk500UploadFirmware() reads
+        // it. It is removed manually at the end of this function.
+        tmpFile.setAutoRemove(false);
         if (!tmpFile.open()) {
             emit errorOccurred(tr("Failed to create temporary firmware file"));
             return;
         }
-        QFile resFile(firmwarePath);
+        QFile resFile(resourcePath);
         if (!resFile.open(QIODevice::ReadOnly)) {
-            emit errorOccurred(tr("Failed to open firmware resource: %1").arg(firmwarePath));
+            emit errorOccurred(tr("Failed to open firmware resource: %1").arg(resourcePath));
             return;
         }
         tmpFile.write(resFile.readAll());
@@ -528,15 +556,94 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
     };
 
-    // Enable upload mode so dataReceived routes to m_stkBuffer
+    // Enable upload mode early so any bootloader traffic arriving during the
+    // reset/reconnect cycle is routed to m_stkBuffer instead of the protocol
+    // parser.
     {
         std::lock_guard<std::mutex> lock(m_uploadMutex);
         m_uploadMode = true;
         m_stkBuffer.clear();
     }
 
-    // Use STK500v1 protocol (Optiboot) for firmware upload
-    bool ok = zowi::stk500UploadFirmware(transport, localPath.toStdString());
+    // The GUI keeps a persistent connection to the running firmware, so we must
+    // reboot the robot into its bootloader before uploading — mirroring the
+    // CLI's restore flow. The reset mechanism differs per transport:
+    //   - Bluetooth: the HC-05 STATE pin resets the MCU when a fresh SPP
+    //     connection comes up. We must tear down the current link, let BlueZ
+    //     release it, then reconnect; the link may briefly drop as the robot
+    //     reboots and the backend reconnects.
+    //   - USB serial: opening the TTY pulses DTR/RESET synchronously, so the
+    //     bootloader window opens immediately after connect() and we must
+    //     upload right away without a settling delay.
+    const bool isUsb = (m_backendKind == Usb);
+    bool stable = false;
+
+    if (isUsb) {
+        qInfo() << "[restore] USB: reopening TTY to pulse reset" << QString::fromStdString(targetAddress);
+        m_backend->disconnect();
+        m_backend->setAutoReconnect(false);
+        // The Optiboot USB bootloader runs at a different baud than the running
+        // firmware (usb_baud); switch to the bootloader baud before the reset so
+        // the reopened link is already at the speed the bootloader expects.
+        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
+            serial->setBaudRate(m_usbBootloaderBaud);
+        const bool connectOk = m_backend->connect(targetAddress);
+        // The serial backend opens synchronously; upload immediately to catch
+        // the short post-reset bootloader window.
+        stable = connectOk && m_backend->isConnected();
+        qInfo() << "[restore] USB: connect() returned" << connectOk
+                << "isConnected=" << m_backend->isConnected()
+                << "lastError=" << QString::fromStdString(m_backend->lastError());
+    } else {
+        // First tear down the existing SPP link cleanly. Reconnecting on top of
+        // a socket that is still closing triggers BlueZ "Cannot connect to
+        // profile/service". disconnect() blocks until the socket reaches the
+        // Unconnected state (up to 2 s) and clears the cached address.
+        qInfo() << "[restore] BT: disconnecting existing link before reset";
+        m_backend->setAutoReconnect(false);
+        m_backend->disconnect();
+
+        // Give BlueZ a moment to fully release the RFCOMM channel and let the
+        // robot notice the drop before we reconnect to trigger the reset.
+        {
+            QElapsedTimer settle;
+            settle.start();
+            while (settle.elapsed() < 800)
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+        }
+
+        qInfo() << "[restore] BT: triggering reset via reconnect to" << QString::fromStdString(targetAddress);
+        m_backend->setAutoReconnect(true, 100);
+        m_backend->connect(targetAddress);
+
+        // Wait for a stable connection after the reset cycle (up to ~10 s). The
+        // link may briefly drop while the robot reboots; the backend reconnects.
+        QElapsedTimer timer;
+        timer.start();
+        while (timer.elapsed() < 10000) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+            if (m_backend->isConnected()) {
+                // Give the link a moment to settle past the reset cycle.
+                QElapsedTimer settle;
+                settle.start();
+                while (settle.elapsed() < 300)
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+                if (m_backend->isConnected()) { stable = true; break; }
+            }
+        }
+    }
+    qInfo() << "[restore] stable connection after reset:" << stable
+            << "isConnected=" << m_backend->isConnected();
+
+    bool ok = false;
+    if (!stable) {
+        emit errorOccurred(tr("Firmware restore failed"));
+    } else {
+        // Use STK500v1 protocol (Optiboot) for firmware upload
+        qInfo() << "[restore] starting STK500 upload of" << localPath;
+        ok = zowi::stk500UploadFirmware(transport, localPath.toStdString());
+        qInfo() << "[restore] STK500 upload result:" << ok;
+    }
 
     // Disable upload mode
     {
@@ -544,10 +651,25 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         m_uploadMode = false;
     }
 
-    if (ok) {
-        emit errorOccurred(tr("Firmware restored successfully"));
-    } else {
-        emit errorOccurred(tr("Firmware restore failed"));
+    m_backend->setAutoReconnect(false);
+
+    // For USB, the link was reopened at the bootloader baud; restore the normal
+    // operating baud and reconnect to the running firmware so the app regains a
+    // usable session after the upload.
+    if (isUsb) {
+        m_backend->disconnect();
+        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
+            serial->setBaudRate(m_usbBaud);
+        m_deviceAddress = QString::fromStdString(targetAddress);
+        connectUsb(QString::fromStdString(targetAddress));
+    }
+
+    if (stable) {
+        if (ok) {
+            emit errorOccurred(tr("Firmware restored successfully"));
+        } else {
+            emit errorOccurred(tr("Firmware restore failed"));
+        }
     }
 
     // Clean up temporary file if we created one

@@ -133,4 +133,5 @@ private:
     bool m_usbAvailable = false;
     QTimer m_pollTimer;
     int m_usbBaud = 9600;
+    int m_usbBootloaderBaud = 115200;
 };
