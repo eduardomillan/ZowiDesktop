@@ -41,6 +41,7 @@ private:
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY deviceChanged)
     Q_PROPERTY(QString deviceAddress READ deviceAddress NOTIFY deviceChanged)
     Q_PROPERTY(int battery READ battery NOTIFY batteryChanged)
+    Q_PROPERTY(bool restoring READ isRestoring NOTIFY restoringChanged)
 
 public:
     explicit BluetoothController(QObject *parent = nullptr);
@@ -59,6 +60,7 @@ public:
     QString deviceName() const;
     QString deviceAddress() const;
     int battery() const;
+    bool isRestoring() const { return m_restoring; }
 
     void setTransport(int transport);
     Q_INVOKABLE bool switchTransport(int transport);
@@ -94,10 +96,14 @@ signals:
     void batteryChanged();
     void dataReceived(const QString &data);
     void errorOccurred(const QString &message);
+    void firmwareRestoreStarted();
+    void firmwareRestoreProgress(int percent, int written, int total);
+    void firmwareRestoreFinished(bool success, const QString &message);
     void unpairFinished(bool success, const QString &message);
     void transportChanged();
     void activeTransportChanged();
     void transportsChanged();
+    void restoringChanged();
 
 private:
     void parseIncoming();
@@ -146,4 +152,5 @@ private:
     int m_usbBootloaderBaud = 115200;
     int m_transportTimeoutMs = 1500;
     SessionController *m_session = nullptr;
+    bool m_restoring = false;
 };

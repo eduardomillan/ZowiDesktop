@@ -606,13 +606,23 @@ void BluetoothController::sendData(const QString &data)
 
 void BluetoothController::restoreFirmware(const QString &firmwarePath)
 {
+    // Early-failure helper: report through the dedicated restore signals so the
+    // UI leaves the "restoring" state even when we never reach the upload.
+    auto failEarly = [this](const QString &msg) {
+        m_restoring = true;
+        emit restoringChanged();
+        m_restoring = false;
+        emit restoringChanged();
+        emit firmwareRestoreFinished(false, msg);
+    };
+
     if (firmwarePath.isEmpty()) {
-        emit errorOccurred(tr("Firmware path is empty"));
+        failEarly(tr("Firmware path is empty"));
         return;
     }
 
     if (!m_backend || !m_backend->isConnected()) {
-        emit errorOccurred(tr("Firmware restore failed"));
+        failEarly(tr("Firmware restore failed"));
         return;
     }
 
@@ -628,7 +638,7 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
             targetAddress = m_knownUsbPorts.value(0).toStdString();
     }
     if (targetAddress.empty()) {
-        emit errorOccurred(tr("Firmware restore failed"));
+        failEarly(tr("Firmware restore failed"));
         return;
     }
 
@@ -647,12 +657,12 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         // it. It is removed manually at the end of this function.
         tmpFile.setAutoRemove(false);
         if (!tmpFile.open()) {
-            emit errorOccurred(tr("Failed to create temporary firmware file"));
+            failEarly(tr("Failed to create temporary firmware file"));
             return;
         }
         QFile resFile(resourcePath);
         if (!resFile.open(QIODevice::ReadOnly)) {
-            emit errorOccurred(tr("Failed to open firmware resource: %1").arg(resourcePath));
+            failEarly(tr("Failed to open firmware resource: %1").arg(resourcePath));
             return;
         }
         tmpFile.write(resFile.readAll());
@@ -660,6 +670,11 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         resFile.close();
         localPath = tmpFile.fileName();
     }
+
+    // Enter the restoring state: block the UI and notify listeners (Phase 2).
+    m_restoring = true;
+    emit restoringChanged();
+    emit firmwareRestoreStarted();
 
     // Prepare transport for firmware upload
     zowi::BootloaderTransport transport;
@@ -677,6 +692,9 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
     };
     transport.pump = [this]() {
         QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+    };
+    transport.progress = [this](int percent, std::size_t written, std::size_t total) {
+        emit firmwareRestoreProgress(percent, static_cast<int>(written), static_cast<int>(total));
     };
 
     // Enable upload mode early so any bootloader traffic arriving during the
@@ -752,7 +770,7 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
 
     bool ok = false;
     if (!stable) {
-        emit errorOccurred(tr("Firmware restore failed"));
+        // Connection could not be (re)established for the upload.
     } else {
         // Use STK500v1 protocol (Optiboot) for firmware upload
         ok = zowi::stk500UploadFirmware(transport, localPath.toStdString());
@@ -777,17 +795,18 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         connectUsb(QString::fromStdString(targetAddress));
     }
 
-    if (stable) {
-        if (ok) {
-            emit errorOccurred(tr("Firmware restored successfully"));
-        } else {
-            emit errorOccurred(tr("Firmware restore failed"));
-        }
-    }
+    const bool success = stable && ok;
+    const QString resultMsg = success ? tr("Firmware restored successfully")
+                                       : tr("Firmware restore failed");
 
     // Clean up temporary file if we created one
     if (localPath != firmwarePath) {
         QFile::remove(localPath);
     }
+
+    // Leave the restoring state and report the outcome through dedicated signals.
+    m_restoring = false;
+    emit restoringChanged();
+    emit firmwareRestoreFinished(success, resultMsg);
 }
 

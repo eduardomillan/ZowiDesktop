@@ -18,6 +18,7 @@ ScreenTemplate {
     property bool forgetting: false
     property bool restoring: false
     property bool switching: false
+    property int restoreProgress: 0
 
     function tr(source) { return Translator.translate("SettingsScreen.qml", source) }
 
@@ -42,10 +43,11 @@ ScreenTemplate {
             return
         }
         settingsScreen.restoring = true
+        restoreProgress = 0
         msgBar.show(tr("restore_started"))
-        // NOTE (phase 1): restoreFirmware() runs synchronously on the GUI
-        // thread, so this blocks until the flash finishes. The result arrives
-        // via Bluetooth.errorOccurred and is handled below.
+        // Phase 2: restoreFirmware() runs synchronously on the GUI thread and
+        // reports progress and outcome via dedicated signals
+        // (onFirmwareRestoreStarted / Progress / Finished).
         Bluetooth.restoreFirmware(Config.get("factory_firmware_path"))
     }
 
@@ -86,14 +88,21 @@ ScreenTemplate {
             else
                 msgBar.show(tr("unpair_app_only"))
         }
-        // Phase 1: restoreFirmware() reports its outcome through
-        // errorOccurred (both success and failure). While a restore is in
-        // progress, translate that outcome into a localized message. The
-        // success string is the exact text emitted by BluetoothController.
-        function onErrorOccurred(message) {
+        // Phase 2: restore progress/outcome arrive through dedicated signals
+        // instead of being multiplexed onto errorOccurred.
+        function onFirmwareRestoreStarted() {
+            if (!settingsScreen.restoring) return
+            restoreProgress = 0
+        }
+        function onFirmwareRestoreProgress(percent, written, total) {
+            if (!settingsScreen.restoring) return
+            restoreProgress = percent
+        }
+        function onFirmwareRestoreFinished(success, message) {
             if (!settingsScreen.restoring) return
             settingsScreen.restoring = false
-            if (message === "Firmware restored successfully")
+            restoreProgress = success ? 100 : 0
+            if (success)
                 msgBar.show(tr("restore_success"))
             else
                 msgBar.show(tr("restore_failed"), "#c0392b")
@@ -299,5 +308,60 @@ ScreenTemplate {
     MessageBar {
         id: msgBar
         duration: parseInt(Config.get("message_duration")) || 2000
+    }
+
+    // Restore progress (Phase 2): occupies the same bottom position as the
+    // MessageBar while a firmware restore runs, covering it (z above). The
+    // status text (yellow) sits above the progress bar.
+    Rectangle {
+        id: restoreProgressBox
+        visible: settingsScreen.restoring
+        z: 1
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+        height: 56
+        color: "#17736c"
+
+        Text {
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: parent.top
+                topMargin: 6
+            }
+            horizontalAlignment: Text.AlignHCenter
+            text: tr("restore_progress").arg(settingsScreen.restoreProgress)
+            color: "#f1c40f"
+            font.pixelSize: 13
+            font.bold: true
+        }
+
+        Rectangle {
+            anchors {
+                left: parent.left
+                right: parent.right
+                leftMargin: 40
+                rightMargin: 40
+                bottom: parent.bottom
+                bottomMargin: 10
+            }
+            height: 10
+            radius: 5
+            color: "#0f4f4a"
+
+            Rectangle {
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    bottom: parent.bottom
+                }
+                width: Math.max(2, parent.width * (settingsScreen.restoreProgress / 100.0))
+                radius: 5
+                color: "#21a69b"
+            }
+        }
     }
 }

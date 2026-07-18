@@ -20,6 +20,7 @@
     "restore_started": "Restaurant el firmware original… mantén Zowi a prop i encès.",
     "restore_success": "Firmware restaurat correctament.",
     "restore_failed": "No s'ha pogut restaurar el firmware. Torna-ho a provar.",
+    "restore_progress": "Restaurant… %1%",
     "rename": "Anomena",
     "rename_desc": "Posa un nom nou al teu Zowi.",
     "update": "Buscar actualitzacions",

@@ -20,6 +20,7 @@
     "restore_started": "Restoring the original firmware… keep Zowi nearby and powered on.",
     "restore_success": "Firmware restored successfully.",
     "restore_failed": "Firmware restore failed. Please try again.",
+    "restore_progress": "Restoring… %1%",
     "rename": "Rename",
     "rename_desc": "Give your Zowi a new name.",
     "update": "Search for app updates",

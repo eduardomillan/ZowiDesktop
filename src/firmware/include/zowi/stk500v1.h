@@ -22,6 +22,10 @@ struct BootloaderTransport {
     // Pump the host's event loop so asynchronous I/O (e.g. Qt signals) can run
     // while the protocol blocks waiting for a reply.
     std::function<void()> pump;
+
+    // Optional progress report during upload: (percent, bytesWritten, totalBytes).
+    // May be empty; the uploader calls it (when set) as pages are written.
+    std::function<void(int percent, std::size_t written, std::size_t total)> progress;
 };
 
 // Upload a firmware image given as an Intel HEX file to the device using the

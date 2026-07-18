@@ -167,7 +167,7 @@ Item {
                     wrapMode: Text.WordWrap
                     text: {
                         var s = Bluetooth.connected ? "● Connected" : "● Disconnected"
-                        if (Bluetooth.deviceAddress)
+                        if (Bluetooth.connected && Bluetooth.deviceAddress)
                             s += "  " + Bluetooth.deviceName + " (" + Bluetooth.deviceAddress + ")"
                         return s
                     }
@@ -186,7 +186,9 @@ Item {
                     color: "#aaa"
                     font.pixelSize: 9
                     wrapMode: Text.WordWrap
-                    text: Session.loadActiveZowiName() + " / " + Session.loadActiveZowiDeviceAddress()
+                    visible: Bluetooth.connected
+                    text: (Bluetooth.deviceName || Session.loadActiveZowiName())
+                          + " / " + (Bluetooth.deviceAddress || Session.loadActiveZowiDeviceAddress())
                 }
 
                 Rectangle {
