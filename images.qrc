@@ -1,11 +1,4 @@
 <RCC>
-    <!-- Language flags (SVG) -->
-    <qresource prefix="/">
-        <file>docs/images/es.svg</file>
-        <file>docs/images/gb.svg</file>
-        <file>docs/images/vl.svg</file>
-    </qresource>
-
     <!-- Miscellaneous -->
     <qresource prefix="/">
         <file>images/misc/zowi_baila.jpg</file>
