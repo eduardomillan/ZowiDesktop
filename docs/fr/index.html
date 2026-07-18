@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zowi Desktop — Guide de l'utilisateur</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 30px 20px 60px;
+            color: #2d5a2d;
+            background: #f4f9f4;
+            line-height: 1.65;
+        }
+        .lang-nav { text-align: right; margin-bottom: 10px; }
+        .lang-nav a {
+            color: #21a69b; margin-left: 12px; text-decoration: none;
+            font-weight: bold; font-size: 0.95em;
+        }
+        .lang-nav a.current { color: #2d5a2d; text-decoration: underline; }
+        .lang-nav a:hover { text-decoration: underline; }
+        h1 { color: #2d5a2d; font-size: 2.2em; margin: 0 0 6px; }
+        h2 { color: #21a69b; border-bottom: 2px solid #21a69b55; padding-bottom: 4px; margin-top: 40px; }
+        p { font-size: 1.05em; }
+        .lead { font-size: 1.15em; opacity: 0.85; }
+        .shot { background: #fff; border: 1px solid #2d5a2d33; border-radius: 10px; padding: 10px; margin: 14px 0; text-align: center; }
+        .shot img { max-width: 100%; height: auto; border-radius: 6px; }
+        .shot .cap { font-size: 0.85em; opacity: 0.6; margin-top: 6px; }
+        .row { display: flex; gap: 14px; flex-wrap: wrap; }
+        .row .shot { flex: 1 1 280px; }
+        ul { font-size: 1.05em; }
+        code { background: #2d5a2d18; padding: 1px 6px; border-radius: 4px; }
+        footer { margin-top: 50px; padding-top: 16px; border-top: 1px solid #2d5a2d33; font-size: 0.9em; opacity: 0.7; text-align: center; }
+    </style>
+</head>
+<body>
+
+<nav class="lang-nav">
+    <a href="../en/">EN</a>
+    <a href="../es/">ES</a>
+    <a href="../ca/">CA</a>
+    <a href="../fr/" class="current">FR</a>
+    <a href="../bg/">BG</a>
+</nav>
+
+<h1>Zowi Desktop — Guide de l'utilisateur</h1>
+<p class="lead"><strong>Zowi Desktop</strong> est une application multiplateforme pour contrôler et programmer votre robot Zowi depuis un ordinateur via Bluetooth. Ce guide vous présente chaque écran de l'application.</p>
+
+<h2>1. Choisissez votre langue</h2>
+<p>À l'ouverture de l'application, vous voyez l'écran de démarrage. Choisissez votre langue dans la liste — <em>Español, Valencià, English, Français, Български</em> — et appuyez sur <strong>Continuer</strong>. Vous pouvez aussi <strong>Quitter</strong> l'application depuis cet écran.</p>
+<div class="shot"><img src="../screenshots/splash_screen.png" alt="Écran de démarrage"><div class="cap">Écran de démarrage avec sélecteur de langue</div></div>
+
+<h2>2. Bienvenue</h2>
+<p>L'écran de bienvenue présente Zowi. Appuyez sur <strong>Commencer</strong> pour démarrer la configuration, ou <strong>En savoir plus</strong> pour en savoir plus sur le robot.</p>
+<div class="shot"><img src="../screenshots/welcome_screen.png" alt="Bienvenue"><div class="cap">Écran de bienvenue</div></div>
+
+<h2>3. Allumez votre Zowi</h2>
+<p>L'assistant de configuration vérifie que votre Zowi est prêt. Assurez-vous qu'il est allumé et à proximité. S'il est déjà allumé, choisissez <em>« Il est déjà allumé »</em>. Si vous n'avez pas encore de Zowi, vous pouvez aussi explorer l'application sans.</p>
+<div class="shot"><img src="../screenshots/wizard_screen.png" alt="Assistant"><div class="cap">Assistant de configuration — allumez le Zowi</div></div>
+
+<h2>4. Connectez-vous en Bluetooth</h2>
+<p>L'application recherche les Zowis à proximité. Lorsque votre Zowi apparaît dans la liste, appuyez dessus. On vous demandera de saisir le code d'appariement <code>1234</code> pour l'apparier avec le robot.</p>
+<div class="row">
+    <div class="shot"><img src="../screenshots/scan_screen.png" alt="Recherche"><div class="cap">Recherche de Zowis</div></div>
+    <div class="shot"><img src="../screenshots/wizard_found_screen.png" alt="Trouvé"><div class="cap">Apparier avec votre Zowi (code 1234)</div></div>
+</div>
+
+<h2>5. Nommez votre Zowi</h2>
+<p>Saisissez un nom pour votre Zowi et appuyez sur <strong>Renommer</strong>. Le nom est envoyé au robot et mémorisé pour la prochaine fois.</p>
+<div class="shot"><img src="../screenshots/wizard_rename_screen.png" alt="Renommer"><div class="cap">Nommez votre Zowi</div></div>
+
+<h2>6. Écran d'accueil</h2>
+<p>Une fois connecté, vous arrivez à l'écran d'accueil, qui comporte deux pages :</p>
+<ul>
+    <li><strong>Applications Zowi</strong> — jeux et modes interactifs.</li>
+    <li><strong>Projets</strong> — activités de programmation.</li>
+</ul>
+<p>Utilisez les boutons du haut pour ouvrir <strong>Paramètres</strong> et <strong>Réalisations</strong>. La barre d'état supérieure affiche l'état de connexion :</p>
+<ul>
+    <li><code>Connecté · &lt;nom&gt; · &lt;batterie&gt;% · &lt;MAC&gt;</code> — votre Zowi est prêt.</li>
+    <li><code>Connexion…</code> — l'application essaie d'atteindre votre Zowi.</li>
+    <li><code>Zowi indisponible</code> — votre Zowi enregistré est éteint ou hors de portée ; appuyez sur <strong>Reconnecter</strong>.</li>
+    <li><code>Non connecté</code> — aucun Zowi n'a été configuré.</li>
+</ul>
+<div class="row">
+    <div class="shot"><img src="../screenshots/home_screen.png" alt="Accueil"><div class="cap">Accueil — Applications Zowi</div></div>
+    <div class="shot"><img src="../screenshots/home_screen_2.png" alt="Accueil projets"><div class="cap">Accueil — Projets</div></div>
+</div>
+
+<h2>7. Reconnexion automatique</h2>
+<p>À chaque ouverture de l'application, Zowi Desktop tente de se reconnecter au dernier Zowi utilisé s'il est allumé. S'il est éteint, la barre d'état vous l'indiquera et vous pourrez appuyer sur <strong>Reconnecter</strong> à tout moment.</p>
+
+<h2>8. Réinitialiser (mode développeur)</h2>
+<p>Le bouton <strong>Réinitialiser</strong>, visible en mode développeur, supprime le Zowi enregistré de l'application et du système Bluetooth. Si aucun Zowi n'est enregistré, un message d'avertissement s'affiche.</p>
+
+<footer>Construit avec Qt et QML. Open source — les contributions sont les bienvenues.</footer>
+
+</body>
+</html>
