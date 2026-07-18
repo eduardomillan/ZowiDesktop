@@ -609,10 +609,8 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
     // Early-failure helper: report through the dedicated restore signals so the
     // UI leaves the "restoring" state even when we never reach the upload.
     auto failEarly = [this](const QString &msg) {
-        m_restoring = true;
-        emit restoringChanged();
-        m_restoring = false;
-        emit restoringChanged();
+        setRestoring(true);
+        setRestoring(false);
         emit firmwareRestoreFinished(false, msg);
     };
 
@@ -671,9 +669,46 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         localPath = tmpFile.fileName();
     }
 
-    // Enter the restoring state: block the UI and notify listeners (Phase 2).
-    m_restoring = true;
+    // The heavy STK500 upload blocks, so run the whole restore on a dedicated
+    // worker thread and leave the GUI thread free to keep the UI (and the
+    // progress bar) responsive. The worker emits the restore signals, which
+    // cross into the GUI thread as queued connections automatically.
+    std::thread(&BluetoothController::runRestore, this, localPath, firmwarePath,
+                QString::fromStdString(targetAddress), (m_backendKind == Usb))
+        .detach();
+}
+
+void BluetoothController::setRestoring(bool value)
+{
+    if (m_restoring == value) return;
+    m_restoring = value;
     emit restoringChanged();
+}
+
+void BluetoothController::confirmRestoreBattery(bool proceed)
+{
+    std::lock_guard<std::mutex> lock(m_batteryCvMutex);
+    if (m_batteryConfirmationPending) {
+        m_batteryConfirmed = proceed;
+        m_batteryConfirmationPending = false;
+        m_batteryCv.notify_one();
+    }
+}
+
+void BluetoothController::runRestore(const QString &localPath,
+                                     const QString &originalPath,
+                                     const QString &targetAddress,
+                                     bool isUsb)
+{
+    if (targetAddress.isEmpty()) {
+        setRestoring(false);
+        emit firmwareRestoreFinished(false, tr("Firmware restore failed"));
+        if (localPath != originalPath) QFile::remove(localPath);
+        return;
+    }
+
+    // Enter the restoring state: block the UI and notify listeners (Phase 2).
+    setRestoring(true);
     emit firmwareRestoreStarted();
 
     // Prepare transport for firmware upload
@@ -690,8 +725,10 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         m_stkBuffer.erase(0, n);
         return static_cast<int>(n);
     };
-    transport.pump = [this]() {
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+    // We run on a worker thread; the GUI thread keeps processing I/O events on
+    // its own (it is no longer blocked), so pump only needs to yield.
+    transport.pump = []() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
     };
     transport.progress = [this](int percent, std::size_t written, std::size_t total) {
         emit firmwareRestoreProgress(percent, static_cast<int>(written), static_cast<int>(total));
@@ -716,7 +753,6 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
     //   - USB serial: opening the TTY pulses DTR/RESET synchronously, so the
     //     bootloader window opens immediately after connect() and we must
     //     upload right away without a settling delay.
-    const bool isUsb = (m_backendKind == Usb);
     bool stable = false;
 
     if (isUsb) {
@@ -727,7 +763,7 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         // the reopened link is already at the speed the bootloader expects.
         if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
             serial->setBaudRate(m_usbBootloaderBaud);
-        const bool connectOk = m_backend->connect(targetAddress);
+        const bool connectOk = m_backend->connect(targetAddress.toStdString());
         // The serial backend opens synchronously; upload immediately to catch
         // the short post-reset bootloader window.
         stable = connectOk && m_backend->isConnected();
@@ -741,28 +777,20 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
 
         // Give BlueZ a moment to fully release the RFCOMM channel and let the
         // robot notice the drop before we reconnect to trigger the reset.
-        {
-            QElapsedTimer settle;
-            settle.start();
-            while (settle.elapsed() < 800)
-                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(800));
 
         m_backend->setAutoReconnect(true, 100);
-        m_backend->connect(targetAddress);
+        m_backend->connect(targetAddress.toStdString());
 
         // Wait for a stable connection after the reset cycle (up to ~10 s). The
         // link may briefly drop while the robot reboots; the backend reconnects.
         QElapsedTimer timer;
         timer.start();
         while (timer.elapsed() < 10000) {
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
             if (m_backend->isConnected()) {
                 // Give the link a moment to settle past the reset cycle.
-                QElapsedTimer settle;
-                settle.start();
-                while (settle.elapsed() < 300)
-                    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+                std::this_thread::sleep_for(std::chrono::milliseconds(300));
                 if (m_backend->isConnected()) { stable = true; break; }
             }
         }
@@ -791,22 +819,52 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         m_backend->disconnect();
         if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
             serial->setBaudRate(m_usbBaud);
-        m_deviceAddress = QString::fromStdString(targetAddress);
-        connectUsb(QString::fromStdString(targetAddress));
+        m_deviceAddress = targetAddress;
+        connectUsb(targetAddress);
     }
 
-    const bool success = stable && ok;
+    const bool uploadOk = stable && ok;
+
+    // --- Phase 3: battery check with confirmation --------------------------
+    // The running firmware reports its battery via &&B after the upload; the
+    // GUI parser fills m_battery automatically. Wait briefly for it, then warn
+    // (and ask the user to confirm) if the level is below the safe threshold,
+    // mirroring the CLI's --force-low-battery flow.
+    bool batteryOk = true;
+    const float kLowBatteryThreshold = 50.0f;
+    if (uploadOk) {
+        QElapsedTimer batteryTimer;
+        batteryTimer.start();
+        while (batteryTimer.elapsed() < 2000) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            if (m_battery >= 0.0f) break;
+        }
+        if (m_battery >= 0.0f && m_battery < kLowBatteryThreshold) {
+            {
+                std::lock_guard<std::mutex> lock(m_batteryCvMutex);
+                m_batteryConfirmed = false;
+                m_batteryConfirmationPending = true;
+            }
+            emit firmwareRestoreBatteryLow(m_battery);
+            // Wait for the UI to confirm (or a 30 s safety timeout).
+            std::unique_lock<std::mutex> lock(m_batteryCvMutex);
+            m_batteryCv.wait_for(lock, std::chrono::seconds(30),
+                                 [this]() { return !m_batteryConfirmationPending; });
+            batteryOk = m_batteryConfirmed;
+        }
+    }
+
+    const bool success = uploadOk && batteryOk;
     const QString resultMsg = success ? tr("Firmware restored successfully")
                                        : tr("Firmware restore failed");
 
     // Clean up temporary file if we created one
-    if (localPath != firmwarePath) {
+    if (localPath != originalPath) {
         QFile::remove(localPath);
     }
 
     // Leave the restoring state and report the outcome through dedicated signals.
-    m_restoring = false;
-    emit restoringChanged();
+    setRestoring(false);
     emit firmwareRestoreFinished(success, resultMsg);
 }
 

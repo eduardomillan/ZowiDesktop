@@ -18,6 +18,7 @@ ScreenTemplate {
     property bool forgetting: false
     property bool restoring: false
     property bool switching: false
+    property bool batteryLow: false
     property int restoreProgress: 0
 
     function tr(source) { return Translator.translate("SettingsScreen.qml", source) }
@@ -101,11 +102,18 @@ ScreenTemplate {
         function onFirmwareRestoreFinished(success, message) {
             if (!settingsScreen.restoring) return
             settingsScreen.restoring = false
+            settingsScreen.batteryLow = false
             restoreProgress = success ? 100 : 0
             if (success)
                 msgBar.show(tr("restore_success"))
             else
                 msgBar.show(tr("restore_failed"), "#c0392b")
+        }
+        // Phase 3: the restore completed the upload but the reported battery is
+        // below the safe threshold; ask the user to confirm before finishing.
+        function onFirmwareRestoreBatteryLow(level) {
+            if (!settingsScreen.restoring) return
+            settingsScreen.batteryLow = true
         }
     }
 
@@ -361,6 +369,87 @@ ScreenTemplate {
                 width: Math.max(2, parent.width * (settingsScreen.restoreProgress / 100.0))
                 radius: 5
                 color: "#21a69b"
+            }
+        }
+    }
+
+    // Phase 3: low-battery confirmation dialog shown over the progress bar while
+    // the worker thread waits for the user's decision.
+    Rectangle {
+        id: batteryLowDialog
+        visible: settingsScreen.batteryLow
+        anchors.fill: parent
+        color: "transparent"
+
+        Rectangle {
+            anchors.centerIn: parent
+            width: Math.min(parent.width - 48, 360)
+            height: confirmColumn.height + 36
+            radius: 12
+            color: "#1f2a2a"
+            border.color: "#f1c40f"
+            border.width: 1
+
+            Column {
+                id: confirmColumn
+                anchors.centerIn: parent
+                width: parent.width - 36
+                spacing: 14
+
+                Text {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    text: tr("restore_battery_low")
+                    color: "#ffffff"
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 16
+
+                    Button {
+                        text: tr("confirm")
+                        background: Rectangle {
+                            color: "#21a69b"
+                            radius: 6
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#ffffff"
+                            font.pixelSize: 13
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: {
+                            settingsScreen.batteryLow = false
+                            Bluetooth.confirmRestoreBattery(true)
+                        }
+                    }
+
+                    Button {
+                        text: tr("cancel")
+                        background: Rectangle {
+                            color: "#c0392b"
+                            radius: 6
+                        }
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#ffffff"
+                            font.pixelSize: 13
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                        onClicked: {
+                            settingsScreen.batteryLow = false
+                            Bluetooth.confirmRestoreBattery(false)
+                        }
+                    }
+                }
             }
         }
     }

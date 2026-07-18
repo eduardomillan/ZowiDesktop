@@ -54,7 +54,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **DEV overlay improvements (diagnostic).** The `DevOverlay` now opens expanded
   by default, word-wraps its text, is resizable from its right / bottom / corner
   edges, and has a **Copy** button that places the full log on the clipboard.
-  These are intended as debugging aids during the testing phase.
+   These are intended as debugging aids during the testing phase.
+- **Phase 3: dedicated restore thread + battery confirmation.** The whole
+  restore (reset, STK500 upload, reconnect) now runs on a dedicated worker
+  thread so the GUI thread never blocks and the progress bar stays responsive.
+  After a successful upload the running firmware reports its battery level
+  (mirroring the CLI's `--force-low-battery` check); if it is below 50% a
+  confirmation dialog is shown over the progress bar and the worker thread
+  waits (30 s safety timeout) for the user to confirm or cancel before
+  finishing. New signals `firmwareRestoreBatteryLow(level)` and the
+  `confirmRestoreBattery(bool)` slot back this handshake.
 
 ### Changed (branch `restore-base-firmware-gui`, EN PRUEBAS)
 - `config.json` gains `usb_bootloader_baud` (`115200`), `transport_timeout`

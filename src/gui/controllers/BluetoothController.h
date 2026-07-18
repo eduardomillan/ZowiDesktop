@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
+#include <thread>
 #include <zowi/bluetooth_api.h>
 #include <zowi/stk500v1.h>
 
@@ -85,6 +87,7 @@ public:
     Q_INVOKABLE void copyText(const QString &text);
     Q_INVOKABLE void unpairDevice(const QString &address);
     Q_INVOKABLE void sendData(const QString &data);
+    Q_INVOKABLE void confirmRestoreBattery(bool proceed);
 
 signals:
     void deviceDiscovered(const QString &name, const QString &address);
@@ -99,6 +102,7 @@ signals:
     void firmwareRestoreStarted();
     void firmwareRestoreProgress(int percent, int written, int total);
     void firmwareRestoreFinished(bool success, const QString &message);
+    void firmwareRestoreBatteryLow(float level);
     void unpairFinished(bool success, const QString &message);
     void transportChanged();
     void activeTransportChanged();
@@ -124,10 +128,23 @@ private:
     // replied, or an empty string otherwise.
     QString probeZowiOnPort(const QString &port);
 
+    // Firmware restore runs on a dedicated worker thread so the GUI never
+    // blocks while the (blocking) STK500 upload is in progress.
+    void runRestore(const QString &localPath, const QString &originalPath,
+                    const QString &targetAddress, bool isUsb);
+    void setRestoring(bool value);
+
     // Firmware upload state (mirrors CLI's g_uploadMode / g_stkBuffer).
     bool m_uploadMode = false;
     std::string m_stkBuffer;
     std::mutex m_uploadMutex;
+
+    // Battery-confirmation handshake (Phase 3): the worker thread pauses after
+    // detecting a low battery and waits for the UI to call confirmRestoreBattery.
+    std::mutex m_batteryCvMutex;
+    std::condition_variable m_batteryCv;
+    bool m_batteryConfirmed = false;
+    bool m_batteryConfirmationPending = false;
 
     std::unique_ptr<zowi::BluetoothApi> m_backend;
     Transport m_backendKind = Bluetooth;   // which backend is currently built
