@@ -18,6 +18,6 @@
     "button_scan_visible": "false",
     "button_quit_visible": "false",
     "factory_firmware_path": "qrc:/firmware/ZOWI_BASE_v2.hex",
-    "restore_simulate_low_battery": "true",
+    "restore_simulate_low_battery": "false",
     "restore_low_battery_threshold": "50"
 }
