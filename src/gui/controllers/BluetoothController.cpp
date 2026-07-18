@@ -68,6 +68,16 @@ BluetoothController::BluetoothController(QObject *parent)
         std::string t = cfg.get("transport_timeout");
         if (!t.empty()) m_transportTimeoutMs = std::stoi(t);
     } catch (...) {}
+    // TEMP (restore battery dialog test): force a low-battery reading so the
+    // confirmation dialog appears without waiting for the real battery to drain.
+    try {
+        std::string s = cfg.get("restore_simulate_low_battery");
+        m_simulateLowBattery = (s == "true" || s == "1");
+    } catch (...) {}
+    try {
+        std::string t = cfg.get("restore_low_battery_threshold");
+        if (!t.empty()) m_lowBatteryThreshold = std::stof(t);
+    } catch (...) {}
     // Start on the Bluetooth backend by default; detection may switch it.
     useBluetoothBackend();
 
@@ -679,10 +689,37 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
     m_restoreTarget = QString::fromStdString(targetAddress);
     m_restoreIsUsb = (m_backendKind == Usb);
 
-    // The reset + reconnect (bootloader) runs HERE, on the GUI thread, because
-    // it touches the backend's QSocketNotifier, which is not thread-safe. Once
-    // the bootloader link is stable we offload only the blocking STK500 upload
-    // to a worker thread so the progress bar stays responsive.
+    // Phase 3: battery check BEFORE the upload, mirroring the CLI flow. The
+    // running firmware reports its level via &&B; wait briefly for it, then if
+    // it is below the (configurable) threshold, ask the user to confirm before
+    // touching the robot. The confirmation is asynchronous (we cannot block the
+    // GUI thread): we defer the actual restore to proceedWithRestore(), which is
+    // called either immediately (battery ok) or from confirmRestoreBattery()
+    // once the user decides.
+    float battery = -1.0f;
+    {
+        QElapsedTimer batteryTimer;
+        batteryTimer.start();
+        while (batteryTimer.elapsed() < 2000) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+            if (m_battery >= 0.0f) { battery = m_battery; break; }
+        }
+    }
+
+    const bool batteryLow = m_simulateLowBattery ||
+                            (battery >= 0.0f && battery < m_lowBatteryThreshold);
+    if (batteryLow) {
+        m_batteryPending = true;
+        emit firmwareRestoreBatteryLow(m_simulateLowBattery ? 20.0f : battery);
+        // Defer: confirmRestoreBattery() will call proceedWithRestore() or abort.
+        return;
+    }
+
+    proceedWithRestore();
+}
+
+void BluetoothController::proceedWithRestore()
+{
     const bool isUsb = m_restoreIsUsb;
     const QString target = m_restoreTarget;
     bool stable = false;
@@ -777,7 +814,7 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         m_stkBuffer.clear();
     }
 
-    const bool ok = zowi::stk500UploadFirmware(transport, localPath.toStdString());
+    const bool ok = zowi::stk500UploadFirmware(transport, m_restoreLocalPath.toStdString());
 
     {
         std::lock_guard<std::mutex> lock(m_uploadMutex);
@@ -814,27 +851,8 @@ void BluetoothController::continueAfterUpload(bool ok)
 
     const bool uploadOk = ok;
 
-    // --- Phase 3: battery check with confirmation --------------------------
-    // The running firmware reports its battery via &&B after the upload; the
-    // GUI parser fills m_battery automatically. Wait briefly for it, then ask
-    // the user to confirm if it is below the safe threshold, mirroring the CLI's
-    // --force-low-battery flow.
-    const float kLowBatteryThreshold = 50.0f;
-    if (uploadOk) {
-        QElapsedTimer batteryTimer;
-        batteryTimer.start();
-        while (batteryTimer.elapsed() < 2000) {
-            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
-            if (m_battery >= 0.0f) break;
-        }
-        if (m_battery >= 0.0f && m_battery < kLowBatteryThreshold) {
-            m_batteryPending = true;
-            emit firmwareRestoreBatteryLow(m_battery);
-            // Defer finishing: confirmRestoreBattery() will call finishRestore().
-            return;
-        }
-    }
-
+    // (The low-battery confirmation now happens BEFORE the upload, in
+    // restoreFirmware(), mirroring the CLI's pre-upload battery check.)
     finishRestore(uploadOk);
 }
 
@@ -842,7 +860,10 @@ void BluetoothController::confirmRestoreBattery(bool proceed)
 {
     if (!m_batteryPending) return;
     m_batteryPending = false;
-    finishRestore(proceed);
+    if (proceed)
+        proceedWithRestore();
+    else
+        finishRestore(false);
 }
 
 void BluetoothController::finishRestore(bool success)

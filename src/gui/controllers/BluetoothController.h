@@ -133,6 +133,7 @@ private:
     // not thread-safe). Only the blocking STK500 upload itself runs on a
     // dedicated worker thread (runUpload) so the UI stays responsive.
     Q_INVOKABLE void continueAfterUpload(bool ok);
+    void proceedWithRestore();
     void finishRestore(bool success);
     void setRestoring(bool value);
 
@@ -177,4 +178,6 @@ private:
     int m_transportTimeoutMs = 1500;
     SessionController *m_session = nullptr;
     bool m_restoring = false;
+    bool m_simulateLowBattery = false; // TEMP: force low-battery dialog for testing
+    float m_lowBatteryThreshold = 50.0f; // configurable low-battery threshold
 };

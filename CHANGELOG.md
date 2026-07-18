@@ -55,12 +55,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by default, word-wraps its text, is resizable from its right / bottom / corner
   edges, and has a **Copy** button that places the full log on the clipboard.
    These are intended as debugging aids during the testing phase.
-- **Phase 3: battery confirmation on restore.** After a successful upload the
-  running firmware reports its battery level (mirroring the CLI's
-  `--force-low-battery` check); if it is below 50% a confirmation dialog is
-  shown over the progress bar and the UI defers finishing until the user
-  confirms or cancels. New signal `firmwareRestoreBatteryLow(level)` and the
-  `confirmRestoreBattery(bool)` slot back this handshake.
+- **Phase 3: battery confirmation on restore (pre-upload).** Before the upload,
+  the running firmware's reported battery level is checked (mirroring the CLI's
+  `--force-low-battery` flow); if it is below the configurable
+  `restore_low_battery_threshold` (default `50`) a confirmation dialog is shown
+  over the progress bar and the restore is deferred. **Continue** proceeds with
+  the reset+upload; **Cancel** aborts without touching the robot. New signal
+  `firmwareRestoreBatteryLow(level)` and the `confirmRestoreBattery(bool)` slot
+  back this handshake.
   The STK500 upload runs on the GUI thread (pumping the event loop between
   pages) — a dedicated worker thread was attempted but reverted because the
   Bluetooth/serial backend owns a `QSocketNotifier` bound to the GUI thread and
