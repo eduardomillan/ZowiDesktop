@@ -1,17 +1,17 @@
 Package: zowi-desktop
 Priority: optional
 Section: education
-Installed-Size: 9421
+Installed-Size: 9485
 Maintainer: Eduardo Millan <dev@zowi.local>
 Architecture: amd64
-Version: 0.4.0-1+noble
+Version: 0.5.0-1+noble
 Depends: libc6 (>= 2.38), libgcc-s1 (>= 3.3.1), libqt6bluetooth6 (>= 6.4.0), libqt6core6t64 (>= 6.4.0), libqt6dbus6t64 (>= 6.3.0), libqt6gui6t64 (>= 6.1.2), libqt6qml6 (>= 6.2.0), libqt6quickcontrols2-6 (>= 6.2.0), libstdc++6 (>= 13.1), bluez, libgl1, libxkbcommon0, qt6-wayland, qt6-base, qt6-declarative, qml6-module-qtqml, qml6-module-qtquick, qml6-module-qtquick-controls, qml6-module-qtquick-window, qml6-module-qtquick-layouts
-Filename: pool/main/z/zowi-desktop/zowi-desktop_0.4.0-1+noble_amd64.deb
-Size: 7638916
-MD5sum: 8fa01cbd1d160bf7f0664b7cb26dc534
-SHA1: 1d006a120d46bf4444f7750a15493ce7a56497af
-SHA256: a402d0ae80523341ef3dc84ed2a33225b09c9288a64bbf6c09e7c69e89f43136
-SHA512: ed18220be1b61cde58dcf0f814a114a9928ed46335e600d3a8ab8514323e8d46c4b400d359ea70d9ccaf59e7a2f88e3cb7a7793e038ea22fad26d505bd169923
+Filename: pool/main/z/zowi-desktop/zowi-desktop_0.5.0-1+noble_amd64.deb
+Size: 7657842
+MD5sum: 83a2ad9bf1ad997f894e67e6c48097d6
+SHA1: 9f740db5854a04cd0013ee5cd18f4d2a43b38cbe
+SHA256: 3a774d01f33393ed39a2d7b80fe94d23479d6c9d199acf1fb867d4dc7b52a16d
+SHA512: 69f9233308a4293eff79668e936f9a1bbaabef803614b30a52e158031be414cdab9e66b86103099093d4daf71778c6cad6d1cfd481bc5738aede48cd21cef361
 Description: Control and program your Zowi robot
  Zowi Desktop is a cross-platform application to control and program your
  Zowi robot from a computer. Connect via Bluetooth (BlueZ), control
