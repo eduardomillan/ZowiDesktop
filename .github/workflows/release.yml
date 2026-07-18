@@ -174,12 +174,19 @@ jobs:
           aptly repo add zowi-noble artifacts/deb-noble/zowi-desktop_*.deb
           aptly publish repo -distribution=noble zowi-noble
 
+      # ── The project website (docs/index.html + en/es/ca/fr/bg, images/,
+      #    screenshots/) already lives in gh-pages/docs/ and is committed
+      #    manually. We must NOT wipe the branch, so force_orphan is false and
+      #    we only update the apt repo under docs/. The website files that are
+      #    already on gh-pages are left untouched by this action. ──
       - name: Stage apt repo under docs/ (Pages serves the docs folder)
         run: |
           mkdir -p publish/docs
           cp -r ~/.aptly/public/dists publish/docs/
           cp -r ~/.aptly/public/pool publish/docs/
           gpg --export > publish/docs/keyring.gpg
+          # Keep .nojekyll so GitHub does not run Jekyll on the Pages site.
+          touch publish/.nojekyll
 
       - name: Publish apt repo to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
@@ -187,6 +194,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: publish
           publish_branch: gh-pages
-          force_orphan: true
+          force_orphan: false
+          keep_files: true
           user_name: github-actions
           user_email: github-actions@github.com
