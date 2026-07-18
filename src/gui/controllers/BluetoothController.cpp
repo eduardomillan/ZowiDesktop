@@ -669,13 +669,81 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         localPath = tmpFile.fileName();
     }
 
-    // The heavy STK500 upload blocks, so run the whole restore on a dedicated
-    // worker thread and leave the GUI thread free to keep the UI (and the
-    // progress bar) responsive. The worker emits the restore signals, which
-    // cross into the GUI thread as queued connections automatically.
-    std::thread(&BluetoothController::runRestore, this, localPath, firmwarePath,
-                QString::fromStdString(targetAddress), (m_backendKind == Usb))
-        .detach();
+    // Enter the restoring state and notify listeners (Phase 2).
+    setRestoring(true);
+    emit firmwareRestoreStarted();
+
+    // Carry the context to the post-upload continuation (runs on the GUI thread).
+    m_restoreLocalPath = localPath;
+    m_restoreOriginalPath = firmwarePath;
+    m_restoreTarget = QString::fromStdString(targetAddress);
+    m_restoreIsUsb = (m_backendKind == Usb);
+
+    // The reset + reconnect (bootloader) runs HERE, on the GUI thread, because
+    // it touches the backend's QSocketNotifier, which is not thread-safe. Once
+    // the bootloader link is stable we offload only the blocking STK500 upload
+    // to a worker thread so the progress bar stays responsive.
+    const bool isUsb = m_restoreIsUsb;
+    const QString target = m_restoreTarget;
+    bool stable = false;
+
+    if (isUsb) {
+        m_backend->disconnect();
+        m_backend->setAutoReconnect(false);
+        // The Optiboot USB bootloader runs at a different baud than the running
+        // firmware (usb_baud); switch to the bootloader baud before the reset so
+        // the reopened link is already at the speed the bootloader expects.
+        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
+            serial->setBaudRate(m_usbBootloaderBaud);
+        const bool connectOk = m_backend->connect(target.toStdString());
+        // The serial backend opens synchronously; upload immediately to catch
+        // the short post-reset bootloader window.
+        stable = connectOk && m_backend->isConnected();
+    } else {
+        // First tear down the existing SPP link cleanly. Reconnecting on top of
+        // a socket that is still closing triggers BlueZ "Cannot connect to
+        // profile/service". disconnect() blocks until the socket reaches the
+        // Unconnected state (up to 2 s) and clears the cached address.
+        m_backend->setAutoReconnect(false);
+        m_backend->disconnect();
+
+        // Give BlueZ a moment to fully release the RFCOMM channel and let the
+        // robot notice the drop before we reconnect to trigger the reset.
+        {
+            QElapsedTimer settle;
+            settle.start();
+            while (settle.elapsed() < 800)
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+        }
+
+        m_backend->setAutoReconnect(true, 100);
+        m_backend->connect(target.toStdString());
+
+        // Wait for a stable connection after the reset cycle (up to ~10 s). The
+        // link may briefly drop while the robot reboots; the backend reconnects.
+        QElapsedTimer timer;
+        timer.start();
+        while (timer.elapsed() < 10000) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+            if (m_backend->isConnected()) {
+                // Give the link a moment to settle past the reset cycle.
+                QElapsedTimer settle;
+                settle.start();
+                while (settle.elapsed() < 300)
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+                if (m_backend->isConnected()) { stable = true; break; }
+            }
+        }
+    }
+
+    if (!stable) {
+        // Could not reach the bootloader; finish now.
+        finishRestore(false);
+        return;
+    }
+
+    // Stable bootloader link: offload the blocking upload to a worker thread.
+    std::thread(&BluetoothController::runUpload, this, localPath).detach();
 }
 
 void BluetoothController::setRestoring(bool value)
@@ -685,33 +753,12 @@ void BluetoothController::setRestoring(bool value)
     emit restoringChanged();
 }
 
-void BluetoothController::confirmRestoreBattery(bool proceed)
+void BluetoothController::runUpload(const QString &localPath)
 {
-    std::lock_guard<std::mutex> lock(m_batteryCvMutex);
-    if (m_batteryConfirmationPending) {
-        m_batteryConfirmed = proceed;
-        m_batteryConfirmationPending = false;
-        m_batteryCv.notify_one();
-    }
-}
-
-void BluetoothController::runRestore(const QString &localPath,
-                                     const QString &originalPath,
-                                     const QString &targetAddress,
-                                     bool isUsb)
-{
-    if (targetAddress.isEmpty()) {
-        setRestoring(false);
-        emit firmwareRestoreFinished(false, tr("Firmware restore failed"));
-        if (localPath != originalPath) QFile::remove(localPath);
-        return;
-    }
-
-    // Enter the restoring state: block the UI and notify listeners (Phase 2).
-    setRestoring(true);
-    emit firmwareRestoreStarted();
-
-    // Prepare transport for firmware upload
+    // Prepare transport for firmware upload. The send/receive callbacks only
+    // touch m_stkBuffer under a lock and call m_backend->send; the GUI thread
+    // keeps its event loop running (it is not blocked here), so the socket
+    // notifier delivers bootloader traffic into m_stkBuffer as usual.
     zowi::BootloaderTransport transport;
     transport.send = [this](const std::vector<uint8_t> &data) -> bool {
         return m_backend && m_backend->send(std::string(data.begin(), data.end()));
@@ -725,8 +772,9 @@ void BluetoothController::runRestore(const QString &localPath,
         m_stkBuffer.erase(0, n);
         return static_cast<int>(n);
     };
-    // We run on a worker thread; the GUI thread keeps processing I/O events on
-    // its own (it is no longer blocked), so pump only needs to yield.
+    // The GUI thread processes I/O on its own; pump only needs to yield so we do
+    // not spin the CPU. (We must NOT call QCoreApplication::processEvents here:
+    // that would run the GUI event loop from the worker thread.)
     transport.pump = []() {
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
     };
@@ -743,72 +791,22 @@ void BluetoothController::runRestore(const QString &localPath,
         m_stkBuffer.clear();
     }
 
-    // The GUI keeps a persistent connection to the running firmware, so we must
-    // reboot the robot into its bootloader before uploading — mirroring the
-    // CLI's restore flow. The reset mechanism differs per transport:
-    //   - Bluetooth: the HC-05 STATE pin resets the MCU when a fresh SPP
-    //     connection comes up. We must tear down the current link, let BlueZ
-    //     release it, then reconnect; the link may briefly drop as the robot
-    //     reboots and the backend reconnects.
-    //   - USB serial: opening the TTY pulses DTR/RESET synchronously, so the
-    //     bootloader window opens immediately after connect() and we must
-    //     upload right away without a settling delay.
-    bool stable = false;
+    const bool ok = zowi::stk500UploadFirmware(transport, localPath.toStdString());
 
-    if (isUsb) {
-        m_backend->disconnect();
-        m_backend->setAutoReconnect(false);
-        // The Optiboot USB bootloader runs at a different baud than the running
-        // firmware (usb_baud); switch to the bootloader baud before the reset so
-        // the reopened link is already at the speed the bootloader expects.
-        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
-            serial->setBaudRate(m_usbBootloaderBaud);
-        const bool connectOk = m_backend->connect(targetAddress.toStdString());
-        // The serial backend opens synchronously; upload immediately to catch
-        // the short post-reset bootloader window.
-        stable = connectOk && m_backend->isConnected();
-    } else {
-        // First tear down the existing SPP link cleanly. Reconnecting on top of
-        // a socket that is still closing triggers BlueZ "Cannot connect to
-        // profile/service". disconnect() blocks until the socket reaches the
-        // Unconnected state (up to 2 s) and clears the cached address.
-        m_backend->setAutoReconnect(false);
-        m_backend->disconnect();
-
-        // Give BlueZ a moment to fully release the RFCOMM channel and let the
-        // robot notice the drop before we reconnect to trigger the reset.
-        std::this_thread::sleep_for(std::chrono::milliseconds(800));
-
-        m_backend->setAutoReconnect(true, 100);
-        m_backend->connect(targetAddress.toStdString());
-
-        // Wait for a stable connection after the reset cycle (up to ~10 s). The
-        // link may briefly drop while the robot reboots; the backend reconnects.
-        QElapsedTimer timer;
-        timer.start();
-        while (timer.elapsed() < 10000) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            if (m_backend->isConnected()) {
-                // Give the link a moment to settle past the reset cycle.
-                std::this_thread::sleep_for(std::chrono::milliseconds(300));
-                if (m_backend->isConnected()) { stable = true; break; }
-            }
-        }
-    }
-
-    bool ok = false;
-    if (!stable) {
-        // Connection could not be (re)established for the upload.
-    } else {
-        // Use STK500v1 protocol (Optiboot) for firmware upload
-        ok = zowi::stk500UploadFirmware(transport, localPath.toStdString());
-    }
-
-    // Disable upload mode
     {
         std::lock_guard<std::mutex> lock(m_uploadMutex);
         m_uploadMode = false;
     }
+
+    // Continue on the GUI thread (everything below touches the backend).
+    QMetaObject::invokeMethod(this, "continueAfterUpload",
+                              Qt::QueuedConnection, Q_ARG(bool, ok));
+}
+
+void BluetoothController::continueAfterUpload(bool ok)
+{
+    const bool isUsb = m_restoreIsUsb;
+    const QString target = m_restoreTarget;
 
     m_backend->setAutoReconnect(false);
 
@@ -819,49 +817,56 @@ void BluetoothController::runRestore(const QString &localPath,
         m_backend->disconnect();
         if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
             serial->setBaudRate(m_usbBaud);
-        m_deviceAddress = targetAddress;
-        connectUsb(targetAddress);
+        m_deviceAddress = target;
+        connectUsb(target);
     }
 
-    const bool uploadOk = stable && ok;
+    const bool uploadOk = ok;
 
     // --- Phase 3: battery check with confirmation --------------------------
     // The running firmware reports its battery via &&B after the upload; the
-    // GUI parser fills m_battery automatically. Wait briefly for it, then warn
-    // (and ask the user to confirm) if the level is below the safe threshold,
-    // mirroring the CLI's --force-low-battery flow.
-    bool batteryOk = true;
+    // GUI parser fills m_battery automatically. Wait briefly for it (on the GUI
+    // thread, so processEvents is fine here), then ask the user to confirm if it
+    // is below the safe threshold, mirroring the CLI's --force-low-battery flow.
     const float kLowBatteryThreshold = 50.0f;
     if (uploadOk) {
         QElapsedTimer batteryTimer;
         batteryTimer.start();
         while (batteryTimer.elapsed() < 2000) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
             if (m_battery >= 0.0f) break;
         }
         if (m_battery >= 0.0f && m_battery < kLowBatteryThreshold) {
-            {
-                std::lock_guard<std::mutex> lock(m_batteryCvMutex);
-                m_batteryConfirmed = false;
-                m_batteryConfirmationPending = true;
-            }
+            m_batteryPending = true;
             emit firmwareRestoreBatteryLow(m_battery);
-            // Wait for the UI to confirm (or a 30 s safety timeout).
-            std::unique_lock<std::mutex> lock(m_batteryCvMutex);
-            m_batteryCv.wait_for(lock, std::chrono::seconds(30),
-                                 [this]() { return !m_batteryConfirmationPending; });
-            batteryOk = m_batteryConfirmed;
+            // Defer finishing: confirmRestoreBattery() will call finishRestore().
+            return;
         }
     }
 
-    const bool success = uploadOk && batteryOk;
+    finishRestore(uploadOk);
+}
+
+void BluetoothController::confirmRestoreBattery(bool proceed)
+{
+    if (!m_batteryPending) return;
+    m_batteryPending = false;
+    finishRestore(proceed);
+}
+
+void BluetoothController::finishRestore(bool success)
+{
+    const QString localPath = m_restoreLocalPath;
+    const QString originalPath = m_restoreOriginalPath;
+
     const QString resultMsg = success ? tr("Firmware restored successfully")
                                        : tr("Firmware restore failed");
 
-    // Clean up temporary file if we created one
-    if (localPath != originalPath) {
+    // Clean up temporary file if we created one.
+    if (localPath != originalPath)
         QFile::remove(localPath);
-    }
+    m_restoreLocalPath.clear();
+    m_restoreOriginalPath.clear();
 
     // Leave the restoring state and report the outcome through dedicated signals.
     setRestoring(false);

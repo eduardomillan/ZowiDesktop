@@ -55,15 +55,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by default, word-wraps its text, is resizable from its right / bottom / corner
   edges, and has a **Copy** button that places the full log on the clipboard.
    These are intended as debugging aids during the testing phase.
-- **Phase 3: dedicated restore thread + battery confirmation.** The whole
-  restore (reset, STK500 upload, reconnect) now runs on a dedicated worker
-  thread so the GUI thread never blocks and the progress bar stays responsive.
+- **Phase 3: dedicated restore worker thread + battery confirmation.** Only the
+  blocking STK500 upload runs on a dedicated worker thread (the reset/reconnect
+  and the post-upload battery check stay on the GUI thread, because the backend
+  uses a `QSocketNotifier` that is not thread-safe — running the whole restore
+  in a thread crashed with "Socket notifiers cannot be enabled or disabled from
+  another thread"). The GUI thread keeps its event loop running during the
+  upload, so the progress bar stays responsive instead of freezing.
   After a successful upload the running firmware reports its battery level
   (mirroring the CLI's `--force-low-battery` check); if it is below 50% a
-  confirmation dialog is shown over the progress bar and the worker thread
-  waits (30 s safety timeout) for the user to confirm or cancel before
-  finishing. New signals `firmwareRestoreBatteryLow(level)` and the
-  `confirmRestoreBattery(bool)` slot back this handshake.
+  confirmation dialog is shown over the progress bar and the UI defers finishing
+  until the user confirms or cancels. New signal `firmwareRestoreBatteryLow(level)`
+  and the `confirmRestoreBattery(bool)` slot back this handshake.
 
 ### Changed (branch `restore-base-firmware-gui`, EN PRUEBAS)
 - `config.json` gains `usb_bootloader_baud` (`115200`), `transport_timeout`

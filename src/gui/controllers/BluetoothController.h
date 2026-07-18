@@ -128,10 +128,13 @@ private:
     // replied, or an empty string otherwise.
     QString probeZowiOnPort(const QString &port);
 
-    // Firmware restore runs on a dedicated worker thread so the GUI never
-    // blocks while the (blocking) STK500 upload is in progress.
-    void runRestore(const QString &localPath, const QString &originalPath,
-                    const QString &targetAddress, bool isUsb);
+    // Firmware restore. The reset/reconnect and the post-upload battery check
+    // run on the GUI thread (they touch the backend's QSocketNotifier, which is
+    // not thread-safe). Only the blocking STK500 upload itself runs on a
+    // dedicated worker thread (runUpload) so the UI stays responsive.
+    Q_INVOKABLE void continueAfterUpload(bool ok);
+    void runUpload(const QString &localPath);
+    void finishRestore(bool success);
     void setRestoring(bool value);
 
     // Firmware upload state (mirrors CLI's g_uploadMode / g_stkBuffer).
@@ -139,12 +142,17 @@ private:
     std::string m_stkBuffer;
     std::mutex m_uploadMutex;
 
-    // Battery-confirmation handshake (Phase 3): the worker thread pauses after
-    // detecting a low battery and waits for the UI to call confirmRestoreBattery.
-    std::mutex m_batteryCvMutex;
-    std::condition_variable m_batteryCv;
-    bool m_batteryConfirmed = false;
-    bool m_batteryConfirmationPending = false;
+    // Battery-confirmation handshake (Phase 3): after a successful upload the
+    // GUI checks the reported battery; if it is low it asks the user to confirm
+    // via the UI and defers finishing until confirmRestoreBattery() is called.
+    bool m_batteryPending = false;
+
+    // Restore context carried from restoreFirmware() (GUI thread) to the
+    // post-upload continuation.
+    QString m_restoreLocalPath;
+    QString m_restoreOriginalPath;
+    QString m_restoreTarget;
+    bool m_restoreIsUsb = false;
 
     std::unique_ptr<zowi::BluetoothApi> m_backend;
     Transport m_backendKind = Bluetooth;   // which backend is currently built
