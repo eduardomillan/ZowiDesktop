@@ -46,6 +46,8 @@
     "transport_auto_hint": "Pick the best available connection automatically.",
     "transport_bt_hint": "Connect wirelessly over Bluetooth.",
     "transport_usb_hint": "Connect through the USB cable.",
+    "transport_switched": "Connection method updated.",
+    "transport_failed": "Could not connect with the selected method.",
     "transport_unavailable": "Not available",
     "usb_no_ports": "No robot detected on USB.",
     "usb_refresh": "Refresh",

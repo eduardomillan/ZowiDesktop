@@ -22,6 +22,10 @@ public:
     Q_INVOKABLE QString getRaw(const QString &key) const;
     Q_INVOKABLE void clearActive();
 
+    // Generic key access for non-Zowi-specific session values (e.g. "transport").
+    Q_INVOKABLE void saveString(const QString &key, const QString &value);
+    Q_INVOKABLE QString getString(const QString &key, const QString &defaultValue = QString()) const;
+
 signals:
     void sessionChanged();
 

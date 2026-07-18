@@ -1,4 +1,5 @@
 #include "BluetoothController.h"
+#include "SessionController.h"
 
 #include <algorithm>
 #include <cmath>
@@ -8,6 +9,8 @@
 #include <memory>
 
 #include <QCoreApplication>
+#include <QGuiApplication>
+#include <QClipboard>
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QFile>
@@ -61,7 +64,10 @@ BluetoothController::BluetoothController(QObject *parent)
         std::string b = cfg.get("usb_bootloader_baud");
         if (!b.empty()) m_usbBootloaderBaud = std::stoi(b);
     } catch (...) {}
-
+    try {
+        std::string t = cfg.get("transport_timeout");
+        if (!t.empty()) m_transportTimeoutMs = std::stoi(t);
+    } catch (...) {}
     // Start on the Bluetooth backend by default; detection may switch it.
     useBluetoothBackend();
 
@@ -114,6 +120,17 @@ void BluetoothController::wireBackend()
         emit connectionChanged();
         if (connected) {
             setConnecting(false);
+            // For USB the address is the TTY path; onConnectionChanged(false)
+            // clears it, so restore it from the known USB port when the link
+            // comes back up (m_deviceAddress may otherwise stay empty).
+            if (m_backendKind == Usb && m_deviceAddress.isEmpty()) {
+                if (!m_usbPort.isEmpty())
+                    m_deviceAddress = m_usbPort;
+                else if (!m_knownUsbPorts.isEmpty())
+                    m_deviceAddress = m_knownUsbPorts.value(0);
+                if (!m_deviceAddress.isEmpty())
+                    emit deviceChanged();
+            }
         } else {
             m_deviceName.clear();
             m_deviceAddress.clear();
@@ -295,28 +312,120 @@ void BluetoothController::setDeviceName(const QString &name)
 
 void BluetoothController::setTransport(int transport)
 {
+    switchTransport(transport);
+}
+
+void BluetoothController::setTransportPreference(int transport)
+{
     Transport t = static_cast<Transport>(transport);
     if (t != Auto && t != Bluetooth && t != Usb) return;
     if (m_transport == t) return;
     m_transport = t;
     emit transportChanged();
+    if (m_session) {
+        const char *s = (t == Usb) ? "usb" : (t == Bluetooth ? "bluetooth" : "auto");
+        m_session->saveString("transport", s);
+    }
+    // Lightweight switch: update the backend/availability logic without a
+    // blocking connect attempt. Used when (re)starting the pairing wizard,
+    // where the wizard drives the connection itself.
+    refreshTransports();
+}
 
-    // Persist the choice so it is honoured next launch.
-    zowi::SessionStore session;
-    const char *s = (t == Usb) ? "usb" : (t == Bluetooth ? "bluetooth" : "auto");
-    session.setString("transport", s);
+bool BluetoothController::switchTransport(int transport)
+{
+    Transport t = static_cast<Transport>(transport);
+    if (t != Auto && t != Bluetooth && t != Usb) return false;
+    if (m_transport == t) return true;
 
-    // Switch the live backend immediately when the user picks an explicit
-    // transport. Tear down any active connection first (changing the backend
-    // under a live link is a no-op), then reconnect against the chosen one.
-    if (isConnected()) disconnectFromDevice();
-    if (t == Usb && m_usbAvailable) {
+    const Transport prev = m_transport;
+
+    // Tear down any live link before switching the backend (changing the
+    // backend under a live link is a no-op and would leak the old connection).
+    if (isConnected()) {
+        m_backend->setAutoReconnect(false);
+        m_backend->disconnect();
+    }
+
+    // Select the target backend; if the chosen transport is unavailable we
+    // cannot proceed, so report the error and stay on the current transport.
+    if (t == Usb) {
+        if (!m_usbAvailable) {
+            emit errorOccurred(tr("No USB robot detected"));
+            return false;
+        }
         useSerialBackend();
     } else if (t == Bluetooth) {
+        if (!m_bluetoothAvailable) {
+            emit errorOccurred(tr("Bluetooth is not available"));
+            return false;
+        }
         useBluetoothBackend();
     }
-    // Re-run availability + auto-connect logic for the new backend.
-    refreshTransports();
+
+    // Persist the choice so it is honoured next launch. Use the shared session
+    // controller (not a throwaway store) so the UI/DEV view sees the update.
+    m_transport = t;
+    emit transportChanged();
+    if (m_session) {
+        const char *s = (t == Usb) ? "usb" : (t == Bluetooth ? "bluetooth" : "auto");
+        m_session->saveString("transport", s);
+    }
+
+    // Kick off the connection for the chosen transport.
+    if (t == Usb) {
+        connectUsb();
+    } else if (t == Bluetooth) {
+        zowi::SessionStore session;
+        QString addr = QString::fromStdString(session.getString("activeZowiDeviceAddress"));
+        if (addr.isEmpty()) {
+            // No known robot: revert and report; Auto would just keep scanning.
+            emit errorOccurred(tr("No paired Zowi found to connect over Bluetooth"));
+            revertTransport(prev);
+            return false;
+        }
+        connectToDevice(addr);
+    } else {
+        // Auto: let availability + auto-connect logic pick a transport.
+        refreshTransports();
+    }
+
+    // Block (pumping the event loop so backend callbacks fire) until connected
+    // or the configured timeout elapses. The UI is disabled by the caller while
+    // this runs, so the user is effectively "quiet" during the attempt.
+    bool ok = false;
+    QElapsedTimer timer;
+    timer.start();
+    while (timer.elapsed() < m_transportTimeoutMs) {
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+        if (isConnected()) { ok = true; break; }
+    }
+
+    if (!ok) {
+        emit errorOccurred(tr("Could not connect using the selected transport"));
+        revertTransport(prev);
+        return false;
+    }
+    return true;
+}
+
+void BluetoothController::revertTransport(Transport prev)
+{
+    if (isConnected()) {
+        m_backend->setAutoReconnect(false);
+        m_backend->disconnect();
+    }
+    if (prev == Usb && m_usbAvailable) useSerialBackend();
+    else if (prev == Bluetooth && m_bluetoothAvailable) useBluetoothBackend();
+    m_transport = prev;
+    emit transportChanged();
+    if (m_session) {
+        const char *s = (prev == Usb) ? "usb" : (prev == Bluetooth ? "bluetooth" : "auto");
+        m_session->saveString("transport", s);
+    }
+    if (prev == Usb) connectUsb();
+    else if (prev == Bluetooth) refreshTransports();
+    else refreshTransports();
 }
 
 QStringList BluetoothController::listUsbPorts() const
@@ -467,6 +576,12 @@ void BluetoothController::connectUsb(const QString &port)
     emit deviceChanged();
 }
 
+void BluetoothController::copyText(const QString &text)
+{
+    if (QGuiApplication::clipboard())
+        QGuiApplication::clipboard()->setText(text);
+}
+
 void BluetoothController::disconnectFromDevice()
 {
     if (!m_backend) return;
@@ -497,13 +612,21 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
     }
 
     if (!m_backend || !m_backend->isConnected()) {
-        emit errorOccurred(tr("Not connected to a Zowi robot"));
+        emit errorOccurred(tr("Firmware restore failed"));
         return;
     }
 
     // Remember the target address before touching the connection: reconnecting
-    // clears the backend's cached address.
-    const std::string targetAddress = m_deviceAddress.toStdString();
+    // clears the backend's cached address. For USB the address is the TTY path,
+    // which is cleared by onConnectionChanged(false) on every reconnect, so fall
+    // back to the known USB port rather than trusting m_deviceAddress (which may
+    // be empty after a reconnect even though the link is up).
+    std::string targetAddress = m_deviceAddress.toStdString();
+    if (targetAddress.empty() && m_backendKind == Usb) {
+        targetAddress = m_usbPort.toStdString();
+        if (targetAddress.empty() && !m_knownUsbPorts.isEmpty())
+            targetAddress = m_knownUsbPorts.value(0).toStdString();
+    }
     if (targetAddress.empty()) {
         emit errorOccurred(tr("Firmware restore failed"));
         return;
@@ -579,7 +702,6 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
     bool stable = false;
 
     if (isUsb) {
-        qInfo() << "[restore] USB: reopening TTY to pulse reset" << QString::fromStdString(targetAddress);
         m_backend->disconnect();
         m_backend->setAutoReconnect(false);
         // The Optiboot USB bootloader runs at a different baud than the running
@@ -591,15 +713,11 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
         // The serial backend opens synchronously; upload immediately to catch
         // the short post-reset bootloader window.
         stable = connectOk && m_backend->isConnected();
-        qInfo() << "[restore] USB: connect() returned" << connectOk
-                << "isConnected=" << m_backend->isConnected()
-                << "lastError=" << QString::fromStdString(m_backend->lastError());
     } else {
         // First tear down the existing SPP link cleanly. Reconnecting on top of
         // a socket that is still closing triggers BlueZ "Cannot connect to
         // profile/service". disconnect() blocks until the socket reaches the
         // Unconnected state (up to 2 s) and clears the cached address.
-        qInfo() << "[restore] BT: disconnecting existing link before reset";
         m_backend->setAutoReconnect(false);
         m_backend->disconnect();
 
@@ -612,7 +730,6 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
                 QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
         }
 
-        qInfo() << "[restore] BT: triggering reset via reconnect to" << QString::fromStdString(targetAddress);
         m_backend->setAutoReconnect(true, 100);
         m_backend->connect(targetAddress);
 
@@ -632,17 +749,13 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
             }
         }
     }
-    qInfo() << "[restore] stable connection after reset:" << stable
-            << "isConnected=" << m_backend->isConnected();
 
     bool ok = false;
     if (!stable) {
         emit errorOccurred(tr("Firmware restore failed"));
     } else {
         // Use STK500v1 protocol (Optiboot) for firmware upload
-        qInfo() << "[restore] starting STK500 upload of" << localPath;
         ok = zowi::stk500UploadFirmware(transport, localPath.toStdString());
-        qInfo() << "[restore] STK500 upload result:" << ok;
     }
 
     // Disable upload mode

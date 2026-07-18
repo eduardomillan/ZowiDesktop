@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> [!WARNING]
+> **Estado: EN PRUEBAS.** Todo lo descrito a continuación pertenece a la rama
+> `restore-base-firmware-gui` y **no está en `main` todavía**. El firmware base
+> se restaura correctamente tanto por Bluetooth como por USB en la GUI, pero el
+> flujo sigue en fase de validación manual (feedback de restauración, cambio de
+> transporte bloqueante, bloqueo de renombrado tras emparejar). No se ha hecho
+> merge ni release.
+
 ### Added
 - **`adivinawi` CLI subcommand.** Install the bundled Adivinawi game firmware
   (`src/firmware/ZOWI_Adivinawi_v2.hex`) on the paired Zowi, mirroring the
@@ -16,6 +24,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   be reverted with `restore`.
 - Bluetooth and USB test scripts for the Adivinawi install flow
   (`src/cli/tests/{bt,usb}/test_install_adivinawi.sh`), wired into `run_all.sh`.
+
+### Added (branch `restore-base-firmware-gui`, EN PRUEBAS)
+- **Restore base firmware from the GUI over Bluetooth AND USB.** The
+  *Restore firmware* action in **Settings** now flashes `ZOWI_BASE_v2.hex`
+  directly from the bundled resources (`app.qrc`, `:/firmware/...`). For USB it
+  reopens the TTY at the Optiboot bootloader baud (`usb_bootloader_baud`,
+  default `115200`), pulses the DTR reset and uploads via STK500v1, then
+  restores the operating baud (`usb_baud`) and reconnects to the running
+  firmware. For Bluetooth it triggers the STATE-pin reset by reconnecting.
+- **Phase-1 restore feedback.** While a restore runs, the *Connection* section
+  and the restore option are disabled; the outcome is reported in the
+  message bar (`restore_started` / `restore_success` / `restore_failed`) in the
+  5 supported locales.
+- **Blocking transport switch in Settings.** Picking **Automatic** / **Bluetooth**
+  / **USB cable** in the *Connection* selector now tears down the live link,
+  switches the backend, and reconnects with a configurable timeout
+  (`transport_timeout`, default `1500 ms`). If the chosen transport cannot
+  connect in time, it reports an error and reverts to the previous transport.
+  The whole Settings screen is disabled during the switch.
+- **Transport auto-fallback on (re)registration / forget / reset.** Starting the
+  pairing wizard, forgetting the Zowi in Settings, or resetting from the splash
+  screen now forces the transport back to **Automatic**
+  (`setTransportPreference`).
+- **Rename lock after pairing.** `WizardRenameScreen` disables the name field
+  and rename button for a configurable period (`rename_lock_ms`, default
+  `1500 ms`) after appearing, giving the robot time to finish its welcome
+  gesture before the user types/confirms.
+- **DEV overlay improvements (diagnostic).** The `DevOverlay` now opens expanded
+  by default, word-wraps its text, is resizable from its right / bottom / corner
+  edges, and has a **Copy** button that places the full log on the clipboard.
+  These are intended as debugging aids during the testing phase.
+
+### Changed (branch `restore-base-firmware-gui`, EN PRUEBAS)
+- `config.json` gains `usb_bootloader_baud` (`115200`), `transport_timeout`
+  (`1500`) and `rename_lock_ms` (`1500`), all configurable.
+- Transport persistence now goes through the shared `SessionController` store so
+  the DEV *SESSION* panel reflects the live `transport` value.
+
+### Fixed (branch `restore-base-firmware-gui`, EN PRUEBAS)
+- **USB restore failed silently.** `restoreFirmware` trusted `m_deviceAddress`,
+  which the serial backend clears on every reconnect, so the USB target was
+  empty and the upload bailed out before even reopening the port. It now falls
+  back to `m_usbPort` / `m_knownUsbPorts`, and `onConnectionChanged(true)`
+  restores `m_deviceAddress` from the USB port.
+- **`qrc:/` firmware path not openable.** `QFile` does not understand the
+  `qrc:/` URL syntax used by QML; the path is now normalised to the `:/`
+  resource syntax before extracting the HEX to a temporary file (the temp file
+  is kept alive for the duration of the upload).
 
 ### Changed
 - `scripts/sync_firmware_from_zowiLibs.sh` now matches the current zowiLibs

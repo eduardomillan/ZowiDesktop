@@ -17,6 +17,7 @@ ScreenTemplate {
 
     property bool forgetting: false
     property bool restoring: false
+    property bool switching: false
 
     function tr(source) { return Translator.translate("SettingsScreen.qml", source) }
 
@@ -53,11 +54,13 @@ ScreenTemplate {
         var addr = Session.loadActiveZowiDeviceAddress()
         if (!addr) addr = Bluetooth.deviceAddress
         if (!addr) {
-            // Nothing registered to forget: just drop any stale app data.
+            // Nothing registered to forget: just drop any stale app data and
+            // fall back to Automatic transport.
             settingsScreen.forgetting = false
             Session.saveActiveZowiDeviceAddress("")
             Session.saveActiveZowiName("")
             Session.saveWizardDismissed(false)
+            Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
             msgBar.show(tr("reset_no_zowi"), "#c0392b")
             return
         }
@@ -76,6 +79,8 @@ ScreenTemplate {
         function onUnpairFinished(success, message) {
             if (!settingsScreen.forgetting) return
             settingsScreen.forgetting = false
+            // The registered Zowi is gone: fall back to Automatic transport.
+            Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
             if (success)
                 msgBar.show(tr("unpair_success"))
             else
@@ -124,12 +129,13 @@ ScreenTemplate {
                         font.bold: true
                         font.pixelSize: 16
                         color: "#2d5a2d"
+                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
                     }
                     Text {
                         text: settingsScreen.tr("connection_desc")
                         font.pixelSize: 12
                         color: "#2d5a2d"
-                        opacity: 0.7
+                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 0.7
                         wrapMode: Text.WordWrap
                         width: parent.width
                     }
@@ -138,10 +144,9 @@ ScreenTemplate {
                     Row {
                         spacing: 8
                         // Lock transport switching while a firmware restore is
-                        // running: changing the connection mid-flash would break
-                        // the upload.
-                        enabled: !settingsScreen.restoring
-                        opacity: settingsScreen.restoring ? 0.45 : 1.0
+                        // running or a transport switch is in progress.
+                        enabled: !settingsScreen.restoring && !settingsScreen.switching
+                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
                         Repeater {
                             model: [
                                 { t: Bluetooth.TransportAuto,      label: "transport_auto",      hint: "transport_auto_hint", avail: true },
@@ -168,9 +173,17 @@ ScreenTemplate {
                                 }
                                 MouseArea {
                                     anchors.fill: parent
-                                    enabled: modelData.avail && !settingsScreen.restoring
+                                    enabled: modelData.avail && !settingsScreen.restoring && !settingsScreen.switching
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: Bluetooth.transport = modelData.t
+                                    onClicked: {
+                                        settingsScreen.switching = true
+                                        var ok = Bluetooth.switchTransport(modelData.t)
+                                        settingsScreen.switching = false
+                                        if (ok)
+                                            msgBar.show(settingsScreen.tr("transport_switched"))
+                                        else
+                                            msgBar.show(settingsScreen.tr("transport_failed"), "#c0392b")
+                                    }
                                 }
                             }
                         }
@@ -179,8 +192,8 @@ ScreenTemplate {
                     // USB quick actions, shown when USB is the chosen/active transport.
                     Row {
                         spacing: 10
-                        enabled: !settingsScreen.restoring
-                        opacity: settingsScreen.restoring ? 0.45 : 1.0
+                        enabled: !settingsScreen.restoring && !settingsScreen.switching
+                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
                         visible: Bluetooth.transport === Bluetooth.TransportUsb ||
                                  Bluetooth.activeTransport === Bluetooth.TransportUsb
                         Text {
@@ -224,6 +237,7 @@ ScreenTemplate {
                     // is visible, and re-evaluates its state once it clears.
                     property bool effectiveEnabled: (!msgBar.visible) &&
                         (!settingsScreen.restoring) &&
+                        (!settingsScreen.switching) &&
                         (modelData.connGated ? Bluetooth.connected : true)
 
                     width: optionCol.width

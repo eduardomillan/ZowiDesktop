@@ -5,14 +5,98 @@ import QtQuick.Layouts 1.15
 Item {
     id: root
     visible: Config.devMode
-    property bool collapsed: true
-    width: collapsed ? 72 : 320
-    height: collapsed ? 28 : Math.min(400, parent ? parent.height * 0.6 : 400)
+    property bool collapsed: false
+    width: 320
+    height: Math.min(400, parent ? parent.height * 0.6 : 400)
 
     x: parent ? parent.width - width - 8 : 0
     y: 8
 
     onCollapsedChanged: if (!collapsed) refreshSession()
+
+    // ── Resize handles (only when expanded) ──
+    // Resizing is computed in the parent coordinate system so the drag does not
+    // fight the window's own size/position (the handle moves with the window,
+    // which would otherwise make the local mouse delta unreliable).
+    MouseArea {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 6
+        cursorShape: Qt.SizeHorCursor
+        enabled: !root.collapsed
+        property int startPX
+        property int startRX
+        property int startW
+        onPressed: (mouse) => {
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            startPX = p.x; startW = root.width; startRX = root.x + root.width
+        }
+        onPositionChanged: (mouse) => {
+            if (!pressed) return
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            var nw = Math.max(200, Math.min(startW + (p.x - startPX),
+                            root.parent ? root.parent.width - 16 : 2000))
+            // Keep the right edge pinned under the cursor by sliding the left edge.
+            root.x = Math.max(8, startRX - nw)
+            root.width = nw
+        }
+    }
+    MouseArea {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: 6
+        cursorShape: Qt.SizeVerCursor
+        enabled: !root.collapsed
+        property int startPY
+        property int startBY
+        property int startH
+        onPressed: (mouse) => {
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            startPY = p.y; startH = root.height; startBY = root.y + root.height
+        }
+        onPositionChanged: (mouse) => {
+            if (!pressed) return
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            var nh = Math.max(120, Math.min(startH + (p.y - startPY),
+                            root.parent ? root.parent.height - 16 : 2000))
+            root.y = Math.max(8, startBY - nh)
+            root.height = nh
+        }
+    }
+    MouseArea {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 12
+        height: 12
+        cursorShape: Qt.SizeFDiagCursor
+        enabled: !root.collapsed
+        property int startPX
+        property int startPY
+        property int startRX
+        property int startBY
+        property int startW
+        property int startH
+        onPressed: (mouse) => {
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            startPX = p.x; startPY = p.y
+            startW = root.width; startH = root.height
+            startRX = root.x + root.width; startBY = root.y + root.height
+        }
+        onPositionChanged: (mouse) => {
+            if (!pressed) return
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            var nw = Math.max(200, Math.min(startW + (p.x - startPX),
+                            root.parent ? root.parent.width - 16 : 2000))
+            var nh = Math.max(120, Math.min(startH + (p.y - startPY),
+                            root.parent ? root.parent.height - 16 : 2000))
+            root.x = Math.max(8, startRX - nw)
+            root.y = Math.max(8, startBY - nh)
+            root.width = nw
+            root.height = nh
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -77,9 +161,10 @@ Item {
                 spacing: 4
 
                 Text {
+                    Layout.fillWidth: true
                     color: "#ddd"
                     font.pixelSize: 9
-                    elide: Text.ElideRight
+                    wrapMode: Text.WordWrap
                     text: {
                         var s = Bluetooth.connected ? "● Connected" : "● Disconnected"
                         if (Bluetooth.deviceAddress)
@@ -89,15 +174,18 @@ Item {
                 }
 
                 Text {
+                    Layout.fillWidth: true
                     color: "#ddd"
                     font.pixelSize: 9
+                    wrapMode: Text.WordWrap
                     text: "Battery: " + (Bluetooth.battery >= 0 ? Bluetooth.battery + "%" : "N/A")
                 }
 
                 Text {
+                    Layout.fillWidth: true
                     color: "#aaa"
                     font.pixelSize: 9
-                    elide: Text.ElideRight
+                    wrapMode: Text.WordWrap
                     text: Session.loadActiveZowiName() + " / " + Session.loadActiveZowiDeviceAddress()
                 }
 
@@ -144,7 +232,8 @@ Item {
                 Flickable {
                     id: sessionFlick
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 120
+                    Layout.preferredHeight: 100
+                    Layout.minimumHeight: 40
                     Layout.fillHeight: false
                     clip: true
                     contentWidth: sessionCol.width
@@ -160,11 +249,12 @@ Item {
                         Repeater {
                             model: ListModel { id: sessionModel }
                             delegate: Text {
-                                width: paintedWidth
+                                width: sessionFlick.width
                                 text: model.key + " = " + model.value
                                 color: "#aaa"
                                 font.pixelSize: 8
                                 font.family: "monospace"
+                                wrapMode: Text.WordWrap
                             }
                         }
                     }
@@ -190,6 +280,32 @@ Item {
                     }
 
                     Item { Layout.fillWidth: true }
+
+                    Button {
+                        implicitWidth: 40
+                        implicitHeight: 16
+                        font.pixelSize: 8
+                        text: "copy"
+
+                        contentItem: Text {
+                            text: parent.text
+                            color: "#ccc"
+                            font.pixelSize: 8
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        background: Rectangle {
+                            color: "#444"
+                            radius: 3
+                        }
+
+                        onClicked: {
+                            var txt = ""
+                            for (var i = 0; i < logModel.count; ++i)
+                                txt += logModel.get(i).text + "\n"
+                            Bluetooth.copyText(txt)
+                        }
+                    }
 
                     Button {
                         implicitWidth: 40
@@ -222,10 +338,12 @@ Item {
                     model: ListModel { id: logModel }
 
                     delegate: Text {
+                        width: logList.width
                         text: model.text
                         color: model.isError ? "#e74c3c" : "#aaa"
                         font.pixelSize: 8
                         font.family: "monospace"
+                        wrapMode: Text.WordWrap
                     }
 
                     ScrollBar.vertical: ScrollBar {

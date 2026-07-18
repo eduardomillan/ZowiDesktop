@@ -10,6 +10,8 @@
 #include <zowi/bluetooth_api.h>
 #include <zowi/stk500v1.h>
 
+class SessionController;
+
 // Robot connection controller. Despite its historical name it is transport
 // agnostic: it can talk to the robot either over Bluetooth SPP (the Qt/BlueZ
 // backend) or over a USB/serial TTY (the serial backend). The active transport
@@ -59,6 +61,8 @@ public:
     int battery() const;
 
     void setTransport(int transport);
+    Q_INVOKABLE bool switchTransport(int transport);
+    Q_INVOKABLE void setTransportPreference(int transport);
 
     Q_INVOKABLE void setDeviceName(const QString &name);
 
@@ -68,10 +72,15 @@ public:
     Q_INVOKABLE void connectUsb(const QString &port = QString());
     Q_INVOKABLE void restoreFirmware(const QString &firmwarePath);
 
+    // Share the session controller so transport persistence goes through the
+    // same store the UI reads (and that emits sessionChanged for the DEV view).
+    void setSessionController(SessionController *session) { m_session = session; }
+
     Q_INVOKABLE void startScan();
     Q_INVOKABLE void stopScan();
     Q_INVOKABLE void connectToDevice(const QString &address);
     Q_INVOKABLE void disconnectFromDevice();
+    Q_INVOKABLE void copyText(const QString &text);
     Q_INVOKABLE void unpairDevice(const QString &address);
     Q_INVOKABLE void sendData(const QString &data);
 
@@ -99,6 +108,7 @@ private:
     void useSerialBackend();
     void wireBackend();
     void setActiveTransport(Transport t);
+    void revertTransport(Transport prev);
 
     // Hotplug / detection.
     void pollTransports();
@@ -134,4 +144,6 @@ private:
     QTimer m_pollTimer;
     int m_usbBaud = 9600;
     int m_usbBootloaderBaud = 115200;
+    int m_transportTimeoutMs = 1500;
+    SessionController *m_session = nullptr;
 };
