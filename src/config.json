@@ -10,8 +10,14 @@
     "zowi_default_name": "OpenZowi",
     "transport": "auto",
     "usb_baud": "9600",
+    "usb_bootloader_baud": "115200",
+    "transport_timeout": "1500",
+    "rename_lock_ms": "1500",
     "dev_mode": "true",
     "message_duration": 2000,
     "button_scan_visible": "false",
-    "button_quit_visible": "false"
+    "button_quit_visible": "false",
+    "factory_firmware_path": "qrc:/firmware/ZOWI_BASE_v2.hex",
+    "restore_simulate_low_battery": "false",
+    "restore_low_battery_threshold": "50"
 }

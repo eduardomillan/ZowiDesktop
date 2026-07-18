@@ -62,3 +62,14 @@ void SessionController::clearActive()
             m_store.removeKey(key);
     }
 }
+
+void SessionController::saveString(const QString &key, const QString &value)
+{
+    m_store.setString(key.toStdString(), value.toStdString());
+}
+
+QString SessionController::getString(const QString &key, const QString &defaultValue) const
+{
+    std::string def = defaultValue.toStdString();
+    return QString::fromStdString(m_store.getString(key.toStdString(), def));
+}

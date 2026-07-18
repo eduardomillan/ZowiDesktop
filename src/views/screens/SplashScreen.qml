@@ -282,9 +282,11 @@ Rectangle {
                 var addr = Session.loadActiveZowiDeviceAddress()
                 if (!addr) addr = Bluetooth.deviceAddress
                 if (!addr) {
-                    // No registered Zowi: clear any stale app data and warn.
+                    // No registered Zowi: clear any stale app data, fall back to
+                    // Automatic transport, and warn.
                     Session.clearActive()
                     Session.saveWizardDismissed(false)
+                    Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
                     msgBar.show(tr("reset_no_zowi"), "#c0392b")
                     return
                 }
@@ -294,6 +296,7 @@ Rectangle {
                 // and mark the wizard as not dismissed.
                 Session.clearActive()
                 Session.saveWizardDismissed(false)
+                Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
             }
         }
     }

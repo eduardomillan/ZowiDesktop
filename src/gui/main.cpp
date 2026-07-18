@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
     SessionController session;
     BluetoothController bluetooth;
     ConfigController config;
+    bluetooth.setSessionController(&session);
 
     QString locale = QLocale::system().name();
     QStringList supported = translator.availableLocales();

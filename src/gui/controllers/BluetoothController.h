@@ -5,7 +5,14 @@
 #include <QTimer>
 #include <memory>
 #include <string>
+#include <vector>
+#include <mutex>
+#include <condition_variable>
+#include <thread>
 #include <zowi/bluetooth_api.h>
+#include <zowi/stk500v1.h>
+
+class SessionController;
 
 // Robot connection controller. Despite its historical name it is transport
 // agnostic: it can talk to the robot either over Bluetooth SPP (the Qt/BlueZ
@@ -36,6 +43,7 @@ private:
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY deviceChanged)
     Q_PROPERTY(QString deviceAddress READ deviceAddress NOTIFY deviceChanged)
     Q_PROPERTY(int battery READ battery NOTIFY batteryChanged)
+    Q_PROPERTY(bool restoring READ isRestoring NOTIFY restoringChanged)
 
 public:
     explicit BluetoothController(QObject *parent = nullptr);
@@ -54,8 +62,11 @@ public:
     QString deviceName() const;
     QString deviceAddress() const;
     int battery() const;
+    bool isRestoring() const { return m_restoring; }
 
     void setTransport(int transport);
+    Q_INVOKABLE bool switchTransport(int transport);
+    Q_INVOKABLE void setTransportPreference(int transport);
 
     Q_INVOKABLE void setDeviceName(const QString &name);
 
@@ -63,13 +74,20 @@ public:
     Q_INVOKABLE QStringList listUsbPorts() const;
     Q_INVOKABLE void refreshTransports();
     Q_INVOKABLE void connectUsb(const QString &port = QString());
+    Q_INVOKABLE void restoreFirmware(const QString &firmwarePath);
+
+    // Share the session controller so transport persistence goes through the
+    // same store the UI reads (and that emits sessionChanged for the DEV view).
+    void setSessionController(SessionController *session) { m_session = session; }
 
     Q_INVOKABLE void startScan();
     Q_INVOKABLE void stopScan();
     Q_INVOKABLE void connectToDevice(const QString &address);
     Q_INVOKABLE void disconnectFromDevice();
+    Q_INVOKABLE void copyText(const QString &text);
     Q_INVOKABLE void unpairDevice(const QString &address);
     Q_INVOKABLE void sendData(const QString &data);
+    Q_INVOKABLE void confirmRestoreBattery(bool proceed);
 
 signals:
     void deviceDiscovered(const QString &name, const QString &address);
@@ -81,10 +99,15 @@ signals:
     void batteryChanged();
     void dataReceived(const QString &data);
     void errorOccurred(const QString &message);
+    void firmwareRestoreStarted();
+    void firmwareRestoreProgress(int percent, int written, int total);
+    void firmwareRestoreFinished(bool success, const QString &message);
+    void firmwareRestoreBatteryLow(float level);
     void unpairFinished(bool success, const QString &message);
     void transportChanged();
     void activeTransportChanged();
     void transportsChanged();
+    void restoringChanged();
 
 private:
     void parseIncoming();
@@ -95,6 +118,7 @@ private:
     void useSerialBackend();
     void wireBackend();
     void setActiveTransport(Transport t);
+    void revertTransport(Transport prev);
 
     // Hotplug / detection.
     void pollTransports();
@@ -103,6 +127,32 @@ private:
     // once per newly-seen port while disconnected. Returns the port if a Zowi
     // replied, or an empty string otherwise.
     QString probeZowiOnPort(const QString &port);
+
+    // Firmware restore. The reset/reconnect and the post-upload battery check
+    // run on the GUI thread (they touch the backend's QSocketNotifier, which is
+    // not thread-safe). Only the blocking STK500 upload itself runs on a
+    // dedicated worker thread (runUpload) so the UI stays responsive.
+    Q_INVOKABLE void continueAfterUpload(bool ok);
+    void proceedWithRestore();
+    void finishRestore(bool success);
+    void setRestoring(bool value);
+
+    // Firmware upload state (mirrors CLI's g_uploadMode / g_stkBuffer).
+    bool m_uploadMode = false;
+    std::string m_stkBuffer;
+    std::mutex m_uploadMutex;
+
+    // Battery-confirmation handshake (Phase 3): after a successful upload the
+    // GUI checks the reported battery; if it is low it asks the user to confirm
+    // via the UI and defers finishing until confirmRestoreBattery() is called.
+    bool m_batteryPending = false;
+
+    // Restore context carried from restoreFirmware() (GUI thread) to the
+    // post-upload continuation.
+    QString m_restoreLocalPath;
+    QString m_restoreOriginalPath;
+    QString m_restoreTarget;
+    bool m_restoreIsUsb = false;
 
     std::unique_ptr<zowi::BluetoothApi> m_backend;
     Transport m_backendKind = Bluetooth;   // which backend is currently built
@@ -124,4 +174,10 @@ private:
     bool m_usbAvailable = false;
     QTimer m_pollTimer;
     int m_usbBaud = 9600;
+    int m_usbBootloaderBaud = 115200;
+    int m_transportTimeoutMs = 1500;
+    SessionController *m_session = nullptr;
+    bool m_restoring = false;
+    bool m_simulateLowBattery = false; // TEMP: force low-battery dialog for testing
+    float m_lowBatteryThreshold = 50.0f; // configurable low-battery threshold
 };

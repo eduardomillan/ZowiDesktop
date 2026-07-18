@@ -17,6 +17,10 @@ ScreenTemplate {
     property string defaultName: Config.get("zowi_default_name") || "OpenZowi"
     property bool renaming: false
     property bool renameDone: false
+    // The robot performs a welcome gesture right after connecting; lock the
+    // rename controls briefly so the user doesn't type/confirm into a busy link.
+    property bool locked: true
+    property int lockMs: parseInt(Config.get("rename_lock_ms")) || 1500
 
     signal renamed(string name)
 
@@ -43,7 +47,7 @@ ScreenTemplate {
             font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             selectByMouse: true
-            enabled: Bluetooth.connected && !renameScreen.renaming
+            enabled: Bluetooth.connected && !renameScreen.renaming && !renameScreen.locked
             onAccepted: renameButton.clicked()
         }
 
@@ -54,7 +58,7 @@ ScreenTemplate {
             height: 56
             text: renameScreen.renaming ? tr("renaming")
                   : (Bluetooth.connected ? tr("rename") : tr("wait_pairing"))
-            enabled: Bluetooth.connected && !renameScreen.renaming && nameField.text.trim() !== ""
+            enabled: Bluetooth.connected && !renameScreen.renaming && !renameScreen.locked && nameField.text.trim() !== ""
 
             contentItem: Text {
                 text: parent.text
@@ -110,8 +114,16 @@ ScreenTemplate {
     }
 
     Component.onCompleted: {
+        renameScreen.locked = true
+        lockTimer.restart()
         nameField.selectAll()
         nameField.forceActiveFocus()
+    }
+
+    Timer {
+        id: lockTimer
+        interval: renameScreen.lockMs
+        onTriggered: renameScreen.locked = false
     }
 
     Connections {

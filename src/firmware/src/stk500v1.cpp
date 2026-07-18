@@ -327,6 +327,7 @@ bool stk500UploadFirmware(const zowi::BootloaderTransport &transport,
             std::cout << "\r  Progress: " << percent << "%" << std::flush;
             lastPercent = percent;
         }
+        if (transport.progress) transport.progress(percent, sentBytes, totalBytes);
         transport.pump();
     }
 
