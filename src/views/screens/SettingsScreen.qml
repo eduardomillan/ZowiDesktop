@@ -374,7 +374,8 @@ ScreenTemplate {
     }
 
     // Phase 3: low-battery confirmation dialog shown over the progress bar while
-    // the worker thread waits for the user's decision.
+    // the restore waits for the user's decision. Styled to match the app theme:
+    // light app background, a warning-yellow panel with a dark-green border.
     Rectangle {
         id: batteryLowDialog
         visible: settingsScreen.batteryLow
@@ -386,9 +387,9 @@ ScreenTemplate {
             width: Math.min(parent.width - 48, 360)
             height: confirmColumn.height + 36
             radius: 12
-            color: "#1f2a2a"
-            border.color: "#f1c40f"
-            border.width: 1
+            color: "#fdfbe7"
+            border.color: "#2d5a2d"
+            border.width: 2
 
             Column {
                 id: confirmColumn
@@ -401,7 +402,7 @@ ScreenTemplate {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     text: tr("restore_battery_low")
-                    color: "#ffffff"
+                    color: "#2d5a2d"
                     font.pixelSize: 14
                     font.bold: true
                 }
@@ -433,7 +434,7 @@ ScreenTemplate {
                     Button {
                         text: tr("cancel")
                         background: Rectangle {
-                            color: "#c0392b"
+                            color: "#e74c3c"
                             radius: 6
                         }
                         contentItem: Text {
