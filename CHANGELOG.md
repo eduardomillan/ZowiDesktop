@@ -5,94 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-> [!WARNING]
-> **Estado: EN PRUEBAS.** Todo lo descrito a continuación pertenece a la rama
-> `restore-base-firmware-gui` y **no está en `main` todavía**. El firmware base
-> se restaura correctamente tanto por Bluetooth como por USB en la GUI, pero el
-> flujo sigue en fase de validación manual (feedback de restauración, cambio de
-> transporte bloqueante, bloqueo de renombrado tras emparejar). No se ha hecho
-> merge ni release.
-
-### Added
-- **`adivinawi` CLI subcommand.** Install the bundled Adivinawi game firmware
-  (`src/firmware/ZOWI_Adivinawi_v2.hex`) on the paired Zowi, mirroring the
-  existing `alarm` command. Supports the same options (`--firmware`,
-  `--timeout`, `--battery-timeout`, `--force-low-battery`, `--protocol`,
-  `--tty`, `--baud`, `--address`, `--backend`) over Bluetooth or USB, and can
-  be reverted with `restore`.
-- Bluetooth and USB test scripts for the Adivinawi install flow
-  (`src/cli/tests/{bt,usb}/test_install_adivinawi.sh`), wired into `run_all.sh`.
-
-### Added (branch `restore-base-firmware-gui`, EN PRUEBAS)
-- **Restore base firmware from the GUI over Bluetooth AND USB.** The
-  *Restore firmware* action in **Settings** now flashes `ZOWI_BASE_v2.hex`
-  directly from the bundled resources (`app.qrc`, `:/firmware/...`). For USB it
-  reopens the TTY at the Optiboot bootloader baud (`usb_bootloader_baud`,
-  default `115200`), pulses the DTR reset and uploads via STK500v1, then
-  restores the operating baud (`usb_baud`) and reconnects to the running
-  firmware. For Bluetooth it triggers the STATE-pin reset by reconnecting.
-- **Phase-1 restore feedback.** While a restore runs, the *Connection* section
-  and the restore option are disabled; the outcome is reported in the
-  message bar (`restore_started` / `restore_success` / `restore_failed`) in the
-  5 supported locales.
-- **Blocking transport switch in Settings.** Picking **Automatic** / **Bluetooth**
-  / **USB cable** in the *Connection* selector now tears down the live link,
-  switches the backend, and reconnects with a configurable timeout
-  (`transport_timeout`, default `1500 ms`). If the chosen transport cannot
-  connect in time, it reports an error and reverts to the previous transport.
-  The whole Settings screen is disabled during the switch.
-- **Transport auto-fallback on (re)registration / forget / reset.** Starting the
-  pairing wizard, forgetting the Zowi in Settings, or resetting from the splash
-  screen now forces the transport back to **Automatic**
-  (`setTransportPreference`).
-- **Rename lock after pairing.** `WizardRenameScreen` disables the name field
-  and rename button for a configurable period (`rename_lock_ms`, default
-  `1500 ms`) after appearing, giving the robot time to finish its welcome
-  gesture before the user types/confirms.
-- **DEV overlay improvements (diagnostic).** The `DevOverlay` now opens expanded
-  by default, word-wraps its text, is resizable from its right / bottom / corner
-  edges, and has a **Copy** button that places the full log on the clipboard.
-   These are intended as debugging aids during the testing phase.
-- **Phase 3: battery confirmation on restore (pre-upload).** Before the upload,
-  the running firmware's reported battery level is checked (mirroring the CLI's
-  `--force-low-battery` flow); if it is below the configurable
-  `restore_low_battery_threshold` (default `50`) a confirmation dialog is shown
-  over the progress bar and the restore is deferred. **Continue** proceeds with
-  the reset+upload; **Cancel** aborts without touching the robot. New signal
-  `firmwareRestoreBatteryLow(level)` and the `confirmRestoreBattery(bool)` slot
-  back this handshake.
-  The STK500 upload runs on the GUI thread (pumping the event loop between
-  pages) — a dedicated worker thread was attempted but reverted because the
-  Bluetooth/serial backend owns a `QSocketNotifier` bound to the GUI thread and
-  is not thread-safe (it crashed with "Cannot create children for a parent that
-  is in a different thread"). The progress bar still updates live during the
-  upload.
-
-### Changed (branch `restore-base-firmware-gui`, EN PRUEBAS)
-- `config.json` gains `usb_bootloader_baud` (`115200`), `transport_timeout`
-  (`1500`) and `rename_lock_ms` (`1500`), all configurable.
-- Transport persistence now goes through the shared `SessionController` store so
-  the DEV *SESSION* panel reflects the live `transport` value.
-
-### Fixed (branch `restore-base-firmware-gui`, EN PRUEBAS)
-- **USB restore failed silently.** `restoreFirmware` trusted `m_deviceAddress`,
-  which the serial backend clears on every reconnect, so the USB target was
-  empty and the upload bailed out before even reopening the port. It now falls
-  back to `m_usbPort` / `m_knownUsbPorts`, and `onConnectionChanged(true)`
-  restores `m_deviceAddress` from the USB port.
-- **`qrc:/` firmware path not openable.** `QFile` does not understand the
-  `qrc:/` URL syntax used by QML; the path is now normalised to the `:/`
-  resource syntax before extracting the HEX to a temporary file (the temp file
-  is kept alive for the duration of the upload).
-
-### Changed
-- `scripts/sync_firmware_from_zowiLibs.sh` now matches the current zowiLibs
-  layout (`code/base/` and `code/games/<name>/<name>.hex`) and copies all game
-  firmware, including Adivinawi.
-
-## [0.5.0] - 2026-07-17
+## [0.5.0] - 2026-07-18
 
 ### Added
 - **Choose USB or Bluetooth in the GUI.** The desktop app is no longer locked
@@ -119,14 +32,78 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   across sessions (session store), honoured on next launch when still
   available. New `transport` and `usb_baud` defaults were added to
   `config.json`.
+- **`adivinawi` CLI subcommand.** Install the bundled Adivinawi game firmware
+  (`src/firmware/ZOWI_Adivinawi_v2.hex`) on the paired Zowi, mirroring the
+  existing `alarm` command. Supports the same options (`--firmware`,
+  `--timeout`, `--battery-timeout`, `--force-low-battery`, `--protocol`,
+  `--tty`, `--baud`, `--address`, `--backend`) over Bluetooth or USB, and can
+  be reverted with `restore`.
+- Bluetooth and USB test scripts for the Adivinawi install flow
+  (`src/cli/tests/{bt,usb}/test_install_adivinawi.sh`), wired into `run_all.sh`.
+- **Restore base firmware from the GUI over Bluetooth AND USB.** The
+  *Restore firmware* action in **Settings** now flashes `ZOWI_BASE_v2.hex`
+  directly from the bundled resources (`app.qrc`, `:/firmware/...`). For USB it
+  reopens the TTY at the Optiboot bootloader baud (`usb_bootloader_baud`,
+  default `115200`), pulses the DTR reset and uploads via STK500v1, then
+  restores the operating baud (`usb_baud`) and reconnects to the running
+  firmware. For Bluetooth it triggers the STATE-pin reset by reconnecting.
+- **Restore feedback.** While a restore runs, the *Connection* section and the
+  restore option are disabled; the outcome is reported in the message bar
+  (`restore_started` / `restore_success` / `restore_failed`) in the 5 supported
+  locales, and a live progress bar (yellow text above, left-to-right fill)
+  occupies the message-bar position during the upload.
+- **Blocking transport switch in Settings.** Picking **Automatic** / **Bluetooth**
+  / **USB cable** in the *Connection* selector now tears down the live link,
+  switches the backend, and reconnects with a configurable timeout
+  (`transport_timeout`, default `1500 ms`). If the chosen transport cannot
+  connect in time, it reports an error and reverts to the previous transport.
+  The whole Settings screen is disabled during the switch.
+- **Transport auto-fallback on (re)registration / forget / reset.** Starting the
+  pairing wizard, forgetting the Zowi in Settings, or resetting from the splash
+  screen now forces the transport back to **Automatic**
+  (`setTransportPreference`).
+- **Rename lock after pairing.** `WizardRenameScreen` disables the name field
+  and rename button for a configurable period (`rename_lock_ms`, default
+  `1500 ms`) after appearing, giving the robot time to finish its welcome
+  gesture before the user types/confirms.
+- **DEV overlay improvements (diagnostic).** The `DevOverlay` now opens expanded
+  by default, word-wraps its text, is resizable from its right / bottom / corner
+  edges, and has a **Copy** button that places the full log on the clipboard.
+- **Pre-upload low-battery confirmation on restore.** Before the upload, the
+  running firmware's reported battery level is checked (mirroring the CLI's
+  `--force-low-battery` flow); if it is below the configurable
+  `restore_low_battery_threshold` (default `50`) a confirmation dialog is shown
+  over the progress bar and the restore is deferred. **Continue** proceeds with
+  the reset+upload; **Cancel** aborts without touching the robot. New signal
+  `firmwareRestoreBatteryLow(level)` and the `confirmRestoreBattery(bool)` slot
+  back this handshake.
 
 ### Changed
+- `config.json` gains `usb_bootloader_baud` (`115200`), `transport_timeout`
+  (`1500`), `rename_lock_ms` (`1500`), `restore_low_battery_threshold` (`50`),
+  `restore_simulate_low_battery` (testing aid) and `factory_firmware_path`.
+- Transport persistence now goes through the shared `SessionController` store so
+  the DEV *SESSION* panel reflects the live `transport` value.
+- `scripts/sync_firmware_from_zowiLibs.sh` now matches the current zowiLibs
+  layout (`code/base/` and `code/games/<name>/<name>.hex`) and copies all game
+  firmware, including Adivinawi.
 - The "no Bluetooth" splash banner now only appears when **neither** a
   Bluetooth adapter **nor** a USB robot is available, and its message guides
   the user to plug in via USB or enable Bluetooth.
 - Home-screen auto-connect on launch now connects over USB when USB is the
   active transport and a robot is present, falling back to the saved Bluetooth
   device otherwise.
+
+### Fixed
+- **USB restore failed silently.** `restoreFirmware` trusted `m_deviceAddress`,
+  which the serial backend clears on every reconnect, so the USB target was
+  empty and the upload bailed out before even reopening the port. It now falls
+  back to `m_usbPort` / `m_knownUsbPorts`, and `onConnectionChanged(true)`
+  restores `m_deviceAddress` from the USB port.
+- **`qrc:/` firmware path not openable.** `QFile` does not understand the
+  `qrc:/` URL syntax used by QML; the path is now normalised to the `:/`
+  resource syntax before extracting the HEX to a temporary file (the temp file
+  is kept alive for the duration of the upload).
 
 ## [0.4.0] - 2026-07-17
 
@@ -242,17 +219,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial Debian / Lliurex packaging (`zowi-desktop`): GUI and CLI built against
-  the system Qt 6, with automatic `CAP_NET_ADMIN` assignment via `postinst` so
-  BlueZ SPP works without a manual `setcap`.
+  the system Qt 6, with a signed APT repository published to GitHub Pages and
+  Wayland support.
 
 ## [0.1.0] - 2026-07-13
 
 ### Added
-- First release of Zowi Desktop.
-- Graphical wizard to scan, pair and connect to a Zowi robot over Bluetooth
-  (BlueZ SPP).
-- Command-line tool (`zowi_cli`) to control, program and flash Zowi firmware.
-- Multi-language user interface (Spanish, Catalan, English, French, Bulgarian)
-  backed by a translation engine and JSON locale files.
-- Settings and firmware-flash screens, plus a status bar reflecting connection
-  states.
+- Initial release: desktop GUI and CLI to connect to a Zowi robot over
+  Bluetooth, drive its behaviours, manage firmware, and a translation engine
+  with the 5 supported locales.
