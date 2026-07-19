@@ -8,7 +8,7 @@ Window {
     visible: true
     width: 1024
     height: 600
-    title: "Zowi Desktop - " + (stack.currentItem && stack.currentItem.screenName ? stack.currentItem.screenName : "")
+    title: "ZowiDesktop - " + AppVersion + (stack.currentItem && stack.currentItem.screenName ? " - " + stack.currentItem.screenName : "")
     color: "#f4f9f4"
 
     property bool paired: false

@@ -228,6 +228,7 @@ int main(int argc, char *argv[])
     view.rootContext()->setContextProperty(QStringLiteral("Config"), &config);
     view.rootContext()->setContextProperty(QStringLiteral("Session"), &session);
     view.rootContext()->setContextProperty(QStringLiteral("Bluetooth"), &bluetooth);
+    view.rootContext()->setContextProperty(QStringLiteral("AppVersion"), QString(ZOWI_VERSION));
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setWidth(1024);
     view.setHeight(600);

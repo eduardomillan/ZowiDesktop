@@ -77,6 +77,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Translator", &translator);
     engine.rootContext()->setContextProperty("Bluetooth", &bluetooth);
     engine.rootContext()->setContextProperty("Config", &config);
+    engine.rootContext()->setContextProperty("AppVersion", QString(ZOWI_VERSION));
 
 #ifdef QT_DEBUG
     s_qmlPath = QUrl::fromLocalFile("src/views/main.qml").toString();
