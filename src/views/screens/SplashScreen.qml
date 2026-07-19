@@ -176,8 +176,10 @@ Rectangle {
 
             onActivated: {
                 var loc = model.get(currentIndex).locale
-                if (Translator.currentLocale() !== loc)
+                if (Translator.currentLocale() !== loc) {
                     Translator.load(loc)
+                    Session.saveString("locale", loc)
+                }
             }
 
             contentItem: Text {

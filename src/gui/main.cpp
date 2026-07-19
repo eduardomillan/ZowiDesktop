@@ -61,10 +61,14 @@ int main(int argc, char *argv[])
     ConfigController config;
     bluetooth.setSessionController(&session);
 
-    QString locale = QLocale::system().name();
-    QStringList supported = translator.availableLocales();
-    if (!supported.contains(locale))
-        locale = "en_US";
+    QString locale = session.getString("locale", "");
+    if (locale.isEmpty()) {
+        locale = QLocale::system().name();
+        QStringList supported = translator.availableLocales();
+        if (!supported.contains(locale))
+            locale = "en_US";
+        session.saveString("locale", locale);
+    }
     translator.load(locale);
 
     // --- QML engine ---
