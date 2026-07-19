@@ -1,6 +1,7 @@
 # Build
 build/
 build-*/
+build-asan/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake

@@ -13,8 +13,8 @@ Leyenda de estados de la máquina de situación:
 
 ## A. Según transportes disponibles (arranque, sin robot registrado)
 
-- [ ] **A1 — Solo Bluetooth disponible**: lanza el asistente de emparejamiento Bt (flujo original).
-- [ ] **A2 — Solo USB disponible**: sin pairing; el registro se simplifica a detectar puerto serie y confirmar conexión.
+- [X] **A1 — Solo Bluetooth disponible**: lanza el asistente de emparejamiento Bt (flujo original).
+- [X] **A2 — Solo USB disponible**: sin pairing; el registro se simplifica a detectar puerto serie y confirmar conexión.
 - [ ] **A3 — Ambos disponibles**: Bt es prioritario por defecto (`TransportAuto` → Bt). Si el robot aparece también por USB, se advierte y se recomienda desconectar el cable.
 - [ ] **A4 — Ninguno disponible**: avisa y arranca en *modo demo*; acciones que requieren hardware deshabilitadas/simuladas.
 
