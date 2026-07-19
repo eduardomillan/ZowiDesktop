@@ -23,6 +23,93 @@ ScreenTemplate {
 
     function tr(source) { return Translator.translate("SettingsScreen.qml", source) }
 
+    function transportLabel(t) {
+        if (t === Robot.TransportUsb) return tr("via_usb")
+        if (t === Robot.TransportBluetooth) return tr("via_bluetooth")
+        return tr("via_bluetooth")
+    }
+
+    function registeredTransportLabel() {
+        var r = Session.loadActiveZowiTransport()
+        if (r === "usb") return tr("via_usb")
+        if (r === "bluetooth") return tr("via_bluetooth")
+        return transportLabel(Robot.activeTransport)
+    }
+
+    // --- Connection situation helpers -------------------------------------
+    function connectionStatusText() {
+        var s = Robot.situation
+        if (s === Robot.SituationConnected)
+            return tr("status_connected").arg(transportLabel(Robot.activeTransport))
+        if (s === Robot.SituationConnecting)
+            return tr("status_connecting")
+        if (s === Robot.SituationDisconnected)
+            return tr("status_disconnected")
+        if (s === Robot.SituationTransportLost)
+            return tr("status_transport_lost").arg(registeredTransportLabel())
+        if (s === Robot.SituationUnregistered)
+            return tr("status_unregistered")
+        return tr("status_demo")
+    }
+
+    function connectionStatusColor() {
+        var s = Robot.situation
+        if (s === Robot.SituationConnected) return "#2d5a2d"
+        if (s === Robot.SituationConnecting) return "#2d5a2d"
+        if (s === Robot.SituationDemo || s === Robot.SituationTransportLost)
+            return "#c0392b"
+        return "#8a6d1f"
+    }
+
+    // Returns the list of contextual actions for the current situation. Each
+    // entry is { label: <i18n key>, action: <fn> }.
+    function connectionActions() {
+        var s = Robot.situation
+        var acts = []
+        if (s === Robot.SituationDisconnected) {
+            acts.push({ label: "action_retry", action: settingsScreen.retryConnection })
+            acts.push({ label: "action_forget_reconfigure", action: settingsScreen.forgetZowi })
+        } else if (s === Robot.SituationTransportLost) {
+            acts.push({ label: "action_retry", action: settingsScreen.retryConnection })
+            acts.push({ label: "action_forget_reconfigure", action: settingsScreen.forgetZowi })
+        } else if (s === Robot.SituationUnregistered) {
+            acts.push({ label: "action_register", action: settingsScreen.startRegistration })
+        } else if (s === Robot.SituationDemo) {
+            acts.push({ label: "action_refresh", action: settingsScreen.refreshTransports })
+        }
+        // USB quick-connect whenever USB is present but we are not connected.
+        if (Robot.usbAvailable && !Robot.connected &&
+            s !== Robot.SituationUnregistered) {
+            acts.push({ label: "action_connect_usb", action: settingsScreen.connectUsb })
+        }
+        return acts
+    }
+
+    function retryConnection() {
+        if (msgBar.visible || settingsScreen.restoring || settingsScreen.switching) return
+        settingsScreen.switching = true
+        var ok = Robot.switchTransport(Robot.TransportAuto)
+        settingsScreen.switching = false
+        if (ok) msgBar.show(tr("transport_switched"))
+        else msgBar.show(tr("transport_failed"), "#c0392b")
+    }
+
+    function connectUsb() {
+        if (msgBar.visible || settingsScreen.restoring) return
+        Robot.connectUsb()
+    }
+
+    function refreshTransports() {
+        Robot.refreshTransports()
+    }
+
+    function startRegistration() {
+        if (msgBar.visible || settingsScreen.restoring) return
+        Session.saveWizardDismissed(false)
+        Robot.setTransportPreference(Robot.TransportAuto)
+        settingsScreen.forgetCompleted()
+    }
+
     // `connGated: true` options are only usable while a Zowi is connected
     // (mirrors ZowiAppReborn's zowiDependantViews: rename, restore firmware,
     // calibrate). The rest are always available.
@@ -39,7 +126,7 @@ ScreenTemplate {
     function restoreFirmware() {
         if (msgBar.visible) return
         if (settingsScreen.restoring) return
-        if (!Bluetooth.connected) {
+        if (!Robot.connected) {
             msgBar.show(tr("restore_failed"), "#c0392b")
             return
         }
@@ -49,13 +136,13 @@ ScreenTemplate {
         // Phase 2: restoreFirmware() runs synchronously on the GUI thread and
         // reports progress and outcome via dedicated signals
         // (onFirmwareRestoreStarted / Progress / Finished).
-        Bluetooth.restoreFirmware(Config.get("factory_firmware_path"))
+        Robot.restoreFirmware(Config.get("factory_firmware_path"))
     }
 
     function forgetZowi() {
         if (msgBar.visible) return
         var addr = Session.loadActiveZowiDeviceAddress()
-        if (!addr) addr = Bluetooth.deviceAddress
+        if (!addr) addr = Robot.deviceAddress
         if (!addr) {
             // Nothing registered to forget: just drop any stale app data and
             // fall back to Automatic transport.
@@ -63,13 +150,13 @@ ScreenTemplate {
             Session.saveActiveZowiDeviceAddress("")
             Session.saveActiveZowiName("")
             Session.saveWizardDismissed(false)
-            Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
+            Robot.setTransportPreference(Robot.TransportAuto)
             msgBar.show(tr("reset_no_zowi"), "#c0392b")
             return
         }
         settingsScreen.forgetting = true
-        if (Bluetooth.connected) Bluetooth.disconnectFromDevice()
-        Bluetooth.unpairDevice(addr)
+        if (Robot.connected) Robot.disconnectFromDevice()
+        Robot.unpairDevice(addr)
         // Forget the registered Zowi: drop every "active*" session key and
         // mark the wizard as not dismissed so the app returns to a clean state.
         Session.clearActive()
@@ -78,12 +165,12 @@ ScreenTemplate {
     }
 
     Connections {
-        target: Bluetooth
+        target: Robot
         function onUnpairFinished(success, message) {
             if (!settingsScreen.forgetting) return
             settingsScreen.forgetting = false
             // The registered Zowi is gone: fall back to Automatic transport.
-            Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
+            Robot.setTransportPreference(Robot.TransportAuto)
             if (success)
                 msgBar.show(tr("unpair_success"))
             else
@@ -126,7 +213,10 @@ ScreenTemplate {
             id: optionCol
             width: parent.width
 
-            // --- Connection (transport) selector ---
+            // --- Connection status + contextual actions ---
+            // The transport is no longer chosen manually: the controller's
+            // situation state machine (see .local/transport_thoughts.md) decides
+            // it and we surface the state plus the actions that make sense now.
             Rectangle {
                 width: optionCol.width
                 height: connCol.implicitHeight + 28
@@ -148,97 +238,45 @@ ScreenTemplate {
                         color: "#2d5a2d"
                         opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
                     }
+
                     Text {
-                        text: settingsScreen.tr("connection_desc")
-                        font.pixelSize: 12
-                        color: "#2d5a2d"
-                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 0.7
-                        wrapMode: Text.WordWrap
                         width: parent.width
+                        text: settingsScreen.connectionStatusText()
+                        font.pixelSize: 13
+                        color: settingsScreen.connectionStatusColor()
+                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
+                        wrapMode: Text.WordWrap
                     }
 
-                    // Segmented control: Automatic / Bluetooth / USB.
-                    Row {
+                    // Contextual actions for the current situation.
+                    Flow {
+                        width: parent.width
                         spacing: 8
-                        // Lock transport switching while a firmware restore is
-                        // running or a transport switch is in progress.
                         enabled: !settingsScreen.restoring && !settingsScreen.switching
                         opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
                         Repeater {
-                            model: [
-                                { t: Bluetooth.TransportAuto,      label: "transport_auto",      hint: "transport_auto_hint", avail: true },
-                                { t: Bluetooth.TransportBluetooth, label: "transport_bluetooth", hint: "transport_bt_hint",   avail: Bluetooth.bluetoothAvailable },
-                                { t: Bluetooth.TransportUsb,       label: "transport_usb",       hint: "transport_usb_hint",  avail: Bluetooth.usbAvailable }
-                            ]
+                            model: settingsScreen.connectionActions()
                             delegate: Rectangle {
-                                property bool isSel: Bluetooth.transport === modelData.t
-                                width: 118
                                 height: 40
                                 radius: 8
-                                enabled: modelData.avail
-                                opacity: modelData.avail ? 1.0 : 0.4
-                                color: isSel ? "#21a69b" : "#ffffff"
-                                border.color: isSel ? "#21a69b" : "#cfe3cf"
+                                width: actionLabel.implicitWidth + 28
+                                color: "#ffffff"
+                                border.color: "#21a69b"
                                 border.width: 1
-
                                 Text {
+                                    id: actionLabel
                                     anchors.centerIn: parent
                                     text: settingsScreen.tr(modelData.label)
-                                    color: parent.isSel ? "#ffffff" : "#2d5a2d"
+                                    color: "#2d5a2d"
                                     font.pixelSize: 13
-                                    font.bold: parent.isSel
                                 }
                                 MouseArea {
                                     anchors.fill: parent
-                                    enabled: modelData.avail && !settingsScreen.restoring && !settingsScreen.switching
+                                    enabled: !settingsScreen.restoring && !settingsScreen.switching
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        settingsScreen.switching = true
-                                        var ok = Bluetooth.switchTransport(modelData.t)
-                                        settingsScreen.switching = false
-                                        if (ok)
-                                            msgBar.show(settingsScreen.tr("transport_switched"))
-                                        else
-                                            msgBar.show(settingsScreen.tr("transport_failed"), "#c0392b")
-                                    }
+                                    onClicked: modelData.action()
                                 }
                             }
-                        }
-                    }
-
-                    // USB quick actions, shown when USB is the chosen/active transport.
-                    Row {
-                        spacing: 10
-                        enabled: !settingsScreen.restoring && !settingsScreen.switching
-                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
-                        visible: Bluetooth.transport === Bluetooth.TransportUsb ||
-                                 Bluetooth.activeTransport === Bluetooth.TransportUsb
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            font.pixelSize: 12
-                            color: Bluetooth.usbAvailable ? "#2d5a2d" : "#c0392b"
-                            text: Bluetooth.usbAvailable
-                                  ? settingsScreen.tr("usb_connect")
-                                  : settingsScreen.tr("usb_no_ports")
-                                MouseArea {
-                                    anchors.fill: parent
-                                    enabled: Bluetooth.usbAvailable && !Bluetooth.connected && !settingsScreen.restoring
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: Bluetooth.connectUsb()
-                                }
-                        }
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: settingsScreen.tr("usb_refresh")
-                            color: "#2980b9"
-                            font.pixelSize: 12
-                            font.underline: true
-                                MouseArea {
-                                    anchors.fill: parent
-                                    enabled: !settingsScreen.restoring
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: Bluetooth.refreshTransports()
-                                }
                         }
                     }
                 }
@@ -255,7 +293,7 @@ ScreenTemplate {
                     property bool effectiveEnabled: (!msgBar.visible) &&
                         (!settingsScreen.restoring) &&
                         (!settingsScreen.switching) &&
-                        (modelData.connGated ? Bluetooth.connected : true)
+                        (modelData.connGated ? Robot.connected : true)
 
                     width: optionCol.width
                     height: 76
@@ -427,7 +465,7 @@ ScreenTemplate {
                         }
                         onClicked: {
                             settingsScreen.batteryLow = false
-                            Bluetooth.confirmRestoreBattery(true)
+                            Robot.confirmRestoreBattery(true)
                         }
                     }
 
@@ -447,7 +485,7 @@ ScreenTemplate {
                         }
                         onClicked: {
                             settingsScreen.batteryLow = false
-                            Bluetooth.confirmRestoreBattery(false)
+                            Robot.confirmRestoreBattery(false)
                         }
                     }
                 }

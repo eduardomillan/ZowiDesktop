@@ -64,7 +64,7 @@ Rectangle {
 
     Button {
         id: disconnectBtn
-        visible: root.showDisconnectButton && Bluetooth.connected
+        visible: root.showDisconnectButton && Robot.connected
         implicitWidth: 100
         height: 32
         anchors {

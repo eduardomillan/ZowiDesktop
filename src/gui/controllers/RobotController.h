@@ -19,13 +19,26 @@ class SessionController;
 // backend) or over a USB/serial TTY (the serial backend). The active transport
 // is selected automatically (USB preferred when a Zowi is detected on a port)
 // but the user can override it from the UI. See docs/project for the design.
-class BluetoothController : public QObject
+class RobotController : public QObject
 {
     Q_OBJECT
 public:
     // Keep the values stable: they are persisted to config/session.
     enum Transport { Auto = 0, Bluetooth = 1, Usb = 2 };
     Q_ENUM(Transport)
+
+    // High-level connection situation derived from the transport state machine
+    // (see .local/transport_thoughts.md). The UI reacts to this instead of
+    // letting the user pick a transport manually.
+    enum Situation {
+        Demo = 0,          // no transport available: demo mode
+        Unregistered = 1,  // transport(s) available, no Zowi registered yet
+        Connecting = 2,    // attempting to (re)connect to the registered Zowi
+        Connected = 3,     // registered Zowi connected
+        Disconnected = 4,  // registered, transport available, not connected
+        TransportLost = 5  // registered but its transport is unavailable now
+    };
+    Q_ENUM(Situation)
 
 private:
     // Enum values exposed to QML (context-property objects can't reference
@@ -44,13 +57,30 @@ private:
     Q_PROPERTY(QString deviceAddress READ deviceAddress NOTIFY deviceChanged)
     Q_PROPERTY(int battery READ battery NOTIFY batteryChanged)
     Q_PROPERTY(bool restoring READ isRestoring NOTIFY restoringChanged)
+    // Situation enum values surfaced to QML (context-property objects can't
+    // reference Q_ENUM members directly).
+    Q_PROPERTY(int SituationDemo READ situationDemo CONSTANT)
+    Q_PROPERTY(int SituationUnregistered READ situationUnregistered CONSTANT)
+    Q_PROPERTY(int SituationConnecting READ situationConnecting CONSTANT)
+    Q_PROPERTY(int SituationConnected READ situationConnected CONSTANT)
+    Q_PROPERTY(int SituationDisconnected READ situationDisconnected CONSTANT)
+    Q_PROPERTY(int SituationTransportLost READ situationTransportLost CONSTANT)
+    Q_PROPERTY(int situation READ situation NOTIFY situationChanged)
 
 public:
-    explicit BluetoothController(QObject *parent = nullptr);
+    explicit RobotController(QObject *parent = nullptr);
 
     int transportAuto() const { return Auto; }
     int transportBluetooth() const { return Bluetooth; }
     int transportUsb() const { return Usb; }
+
+    int situationDemo() const { return Demo; }
+    int situationUnregistered() const { return Unregistered; }
+    int situationConnecting() const { return Connecting; }
+    int situationConnected() const { return Connected; }
+    int situationDisconnected() const { return Disconnected; }
+    int situationTransportLost() const { return TransportLost; }
+    int situation() const;
 
     bool isBluetoothAvailable() const;
     bool isUsbAvailable() const;
@@ -108,6 +138,7 @@ signals:
     void activeTransportChanged();
     void transportsChanged();
     void restoringChanged();
+    void situationChanged();
 
 private:
     void parseIncoming();
@@ -119,6 +150,16 @@ private:
     void wireBackend();
     void setActiveTransport(Transport t);
     void revertTransport(Transport prev);
+
+    // Situation state machine helpers. computeSituation() derives the current
+    // Situation from availability + registration + connection; maybeEmitSituation()
+    // recomputes and emits situationChanged() only when it actually changed.
+    Situation computeSituation() const;
+    void maybeEmitSituation();
+    // Persist the transport the active Zowi was registered with (bt/usb) so the
+    // transport stays tied to the registration.
+    void persistRegistrationTransport(Transport t);
+    Situation m_situation = Demo;
 
     // Hotplug / detection.
     void pollTransports();

@@ -71,7 +71,7 @@ Window {
         welcome.startWizard.connect(function() {
             // Starting (or restarting) the pairing wizard from scratch: fall back
             // to Automatic transport so the wizard can drive the connection.
-            Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
+            Robot.setTransportPreference(Robot.TransportAuto)
             var wizard = stack.push("qrc:/src/views/screens/WizardScreen.qml")
             wizard.startClicked.connect(function() {
                 var scan = stack.push("qrc:/src/views/screens/ScanScreen.qml")

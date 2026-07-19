@@ -32,7 +32,7 @@ src/
 │   ├── SessionService
 │   └── TranslationEngine
 ├── controllers/          # ViewModel layer
-│   ├── BluetoothController
+│   ├── RobotController
 │   ├── SessionController
 │   ├── TranslatorController
 │   └── ConfigController

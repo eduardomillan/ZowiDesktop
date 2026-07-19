@@ -40,7 +40,7 @@
 - [x] Implement `QBluetoothSocket` (RFCOMM SPP, UUID `00001101-0000-1000-8000-00805F9B34FB`) — `src/backends/bt_qt/qt_bluetooth_backend.cpp`
 - [x] Pairing flow and persistent storage of paired device (CLI `connect`/`disconnect` + GUI `SessionController`)
 - [x] Connection status indicator (connected / disconnected) — shown in GUI `HomeScreen.qml` and `ScanScreen.qml`
-- [x] Low-battery indicator in the GUI status bar — `BluetoothController` exposes `battery` (parsed from `&&B`/`B`); `StatusBar.qml` shows the percentage and turns red below 50%
+- [x] Low-battery indicator in the GUI status bar — `RobotController` exposes `battery` (parsed from `&&B`/`B`); `StatusBar.qml` shows the percentage and turns red below 50%
 
 ### M3 — Zowi control pad
 - [x] Directional movement pad (forward, backward, turn left/right) — implemented in `zowi_cli control` minigame and shared `zowi::robot_commands` builder (docs/firmware/PROTOCOL.md)

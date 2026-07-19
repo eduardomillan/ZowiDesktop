@@ -215,19 +215,19 @@ int main(int argc, char *argv[])
 
     ConfigController config;
     PreviewSession session;
-    PreviewBluetooth bluetooth;
+    PreviewBluetooth robot;
 
     if (options.connected) {
         session.saveActiveZowiDeviceAddress(options.deviceAddress);
         session.saveActiveZowiName(options.deviceName);
-        bluetooth.setInitialConnection(options.deviceName, options.deviceAddress);
+        robot.setInitialConnection(options.deviceName, options.deviceAddress);
     }
 
     QQuickView view;
     view.rootContext()->setContextProperty(QStringLiteral("Translator"), &translator);
     view.rootContext()->setContextProperty(QStringLiteral("Config"), &config);
     view.rootContext()->setContextProperty(QStringLiteral("Session"), &session);
-    view.rootContext()->setContextProperty(QStringLiteral("Bluetooth"), &bluetooth);
+    view.rootContext()->setContextProperty(QStringLiteral("Robot"), &robot);
     view.rootContext()->setContextProperty(QStringLiteral("AppVersion"), QString(ZOWI_VERSION));
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setWidth(1024);

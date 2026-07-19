@@ -166,9 +166,9 @@ Item {
                     font.pixelSize: 9
                     wrapMode: Text.WordWrap
                     text: {
-                        var s = Bluetooth.connected ? "● Connected" : "● Disconnected"
-                        if (Bluetooth.connected && Bluetooth.deviceAddress)
-                            s += "  " + Bluetooth.deviceName + " (" + Bluetooth.deviceAddress + ")"
+                        var s = Robot.connected ? "● Connected" : "● Disconnected"
+                        if (Robot.connected && Robot.deviceAddress)
+                            s += "  " + Robot.deviceName + " (" + Robot.deviceAddress + ")"
                         return s
                     }
                 }
@@ -178,17 +178,7 @@ Item {
                     color: "#ddd"
                     font.pixelSize: 9
                     wrapMode: Text.WordWrap
-                    text: "Battery: " + (Bluetooth.battery >= 0 ? Bluetooth.battery + "%" : "N/A")
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    color: "#aaa"
-                    font.pixelSize: 9
-                    wrapMode: Text.WordWrap
-                    visible: Bluetooth.connected
-                    text: (Bluetooth.deviceName || Session.loadActiveZowiName())
-                          + " / " + (Bluetooth.deviceAddress || Session.loadActiveZowiDeviceAddress())
+                    text: "Battery: " + (Robot.battery >= 0 ? Robot.battery + "%" : "N/A")
                 }
 
                 Rectangle {
@@ -305,7 +295,7 @@ Item {
                             var txt = ""
                             for (var i = 0; i < logModel.count; ++i)
                                 txt += logModel.get(i).text + "\n"
-                            Bluetooth.copyText(txt)
+                            Robot.copyText(txt)
                         }
                     }
 
@@ -357,7 +347,7 @@ Item {
     }
 
     Connections {
-        target: Bluetooth
+        target: Robot
 
         function onDataReceived(data) {
             appendLog("> " + data, false)
@@ -368,7 +358,7 @@ Item {
         }
 
         function onConnectionChanged() {
-            appendLog("~ " + (Bluetooth.connected ? "connected" : "disconnected"), false)
+            appendLog("~ " + (Robot.connected ? "connected" : "disconnected"), false)
         }
     }
 

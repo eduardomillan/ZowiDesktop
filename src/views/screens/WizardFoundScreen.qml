@@ -66,7 +66,7 @@ ScreenTemplate {
             enabled: !wizardFound.pairingAttempt
 
             onClicked: {
-                if (Bluetooth.connected) {
+                if (Robot.connected) {
                     wizardFound.paired()
                 } else {
                     var addr = Session.loadActiveZowiDeviceAddress()
@@ -74,7 +74,7 @@ ScreenTemplate {
                         wizardFound.pairingAttempt = true
                         errorText.visible = false
                         pairingTimer.restart()
-                        Bluetooth.connectToDevice(addr)
+                        Robot.connectToDevice(addr)
                     }
                 }
             }
@@ -94,10 +94,10 @@ ScreenTemplate {
     }
 
     Connections {
-        target: Bluetooth
+        target: Robot
 
         function onConnectionChanged() {
-            if (Bluetooth.connected) {
+            if (Robot.connected) {
                 pairingTimer.stop()
                 wizardFound.pairingAttempt = false
                 wizardFound.paired()

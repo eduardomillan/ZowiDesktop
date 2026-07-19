@@ -42,6 +42,16 @@ void SessionController::saveWizardDismissed(bool dismissed)
     m_store.setBool("wizardDismissed", dismissed);
 }
 
+QString SessionController::loadActiveZowiTransport()
+{
+    return QString::fromStdString(m_store.getString("activeZowiTransport", ""));
+}
+
+void SessionController::saveActiveZowiTransport(const QString &transport)
+{
+    m_store.setString("activeZowiTransport", transport.toStdString());
+}
+
 QStringList SessionController::keys() const
 {
     QStringList result;

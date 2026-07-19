@@ -59,10 +59,10 @@ Qt Quick application. Controllers wrap core classes and expose them to QML via c
 |-----------|-------|-------------|
 | `SessionController` | `SessionStore` | `Session` |
 | `TranslatorController` | `TranslationEngine` | `Translator` |
-| `BluetoothController` | `QtBluetoothBackend` **or** `SerialBluetoothBackend` | `Bluetooth` |
+| `RobotController` | `QtBluetoothBackend` **or** `SerialBluetoothBackend` | `Bluetooth` |
 | `ConfigController` | `ConfigStore` | `Config` |
 
-`BluetoothController` is transport-agnostic: it builds either the Qt/BlueZ SPP
+`RobotController` is transport-agnostic: it builds either the Qt/BlueZ SPP
 backend (`QtBluetoothBackend`) or the serial/USB backend
 (`SerialBluetoothBackend`) depending on the selected transport
 (`Automatic` / `Bluetooth` / `USB`, chosen from the Settings screen). In
@@ -110,7 +110,7 @@ src/
 │   ├── CMakeLists.txt
 │   ├── main.cpp                     # Entry point, hot-reload, context wiring
 │   └── controllers/
-│       ├── BluetoothController.h/.cpp
+│       ├── RobotController.h/.cpp
 │       ├── ConfigController.h/.cpp
 │       ├── SessionController.h/.cpp
 │       └── TranslatorController.h/.cpp

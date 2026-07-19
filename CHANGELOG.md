@@ -5,12 +5,37 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - 2026-07-18
+## [0.6.0] - 2026-07-19 (en pruebas)
+
+> **Estado:** esta versión está en fase de pruebas. Los cambios de transporte y
+> la máquina de estados de situación aún se están validando; pueden aparecer
+> ajustes antes del release definitivo.
+
+### Changed
+- **Transport is no longer user-selectable.** The *Connection* selector in
+  **Settings** (Automatic / Bluetooth / USB) has been replaced by a status panel
+  driven by a `RobotController` situation state machine
+  (`Demo` / `Unregistered` / `Connecting` / `Connected` / `Disconnected` /
+  `TransportLost`). The app now picks the best available transport on its own and
+  offers only contextual actions (retry, register, forget & reconfigure, connect
+  via USB, refresh).
+- **The registered transport is now tied to the Zowi registration.**
+  `RobotController` persists `activeZowiTransport` (bt/usb) when a registered
+  Zowi connects, so switching transports requires *forgetting* the Zowi.
+- **Renamed `BluetoothController` → `RobotController`** and the QML context
+  property `Bluetooth` → `Robot`, reflecting that the controller is
+  transport-agnostic (covers connection, registration, firmware restore and the
+  new situation state machine).
+- **Window title now shows the app version.** Format:
+  `ZowiDesktop - {version} - {screen name}`.
+- **DEV overlay** no longer duplicates the robot name/address line.
+
+
 
 ### Added
 - **Choose USB or Bluetooth in the GUI.** The desktop app is no longer locked
   to Bluetooth: a new *Connection* selector in **Settings** lets the user pick
-  **Automatic**, **Bluetooth** or **USB cable**. The `BluetoothController` is
+  **Automatic**, **Bluetooth** or **USB cable**. The `RobotController` is
   now transport-agnostic and can drive either the Qt/BlueZ SPP backend or the
   serial/USB backend.
 - **Automatic transport detection (hybrid).** In *Automatic* mode the app

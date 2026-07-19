@@ -1,4 +1,4 @@
-#include "BluetoothController.h"
+#include "RobotController.h"
 #include "SessionController.h"
 
 #include <algorithm>
@@ -32,16 +32,16 @@ constexpr int kPollIntervalMs = 2500;
 // How long (ms) to wait for a Zowi to answer the identification handshake.
 constexpr int kProbeTimeoutMs = 1800;
 
-BluetoothController::Transport transportFromString(const QString &s)
+RobotController::Transport transportFromString(const QString &s)
 {
     const QString v = s.trimmed().toLower();
-    if (v == "usb") return BluetoothController::Usb;
-    if (v == "bluetooth" || v == "bt") return BluetoothController::Bluetooth;
-    return BluetoothController::Auto;
+    if (v == "usb") return RobotController::Usb;
+    if (v == "bluetooth" || v == "bt") return RobotController::Bluetooth;
+    return RobotController::Auto;
 }
 } // namespace
 
-BluetoothController::BluetoothController(QObject *parent)
+RobotController::RobotController(QObject *parent)
     : QObject(parent)
 {
     // The user's transport preference is persisted in the session store; the
@@ -82,16 +82,17 @@ BluetoothController::BluetoothController(QObject *parent)
     useBluetoothBackend();
 
     m_pollTimer.setInterval(kPollIntervalMs);
-    connect(&m_pollTimer, &QTimer::timeout, this, &BluetoothController::pollTransports);
+    connect(&m_pollTimer, &QTimer::timeout, this, &RobotController::pollTransports);
     m_pollTimer.start();
 
     // Initial availability snapshot + auto-detection.
     refreshTransports();
+    m_situation = computeSituation();
 }
 
 // --- Backend construction ---------------------------------------------------
 
-void BluetoothController::useBluetoothBackend()
+void RobotController::useBluetoothBackend()
 {
     if (m_backend && m_backendKind == Bluetooth) return;
     m_backend = std::make_unique<zowi::QtBluetoothBackend>();
@@ -100,7 +101,7 @@ void BluetoothController::useBluetoothBackend()
     setActiveTransport(Bluetooth);
 }
 
-void BluetoothController::useSerialBackend()
+void RobotController::useSerialBackend()
 {
 #ifdef ZOWI_HAVE_SERIAL
     if (m_backend && m_backendKind == Usb) return;
@@ -115,7 +116,7 @@ void BluetoothController::useSerialBackend()
 #endif
 }
 
-void BluetoothController::wireBackend()
+void RobotController::wireBackend()
 {
     if (!m_backend) return;
 
@@ -141,6 +142,15 @@ void BluetoothController::wireBackend()
                 if (!m_deviceAddress.isEmpty())
                     emit deviceChanged();
             }
+            // If a Zowi is registered, tie its registration to the transport we
+            // actually connected with so future launches honour it.
+            {
+                zowi::SessionStore session;
+                const QString addr = QString::fromStdString(
+                    session.getString("activeZowiDeviceAddress"));
+                if (!addr.isEmpty())
+                    persistRegistrationTransport(m_backendKind);
+            }
         } else {
             m_deviceName.clear();
             m_deviceAddress.clear();
@@ -148,6 +158,7 @@ void BluetoothController::wireBackend()
             emit deviceChanged();
             emit batteryChanged();
         }
+        maybeEmitSituation();
     });
 
     m_backend->onDataReceived([this](const std::string &data) {
@@ -180,7 +191,7 @@ void BluetoothController::wireBackend()
     });
 }
 
-void BluetoothController::setActiveTransport(Transport t)
+void RobotController::setActiveTransport(Transport t)
 {
     if (m_activeTransport == t) return;
     m_activeTransport = t;
@@ -189,7 +200,7 @@ void BluetoothController::setActiveTransport(Transport t)
 
 // --- Incoming parsing -------------------------------------------------------
 
-void BluetoothController::parseIncoming()
+void RobotController::parseIncoming()
 {
     // The robot frames responses as &&<token><payload>%% (e.g. &&B 85.0%%) and
     // can also send line-based messages (e.g. "B 85.0"). We only need the
@@ -253,64 +264,65 @@ void BluetoothController::parseIncoming()
 
 // --- Property getters -------------------------------------------------------
 
-bool BluetoothController::isBluetoothAvailable() const
+bool RobotController::isBluetoothAvailable() const
 {
     return m_bluetoothAvailable;
 }
 
-bool BluetoothController::isUsbAvailable() const
+bool RobotController::isUsbAvailable() const
 {
     return m_usbAvailable;
 }
 
-int BluetoothController::transport() const
+int RobotController::transport() const
 {
     return static_cast<int>(m_transport);
 }
 
-int BluetoothController::activeTransport() const
+int RobotController::activeTransport() const
 {
     return static_cast<int>(m_activeTransport);
 }
 
-bool BluetoothController::isConnected() const
+bool RobotController::isConnected() const
 {
     return m_backend && m_backend->isConnected();
 }
 
-bool BluetoothController::isConnecting() const
+bool RobotController::isConnecting() const
 {
     return m_connecting;
 }
 
-void BluetoothController::setConnecting(bool value)
+void RobotController::setConnecting(bool value)
 {
     if (m_connecting == value) return;
     m_connecting = value;
     emit connectingChanged();
+    maybeEmitSituation();
 }
 
-bool BluetoothController::isScanning() const
+bool RobotController::isScanning() const
 {
     return m_scanning;
 }
 
-QString BluetoothController::deviceName() const
+QString RobotController::deviceName() const
 {
     return m_deviceName;
 }
 
-QString BluetoothController::deviceAddress() const
+QString RobotController::deviceAddress() const
 {
     return m_deviceAddress;
 }
 
-int BluetoothController::battery() const
+int RobotController::battery() const
 {
     return m_battery >= 0.0f ? static_cast<int>(std::round(m_battery)) : -1;
 }
 
-void BluetoothController::setDeviceName(const QString &name)
+void RobotController::setDeviceName(const QString &name)
 {
     if (m_deviceName != name) {
         m_deviceName = name;
@@ -320,12 +332,12 @@ void BluetoothController::setDeviceName(const QString &name)
 
 // --- Transport selection ----------------------------------------------------
 
-void BluetoothController::setTransport(int transport)
+void RobotController::setTransport(int transport)
 {
     switchTransport(transport);
 }
 
-void BluetoothController::setTransportPreference(int transport)
+void RobotController::setTransportPreference(int transport)
 {
     Transport t = static_cast<Transport>(transport);
     if (t != Auto && t != Bluetooth && t != Usb) return;
@@ -342,7 +354,7 @@ void BluetoothController::setTransportPreference(int transport)
     refreshTransports();
 }
 
-bool BluetoothController::switchTransport(int transport)
+bool RobotController::switchTransport(int transport)
 {
     Transport t = static_cast<Transport>(transport);
     if (t != Auto && t != Bluetooth && t != Usb) return false;
@@ -419,7 +431,7 @@ bool BluetoothController::switchTransport(int transport)
     return true;
 }
 
-void BluetoothController::revertTransport(Transport prev)
+void RobotController::revertTransport(Transport prev)
 {
     if (isConnected()) {
         m_backend->setAutoReconnect(false);
@@ -438,7 +450,57 @@ void BluetoothController::revertTransport(Transport prev)
     else refreshTransports();
 }
 
-QStringList BluetoothController::listUsbPorts() const
+// --- Situation state machine ------------------------------------------------
+
+int RobotController::situation() const
+{
+    return static_cast<int>(m_situation);
+}
+
+RobotController::Situation RobotController::computeSituation() const
+{
+    zowi::SessionStore session;
+    const QString addr = QString::fromStdString(
+        session.getString("activeZowiDeviceAddress"));
+    const bool registered = !addr.isEmpty();
+
+    if (!registered) {
+        if (m_bluetoothAvailable || m_usbAvailable) return Unregistered;
+        return Demo;
+    }
+
+    // Registered: the transport is tied to the registration.
+    const Transport regT = transportFromString(
+        QString::fromStdString(session.getString("activeZowiTransport", "")));
+    const bool regTransportAvail =
+        (regT == Usb)       ? m_usbAvailable :
+        (regT == Bluetooth) ? m_bluetoothAvailable :
+        (m_bluetoothAvailable || m_usbAvailable); // legacy: unknown reg transport
+
+    if (isConnected()) return Connected;
+    if (m_connecting)  return Connecting;
+    if (!regTransportAvail) return TransportLost;
+    return Disconnected;
+}
+
+void RobotController::maybeEmitSituation()
+{
+    Situation next = computeSituation();
+    if (next != m_situation) {
+        m_situation = next;
+        emit situationChanged();
+    }
+}
+
+void RobotController::persistRegistrationTransport(Transport t)
+{
+    if (!m_session) return;
+    if (t != Bluetooth && t != Usb) return;
+    m_session->saveActiveZowiTransport(t == Usb ? "usb" : "bluetooth");
+    maybeEmitSituation();
+}
+
+QStringList RobotController::listUsbPorts() const
 {
     QStringList out;
 #ifdef ZOWI_HAVE_SERIAL
@@ -448,7 +510,7 @@ QStringList BluetoothController::listUsbPorts() const
     return out;
 }
 
-void BluetoothController::refreshTransports()
+void RobotController::refreshTransports()
 {
     pollTransports();
 
@@ -473,7 +535,7 @@ void BluetoothController::refreshTransports()
     }
 }
 
-void BluetoothController::pollTransports()
+void RobotController::pollTransports()
 {
     // 1) USB port presence (cheap: does not open the port).
     QStringList ports = listUsbPorts();
@@ -491,9 +553,10 @@ void BluetoothController::pollTransports()
     m_usbAvailable = usbAvail;
     m_bluetoothAvailable = btAvail;
     if (changed) emit transportsChanged();
+    maybeEmitSituation();
 }
 
-QString BluetoothController::probeZowiOnPort(const QString &port)
+QString RobotController::probeZowiOnPort(const QString &port)
 {
 #ifndef ZOWI_HAVE_SERIAL
     Q_UNUSED(port)
@@ -541,7 +604,7 @@ QString BluetoothController::probeZowiOnPort(const QString &port)
 
 // --- Connection actions -----------------------------------------------------
 
-void BluetoothController::startScan()
+void RobotController::startScan()
 {
     if (!m_backend) return;
     // Scanning is a Bluetooth-only concept.
@@ -551,7 +614,7 @@ void BluetoothController::startScan()
     m_backend->startDiscovery();
 }
 
-void BluetoothController::stopScan()
+void RobotController::stopScan()
 {
     if (!m_backend) return;
     m_backend->stopDiscovery();
@@ -559,7 +622,7 @@ void BluetoothController::stopScan()
     emit scanningChanged();
 }
 
-void BluetoothController::connectToDevice(const QString &address)
+void RobotController::connectToDevice(const QString &address)
 {
     if (address.isEmpty()) return;
     if (m_backendKind != Bluetooth) useBluetoothBackend();
@@ -569,7 +632,7 @@ void BluetoothController::connectToDevice(const QString &address)
     emit deviceChanged();
 }
 
-void BluetoothController::connectUsb(const QString &port)
+void RobotController::connectUsb(const QString &port)
 {
     QString target = port;
     if (target.isEmpty()) target = m_usbPort;
@@ -586,13 +649,13 @@ void BluetoothController::connectUsb(const QString &port)
     emit deviceChanged();
 }
 
-void BluetoothController::copyText(const QString &text)
+void RobotController::copyText(const QString &text)
 {
     if (QGuiApplication::clipboard())
         QGuiApplication::clipboard()->setText(text);
 }
 
-void BluetoothController::disconnectFromDevice()
+void RobotController::disconnectFromDevice()
 {
     if (!m_backend) return;
     m_backend->disconnect();
@@ -602,19 +665,19 @@ void BluetoothController::disconnectFromDevice()
     emit deviceChanged();
 }
 
-void BluetoothController::unpairDevice(const QString &address)
+void RobotController::unpairDevice(const QString &address)
 {
     if (!m_backend || address.isEmpty()) return;
     m_backend->unpair(address.toStdString());
 }
 
-void BluetoothController::sendData(const QString &data)
+void RobotController::sendData(const QString &data)
 {
     if (!m_backend) return;
     m_backend->send(data.toStdString());
 }
 
-void BluetoothController::restoreFirmware(const QString &firmwarePath)
+void RobotController::restoreFirmware(const QString &firmwarePath)
 {
     // Early-failure helper: report through the dedicated restore signals so the
     // UI leaves the "restoring" state even when we never reach the upload.
@@ -718,7 +781,7 @@ void BluetoothController::restoreFirmware(const QString &firmwarePath)
     proceedWithRestore();
 }
 
-void BluetoothController::proceedWithRestore()
+void RobotController::proceedWithRestore()
 {
     const bool isUsb = m_restoreIsUsb;
     const QString target = m_restoreTarget;
@@ -824,14 +887,14 @@ void BluetoothController::proceedWithRestore()
     continueAfterUpload(ok);
 }
 
-void BluetoothController::setRestoring(bool value)
+void RobotController::setRestoring(bool value)
 {
     if (m_restoring == value) return;
     m_restoring = value;
     emit restoringChanged();
 }
 
-void BluetoothController::continueAfterUpload(bool ok)
+void RobotController::continueAfterUpload(bool ok)
 {
     const bool isUsb = m_restoreIsUsb;
     const QString target = m_restoreTarget;
@@ -856,7 +919,7 @@ void BluetoothController::continueAfterUpload(bool ok)
     finishRestore(uploadOk);
 }
 
-void BluetoothController::confirmRestoreBattery(bool proceed)
+void RobotController::confirmRestoreBattery(bool proceed)
 {
     if (!m_batteryPending) return;
     m_batteryPending = false;
@@ -866,7 +929,7 @@ void BluetoothController::confirmRestoreBattery(bool proceed)
         finishRestore(false);
 }
 
-void BluetoothController::finishRestore(bool success)
+void RobotController::finishRestore(bool success)
 {
     const QString localPath = m_restoreLocalPath;
     const QString originalPath = m_restoreOriginalPath;

@@ -8,35 +8,35 @@ import QtQuick.Controls 2.15
 Rectangle {
     id: root
     height: 36
-    color: Bluetooth.connecting
+    color: Robot.connecting
           ? "#eaf2fb"
-          : (Bluetooth.connected
-              ? (Bluetooth.battery >= 0 && Bluetooth.battery < 50 ? "#fdecea" : "#e8f5e8")
+          : (Robot.connected
+              ? (Robot.battery >= 0 && Robot.battery < 50 ? "#fdecea" : "#e8f5e8")
               : "#fff3e0")
 
     function tr(source) { return Translator.translate("StatusBar.qml", source) }
 
     property bool hasSavedZowi: Session.loadActiveZowiDeviceAddress() !== ""
-    property bool canReconnect: !Bluetooth.connected && !Bluetooth.connecting && root.hasSavedZowi
+    property bool canReconnect: !Robot.connected && !Robot.connecting && root.hasSavedZowi
 
-    property color dotColor: Bluetooth.connecting
+    property color dotColor: Robot.connecting
         ? "#2980b9"
-        : (Bluetooth.connected
-            ? (Bluetooth.battery >= 0 && Bluetooth.battery < 50 ? "#c0392b" : "#2d5a2d")
+        : (Robot.connected
+            ? (Robot.battery >= 0 && Robot.battery < 50 ? "#c0392b" : "#2d5a2d")
             : "#e67e22")
 
     function statusText() {
-        if (Bluetooth.connecting) return root.tr("status_connecting")
-        if (Bluetooth.connected) {
-            var name = Session.loadActiveZowiName() || Bluetooth.deviceName || ""
-            var mac = Bluetooth.deviceAddress ? Bluetooth.deviceAddress : ""
+        if (Robot.connecting) return root.tr("status_connecting")
+        if (Robot.connected) {
+            var name = Session.loadActiveZowiName() || Robot.deviceName || ""
+            var mac = Robot.deviceAddress ? Robot.deviceAddress : ""
             function withMac(base) {
                 return mac !== "" ? base + " · " + mac : base
             }
-            if (Bluetooth.battery >= 0)
+            if (Robot.battery >= 0)
                 return withMac(name !== ""
-                    ? root.tr("connected_name_battery").arg(name).arg(Bluetooth.battery)
-                    : root.tr("connected_battery").arg(Bluetooth.battery))
+                    ? root.tr("connected_name_battery").arg(name).arg(Robot.battery)
+                    : root.tr("connected_battery").arg(Robot.battery))
             return withMac(name !== "" ? root.tr("connected_name").arg(name) : root.tr("connected"))
         }
         if (root.hasSavedZowi) return root.tr("status_unavailable")
@@ -67,7 +67,7 @@ Rectangle {
 
         // Active transport pill (only meaningful while connected).
         Rectangle {
-            visible: Bluetooth.connected
+            visible: Robot.connected
             anchors.verticalCenter: parent.verticalCenter
             radius: 8
             height: 16
@@ -83,7 +83,7 @@ Rectangle {
                 font.pixelSize: 10
                 font.bold: true
                 color: root.dotColor
-                text: Bluetooth.activeTransport === Bluetooth.TransportUsb
+                text: Robot.activeTransport === Robot.TransportUsb
                       ? root.tr("via_usb")
                       : root.tr("via_bluetooth")
             }
@@ -106,7 +106,7 @@ Rectangle {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: Bluetooth.connectToDevice(Session.loadActiveZowiDeviceAddress())
+            onClicked: Robot.connectToDevice(Session.loadActiveZowiDeviceAddress())
         }
     }
 

@@ -17,7 +17,7 @@
 
 #include "controllers/TranslatorController.h"
 #include "controllers/SessionController.h"
-#include "controllers/BluetoothController.h"
+#include "controllers/RobotController.h"
 #include "controllers/ConfigController.h"
 
 static QQmlApplicationEngine *s_engine = nullptr;
@@ -57,9 +57,9 @@ int main(int argc, char *argv[])
     // --- Controllers (wrapping core library) ---
     TranslatorController translator;
     SessionController session;
-    BluetoothController bluetooth;
+    RobotController robot;
     ConfigController config;
-    bluetooth.setSessionController(&session);
+    robot.setSessionController(&session);
 
     QString locale = session.getString("locale", "");
     if (locale.isEmpty()) {
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("Session", &session);
     engine.rootContext()->setContextProperty("Translator", &translator);
-    engine.rootContext()->setContextProperty("Bluetooth", &bluetooth);
+    engine.rootContext()->setContextProperty("Robot", &robot);
     engine.rootContext()->setContextProperty("Config", &config);
     engine.rootContext()->setContextProperty("AppVersion", QString(ZOWI_VERSION));
 

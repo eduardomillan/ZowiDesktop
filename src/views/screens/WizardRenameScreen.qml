@@ -47,7 +47,7 @@ ScreenTemplate {
             font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             selectByMouse: true
-            enabled: Bluetooth.connected && !renameScreen.renaming && !renameScreen.locked
+            enabled: Robot.connected && !renameScreen.renaming && !renameScreen.locked
             onAccepted: renameButton.clicked()
         }
 
@@ -57,8 +57,8 @@ ScreenTemplate {
             implicitWidth: 260
             height: 56
             text: renameScreen.renaming ? tr("renaming")
-                  : (Bluetooth.connected ? tr("rename") : tr("wait_pairing"))
-            enabled: Bluetooth.connected && !renameScreen.renaming && !renameScreen.locked && nameField.text.trim() !== ""
+                  : (Robot.connected ? tr("rename") : tr("wait_pairing"))
+            enabled: Robot.connected && !renameScreen.renaming && !renameScreen.locked && nameField.text.trim() !== ""
 
             contentItem: Text {
                 text: parent.text
@@ -76,7 +76,7 @@ ScreenTemplate {
 
             onClicked: {
                 var name = nameField.text.trim()
-                if (name === "" || !Bluetooth.connected)
+                if (name === "" || !Robot.connected)
                     return
                 renameScreen.renaming = true
                 statusText.text = tr("sending")
@@ -84,7 +84,7 @@ ScreenTemplate {
                 statusText.visible = true
                 renameTimer.restart()
                 // Firmware command: "R <name>\r"
-                Bluetooth.sendData("R " + name + "\r")
+                Robot.sendData("R " + name + "\r")
             }
         }
 
@@ -127,7 +127,7 @@ ScreenTemplate {
     }
 
     Connections {
-        target: Bluetooth
+        target: Robot
 
         function onDataReceived(data) {
             if (renameScreen.renaming && !renameScreen.renameDone
@@ -138,7 +138,7 @@ ScreenTemplate {
                 statusText.text = tr("done").arg(nameField.text.trim())
                 statusText.color = "#2d5a2d"
                 statusText.visible = true
-                Bluetooth.setDeviceName(nameField.text.trim())
+                Robot.setDeviceName(nameField.text.trim())
                 renameScreen.renamed(nameField.text.trim())
             }
         }

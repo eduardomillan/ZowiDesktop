@@ -94,7 +94,7 @@ architecture already makes this straightforward for the following reasons:
 - **Serial port enumeration.** Add discovery of serial ports (via
   `QSerialPortInfo`, or by listing `/dev/ttyUSB*` and `/dev/ttyACM*`) so users
   are not forced through Bluetooth pairing.
-- **GUI exposure.** `BluetoothController` always creates a `QtBluetoothBackend`;
+- **GUI exposure.** `RobotController` always creates a `QtBluetoothBackend`;
   the GUI needs a way to select the serial/USB backend and list available ports.
 
 ### Summary

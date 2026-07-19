@@ -358,11 +358,11 @@ Rectangle {
         // manageConnection). Prefer USB when the auto-detector selected it and
         // a robot is present on a port; otherwise reconnect to the saved
         // Bluetooth device. The BT backend auto-reconnects every 3s.
-        if (!Bluetooth.connected) {
-            if (Bluetooth.activeTransport === Bluetooth.TransportUsb && Bluetooth.usbAvailable)
-                Bluetooth.connectUsb()
+        if (!Robot.connected) {
+            if (Robot.activeTransport === Robot.TransportUsb && Robot.usbAvailable)
+                Robot.connectUsb()
             else if (Session.loadActiveZowiDeviceAddress() !== "")
-                Bluetooth.connectToDevice(Session.loadActiveZowiDeviceAddress())
+                Robot.connectToDevice(Session.loadActiveZowiDeviceAddress())
         }
 
         var apps = [

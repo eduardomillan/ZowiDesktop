@@ -16,7 +16,7 @@ ScreenTemplate {
     showDisconnectButton: true
 
     onBackClicked: scan.back()
-    onDisconnectClicked: Bluetooth.disconnectFromDevice()
+    onDisconnectClicked: Robot.disconnectFromDevice()
 
     signal deviceSelected(string name, string address)
     signal back()
@@ -114,7 +114,7 @@ ScreenTemplate {
                 implicitWidth: 160
                 height: 44
                 visible: Config.get("button_scan_visible") === "true"
-                text: Bluetooth.scanning
+                text: Robot.scanning
                       ? tr("scanning")
                       : tr("scan")
 
@@ -129,14 +129,14 @@ ScreenTemplate {
 
                 background: Rectangle {
                     radius: 22
-                    color: Bluetooth.scanning ? "#999999" : (scanButton.pressed ? "#17736c" : "#21a69b")
+                    color: Robot.scanning ? "#999999" : (scanButton.pressed ? "#17736c" : "#21a69b")
                 }
 
                 onClicked: {
-                    if (Bluetooth.scanning)
-                        Bluetooth.stopScan()
+                    if (Robot.scanning)
+                        Robot.stopScan()
                     else
-                        Bluetooth.startScan()
+                        Robot.startScan()
                 }
             }
         }
@@ -156,7 +156,7 @@ ScreenTemplate {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    Bluetooth.stopScan()
+                    Robot.stopScan()
                     Session.saveActiveZowiDeviceAddress(address)
                     Session.saveActiveZowiName(deviceName)
                     scan.deviceSelected(deviceName, address)
@@ -229,7 +229,7 @@ ScreenTemplate {
     }
 
     Connections {
-        target: Bluetooth
+        target: Robot
 
         function onDeviceDiscovered(name, address) {
             for (var i = 0; i < devicesModel.count; i++) {
@@ -253,8 +253,8 @@ ScreenTemplate {
         }
 
         function onConnectionChanged() {
-            if (Bluetooth.connected) {
-                Session.saveActiveZowiDeviceAddress(Bluetooth.deviceAddress)
+            if (Robot.connected) {
+                Session.saveActiveZowiDeviceAddress(Robot.deviceAddress)
             }
         }
     }
@@ -263,8 +263,8 @@ ScreenTemplate {
 
     StackView.onActivated: {
         devicesModel.clear()
-        Bluetooth.startScan()
+        Robot.startScan()
     }
 
-    StackView.onDeactivated: Bluetooth.stopScan()
+    StackView.onDeactivated: Robot.stopScan()
 }

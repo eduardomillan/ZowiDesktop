@@ -106,7 +106,7 @@ Rectangle {
 
     Rectangle {
         id: noBtBanner
-        visible: !Bluetooth.bluetoothAvailable && !Bluetooth.usbAvailable
+        visible: !Robot.bluetoothAvailable && !Robot.usbAvailable
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: 24
@@ -282,29 +282,29 @@ Rectangle {
             onClicked: {
                 if (msgBar.visible) return
                 var addr = Session.loadActiveZowiDeviceAddress()
-                if (!addr) addr = Bluetooth.deviceAddress
+                if (!addr) addr = Robot.deviceAddress
                 if (!addr) {
                     // No registered Zowi: clear any stale app data, fall back to
                     // Automatic transport, and warn.
                     Session.clearActive()
                     Session.saveWizardDismissed(false)
-                    Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
+                    Robot.setTransportPreference(Robot.TransportAuto)
                     msgBar.show(tr("reset_no_zowi"), "#c0392b")
                     return
                 }
-                if (Bluetooth.connected) Bluetooth.disconnectFromDevice()
-                Bluetooth.unpairDevice(addr)
+                if (Robot.connected) Robot.disconnectFromDevice()
+                Robot.unpairDevice(addr)
                 // Forget the registered Zowi: drop every "active*" session key
                 // and mark the wizard as not dismissed.
                 Session.clearActive()
                 Session.saveWizardDismissed(false)
-                Bluetooth.setTransportPreference(Bluetooth.TransportAuto)
+                Robot.setTransportPreference(Robot.TransportAuto)
             }
         }
     }
 
     Connections {
-        target: Bluetooth
+        target: Robot
         function onUnpairFinished(success, message) {
             if (success)
                 msgBar.show(tr("unpair_success"))

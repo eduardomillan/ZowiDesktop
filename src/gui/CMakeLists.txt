@@ -15,7 +15,7 @@ add_executable(ZowiDesktop
     main.cpp
     controllers/SessionController.cpp
     controllers/TranslatorController.cpp
-    controllers/BluetoothController.cpp
+    controllers/RobotController.cpp
     controllers/ConfigController.cpp
     ${GUI_RESOURCES}
 )
