@@ -15,7 +15,7 @@
   "SettingsScreen.qml": {
     "settings": "Paramètres",
     "restore": "Restaurer les fonctions d'origine",
-    "restore_desc": "Charge le firmware ZOWI_BASE pour ramener Zowi à ses réglages par défaut.",
+    "restore_desc": "Charge le firmware BASE pour ramener Zowi à ses réglages par défaut.",
     "restore_stub": "Bientôt disponible : restaurera le firmware d'origine (ZOWI_BASE) pour ramener Zowi à sa configuration d'usine.",
     "restore_started": "Restauration du firmware d'origine… gardez Zowi à proximité et allumé.",
     "restore_success": "Firmware restauré avec succès.",
