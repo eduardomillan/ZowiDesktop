@@ -9,7 +9,7 @@ ScreenTemplate {
     screenName: "WizardFoundScreen"
 
     title: tr("title")
-    subtitle: tr("subtitle")
+    subtitle: wizardFound.usbMode ? tr("subtitle_usb") : tr("subtitle")
 
     property string pairingCode: Config.get("pairing_code") || "1234"
     property bool pairingAttempt: false
@@ -50,7 +50,7 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: 260
             height: 56
-            text: wizardFound.usbMode ? tr("connect_usb_button") : tr("pair_button").arg(wizardFound.pairingCode)
+            text: wizardFound.usbMode ? tr("pair_usb_button") : tr("pair_button").arg(wizardFound.pairingCode)
 
             contentItem: Text {
                 text: parent.text

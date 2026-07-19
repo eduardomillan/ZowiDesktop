@@ -53,22 +53,33 @@ int main(int argc, char **argv)
     scanCmd->add_flag("--no-filter-mac", scanArgs.filterMac, "Disable filtering by MAC prefix");
 
     // ── connect subcommand ────────────────────────────────────
-    auto *connectCmd = app.add_subcommand("connect", "Connect to a Zowi robot by Bluetooth address\nReceives robot name, app ID, and battery level.\nUses BlueZ D-Bus; no root needed.");
+    auto *connectCmd = app.add_subcommand("connect", "Connect to a Zowi robot by Bluetooth address (or USB serial)\nReceives robot name, app ID, and battery level.\nUses BlueZ D-Bus by default (no root needed); add --backend usb --tty /dev/ttyUSB0 for USB.");
     zowi_cli::ConnectArgs connectArgs;
-    connectCmd->add_option("address", connectArgs.address, "Bluetooth MAC address (e.g. B4:9D:0B:32:41:0E)")->required();
+    connectCmd->add_option("address", connectArgs.address, "Bluetooth MAC address (e.g. B4:9D:0B:32:41:0E) or USB TTY path (e.g. /dev/ttyUSB0)")->required();
     connectCmd->add_option("--timeout,-t", connectArgs.timeout, "Timeout waiting for robot data (seconds)")->default_val(3);
+    connectCmd->add_option("--backend", connectArgs.backend, "Backend: 'auto' (default), 'bluetooth' (BlueZ SPP, no root), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
+    connectCmd->add_option("--tty", connectArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
+    connectCmd->add_option("--baud", connectArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
 
     // ── rename subcommand ─────────────────────────────────────
     auto *renameCmd = app.add_subcommand("rename", "Rename the connected Zowi robot\nConnects to the saved device, sends the rename command, and saves the new name.");
     zowi_cli::RenameArgs renameArgs;
     renameCmd->add_option("name", renameArgs.name, "New name for the robot")->required();
     renameCmd->add_option("--timeout,-t", renameArgs.timeout, "Timeout waiting for robot response (seconds)")->default_val(3);
+    renameCmd->add_option("--backend", renameArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    renameCmd->add_option("--tty", renameArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
+    renameCmd->add_option("--baud", renameArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
 
     // ── disconnect subcommand ─────────────────────────────────
     auto *disconnectCmd = app.add_subcommand("disconnect", "Disconnect and remove the Zowi robot from the system Bluetooth paired devices\nClears all saved pairing data and removes the device from BlueZ.");
 
     // ── status subcommand ─────────────────────────────────────
-    auto *statusCmd = app.add_subcommand("status", "Show current Zowi connection status");
+    auto *statusCmd = app.add_subcommand("status", "Show current Zowi connection status\nUses the registered transport (USB or Bluetooth); override with --backend/--tty.");
+    zowi_cli::StatusArgs statusArgs;
+    statusCmd->add_option("--timeout,-t", statusArgs.timeout, "Timeout waiting for robot data (seconds)")->default_val(3);
+    statusCmd->add_option("--backend", statusArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    statusCmd->add_option("--tty", statusArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
+    statusCmd->add_option("--baud", statusArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
 
     // ── restore subcommand ────────────────────────────────────
     auto *restoreCmd = app.add_subcommand("restore", "Restore the original factory firmware to the paired Zowi robot\nUploads the bundled ZOWI_BASE_v2.hex file unless a custom path is provided.");
@@ -136,7 +147,7 @@ int main(int argc, char **argv)
     if (*alarmCmd)      return zowi_cli::runFirmware(argc, argv, alarmArgs, "Alarm firmware installation");
     if (*adivinawiCmd)  return zowi_cli::runFirmware(argc, argv, adivinawiArgs, "Adivinawi firmware installation");
     if (*disconnectCmd) return zowi_cli::runDisconnect(argc, argv);
-    if (*statusCmd)     return zowi_cli::runStatus(argc, argv, connectArgs.timeout);
+    if (*statusCmd)     return zowi_cli::runStatus(argc, argv, statusArgs);
     if (*controlCmd)    return zowi_cli::runControl(argc, argv, controlArgs);
 
     return 0;

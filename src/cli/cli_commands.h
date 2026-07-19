@@ -37,11 +37,17 @@ struct ScanArgs {
 
 struct ConnectArgs {
     std::string address;
+    std::string tty;
+    int baud = 9600;
+    std::string backend = "auto";
     int timeout = 3;
 };
 
 struct RenameArgs {
     std::string name;
+    std::string tty;
+    int baud = 9600;
+    std::string backend = "auto";
     int timeout = 3;
 };
 
@@ -64,6 +70,13 @@ struct ControlArgs {
     int timeout = 3;
 };
 
+struct StatusArgs {
+    std::string tty;
+    int baud = 9600;
+    std::string backend = "auto";
+    int timeout = 3;
+};
+
 int runSession(const SessionArgs &a);
 int runTranslate(const TranslateArgs &a);
 int runConfig(const ConfigArgs &a);
@@ -73,7 +86,7 @@ int runConnect(int argc, char **argv, const ConnectArgs &a);
 int runRename(int argc, char **argv, const RenameArgs &a);
 int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string &actionLabel);
 int runDisconnect(int argc, char **argv);
-int runStatus(int argc, char **argv, int connectTimeout);
+int runStatus(int argc, char **argv, const StatusArgs &a);
 int runControl(int argc, char **argv, const ControlArgs &a);
 
 } // namespace zowi_cli

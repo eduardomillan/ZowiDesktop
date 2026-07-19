@@ -160,19 +160,29 @@ int runScan(int argc, char **argv, const ScanArgs &a)
 int runConnect(int argc, char **argv, const ConnectArgs &a)
 {
     QCoreApplication qtApp(argc, argv);
-    zowi::QtBluetoothBackend bt;
     resetRobotState();
 
-    std::cout << "Discovering " << a.address << "..." << std::endl;
-    discoverDevice(qtApp, bt, a.address, kDiscoveryTimeoutMs);
+    std::string target, boundTty;
+    auto bt = prepareFlashBackend(a.backend, a.address, a.tty, a.baud, target, boundTty);
+    if (!bt) return 1;
 
-    std::cout << "Connecting to " << a.address << "..." << std::endl;
+    // Over USB the robot takes a while to boot and start emitting data, so give
+    // it a longer default timeout (8s) unless the user asked for more.
+    const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+    const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
 
-    bt.onDataReceived([](const std::string &data) {
+    if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+        std::cout << "Discovering " << target << "..." << std::endl;
+        discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
+    }
+
+    std::cout << "Connecting to " << target << "..." << std::endl;
+
+    bt->onDataReceived([](const std::string &data) {
         onDataReceived(data);
     });
 
-    bt.onConnectionChanged([&](bool connected) {
+    bt->onConnectionChanged([&](bool connected) {
         g_connected = connected;
         if (connected) {
             std::cout << "Connected. Waiting for robot data..." << std::endl;
@@ -181,15 +191,17 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
         }
     });
 
-    bt.onError([&](const std::string &msg) {
+    bt->onError([&](const std::string &msg) {
         std::cerr << "Error: " << msg << std::endl;
     });
 
-    bt.connect(a.address);
+    bt->connect(target);
+    requestRobotData(*bt);
 
-    waitForRobotData(qtApp, (a.timeout + 2) * 1000);
+    waitForRobotData(qtApp, (effTimeout + 2) * 1000);
 
-    bt.disconnect();
+    bt->disconnect();
+    if (!boundTty.empty()) std::system("rfcomm release 0");
 
     std::cout << std::endl;
     if (!g_robotName.empty()) {
@@ -207,10 +219,11 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
     } else {
         std::cout << "  Battery: (not received)" << std::endl;
     }
-    std::cout << "  Address: " << a.address << std::endl;
+    std::cout << "  Address: " << target << std::endl;
 
     zowi::SessionStore store("ZowiDesktop", "ZowiApp");
-    store.setString("activeZowiDeviceAddress", a.address);
+    store.setString("activeZowiDeviceAddress", target);
+    store.setString("activeZowiTransport", a.backend == "usb" ? "usb" : "bt");
     if (!g_robotName.empty()) {
         store.setString("activeZowiName", g_robotName);
     }
@@ -229,7 +242,6 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
 int runRename(int argc, char **argv, const RenameArgs &a)
 {
     QCoreApplication qtApp(argc, argv);
-    zowi::QtBluetoothBackend bt;
     resetRobotState();
 
     zowi::SessionStore session("ZowiDesktop", "ZowiApp");
@@ -239,29 +251,47 @@ int runRename(int argc, char **argv, const RenameArgs &a)
         return 1;
     }
 
-    std::cout << "Discovering " << savedAddr << "..." << std::endl;
-    discoverDevice(qtApp, bt, savedAddr, kDiscoveryTimeoutMs);
+    // Pick the backend: explicit --backend, else the transport used at connect
+    // time, else Bluetooth by default.
+    std::string backend = a.backend;
+    if (backend == "auto") {
+        backend = session.getString("activeZowiTransport");
+        if (backend.empty()) backend = "bluetooth";
+    }
 
-    std::cout << "Connecting to " << savedAddr << "..." << std::endl;
+    std::string target, boundTty;
+    auto bt = prepareFlashBackend(backend, savedAddr, a.tty, a.baud, target, boundTty);
+    if (!bt) return 1;
+
+    const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+    const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
+
+    if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+        std::cout << "Discovering " << target << "..." << std::endl;
+        discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
+    }
+
+    std::cout << "Connecting to " << target << "..." << std::endl;
 
     std::atomic<bool> renameSent{false};
 
-    bt.onConnectionChanged([&](bool connected) {
+    bt->onConnectionChanged([&](bool connected) {
         g_connected = connected;
     });
 
-    bt.onDataReceived([&](const std::string &data) {
+    bt->onDataReceived([&](const std::string &data) {
         onDataReceived(data);
     });
 
-    bt.onError([&](const std::string &msg) {
+    bt->onError([&](const std::string &msg) {
         std::cerr << "Error: " << msg << std::endl;
     });
 
-    bt.connect(savedAddr);
+    bt->connect(target);
+    requestRobotData(*bt);
 
     bool renamed = false;
-    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(a.timeout + 2);
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(effTimeout + 2);
     while (std::chrono::steady_clock::now() < deadline) {
         qtApp.processEvents();
         {
@@ -269,7 +299,8 @@ int runRename(int argc, char **argv, const RenameArgs &a)
             if (g_connected && g_dataReceived && !renameSent) {
                 std::cout << "Connected. Sending rename command..." << std::endl;
                 const std::string cmd = zowi::makeCommand(zowi::Command::SetName, a.name);
-                bt.send(cmd);
+                std::cout << "robot tx: R " << a.name << std::endl;
+                bt->send(cmd);
                 renameSent = true;
             }
             if (renameSent && g_finalAck) { renamed = true; break; }
@@ -282,7 +313,8 @@ int runRename(int argc, char **argv, const RenameArgs &a)
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    bt.disconnect();
+    bt->disconnect();
+    if (!boundTty.empty()) std::system("rfcomm release 0");
 
     session.setString("activeZowiName", a.name);
     std::cout << "Robot renamed to '" << a.name << "'." << std::endl;
@@ -302,6 +334,10 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
                                  : a.address;
     auto bt = prepareFlashBackend(a.backend, addr, a.tty, a.baud, connectTarget, boundTty);
     if (!bt) return 1;
+    // Firmware flashing drives the bootloader explicitly via pulseReset(); do
+    // not add the control-connection boot delay.
+    if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()))
+        serial->setBootDelayMs(0);
     if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
         std::cout << "Discovering " << connectTarget << "..." << std::endl;
         discoverDevice(qtApp, *qtBt, connectTarget, kDiscoveryTimeoutMs);
@@ -382,7 +418,7 @@ int runDisconnect(int argc, char **argv)
     return 0;
 }
 
-int runStatus(int argc, char **argv, int connectTimeout)
+int runStatus(int argc, char **argv, const StatusArgs &a)
 {
     zowi::SessionStore store("ZowiDesktop", "ZowiApp");
 
@@ -397,36 +433,57 @@ int runStatus(int argc, char **argv, int connectTimeout)
         return 0;
     }
 
+    // Resolve the backend: explicit --backend, else the transport used at
+    // connect time, else Bluetooth by default.
+    std::string backend = a.backend;
+    if (backend == "auto") {
+        backend = store.getString("activeZowiTransport");
+        if (backend.empty()) backend = "bluetooth";
+    }
+
     // Attempt a live connection so the reported state reflects the robot's
     // actual running firmware rather than the (possibly stale) session cache.
+    // Use the registered transport (USB or Bluetooth); the address saved for
+    // USB is the TTY path, which is what the serial backend expects.
     bool live = false;
     {
         QCoreApplication qtApp(argc, argv);
-        zowi::QtBluetoothBackend bt;
         resetRobotState();
 
-        bt.onDataReceived([](const std::string &data) { onDataReceived(data); });
-        bt.onConnectionChanged([](bool connected) {
-            if (connected) std::cout << "Connected. Reading live status..." << std::endl;
-        });
-        bt.onError([](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
+        std::string target, boundTty;
+        auto bt = prepareFlashBackend(backend, addr, a.tty, a.baud, target, boundTty);
+        if (!bt) {
+            std::cout << "Could not open a backend for '" << addr << "'; showing last known (cached) state." << std::endl;
+        } else {
+            const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+            const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
+            if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+                std::cout << "Discovering " << target << "..." << std::endl;
+                discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
+            }
 
-        std::cout << "Discovering " << addr << "..." << std::endl;
-        discoverDevice(qtApp, bt, addr, kDiscoveryTimeoutMs);
+            bt->onDataReceived([](const std::string &data) { onDataReceived(data); });
+            bt->onConnectionChanged([](bool connected) {
+                if (connected) std::cout << "Connected. Reading live status..." << std::endl;
+            });
+            bt->onError([](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
 
-        std::cout << "Connecting to " << addr << "..." << std::endl;
-        bt.connect(addr);
-        if (waitForRobotData(qtApp, (connectTimeout + 2) * 1000)) {
-            live = true;
-            if (!g_robotName.empty()) name = g_robotName;
-            if (!g_appId.empty()) appId = g_appId;
-            if (g_battery >= 0) battery = static_cast<int>(g_battery);
+            std::cout << "Connecting to " << target << "..." << std::endl;
+            bt->connect(target);
+            requestRobotData(*bt);
+            if (waitForRobotData(qtApp, (effTimeout + 2) * 1000)) {
+                live = true;
+                if (!g_robotName.empty()) name = g_robotName;
+                if (!g_appId.empty()) appId = g_appId;
+                if (g_battery >= 0) battery = static_cast<int>(g_battery);
 
-            store.setString("activeZowiName", name);
-            store.setString("activeZowiAppId", appId);
-            store.setInt("activeZowiBattery", battery);
+                store.setString("activeZowiName", name);
+                store.setString("activeZowiAppId", appId);
+                store.setInt("activeZowiBattery", battery);
+            }
+            bt->disconnect();
+            if (!boundTty.empty()) std::system("rfcomm release 0");
         }
-        bt.disconnect();
     }
 
     if (!live) {

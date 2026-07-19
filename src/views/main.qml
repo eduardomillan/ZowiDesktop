@@ -113,6 +113,17 @@ Window {
     // USB), skip the rename wizard if it already has a non-default name and go
     // straight to Home; otherwise show the rename wizard.
     function finishRegistration() {
+        // Persist the registration so the situation state machine reports
+        // Connected (not Unregistered) and SettingsScreen shows the live link.
+        console.log("[finishRegistration] deviceAddress=", Robot.deviceAddress,
+                    "activeTransport=", Robot.activeTransport,
+                    "connected=", Robot.connected)
+        Session.saveActiveZowiDeviceAddress(Robot.deviceAddress)
+        Session.saveActiveZowiTransport(Robot.activeTransport === Robot.TransportUsb ? "usb" : "bluetooth")
+        Session.saveWizardDismissed(true)
+        // Recompute the situation so SettingsScreen reflects a live connection.
+        Robot.refreshTransports()
+
         var defaultName = Config.get("zowi_default_name") || "Zowi"
         if (Robot.deviceName && Robot.deviceName.toLowerCase() !== defaultName.toLowerCase()) {
             Session.saveActiveZowiName(Robot.deviceName)
@@ -122,6 +133,9 @@ Window {
             return
         }
         var rename = stack.push("qrc:/src/views/screens/WizardRenameScreen.qml")
+        // Flag USB-only connections so the rename is best-effort (the robot may
+        // not ACK the rename over USB).
+        rename.usbMode = Robot.usbAvailable && !Robot.bluetoothAvailable
         rename.backClicked.connect(function() { stack.pop() })
         rename.renamed.connect(function(name) {
             Session.saveActiveZowiName(name)

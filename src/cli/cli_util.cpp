@@ -121,8 +121,18 @@ bool waitForBatteryLevel(QCoreApplication &qtApp, int timeoutMs)
     });
 }
 
+void requestRobotData(zowi::BluetoothApi &bt)
+{
+    std::cout << "robot tx: E (GetName)" << std::endl;
+    bt.send(zowi::makeCommand(zowi::Command::GetName));
+    std::cout << "robot tx: I (GetProgramId)" << std::endl;
+    bt.send(zowi::makeCommand(zowi::Command::GetProgramId));
+    std::cout << "robot tx: B (GetBattery)" << std::endl;
+    bt.send(zowi::makeCommand(zowi::Command::GetBattery));
+}
+
 bool waitForAppId(QCoreApplication &qtApp, zowi::BluetoothApi &bt, int timeoutMs,
-                  const std::string &previousAppId)
+                   const std::string &previousAppId)
 {
     auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
     auto nextPoll = std::chrono::steady_clock::now();

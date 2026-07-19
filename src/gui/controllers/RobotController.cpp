@@ -30,7 +30,7 @@ namespace {
 // How often (ms) to poll for USB port / Bluetooth adapter appearance.
 constexpr int kPollIntervalMs = 2500;
 // How long (ms) to wait for a Zowi to answer the identification handshake.
-constexpr int kProbeTimeoutMs = 1800;
+constexpr int kProbeTimeoutMs = 6000;
 
 RobotController::Transport transportFromString(const QString &s)
 {
@@ -85,6 +85,11 @@ RobotController::RobotController(QObject *parent)
     connect(&m_pollTimer, &QTimer::timeout, this, &RobotController::pollTransports);
     m_pollTimer.start();
 
+    // Periodically ask the robot for its name, firmware id and battery. The
+    // firmware only reports these on request, so keep polling while connected.
+    m_dataPollTimer.setInterval(1000);
+    connect(&m_dataPollTimer, &QTimer::timeout, this, &RobotController::requestRobotData);
+
     // Initial availability snapshot + auto-detection.
     refreshTransports();
     m_situation = computeSituation();
@@ -107,6 +112,7 @@ void RobotController::useSerialBackend()
     if (m_backend && m_backendKind == Usb) return;
     auto serial = std::make_unique<zowi::SerialBluetoothBackend>();
     serial->setBaudRate(m_usbBaud);
+    serial->setBootDelayMs(5000);
     m_backend = std::move(serial);
     m_backendKind = Usb;
     wireBackend();
@@ -129,6 +135,9 @@ void RobotController::wireBackend()
     m_backend->onConnectionChanged([this](bool connected) {
         m_connected = connected;
         emit connectionChanged();
+        qInfo() << "[conn] connected=" << connected << "kind=" << m_backendKind
+                << "usbPort=" << m_usbPort << "deviceAddress=" << m_deviceAddress
+                << "known=" << m_knownUsbPorts;
         if (connected) {
             setConnecting(false);
             // For USB the address is the TTY path; onConnectionChanged(false)
@@ -142,6 +151,10 @@ void RobotController::wireBackend()
                 if (!m_deviceAddress.isEmpty())
                     emit deviceChanged();
             }
+            // Ask the robot for its name, firmware id and battery. The firmware
+            // only reports these on request, so start a periodic poll.
+            requestRobotData();
+            m_dataPollTimer.start();
             // If a Zowi is registered, tie its registration to the transport we
             // actually connected with so future launches honour it.
             {
@@ -152,8 +165,14 @@ void RobotController::wireBackend()
                     persistRegistrationTransport(m_backendKind);
             }
         } else {
+            m_dataPollTimer.stop();
             m_deviceName.clear();
-            m_deviceAddress.clear();
+            // For USB the "address" is the TTY path, which is stable across the
+            // connect/disconnect cycle; keep it so registration and the UI can
+            // read it (finishRegistration runs on the connection signal before
+            // the C++-side restore below would repopulate it).
+            if (m_backendKind != Usb)
+                m_deviceAddress.clear();
             m_battery = -1.0f;
             if (!m_appId.isEmpty()) {
                 m_appId.clear();
@@ -177,6 +196,7 @@ void RobotController::wireBackend()
             m_rxBuffer += data;
             parseIncoming();
         }
+        qInfo() << "robot rx:" << QString::fromStdString(data).trimmed();
         emit dataReceived(QString::fromStdString(data));
     });
 
@@ -282,6 +302,15 @@ void RobotController::parseIncoming()
     if (buf.size() > 512) buf.erase(0, buf.size() - 512);
 
     if (updated) emit batteryChanged();
+}
+
+void RobotController::requestRobotData()
+{
+    if (!m_connected || m_uploadMode) return;
+    if (!m_backend) return;
+    m_backend->send(zowi::makeCommand(zowi::Command::GetName));
+    m_backend->send(zowi::makeCommand(zowi::Command::GetProgramId));
+    m_backend->send(zowi::makeCommand(zowi::Command::GetBattery));
 }
 
 // --- Property getters -------------------------------------------------------
@@ -490,6 +519,10 @@ RobotController::Situation RobotController::computeSituation() const
     const QString addr = QString::fromStdString(
         session.getString("activeZowiDeviceAddress"));
     const bool registered = !addr.isEmpty();
+    qInfo() << "[situation] addr=" << addr << "registered=" << registered
+            << "usb=" << m_usbAvailable << "bt=" << m_bluetoothAvailable
+            << "connected=" << isConnected() << "connecting=" << m_connecting
+            << "regTransport=" << QString::fromStdString(session.getString("activeZowiTransport"));
 
     if (!registered) {
         if (m_bluetoothAvailable || m_usbAvailable) return Unregistered;
@@ -579,7 +612,11 @@ void RobotController::pollTransports()
     bool changed = usbChanged || (usbAvail != m_usbAvailable) || (btAvail != m_bluetoothAvailable);
     m_usbAvailable = usbAvail;
     m_bluetoothAvailable = btAvail;
-    if (changed) emit transportsChanged();
+    if (changed) {
+        qInfo() << "transports:" << "usb=" << usbAvail << "bt=" << btAvail
+                << "ports=" << ports;
+        emit transportsChanged();
+    }
     maybeEmitSituation();
 }
 
@@ -597,6 +634,10 @@ QString RobotController::probeZowiOnPort(const QString &port)
 
     zowi::SerialBluetoothBackend probe;
     probe.setBaudRate(m_usbBaud);
+    // The probe only opens the port to detect a robot; do not block 5s on the
+    // boot delay here (polling would stall). The probe loop below already waits
+    // for the firmware to come up after the DTR reset.
+    probe.setBootDelayMs(0);
 
     std::string rx;
     bool identified = false;
@@ -705,6 +746,7 @@ void RobotController::unpairDevice(const QString &address)
 void RobotController::sendData(const QString &data)
 {
     if (!m_backend) return;
+    qInfo() << "robot tx:" << data.trimmed();
     m_backend->send(data.toStdString());
 }
 
@@ -824,8 +866,16 @@ void RobotController::proceedWithRestore()
         // The Optiboot USB bootloader runs at a different baud than the running
         // firmware (usb_baud); switch to the bootloader baud before the reset so
         // the reopened link is already at the speed the bootloader expects.
-        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
+        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get())) {
             serial->setBaudRate(m_usbBootloaderBaud);
+            // Flashing drives the bootloader explicitly via pulseReset(); do not
+            // add the control-connection boot delay.
+            serial->setBootDelayMs(0);
+        }
+        // Reset into the bootloader before (re)opening the link so the upload
+        // races the short post-reset window.
+        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
+            serial->pulseReset();
         const bool connectOk = m_backend->connect(target.toStdString());
         // The serial backend opens synchronously; upload immediately to catch
         // the short post-reset bootloader window.

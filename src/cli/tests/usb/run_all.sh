@@ -58,6 +58,22 @@ else
     echo "SKIP: flashing tests (set ZOWI_USB_FLASH=1 and connect a robot to run them)"
 fi
 
+# 3. Connect/rename over USB (opt-in, requires a robot connected over USB).
+if [ "${ZOWI_USB_CONNECT:-0}" = "1" ]; then
+    run "usb/test_connect_rename.sh" "$SCRIPT_DIR/test_connect_rename.sh"
+else
+    echo ""
+    echo "SKIP: connect/rename test (set ZOWI_USB_CONNECT=1 and connect a robot to run it)"
+fi
+
+# 4. Disconnect over USB (opt-in, requires a robot registered over USB).
+if [ "${ZOWI_USB_CONNECT:-0}" = "1" ]; then
+    run "usb/test_disconnect.sh" "$SCRIPT_DIR/test_disconnect.sh"
+else
+    echo ""
+    echo "SKIP: disconnect test (set ZOWI_USB_CONNECT=1 and connect a robot to run it)"
+fi
+
 echo ""
 echo "========================================================"
 echo "USB test summary: $pass passed, $fail failed"

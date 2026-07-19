@@ -17,6 +17,9 @@ ScreenTemplate {
     property string defaultName: Config.get("zowi_default_name") || "OpenZowi"
     property bool renaming: false
     property bool renameDone: false
+    // Set when reached over a USB-only connection; the rename is best-effort
+    // there because the robot may not ACK it (no &&F).
+    property bool usbMode: false
     // The robot performs a welcome gesture right after connecting; lock the
     // rename controls briefly so the user doesn't type/confirm into a busy link.
     property bool locked: true
@@ -104,32 +107,52 @@ ScreenTemplate {
         id: renameTimer
         interval: 8000
         onTriggered: {
-            if (!renameScreen.renameDone) {
-                renameScreen.renaming = false
-                statusText.text = tr("rename_failed")
-                statusText.color = "#e74c3c"
+            if (renameScreen.renameDone) return
+            renameScreen.renaming = false
+            // Over USB the robot often does not ACK the rename (no &&F), so the
+            // registration must not get stuck. Treat the timeout as best-effort:
+            // keep the typed name and continue to Home instead of blocking.
+            if (renameScreen.usbMode) {
+                statusText.text = tr("rename_skipped_usb").arg(nameField.text.trim())
+                statusText.color = "#2d5a2d"
                 statusText.visible = true
+                renameScreen.renamed(nameField.text.trim())
+                return
             }
+            statusText.text = tr("rename_failed")
+            statusText.color = "#e74c3c"
+            statusText.visible = true
         }
     }
 
     Component.onCompleted: {
         renameScreen.locked = true
         lockTimer.restart()
-        nameField.selectAll()
-        nameField.forceActiveFocus()
     }
 
+    onVisibleChanged: {
+        if (renameScreen.visible && !renameScreen.locked && !renameScreen.renaming)
+            nameField.forceActiveFocus()
+    }
+
+    // The rename field is disabled while `locked` (welcome gesture). Once it
+    // unlocks, grab focus so the user can type the name immediately.
     Timer {
         id: lockTimer
         interval: renameScreen.lockMs
-        onTriggered: renameScreen.locked = false
+        onTriggered: {
+            renameScreen.locked = false
+            nameField.selectAll()
+            nameField.forceActiveFocus()
+        }
     }
 
     Connections {
         target: Robot
 
         function onDataReceived(data) {
+            if (renameScreen.renaming)
+                console.log("WizardRenameScreen: recv", JSON.stringify(data))
             if (renameScreen.renaming && !renameScreen.renameDone
                     && data.indexOf("&&F") !== -1) {
                 renameScreen.renameDone = true

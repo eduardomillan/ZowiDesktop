@@ -80,16 +80,19 @@ bool SerialBluetoothBackend::connect(const std::string &ttyPath)
     }
     ::tcflush(m_fd, TCIOFLUSH);
 
-    // Auto-reset the MCU into the bootloader. On the ZUM BT-328 the reset is
-    // triggered by the HC-05 STATE pin when the SPP connection comes up (i.e. when
-    // this TTY is opened / rfcomm-bound), so the caller must send STK_GET_SYNC
-    // immediately afterwards, racing the bootloader's short post-reset window.
-    // A brief DTR pulse is also sent for boards that wire DTR to RESET.
-    pulseReset();
+    // NOTE: the DTR reset pulse is intentionally NOT performed here. A normal
+    // control connection must not reboot the robot: doing so drops it into the
+    // bootloader (ignoring control commands such as rename) and breaks the
+    // connect/control flow over USB. Firmware flashing calls pulseReset()
+    // explicitly before connect() (see RobotController::restoreFirmware).
 
-    // Minimal settle so the bootloader UART is ready; we must not dawdle here or
-    // the bootloader's wait window expires before STK_GET_SYNC is sent.
-    ::usleep(50 * 1000);
+    // Settle so the firmware UART is ready. On a USB-serial link the MCU resets
+    // when the port is opened and the bootloader runs for a moment before
+    // handing control to the running firmware; wait that out before we start
+    // exchanging commands. Firmware flashing sets this to 0 and drives the
+    // bootloader explicitly via pulseReset().
+    if (m_bootDelayMs > 0)
+        ::usleep(static_cast<useconds_t>(m_bootDelayMs) * 1000);
 
     m_notifier = new QSocketNotifier(m_fd, QSocketNotifier::Read, this);
     QObject::connect(m_notifier, &QSocketNotifier::activated, this, &SerialBluetoothBackend::onReadyRead);

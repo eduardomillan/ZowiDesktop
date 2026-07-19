@@ -79,7 +79,8 @@
     "wait_pairing": "S'està esperant que el Zowi es pairi...",
     "sending": "Enviant el nom al Zowi...",
     "done": "Fet! El Zowi ara es diu %1.",
-    "rename_failed": "No s'ha pogut reanomenar. Torna-ho a provar."
+    "rename_failed": "No s'ha pogut reanomenar. Torna-ho a provar.",
+    "rename_skipped_usb": "El robot no ha confirmat el reanomenament per USB. Es manté « %1 »."
   },
   "ScanScreen.qml": {
     "searching_title": "Buscant Zowis...",
@@ -119,7 +120,9 @@
   "WizardFoundScreen.qml": {
     "title": "Allà és!",
     "subtitle": "Per a controlar a Zowi, introdueix el codi 1234",
+    "subtitle_usb": "Posa el cable USB al PC i al robot i prem Connecta",
     "pair_button": "Aparellar amb %1",
+    "pair_usb_button": "Aparellar per USB",
     "connect_error": "No s'ha pogut connectar. Assegura't que el Zowi està encès i a prop."
   },
   "ScreenTemplate.qml": {

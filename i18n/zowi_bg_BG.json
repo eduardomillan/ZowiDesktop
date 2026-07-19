@@ -79,7 +79,8 @@
     "wait_pairing": "Изчакване на Zowi да се свърже...",
     "sending": "Изпращане на името към Zowi…",
     "done": "Готово! Zowi вече се казва %1.",
-    "rename_failed": "Неуспешно преименуване. Опитайте отново."
+    "rename_failed": "Неуспешно преименуване. Опитайте отново.",
+    "rename_skipped_usb": "Роботът не потвърди преименуването по USB. Запазва се „%1“."
   },
   "ScanScreen.qml": {
     "searching_title": "Търсене на Zowi…",
@@ -119,7 +120,9 @@
   "WizardFoundScreen.qml": {
     "title": "Ето го!",
     "subtitle": "За да управлявате Zowi, въведете кода 1234",
+    "subtitle_usb": "Свържи USB кабела и натисни Свързване",
     "pair_button": "Сдвояване с %1",
+    "pair_usb_button": "Сдвояване през USB",
     "connect_error": "Не може да се свърже. Уверете се, че Zowi е включен и наблизо."
   },
   "ScreenTemplate.qml": {

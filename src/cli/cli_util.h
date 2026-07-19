@@ -37,6 +37,10 @@ std::string readKey();
 // Waits until name, app id and battery have all been received.
 bool waitForRobotData(QCoreApplication &qtApp, int timeoutMs);
 
+// Asks the robot for its name, app id and battery level (E / I / B commands).
+// The robot only reports these on request, so call this right after connecting.
+void requestRobotData(zowi::BluetoothApi &bt);
+
 // Waits until a battery level has been received.
 bool waitForBatteryLevel(QCoreApplication &qtApp, int timeoutMs);
 

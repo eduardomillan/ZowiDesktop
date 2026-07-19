@@ -148,6 +148,7 @@ signals:
 
 private:
     void parseIncoming();
+    void requestRobotData();
     void setConnecting(bool value);
 
     // Backend management.
@@ -221,6 +222,7 @@ private:
     bool m_bluetoothAvailable = false;
     bool m_usbAvailable = false;
     QTimer m_pollTimer;
+    QTimer m_dataPollTimer;   // re-requests name/appId/battery while connected
     int m_usbBaud = 9600;
     int m_usbBootloaderBaud = 115200;
     int m_transportTimeoutMs = 1500;

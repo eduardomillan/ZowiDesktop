@@ -53,7 +53,17 @@ bool QtBluetoothBackend::init()
 
 bool QtBluetoothBackend::hasAdapter()
 {
-    return !QBluetoothLocalDevice::allDevices().isEmpty();
+    // An adapter counts as available only if it is present AND powered on.
+    // A physically present but powered-off adapter (e.g. `hciconfig` shows
+    // "DOWN") cannot scan or connect, so the app must treat it as unavailable
+    // and fall back to USB / demo instead of driving the Bluetooth flow.
+    const auto devices = QBluetoothLocalDevice::allDevices();
+    for (const auto &info : devices) {
+        QBluetoothLocalDevice dev(info.address());
+        if (dev.isValid() && dev.hostMode() != QBluetoothLocalDevice::HostPoweredOff)
+            return true;
+    }
+    return false;
 }
 
 bool QtBluetoothBackend::isAdapterAvailable() const

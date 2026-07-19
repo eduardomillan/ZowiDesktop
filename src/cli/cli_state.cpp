@@ -1,6 +1,7 @@
 #include "cli_state.h"
 
 #include <algorithm>
+#include <iostream>
 #include <zowi/protocol.h>
 
 namespace zowi_cli {
@@ -121,6 +122,9 @@ void onDataReceived(const std::string &data)
 
     std::lock_guard<std::mutex> lock(g_mtx);
     g_dataBuffer += data;
+
+    std::string printable = trimRobotMessage(data);
+    std::cout << "robot rx: " << printable << std::endl;
 
     // Robot protocol can arrive either as &&E <name>%% / &&I <appId>%% / &&B <battery>%%
     // or as line-based N / U / B messages.
