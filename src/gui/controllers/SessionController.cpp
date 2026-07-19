@@ -52,6 +52,16 @@ void SessionController::saveActiveZowiTransport(const QString &transport)
     m_store.setString("activeZowiTransport", transport.toStdString());
 }
 
+QString SessionController::loadActiveZowiAppId()
+{
+    return QString::fromStdString(m_store.getString("activeZowiAppId", ""));
+}
+
+void SessionController::saveActiveZowiAppId(const QString &appId)
+{
+    m_store.setString("activeZowiAppId", appId.toStdString());
+}
+
 QStringList SessionController::keys() const
 {
     QStringList result;

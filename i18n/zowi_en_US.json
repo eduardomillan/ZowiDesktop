@@ -15,7 +15,7 @@
   "SettingsScreen.qml": {
     "settings": "Settings",
     "restore": "Restore original functions",
-    "restore_desc": "Load the ZOWI_BASE firmware to return Zowi to its defaults.",
+    "restore_desc": "Load the BASE firmware to return Zowi to its defaults.",
     "restore_stub": "Coming soon: will restore the original firmware (ZOWI_BASE) to return Zowi to its factory setup.",
     "restore_started": "Restoring the original firmware… keep Zowi nearby and powered on.",
     "restore_success": "Firmware restored successfully.",
@@ -71,7 +71,8 @@
     "status_unavailable": "Zowi unavailable",
     "status_reconnect": "Reconnect",
     "via_bluetooth": "Bluetooth",
-    "via_usb": "USB"
+    "via_usb": "USB",
+    "status_firmware": "FW %1"
   },
   "WizardRenameScreen.qml": {
     "title": "Name your Zowi!",
@@ -123,6 +124,7 @@
     "title": "There it is!",
     "subtitle": "To control Zowi, enter the code 1234",
     "pair_button": "Pair with %1",
+    "connect_usb_button": "Connect via USB",
     "connect_error": "Could not connect. Make sure Zowi is turned on and nearby."
   },
   "ScreenTemplate.qml": {

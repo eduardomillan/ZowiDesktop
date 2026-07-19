@@ -55,6 +55,10 @@ private:
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY deviceChanged)
     Q_PROPERTY(QString deviceAddress READ deviceAddress NOTIFY deviceChanged)
+    // Firmware / program id reported by the robot (e.g. "&&I <appId>%%"). Empty
+    // until received. Persisted to session as activeZowiAppId so the app knows
+    // which firmware the connected Zowi is running.
+    Q_PROPERTY(QString appId READ appId NOTIFY appIdChanged)
     Q_PROPERTY(int battery READ battery NOTIFY batteryChanged)
     Q_PROPERTY(bool restoring READ isRestoring NOTIFY restoringChanged)
     // Situation enum values surfaced to QML (context-property objects can't
@@ -91,6 +95,7 @@ public:
     bool isScanning() const;
     QString deviceName() const;
     QString deviceAddress() const;
+    QString appId() const;
     int battery() const;
     bool isRestoring() const { return m_restoring; }
 
@@ -127,6 +132,7 @@ signals:
     void scanningChanged();
     void deviceChanged();
     void batteryChanged();
+    void appIdChanged();
     void dataReceived(const QString &data);
     void errorOccurred(const QString &message);
     void firmwareRestoreStarted();
@@ -205,6 +211,7 @@ private:
     bool m_scanning = false;
     QString m_deviceName;
     QString m_deviceAddress;
+    QString m_appId;
     QString m_usbPort;
     float m_battery = -1.0f;
     std::string m_rxBuffer;

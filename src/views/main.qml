@@ -74,19 +74,26 @@ Window {
             Robot.setTransportPreference(Robot.TransportAuto)
             var wizard = stack.push("qrc:/src/views/screens/WizardScreen.qml")
             wizard.startClicked.connect(function() {
+                // Only USB available (no Bluetooth): skip the Bluetooth scan and
+                // go straight to a USB connection (no pairing concept).
+                if (Robot.usbAvailable && !Robot.bluetoothAvailable) {
+                    var usbFound = stack.push("qrc:/src/views/screens/WizardFoundScreen.qml")
+                    usbFound.usbMode = true
+                    usbFound.backClicked.connect(function() { stack.pop() })
+                    usbFound.paired.connect(function() {
+                        finishRegistration()
+                    })
+                    return
+                }
+                // Bluetooth available (alone or with USB): Bluetooth is the
+                // priority transport, drive the scan/pairing flow.
                 var scan = stack.push("qrc:/src/views/screens/ScanScreen.qml")
                 scan.back.connect(function() { stack.pop() })
                 scan.deviceSelected.connect(function() {
                     var found = stack.push("qrc:/src/views/screens/WizardFoundScreen.qml")
                     found.backClicked.connect(function() { stack.pop() })
                     found.paired.connect(function() {
-                        var rename = stack.push("qrc:/src/views/screens/WizardRenameScreen.qml")
-                        rename.backClicked.connect(function() { stack.pop() })
-                        rename.renamed.connect(function(name) {
-                            Session.saveActiveZowiName(name)
-                            var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
-                            connectHome(home)
-                        })
+                        finishRegistration()
                     })
                 })
             })
@@ -102,6 +109,27 @@ Window {
         })
     }
 
+    // Shared end-of-registration step: after a Zowi is paired/connected (Bt or
+    // USB), skip the rename wizard if it already has a non-default name and go
+    // straight to Home; otherwise show the rename wizard.
+    function finishRegistration() {
+        var defaultName = Config.get("zowi_default_name") || "Zowi"
+        if (Robot.deviceName && Robot.deviceName.toLowerCase() !== defaultName.toLowerCase()) {
+            Session.saveActiveZowiName(Robot.deviceName)
+            rootNotice.show("Robot already named \"" + Robot.deviceName + "\". Keeping it.")
+            var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
+            connectHome(home)
+            return
+        }
+        var rename = stack.push("qrc:/src/views/screens/WizardRenameScreen.qml")
+        rename.backClicked.connect(function() { stack.pop() })
+        rename.renamed.connect(function(name) {
+            Session.saveActiveZowiName(name)
+            var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
+            connectHome(home)
+        })
+    }
+
     StackView {
         id: stack
         anchors.fill: parent
@@ -111,5 +139,9 @@ Window {
     }
 
     DevOverlay {
+    }
+
+    MessageBar {
+        id: rootNotice
     }
 }

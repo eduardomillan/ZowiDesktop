@@ -88,6 +88,28 @@ Rectangle {
                       : root.tr("via_bluetooth")
             }
         }
+
+        // Firmware (appId) pill, shown when the robot reported its firmware id.
+        Rectangle {
+            visible: Robot.connected && Robot.appId !== ""
+            anchors.verticalCenter: parent.verticalCenter
+            radius: 8
+            height: 16
+            width: fwText.implicitWidth + 14
+            color: "#ffffff"
+            border.color: "#8a6d1f"
+            border.width: 1
+            opacity: 0.75
+
+            Text {
+                id: fwText
+                anchors.centerIn: parent
+                font.pixelSize: 10
+                font.bold: true
+                color: "#8a6d1f"
+                text: root.tr("status_firmware").arg(Robot.appId)
+            }
+        }
     }
 
     Text {
@@ -113,5 +135,10 @@ Rectangle {
     Connections {
         target: Session
         function onSessionChanged() { root.statusLabel = root.statusText() }
+    }
+
+    Connections {
+        target: Robot
+        function onAppIdChanged() { root.statusLabel = root.statusText() }
     }
 }

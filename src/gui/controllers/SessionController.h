@@ -24,6 +24,11 @@ public:
     Q_INVOKABLE QString loadActiveZowiTransport();
     Q_INVOKABLE void saveActiveZowiTransport(const QString &transport);
 
+    // Firmware / program id reported by the robot (e.g. "&&I <appId>%%").
+    // Persisted so the app remembers which firmware the connected Zowi runs.
+    Q_INVOKABLE QString loadActiveZowiAppId();
+    Q_INVOKABLE void saveActiveZowiAppId(const QString &appId);
+
     Q_INVOKABLE QStringList keys() const;
     Q_INVOKABLE QString getRaw(const QString &key) const;
     Q_INVOKABLE void clearActive();

@@ -181,6 +181,14 @@ Item {
                     text: "Battery: " + (Robot.battery >= 0 ? Robot.battery + "%" : "N/A")
                 }
 
+                Text {
+                    Layout.fillWidth: true
+                    color: "#ddd"
+                    font.pixelSize: 9
+                    wrapMode: Text.WordWrap
+                    text: "Firmware (appId): " + (Robot.appId !== "" ? Robot.appId : "N/A")
+                }
+
                 Rectangle {
                     height: 1
                     color: "#555"

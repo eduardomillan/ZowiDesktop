@@ -13,6 +13,9 @@ ScreenTemplate {
 
     property string pairingCode: Config.get("pairing_code") || "1234"
     property bool pairingAttempt: false
+    // When true the pair button connects over USB instead of Bluetooth SPP,
+    // skipping the Bluetooth pairing step (used when only USB is available).
+    property bool usbMode: false
 
     signal paired()
 
@@ -47,7 +50,7 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: 260
             height: 56
-            text: tr("pair_button").arg(wizardFound.pairingCode)
+            text: wizardFound.usbMode ? tr("connect_usb_button") : tr("pair_button").arg(wizardFound.pairingCode)
 
             contentItem: Text {
                 text: parent.text
@@ -68,14 +71,21 @@ ScreenTemplate {
             onClicked: {
                 if (Robot.connected) {
                     wizardFound.paired()
-                } else {
-                    var addr = Session.loadActiveZowiDeviceAddress()
-                    if (addr) {
-                        wizardFound.pairingAttempt = true
-                        errorText.visible = false
-                        pairingTimer.restart()
-                        Robot.connectToDevice(addr)
-                    }
+                    return
+                }
+                if (wizardFound.usbMode) {
+                    wizardFound.pairingAttempt = true
+                    errorText.visible = false
+                    pairingTimer.restart()
+                    Robot.connectUsb()
+                    return
+                }
+                var addr = Session.loadActiveZowiDeviceAddress()
+                if (addr) {
+                    wizardFound.pairingAttempt = true
+                    errorText.visible = false
+                    pairingTimer.restart()
+                    Robot.connectToDevice(addr)
                 }
             }
         }

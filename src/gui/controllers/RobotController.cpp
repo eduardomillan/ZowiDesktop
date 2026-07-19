@@ -155,6 +155,10 @@ void RobotController::wireBackend()
             m_deviceName.clear();
             m_deviceAddress.clear();
             m_battery = -1.0f;
+            if (!m_appId.isEmpty()) {
+                m_appId.clear();
+                emit appIdChanged();
+            }
             emit deviceChanged();
             emit batteryChanged();
         }
@@ -236,6 +240,24 @@ void RobotController::parseIncoming()
         ampE = buf.find("&&E ");
     }
 
+    // &&I <appId>%% form: firmware / program id reported by the robot.
+    auto ampI = buf.find("&&I ");
+    while (ampI != std::string::npos) {
+        auto end = buf.find("%%", ampI);
+        if (end == std::string::npos) break; // incomplete frame, wait for more
+        std::string value = buf.substr(ampI + 4, end - (ampI + 4));
+        if (QString::fromStdString(value) != m_appId) {
+            m_appId = QString::fromStdString(value);
+            emit appIdChanged();
+            // Persist the firmware id so the app remembers which firmware this
+            // Zowi is running (used later to surface it in the UI).
+            if (m_session)
+                m_session->saveActiveZowiAppId(m_appId);
+        }
+        buf.erase(0, end + 2);
+        ampI = buf.find("&&I ");
+    }
+
     // Line-based "B <value>" / "N <name>" forms (value until newline).
     auto nl = buf.find('\n');
     while (nl != std::string::npos) {
@@ -315,6 +337,11 @@ QString RobotController::deviceName() const
 QString RobotController::deviceAddress() const
 {
     return m_deviceAddress;
+}
+
+QString RobotController::appId() const
+{
+    return m_appId;
 }
 
 int RobotController::battery() const
@@ -662,6 +689,10 @@ void RobotController::disconnectFromDevice()
     setConnecting(false);
     m_deviceAddress.clear();
     m_deviceName.clear();
+    if (!m_appId.isEmpty()) {
+        m_appId.clear();
+        emit appIdChanged();
+    }
     emit deviceChanged();
 }
 
