@@ -32,6 +32,22 @@ std::string commandTurnRight(MovementSpeed speed = MovementSpeed::Medium);
 std::string commandMoonwalkerLeft(MovementSpeed speed = MovementSpeed::Medium);
 std::string commandMoonwalkerRight(MovementSpeed speed = MovementSpeed::Medium);
 
+// Action movements (firmware MoveIDs 5, 8-20).
+std::string commandUpDown(MovementSpeed speed = MovementSpeed::Medium, int size = 15);
+std::string commandSwing(MovementSpeed speed = MovementSpeed::Medium, int size = 15);
+std::string commandCrusaitoForward(MovementSpeed speed = MovementSpeed::Medium, int size = 30);
+std::string commandCrusaitoBackward(MovementSpeed speed = MovementSpeed::Medium, int size = 30);
+std::string commandJump(MovementSpeed speed = MovementSpeed::Medium);
+std::string commandFlappingLeft(MovementSpeed speed = MovementSpeed::Medium, int size = 30);
+std::string commandFlappingRight(MovementSpeed speed = MovementSpeed::Medium, int size = 30);
+std::string commandTiptoeSwing(MovementSpeed speed = MovementSpeed::Medium, int size = 15);
+std::string commandBendForward(MovementSpeed speed = MovementSpeed::Medium);
+std::string commandBendBackward(MovementSpeed speed = MovementSpeed::Medium);
+std::string commandShakeLegLeft(MovementSpeed speed = MovementSpeed::Medium);
+std::string commandShakeLegRight(MovementSpeed speed = MovementSpeed::Medium);
+std::string commandJitter(MovementSpeed speed = MovementSpeed::Medium, int size = 15);
+std::string commandAscendingTurn(MovementSpeed speed = MovementSpeed::Medium, int size = 15);
+
 // Stop / home: moves all servos to 90 degrees and detaches them.
 std::string commandStop();
 

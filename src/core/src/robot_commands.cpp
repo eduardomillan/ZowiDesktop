@@ -48,6 +48,76 @@ std::string commandMoonwalkerRight(MovementSpeed speed)
     return buildMovement(7, static_cast<int>(speed), 30);
 }
 
+std::string commandUpDown(MovementSpeed speed, int size)
+{
+    return buildMovement(5, static_cast<int>(speed), size);
+}
+
+std::string commandSwing(MovementSpeed speed, int size)
+{
+    return buildMovement(8, static_cast<int>(speed), size);
+}
+
+std::string commandCrusaitoForward(MovementSpeed speed, int size)
+{
+    return buildMovement(9, static_cast<int>(speed), size);
+}
+
+std::string commandCrusaitoBackward(MovementSpeed speed, int size)
+{
+    return buildMovement(10, static_cast<int>(speed), size);
+}
+
+std::string commandJump(MovementSpeed speed)
+{
+    return buildMovement(11, static_cast<int>(speed));
+}
+
+std::string commandFlappingLeft(MovementSpeed speed, int size)
+{
+    return buildMovement(12, static_cast<int>(speed), size);
+}
+
+std::string commandFlappingRight(MovementSpeed speed, int size)
+{
+    return buildMovement(13, static_cast<int>(speed), size);
+}
+
+std::string commandTiptoeSwing(MovementSpeed speed, int size)
+{
+    return buildMovement(14, static_cast<int>(speed), size);
+}
+
+std::string commandBendForward(MovementSpeed speed)
+{
+    return buildMovement(15, static_cast<int>(speed));
+}
+
+std::string commandBendBackward(MovementSpeed speed)
+{
+    return buildMovement(16, static_cast<int>(speed));
+}
+
+std::string commandShakeLegLeft(MovementSpeed speed)
+{
+    return buildMovement(17, static_cast<int>(speed));
+}
+
+std::string commandShakeLegRight(MovementSpeed speed)
+{
+    return buildMovement(18, static_cast<int>(speed));
+}
+
+std::string commandJitter(MovementSpeed speed, int size)
+{
+    return buildMovement(19, static_cast<int>(speed), size);
+}
+
+std::string commandAscendingTurn(MovementSpeed speed, int size)
+{
+    return buildMovement(20, static_cast<int>(speed), size);
+}
+
 std::string commandStop()
 {
     return makeCommand(Command::Stop);
