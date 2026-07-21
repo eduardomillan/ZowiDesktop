@@ -4,7 +4,6 @@
 // ("R <name>\r") and waits for the firmware's final ack (&&F) before leaving.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import "../components"
 
 ScreenTemplate {
     id: renameScreen
@@ -15,6 +14,7 @@ ScreenTemplate {
     showBackButton: !renaming
 
     property string defaultName: Config.get("zowi_default_name") || "OpenZowi"
+    property string robotName: Robot.deviceName || defaultName
     property bool renaming: false
     property bool renameDone: false
     // Set when reached over a USB-only connection; the rename is best-effort
@@ -22,8 +22,15 @@ ScreenTemplate {
     property bool usbMode: false
     // The robot performs a welcome gesture right after connecting; lock the
     // rename controls briefly so the user doesn't type/confirm into a busy link.
-    property bool locked: true
+    property bool _lockExpired: false
+    property bool locked: !_lockExpired || !dataReady
     property int lockMs: parseInt(Config.get("rename_lock_ms")) || 1500
+    // Wait for the robot to report name, appId and battery before enabling
+    // the rename controls (mirrors waitForRobotData in the CLI).
+    property bool dataReady: Robot.connected
+                             && Robot.deviceName !== ""
+                             && Robot.appId !== ""
+                             && Robot.battery >= 0
 
     signal renamed(string name)
 
@@ -45,7 +52,7 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 340
             height: 48
-            text: renameScreen.defaultName
+            text: renameScreen.robotName
             placeholderText: tr("name_placeholder")
             font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
@@ -81,6 +88,11 @@ ScreenTemplate {
                 var name = nameField.text.trim()
                 if (name === "" || !Robot.connected)
                     return
+                // Skip rename if the robot already has the requested name.
+                if (Robot.deviceName && Robot.deviceName.toLowerCase() === name.toLowerCase()) {
+                    renameScreen.renamed(name)
+                    return
+                }
                 renameScreen.renaming = true
                 statusText.text = tr("sending")
                 statusText.color = "#2d5a2d"
@@ -100,6 +112,16 @@ ScreenTemplate {
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             width: 340
+        }
+
+        Text {
+            id: waitText
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: tr("waiting_data")
+            font.pixelSize: 14
+            color: "#2d5a2d"
+            visible: Robot.connected && !renameScreen.dataReady && !renameScreen.renaming
+            horizontalAlignment: Text.AlignHCenter
         }
     }
 
@@ -126,7 +148,7 @@ ScreenTemplate {
     }
 
     Component.onCompleted: {
-        renameScreen.locked = true
+        renameScreen._lockExpired = false
         lockTimer.restart()
     }
 
@@ -135,15 +157,27 @@ ScreenTemplate {
             nameField.forceActiveFocus()
     }
 
-    // The rename field is disabled while `locked` (welcome gesture). Once it
-    // unlocks, grab focus so the user can type the name immediately.
+    // When robot data arrives after the welcome-gesture lock has expired,
+    // the controls finally unlock — grab focus so the user can type.
+    onLockedChanged: {
+        if (!renameScreen.locked && !renameScreen.renaming) {
+            nameField.selectAll()
+            nameField.forceActiveFocus()
+        }
+    }
+
+    // The rename field is disabled while locked (welcome gesture or waiting for
+    // robot data). Once both conditions are satisfied, grab focus so the user
+    // can type the name immediately.
     Timer {
         id: lockTimer
         interval: renameScreen.lockMs
         onTriggered: {
-            renameScreen.locked = false
-            nameField.selectAll()
-            nameField.forceActiveFocus()
+            renameScreen._lockExpired = true
+            if (!renameScreen.locked) {
+                nameField.selectAll()
+                nameField.forceActiveFocus()
+            }
         }
     }
 

@@ -33,6 +33,11 @@ Item {
         }
         statusMessage(tr("renaming").arg(defaultName))
         if (Robot.connected) {
+            // Skip rename if the robot already has the target name.
+            if (Robot.deviceName && Robot.deviceName.toLowerCase() === defaultName.toLowerCase()) {
+                doUnpair()
+                return
+            }
             sendRename()
         } else {
             // Try to connect (transport-aware) so we can issue the rename.
@@ -80,7 +85,7 @@ Item {
 
     Timer {
         id: connectTimer
-        interval: 8000
+        interval: 3000
         onTriggered: {
             if (!_active || _waitingAck) return
             // Could not reach the robot in time: forget anyway (best effort).
@@ -91,7 +96,7 @@ Item {
 
     Timer {
         id: ackTimer
-        interval: 8000
+        interval: 3000
         onTriggered: {
             if (!_waitingAck) return
             // Robot did not ACK the rename: forget anyway.
@@ -108,6 +113,10 @@ Item {
             if (Robot.connected && _initiatedConnect) {
                 _initiatedConnect = false
                 connectTimer.stop()
+                if (Robot.deviceName && Robot.deviceName.toLowerCase() === defaultName.toLowerCase()) {
+                    doUnpair()
+                    return
+                }
                 sendRename()
             }
         }

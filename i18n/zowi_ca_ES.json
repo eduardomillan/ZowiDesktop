@@ -81,7 +81,8 @@
     "sending": "Enviant el nom al Zowi...",
     "done": "Fet! El Zowi ara es diu %1.",
     "rename_failed": "No s'ha pogut reanomenar. Torna-ho a provar.",
-    "rename_skipped_usb": "El robot no ha confirmat el reanomenament per USB. Es manté « %1 »."
+    "rename_skipped_usb": "El robot no ha confirmat el reanomenament per USB. Es manté « %1 ».",
+    "waiting_data": "Esperant les dades del robot..."
   },
   "ScanScreen.qml": {
     "searching_title": "Buscant Zowis...",

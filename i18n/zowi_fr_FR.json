@@ -81,7 +81,8 @@
     "sending": "Envoi du nom au Zowi…",
     "done": "Terminé ! Le Zowi s'appelle désormais %1.",
     "rename_failed": "Impossible de renommer. Réessayez.",
-    "rename_skipped_usb": "Le robot n'a pas confirmé le renommage via USB. « %1 » conservé."
+    "rename_skipped_usb": "Le robot n'a pas confirmé le renommage via USB. « %1 » conservé.",
+    "waiting_data": "En attente des données du robot…"
   },
   "ScanScreen.qml": {
     "searching_title": "Recherche de Zowis…",

@@ -20,8 +20,8 @@ Leyenda de estados de la máquina de situación:
 
 ## B. Según registro previo de Zowi
 
-- [ ] **B1 — No registrado + hay Bt**: asistente de emparejamiento Bt.
-- [ ] **B2 — No registrado + solo USB**: registro por USB (sin pairing).
+- [X] **B1 — No registrado + hay Bt**: asistente de emparejamiento Bt.
+- [X] **B2 — No registrado + solo USB**: registro por USB (sin pairing).
 - [ ] **B3 — Registrado por Bt**: se descarta USB; reconexión automática al dispositivo guardado (`activeZowiDeviceAddress`). Cambiar a USB exige *olvidar a Zowi*.
 - [ ] **B4 — Registrado por USB**: prioriza reconexión por USB. Pasar a Bt exige *olvidar a Zowi*.
 - [ ] **B5 — Registrado por transporte ya no disponible** (p.ej. registrado por Bt, sin adaptador Bt): avisa de que el transporte no está disponible; ofrece reintentar / olvidar y registrar por el disponible / modo demo.

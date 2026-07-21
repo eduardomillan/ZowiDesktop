@@ -63,7 +63,7 @@ ScreenTemplate {
 
             background: Rectangle {
                 radius: 28
-                color: pairButton.pressed ? "#17736c" : "#21a69b"
+                color: !pairButton.enabled ? "#999999" : (pairButton.pressed ? "#17736c" : "#21a69b")
             }
 
             enabled: !wizardFound.pairingAttempt
