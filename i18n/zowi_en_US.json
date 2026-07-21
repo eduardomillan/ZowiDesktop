@@ -149,7 +149,8 @@
     "turn_on_hint": "To control Zowi, first turn it on.",
     "already_on": "It's already on",
     "no_zowi": "I don't have a Zowi",
-    "usb_recommend_disconnect": "Zowi also detected via USB. Disconnect the cable for greater freedom of movement."
+    "usb_recommend_disconnect": "Zowi also detected via USB. Disconnect the cable for greater freedom of movement.",
+    "no_transport_error": "No Bluetooth or USB detected. Starting in demo mode."
   },
   "DesktopEntry": {
     "app_coment": "Control and program your Zowi robot"

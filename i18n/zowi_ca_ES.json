@@ -149,7 +149,8 @@
     "turn_on_hint": "Per a controlar a Zowi, primer encén-lo.",
     "already_on": "Ja està encés",
     "no_zowi": "No tinc un Zowi",
-    "usb_recommend_disconnect": "Zowi també detectat per USB. Desconnecta el cable per a major llibertat de moviment."
+    "usb_recommend_disconnect": "Zowi també detectat per USB. Desconnecta el cable per a major llibertat de moviment.",
+    "no_transport_error": "No s'ha detectat Bluetooth ni USB. Iniciant en mode demo."
   },
   "DesktopEntry": {
     "app_coment": "Controla i programa el teu robot Zowi"

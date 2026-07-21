@@ -121,7 +121,7 @@ ScreenTemplate {
         { key: "rename",         desc: "rename_desc",         connGated: true,  action: function() { settingsScreen.renameRequested() } },
         { key: "update",         desc: "update_desc",         connGated: false, action: function() { msgBar.show(tr("update_stub")) } },
         { key: "achievements",   desc: "achievements_desc",   connGated: false, action: function() { msgBar.show(tr("achievements_stub")) } },
-        { key: "forget",         desc: "forget_desc",         connGated: false, action: function() { settingsScreen.forgetZowi() } },
+        { key: "forget",         desc: "forget_desc",         connGated: false, needsRegistration: true, action: function() { settingsScreen.forgetZowi() } },
         { key: "calibrate",      desc: "calibrate_desc",      connGated: true,  action: function() { msgBar.show(tr("calibrate_stub")) } },
         { key: "hospital",       desc: "hospital_desc",       connGated: false, action: function() { Qt.openUrlExternally(Config.get("hospital_url")) } }
     ]
@@ -287,7 +287,8 @@ ScreenTemplate {
                     property bool effectiveEnabled: (!msgBar.visible) &&
                         (!settingsScreen.restoring) &&
                         (!settingsScreen.switching) &&
-                        (modelData.connGated ? Robot.connected : true)
+                        (modelData.connGated ? Robot.connected : true) &&
+                        (!modelData.needsRegistration || Session.loadActiveZowiDeviceAddress() !== "")
 
                     width: optionCol.width
                     height: 76

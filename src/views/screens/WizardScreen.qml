@@ -29,6 +29,12 @@ ScreenTemplate {
         }
     }
 
+    Timer {
+        id: noTransportTimer
+        interval: 3000
+        onTriggered: wizard.dismissed()
+    }
+
     footer: MessageBar {
         id: usbWarnBar
         duration: 3000
@@ -73,7 +79,14 @@ ScreenTemplate {
                 }
 
                 onClicked: {
+                    if (!Robot.bluetoothAvailable && !Robot.usbAvailable) {
+                        usbWarnBar.textColor = "#f1c40f"
+                        usbWarnBar.show(tr("no_transport_error"), "#c0392b")
+                        noTransportTimer.restart()
+                        return
+                    }
                     if (Robot.usbAvailable && Robot.bluetoothAvailable) {
+                        usbWarnBar.textColor = "#2d5a2d"
                         usbWarnBar.show(tr("usb_recommend_disconnect"), "#f1c40f")
                         wizard._pendingStart = true
                         usbWarnTimer.restart()
