@@ -2,11 +2,11 @@
 
 ## Bugs detectados
 
-- [ ] Al iniciar ZowiDesktop, se queda todo el rato en "Conectando..." la statusbar. Debería intentar la conexión según el transport que tenga configurado, durante un tiempo limitado por timeout. Si no es posible la conexión (auto, usb o bluetooth) debería indicarlo en dicha statusbar.
+- [X] Al iniciar ZowiDesktop, se queda todo el rato en "Conectando..." la statusbar. Debería intentar la conexión según el transport que tenga configurado, durante un tiempo limitado por timeout. Si no es posible la conexión (auto, usb o bluetooth) debería indicarlo en dicha statusbar.
 - [X] En docs/tests hay un ZOWILIB_HOWTO, debería referenciarse con TEST_ al inicio.
 - [ ] Si el robot tiene el firmware modificado (por bitbloq, por ejemplo), el proceso de renombrado falla
 - [X] Si se intenta 'renombrar' a Zowi con el mismo nombre que ya tiene, el proceso de renombrado falla
-- [ ] Al iniciar la aplicación con robot registrado, no muestra el porcentaje de batería
+- [X] Al iniciar la aplicación con robot registrado, no muestra el porcentaje de batería
 
 
 ## Nuevas funcionalidades
