@@ -6,11 +6,15 @@
 namespace zowi {
 
 namespace {
-// Movement command: M <MoveID> <T>\r  (T = period in ms)
-std::string buildMovement(int moveId, int periodMs)
+// Movement command: M <MoveID> <T> [<MoveSize>]\r
+// moveSize is only used by certain MoveIDs (6-14, 19-20); pass 0 to omit.
+std::string buildMovement(int moveId, int periodMs, int moveSize = 0)
 {
-    return makeCommand(Command::Move,
-                        std::to_string(moveId) + ' ' + std::to_string(periodMs));
+    std::string args = std::to_string(moveId) + ' ' + std::to_string(periodMs);
+    if (moveSize > 0) {
+        args += ' ' + std::to_string(moveSize);
+    }
+    return makeCommand(Command::Move, args);
 }
 } // namespace
 
@@ -26,12 +30,12 @@ std::string commandWalkBackward(MovementSpeed speed)
 
 std::string commandTurnLeft(MovementSpeed speed)
 {
-    return buildMovement(3, static_cast<int>(speed));
+    return buildMovement(6, static_cast<int>(speed), 30);
 }
 
 std::string commandTurnRight(MovementSpeed speed)
 {
-    return buildMovement(4, static_cast<int>(speed));
+    return buildMovement(7, static_cast<int>(speed), 30);
 }
 
 std::string commandStop()

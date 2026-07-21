@@ -6,6 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <csignal>
+#include <chrono>
 #include <unistd.h>
 
 #include <QCoreApplication>
@@ -570,6 +571,10 @@ int runControl(int argc, char **argv, const ControlArgs &a)
 
     std::cout << "Controls:  UP=forward  DOWN=backward  LEFT=turn left  RIGHT=turn right  (ESC/q=quit)\n";
 
+    using clock = std::chrono::steady_clock;
+    auto lastMove = clock::time_point{};  // epoch: no movement yet
+    constexpr auto moveDuration = std::chrono::seconds(1);
+
     while (!g_quit.load()) {
         {
             std::lock_guard<std::mutex> lock(g_mtx);
@@ -592,8 +597,14 @@ int runControl(int argc, char **argv, const ControlArgs &a)
 
             if (!cmd.empty()) {
                 bt.send(cmd);
+                lastMove = clock::now();
                 std::cout << "\r" << action << "          " << std::flush;
             }
+        } else if (lastMove.time_since_epoch().count() != 0
+                   && clock::now() - lastMove >= moveDuration) {
+            bt.send(zowi::commandStop());
+            lastMove = {};  // reset so we only send stop once
+            std::cout << "\r idle        " << std::flush;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }

@@ -89,11 +89,13 @@ firmware's default handler.
 ## Example session
 
 ```text
-M 1 1000\r     # walk forward
-M 2 1000\r     # walk backward
-M 3 1000\r     # turn left
-M 4 1000\r     # turn right
-S\r            # stop / home
+M 1 1000\r       # walk forward
+M 2 1000\r       # walk backward
+M 6 1000 30\r    # moonwalker left (default left)
+M 7 1000 30\r    # moonwalker right (default right)
+M 3 1000\r       # turn left (tighter arc)
+M 4 1000\r       # turn right (tighter arc)
+S\r              # stop / home
 ```
 
 ## Other commands (reference)

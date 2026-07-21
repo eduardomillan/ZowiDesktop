@@ -6,6 +6,7 @@
 - [X] En docs/tests hay un ZOWILIB_HOWTO, debería referenciarse con TEST_ al inicio.
 - [ ] Si el robot tiene el firmware modificado (por bitbloq, por ejemplo), el proceso de renombrado falla
 - [X] Si se intenta 'renombrar' a Zowi con el mismo nombre que ya tiene, el proceso de renombrado falla
+- [ ] Al iniciar la aplicación con robot registrado, no muestra el porcentaje de batería
 
 
 ## Nuevas funcionalidades

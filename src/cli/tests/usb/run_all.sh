@@ -47,6 +47,7 @@ export CLI
 # 1. Hardware-free smoke tests (always run).
 run "usb/test_usb_options.sh" "$SCRIPT_DIR/test_usb_options.sh"
 run "usb/test_ports.sh"       "$SCRIPT_DIR/test_ports.sh"
+run "usb/test_control.sh"     "$SCRIPT_DIR/test_control.sh"
 
 # 2. Flashing tests (opt-in, require a robot connected over USB).
 if [ "$FLASH" = "1" ]; then
