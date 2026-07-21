@@ -786,6 +786,20 @@ commands follow the firmware serial protocol documented in
 `docs/firmware/PROTOCOL.md` (the `M <MoveID> <T> [<MoveSize>]` movement command and the `S`
 stop command).
 
+Supports both Bluetooth (default) and USB serial transport. Use `--backend usb`
+to drive the robot over a USB cable instead of Bluetooth.
+
+### Backend selection
+
+| `--backend` | Backend | Needs root / setcap? |
+|---|---|---|
+| `auto` (default) | Uses the transport registered at `connect` time; falls back to Bluetooth | No |
+| `bluetooth` | Qt Bluetooth SPP (BlueZ) | No |
+| `usb` | USB serial (`/dev/ttyUSB*`, `/dev/ttyACM*`) | No |
+
+When `--tty` is given, the USB serial backend is selected automatically
+regardless of `--backend`.
+
 ### Controls
 
 | Key            | Action              | Firmware command           |
@@ -838,6 +852,23 @@ Speed maps to the firmware period `T` in ms: `slow` = 2000, `medium` = 1000,
 ```bash
 zowi_cli control -t 5    # wait up to 5 seconds for the connection
 ```
+
+### Drive over USB
+
+```bash
+zowi_cli control --backend usb --tty /dev/ttyUSB0
+```
+
+Or let the CLI auto-detect the USB port:
+
+```bash
+zowi_cli control --backend usb
+```
+
+When using USB, the connection timeout is automatically extended to at least 8
+seconds to account for the robot's boot delay over serial. The baud rate
+defaults to 115200 (the control firmware's rate); override with `--baud` if
+needed.
 
 ### Behavior notes
 

@@ -507,8 +507,30 @@ int runStatus(int argc, char **argv, const StatusArgs &a)
 int runControl(int argc, char **argv, const ControlArgs &a)
 {
     QCoreApplication qtApp(argc, argv);
-    zowi::QtBluetoothBackend bt;
     resetRobotState();
+
+    zowi::SessionStore session("ZowiDesktop", "ZowiApp");
+
+    std::string backend = a.backend;
+    if (backend == "auto") {
+        backend = session.getString("activeZowiTransport");
+        if (backend.empty()) backend = "bluetooth";
+    }
+
+    const std::string ctrlAddr = a.address.empty()
+                                     ? session.getString("activeZowiDeviceAddress")
+                                     : a.address;
+    if (ctrlAddr.empty()) {
+        std::cerr << "No paired device found. Run 'connect' first or pass --address." << std::endl;
+        return 1;
+    }
+
+    std::string target, boundTty;
+    auto bt = prepareFlashBackend(backend, ctrlAddr, a.tty, a.baud, target, boundTty);
+    if (!bt) return 1;
+
+    const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+    const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
 
     // Speed as an index: 0=slow, 1=medium, 2=fast (matches the original app's
     // speedArray = {2000, 1000, 700}).
@@ -534,22 +556,15 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     };
     zowi::MovementSpeed speed = speedFromIndex(speedIndex);
 
-    zowi::SessionStore session("ZowiDesktop", "ZowiApp");
-    const std::string ctrlAddr = a.address.empty()
-                                     ? session.getString("activeZowiDeviceAddress")
-                                     : a.address;
-    if (ctrlAddr.empty()) {
-        std::cerr << "No paired device found. Run 'connect' first or pass --address." << std::endl;
-        return 1;
+    if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+        std::cout << "Discovering " << target << "..." << std::endl;
+        discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
     }
 
-    std::cout << "Discovering " << ctrlAddr << "..." << std::endl;
-    discoverDevice(qtApp, bt, ctrlAddr, kDiscoveryTimeoutMs);
+    std::cout << "Connecting to " << target << "..." << std::endl;
 
-    std::cout << "Connecting to " << ctrlAddr << "..." << std::endl;
-
-    bt.onDataReceived([](const std::string &data) { onDataReceived(data); });
-    bt.onConnectionChanged([&](bool connected) {
+    bt->onDataReceived([](const std::string &data) { onDataReceived(data); });
+    bt->onConnectionChanged([&](bool connected) {
         g_connected = connected;
         if (connected) {
             std::cout << "Connected. Drive with the arrow keys (ESC or 'q' to quit)." << std::endl;
@@ -557,16 +572,17 @@ int runControl(int argc, char **argv, const ControlArgs &a)
             std::cout << "\n\nDisconnected." << std::endl;
         }
     });
-    bt.onError([&](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
+    bt->onError([&](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
 
-    bt.connect(ctrlAddr);
+    bt->connect(target);
 
-    if (!waitUntil(qtApp, a.timeout * 1000, []() {
+    if (!waitUntil(qtApp, effTimeout * 1000, []() {
             std::lock_guard<std::mutex> lock(g_mtx);
             return g_connected;
         })) {
-        std::cerr << "Could not connect to the robot within " << a.timeout << "s." << std::endl;
-        bt.disconnect();
+        std::cerr << "Could not connect to the robot within " << effTimeout << "s." << std::endl;
+        bt->disconnect();
+        if (!boundTty.empty()) std::system("rfcomm release 0");
         return 1;
     }
 
@@ -583,8 +599,9 @@ int runControl(int argc, char **argv, const ControlArgs &a)
         });
     } else {
         std::cout << "Interactive control requires a terminal; cannot read arrow keys.\n";
-        bt.send(zowi::commandStop());
-        bt.disconnect();
+        bt->send(zowi::commandStop());
+        bt->disconnect();
+        if (!boundTty.empty()) std::system("rfcomm release 0");
         return 0;
     }
 
@@ -628,7 +645,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
             else if (key == "turn_right") { cmd = zowi::commandTurnRight(speed); action = "turn right"; }
 
             if (!cmd.empty()) {
-                bt.send(cmd);
+                bt->send(cmd);
                 lastMove = clock::now();
                 std::string keyUpper = key;
                 std::transform(keyUpper.begin(), keyUpper.end(), keyUpper.begin(), ::toupper);
@@ -638,7 +655,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
             }
         } else if (lastMove.time_since_epoch().count() != 0
                    && clock::now() - lastMove >= moveDuration) {
-            bt.send(zowi::commandStop());
+            bt->send(zowi::commandStop());
             lastMove = {};  // reset so we only send stop once
             std::cout << "\x1b[2K\rStatus: idle. Speed: " << speedNameFromIndex(speedIndex)
                       << ". Last key: " << (lastKeyDisplay.empty() ? "none" : lastKeyDisplay)
@@ -647,10 +664,11 @@ int runControl(int argc, char **argv, const ControlArgs &a)
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
 
-    bt.send(zowi::commandStop());
+    bt->send(zowi::commandStop());
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
     disableRawMode();
-    bt.disconnect();
+    bt->disconnect();
+    if (!boundTty.empty()) std::system("rfcomm release 0");
     std::cout << "\n\nStopped. Disconnected. Bye!\n";
     return 0;
 }

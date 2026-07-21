@@ -68,6 +68,9 @@ struct ControlArgs {
     std::string address;
     std::string speed = "medium";
     int timeout = 3;
+    std::string tty;
+    int baud = 115200;
+    std::string backend = "auto";
 };
 
 struct StatusArgs {

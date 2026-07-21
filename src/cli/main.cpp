@@ -127,11 +127,14 @@ int main(int argc, char **argv)
     adivinawiCmd->add_option("--backend", adivinawiArgs.backend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
 
     // ── control subcommand ───────────────────────────────────
-    auto *controlCmd = app.add_subcommand("control", "Interactive keyboard minigame to drive the Zowi robot\nUse the arrow keys or WASD to move; Q/E to turn; press ESC or Ctrl+C to quit.\nConnects to the paired device (or --address).");
+    auto *controlCmd = app.add_subcommand("control", "Interactive keyboard minigame to drive the Zowi robot\nUse the arrow keys or WASD to move; Q/E to turn; press ESC or Ctrl+C to quit.\nConnects to the paired device (or --address). Add --backend usb --tty /dev/ttyUSB0 for USB.");
     zowi_cli::ControlArgs controlArgs;
-    controlCmd->add_option("--address,-a", controlArgs.address, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
+    controlCmd->add_option("--address,-a", controlArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path (e.g. /dev/ttyUSB0)")->default_val("");
     controlCmd->add_option("--speed", controlArgs.speed, "Movement speed: slow, medium, fast")->default_val("medium");
     controlCmd->add_option("--timeout,-t", controlArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    controlCmd->add_option("--backend", controlArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    controlCmd->add_option("--tty", controlArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
+    controlCmd->add_option("--baud", controlArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
 
     CLI11_PARSE(app, argc, argv);
 

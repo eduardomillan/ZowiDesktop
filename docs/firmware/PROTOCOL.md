@@ -5,6 +5,15 @@ sends to the robot over Bluetooth (SPP) / serial. It was derived from the
 original BQ/bitbloq firmware in `zowiLibs/code .ino/ZOWI_BASE_v2/ZOWI_BASE_v2.ino`
 and its `ZowiSerialCommand` parser.
 
+## Table of Contents
+
+- [Framing](#framing)
+- [Responses (robot → host)](#responses-robot--host)
+- [Movement command `M`](#movement-command-m)
+- [Stop command `S`](#stop-command-s)
+- [Example session](#example-session)
+- [Other commands (reference)](#other-commands-reference)
+
 ## Framing
 
 - Commands are **ASCII text**, tokens separated by a single **space** (`' '`).
