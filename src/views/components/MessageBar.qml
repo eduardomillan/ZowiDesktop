@@ -15,6 +15,7 @@ Rectangle {
     color: "#17736c"
 
     property alias message: msgText.text
+    property color textColor: "#f1c40f"
     property int duration: 2000
 
     signal dismissed()
@@ -22,7 +23,7 @@ Rectangle {
     Text {
         id: msgText
         anchors.centerIn: parent
-        color: "#f1c40f"
+        color: root.textColor
         font.pixelSize: 13
         font.bold: true
     }

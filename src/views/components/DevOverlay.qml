@@ -10,7 +10,7 @@ Item {
     height: Math.min(400, parent ? parent.height * 0.6 : 400)
 
     x: parent ? parent.width - width - 8 : 0
-    y: parent ? parent.height * 0.05 : 8
+    y: parent ? parent.height * 0.15 : 8
 
     onCollapsedChanged: if (!collapsed) refreshSession()
 

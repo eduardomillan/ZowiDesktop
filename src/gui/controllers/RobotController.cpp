@@ -574,8 +574,13 @@ void RobotController::refreshTransports()
 {
     pollTransports();
 
-    // Auto mode: pick the best available transport while disconnected.
+    // Auto mode: Bluetooth is preferred. USB is only used as fallback when
+    // no Bluetooth adapter is present.
     if (m_transport == Auto && !isConnected() && !m_connecting) {
+        if (m_bluetoothAvailable) {
+            useBluetoothBackend();
+            return;
+        }
         if (m_usbAvailable) {
             QString port = probeZowiOnPort(m_knownUsbPorts.value(0));
             if (!port.isEmpty()) {
@@ -584,15 +589,16 @@ void RobotController::refreshTransports()
                 return;
             }
         }
-        if (m_bluetoothAvailable) {
-            useBluetoothBackend();
-            return;
-        }
     } else if (m_transport == Usb && m_usbAvailable && !isConnected()) {
         useSerialBackend();
     } else if (m_transport == Bluetooth && !isConnected()) {
         useBluetoothBackend();
     }
+
+    // Notify the UI when both transports are available so it can advise the
+    // user to disconnect the USB cable for greater freedom of movement.
+    if (m_bluetoothAvailable && m_usbAvailable)
+        emit bothTransportsAvailable();
 }
 
 void RobotController::pollTransports()
@@ -616,6 +622,8 @@ void RobotController::pollTransports()
         qInfo() << "transports:" << "usb=" << usbAvail << "bt=" << btAvail
                 << "ports=" << ports;
         emit transportsChanged();
+        if (usbAvail && btAvail)
+            emit bothTransportsAvailable();
     }
     maybeEmitSituation();
 }

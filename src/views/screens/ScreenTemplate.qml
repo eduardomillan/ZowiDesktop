@@ -20,6 +20,8 @@ Rectangle {
 
     default property alias content: contentArea.data
 
+    property alias footer: footerArea.data
+
     function tr(source) { return Translator.translate("ScreenTemplate.qml", source) }
 
     StatusBar {
@@ -126,9 +128,19 @@ Rectangle {
             top: header.bottom
             left: parent.left
             right: parent.right
-            bottom: parent.bottom
+            bottom: footerArea.top
             margins: 30
         }
         clip: true
+    }
+
+    Item {
+        id: footerArea
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+        height: 0
     }
 }

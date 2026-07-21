@@ -15,7 +15,7 @@ Leyenda de estados de la máquina de situación:
 
 - [X] **A1 — Solo Bluetooth disponible**: lanza el asistente de emparejamiento Bt (flujo original).
 - [X] **A2 — Solo USB disponible**: sin pairing; el registro se simplifica a detectar puerto serie y confirmar conexión.
-- [ ] **A3 — Ambos disponibles**: Bt es prioritario por defecto (`TransportAuto` → Bt). Si el robot aparece también por USB, se advierte y se recomienda desconectar el cable.
+- [X] **A3 — Ambos disponibles**: Bt es prioritario por defecto (`TransportAuto` → Bt). Si el robot aparece también por USB, se advierte y se recomienda desconectar el cable.
 - [ ] **A4 — Ninguno disponible**: avisa y arranca en *modo demo*; acciones que requieren hardware deshabilitadas/simuladas.
 
 ## B. Según registro previo de Zowi
@@ -43,20 +43,12 @@ Leyenda de estados de la máquina de situación:
 
 ## E. Robot rehecho / renombrado previamente (detectado en pruebas)
 
-- [ ] **E1 — Olvidar no toca el robot**: *olvidar a Zowi* solo borra datos de app y desempareja a nivel de sistema; no reescribe la EEPROM (ni nombre ni firmware).
 - [ ] **E2 — Registro con nombre ≠ defecto**: al volver a registrar, si el nombre leído no es el nombre por defecto (`zowi_default_name`, case-insensitive) **se salta `WizardRenameScreen`** y va a `HomeScreen`, conservando el nombre.
 - [ ] **E3 — Aviso de nombre existente**: al saltar el rename se muestra un `MessageBar` indicando el nombre que ya tenía el robot ("Robot already named \"X\". Keeping it.").
 - [ ] **E4 — Lectura y persistencia del firmware (appId)**: se parsea `&&I <appId>%%`, se expone `Robot.appId`, y se persiste en sesión `activeZowiAppId`.
 - [ ] **E5 — El appId se muestra en la UI**: pill `FW <appId>` en `StatusBar` (cuando conectado) y línea *Firmware (appId)* en `DevOverlay`.
 
-## F. Barra de título y versión
 
-- [ ] **F1 — Título con versión**: `ZowiDesktop - {versión} - {pantalla}` (versión desde `PROJECT_VERSION` → `ZOWI_VERSION` → `AppVersion`).
-- [ ] **F2 — Todas las pantallas definen `screenName`**: el título nunca queda con guion final suelto.
-
-## G. Renombrado de controlador (0.6.0)
-
-- [ ] **G1 — `BluetoothController` → `RobotController`** y propiedad QML `Bluetooth` → `Robot`, sin romper backends Qt (`QtBluetoothBackend`, `QBluetooth*`).
 
 ---
 

@@ -17,8 +17,9 @@ class SessionController;
 // Robot connection controller. Despite its historical name it is transport
 // agnostic: it can talk to the robot either over Bluetooth SPP (the Qt/BlueZ
 // backend) or over a USB/serial TTY (the serial backend). The active transport
-// is selected automatically (USB preferred when a Zowi is detected on a port)
-// but the user can override it from the UI. See docs/project for the design.
+// is selected automatically (Bluetooth preferred when available; USB is only
+// used as fallback when no Bluetooth adapter is present) but the user can
+// override it from the UI. See docs/project for the design.
 class RobotController : public QObject
 {
     Q_OBJECT
@@ -143,6 +144,7 @@ signals:
     void transportChanged();
     void activeTransportChanged();
     void transportsChanged();
+    void bothTransportsAvailable();
     void restoringChanged();
     void situationChanged();
 

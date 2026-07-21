@@ -14,7 +14,26 @@ ScreenTemplate {
     signal startClicked()
     signal dismissed()
 
+    property bool _pendingStart: false
+
     function tr(source) { return Translator.translate("WizardScreen.qml", source) }
+
+    Timer {
+        id: usbWarnTimer
+        interval: 3000
+        onTriggered: {
+            if (wizard._pendingStart) {
+                wizard._pendingStart = false
+                wizard.startClicked()
+            }
+        }
+    }
+
+    footer: MessageBar {
+        id: usbWarnBar
+        duration: 3000
+        textColor: "#2d5a2d"
+    }
 
     Column {
         anchors.centerIn: parent
@@ -53,7 +72,15 @@ ScreenTemplate {
                     color: startButton.pressed ? "#17736c" : "#21a69b"
                 }
 
-                onClicked: wizard.startClicked()
+                onClicked: {
+                    if (Robot.usbAvailable && Robot.bluetoothAvailable) {
+                        usbWarnBar.show(tr("usb_recommend_disconnect"), "#f1c40f")
+                        wizard._pendingStart = true
+                        usbWarnTimer.restart()
+                    } else {
+                        wizard.startClicked()
+                    }
+                }
             }
 
             Button {

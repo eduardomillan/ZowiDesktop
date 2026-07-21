@@ -134,7 +134,8 @@
     "welcome": "Bienvenue !",
     "turn_on_hint": "Pour contrôler Zowi, allumez-le d'abord.",
     "already_on": "Il est déjà allumé",
-    "no_zowi": "Je n'ai pas de Zowi"
+    "no_zowi": "Je n'ai pas de Zowi",
+    "usb_recommend_disconnect": "Zowi également détecté via USB. Débranchez le câble pour plus de liberté de mouvement."
   },
   "DesktopEntry": {
     "app_coment": "Contrôlez et programmez votre robot Zowi"

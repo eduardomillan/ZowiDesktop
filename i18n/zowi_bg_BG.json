@@ -134,7 +134,8 @@
     "welcome": "Добре дошли!",
     "turn_on_hint": "За да управлявате Zowi, първо го включете.",
     "already_on": "Вече е включен",
-    "no_zowi": "Нямам Zowi"
+    "no_zowi": "Нямам Zowi",
+    "usb_recommend_disconnect": "Zowi е открит и чрез USB. Изключете кабела за по-голяма свобода на движение."
   },
   "DesktopEntry": {
     "app_coment": "Управлявайте и програмирайте вашия робот Zowi"
