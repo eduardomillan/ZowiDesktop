@@ -253,10 +253,10 @@ ScreenTemplate {
 
         Column {
             anchors.centerIn: parent
-            spacing: 15
+            spacing: 5
 
             Row {
-                spacing: 15
+                spacing: 5
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Image {
@@ -305,7 +305,7 @@ ScreenTemplate {
             }
 
             Row {
-                spacing: 15
+                spacing: 5
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Image {
@@ -351,11 +351,6 @@ ScreenTemplate {
                         }
                     }
                 }
-            }
-
-            Row {
-                spacing: 15
-                anchors.horizontalCenter: parent.horizontalCenter
 
                 Image {
                     id: swingBtn
@@ -378,6 +373,11 @@ ScreenTemplate {
                         }
                     }
                 }
+            }
+
+            Row {
+                spacing: 5
+                anchors.horizontalCenter: parent.horizontalCenter
 
                 Image {
                     id: flappingBtn
@@ -400,27 +400,26 @@ ScreenTemplate {
                         }
                     }
                 }
-            }
 
-            Image {
-                id: crusaitoBtn
-                width: 80
-                height: 80
-                source: "qrc:/images/android/pad_crusaito_button.png"
-                sourceSize.width: 80
-                sourceSize.height: 80
-                fillMode: Image.PreserveAspectFit
-                anchors.horizontalCenter: parent.horizontalCenter
+                Image {
+                    id: crusaitoBtn
+                    width: 80
+                    height: 80
+                    source: "qrc:/images/android/pad_crusaito_button.png"
+                    sourceSize.width: 80
+                    sourceSize.height: 80
+                    fillMode: Image.PreserveAspectFit
 
-                MouseArea {
-                    anchors.fill: parent
-                    onPressed: {
-                        parent.source = "qrc:/images/android/pressed_pad_crusaito_button.png"
-                        startHold("M 9 " + currentSpeed + " 30\r", tr("crusaito"))
-                    }
-                    onReleased: {
-                        parent.source = "qrc:/images/android/pad_crusaito_button.png"
-                        stopHold()
+                    MouseArea {
+                        anchors.fill: parent
+                        onPressed: {
+                            parent.source = "qrc:/images/android/pressed_pad_crusaito_button.png"
+                            startHold("M 9 " + currentSpeed + " 30\r", tr("crusaito"))
+                        }
+                        onReleased: {
+                            parent.source = "qrc:/images/android/pad_crusaito_button.png"
+                            stopHold()
+                        }
                     }
                 }
             }
