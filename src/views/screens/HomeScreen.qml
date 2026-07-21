@@ -6,14 +6,17 @@ import "../components"
 
 Rectangle {
     id: home
+    property string screenName: "HomeScreen"
+
+
     color: "#f4f9f4"
 
     signal settingsClicked()
     signal achievementsClicked()
+    signal gamepadClicked()
     signal goSplash()
     signal goWelcome()
 
-    property string screenName: "HomeScreen"
 
     function tr(source) { return Translator.translate("HomeScreen.qml", source) }
 
@@ -195,7 +198,13 @@ Rectangle {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: console.log("Home: tapped", name)
+                            onClicked: {
+                                if (name === tr("gamepad")) {
+                                    home.gamepadClicked()
+                                } else {
+                                    console.log("Home: tapped", name)
+                                }
+                            }
                         }
                     }
 

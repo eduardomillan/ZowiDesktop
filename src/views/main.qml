@@ -21,6 +21,10 @@ Window {
         home.achievementsClicked.connect(function() {
             console.log("Home: achievements")
         })
+        home.gamepadClicked.connect(function() {
+            var pad = stack.push("qrc:/src/views/screens/PadScreen.qml")
+            pad.backClicked.connect(function() { stack.pop() })
+        })
         // DEV: temporary navigation
         home.goSplash.connect(function() {
             Session.saveWizardDismissed(false)

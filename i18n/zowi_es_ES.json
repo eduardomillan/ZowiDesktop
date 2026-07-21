@@ -135,6 +135,26 @@
   "ScreenTemplate.qml": {
     "disconnect": "Desconectar"
   },
+  "PadScreen.qml": {
+    "title": "Gamepad",
+    "subtitle": "Controla tu robot Zowi",
+    "walk_forward": "Andar hacia adelante",
+    "walk_backward": "Andar hacia atrás",
+    "moonwalker_left": "Moonwalker izquierda",
+    "moonwalker_right": "Moonwalker derecha",
+    "turn_left": "Girar izquierda",
+    "turn_right": "Girar derecha",
+    "bend": "Doblarse",
+    "shake_leg": "Sacudir pierna",
+    "updown": "Arriba/abajo",
+    "jitter": "Temblar",
+    "swing": "Balanceo",
+    "flapping": "Aleteo",
+    "crusaito": "Crusaito",
+    "speed_slow": "Lento",
+    "speed_medium": "Medio",
+    "speed_fast": "Rápido"
+  },
   "WizardScreen.qml": {
     "welcome": "¡Bienvenido!",
     "turn_on_hint": "Para controlar a Zowi, primero enciéndelo.",

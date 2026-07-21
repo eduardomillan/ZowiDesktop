@@ -10,6 +10,7 @@
         <file>src/views/screens/ScanScreen.qml</file>
         <file>src/views/screens/HomeScreen.qml</file>
         <file>src/views/screens/SettingsScreen.qml</file>
+        <file>src/views/screens/PadScreen.qml</file>
         <file>src/views/screens/ScreenTemplate.qml</file>
         <!-- Components -->
         <file>src/views/components/AnimatedZowi.qml</file>

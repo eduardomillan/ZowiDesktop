@@ -145,6 +145,26 @@
   "ScreenTemplate.qml": {
     "disconnect": "Разкачи"
   },
+  "PadScreen.qml": {
+    "title": "Геймпад",
+    "subtitle": "Управлявайте вашия робот Zowi",
+    "walk_forward": "Ходене напред",
+    "walk_backward": "Ходене назад",
+    "moonwalker_left": "Moonwalker наляво",
+    "moonwalker_right": "Moonwalker надясно",
+    "turn_left": "Завой наляво",
+    "turn_right": "Завой надясно",
+    "bend": "Навеждане",
+    "shake_leg": "Разклащане на крак",
+    "updown": "Горе/долу",
+    "jitter": "Треперене",
+    "swing": "Люлеене",
+    "flapping": "Пърхане",
+    "crusaito": "Crusaito",
+    "speed_slow": "Бавно",
+    "speed_medium": "Средно",
+    "speed_fast": "Бързо"
+  },
   "WizardScreen.qml": {
     "welcome": "Добре дошли!",
     "turn_on_hint": "За да управлявате Zowi, първо го включете.",
