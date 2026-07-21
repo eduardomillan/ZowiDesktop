@@ -7,8 +7,10 @@ import QtQuick.Controls 2.15
 import "../components"
 
 ScreenTemplate {
-    id: settingsScreen
+    
+    id: settings
     screenName: "SettingsScreen"
+
     title: tr("settings")
     showBackButton: true
 
@@ -70,35 +72,35 @@ ScreenTemplate {
         var s = Robot.situation
         var acts = []
         if (s === Robot.SituationDisconnected) {
-            acts.push({ label: "action_retry", action: settingsScreen.retryConnection })
-            acts.push({ label: "action_forget_reconfigure", action: settingsScreen.forgetZowi })
+            acts.push({ label: "action_retry", action: settings.retryConnection })
+            acts.push({ label: "action_forget_reconfigure", action: settings.forgetZowi })
         } else if (s === Robot.SituationTransportLost) {
-            acts.push({ label: "action_retry", action: settingsScreen.retryConnection })
-            acts.push({ label: "action_forget_reconfigure", action: settingsScreen.forgetZowi })
+            acts.push({ label: "action_retry", action: settings.retryConnection })
+            acts.push({ label: "action_forget_reconfigure", action: settings.forgetZowi })
         } else if (s === Robot.SituationUnregistered) {
-            acts.push({ label: "action_register", action: settingsScreen.startRegistration })
+            acts.push({ label: "action_register", action: settings.startRegistration })
         } else if (s === Robot.SituationDemo) {
-            acts.push({ label: "action_refresh", action: settingsScreen.refreshTransports })
+            acts.push({ label: "action_refresh", action: settings.refreshTransports })
         }
         // USB quick-connect whenever USB is present but we are not connected.
         if (Robot.usbAvailable && !Robot.connected &&
             s !== Robot.SituationUnregistered) {
-            acts.push({ label: "action_connect_usb", action: settingsScreen.connectUsb })
+            acts.push({ label: "action_connect_usb", action: settings.connectUsb })
         }
         return acts
     }
 
     function retryConnection() {
-        if (msgBar.visible || settingsScreen.restoring || settingsScreen.switching) return
-        settingsScreen.switching = true
+        if (msgBar.visible || settings.restoring || settings.switching) return
+        settings.switching = true
         var ok = Robot.switchTransport(Robot.TransportAuto)
-        settingsScreen.switching = false
+        settings.switching = false
         if (ok) msgBar.show(tr("transport_switched"))
         else msgBar.show(tr("transport_failed"), "#c0392b")
     }
 
     function connectUsb() {
-        if (msgBar.visible || settingsScreen.restoring) return
+        if (msgBar.visible || settings.restoring) return
         Robot.connectUsb()
     }
 
@@ -107,33 +109,33 @@ ScreenTemplate {
     }
 
     function startRegistration() {
-        if (msgBar.visible || settingsScreen.restoring) return
+        if (msgBar.visible || settings.restoring) return
         Session.saveWizardDismissed(false)
         Robot.setTransportPreference(Robot.TransportAuto)
-        settingsScreen.forgetCompleted()
+        settings.forgetCompleted()
     }
 
     // `connGated: true` options are only usable while a Zowi is connected
     // (mirrors ZowiAppReborn's zowiDependantViews: rename, restore firmware,
     // calibrate). The rest are always available.
     property var options: [
-        { key: "restore",        desc: "restore_desc",        connGated: true,  action: function() { settingsScreen.restoreFirmware() } },
-        { key: "rename",         desc: "rename_desc",         connGated: true,  action: function() { settingsScreen.renameRequested() } },
+        { key: "restore",        desc: "restore_desc",        connGated: true,  action: function() { settings.restoreFirmware() } },
+        { key: "rename",         desc: "rename_desc",         connGated: true,  action: function() { settings.renameRequested() } },
         { key: "update",         desc: "update_desc",         connGated: false, action: function() { msgBar.show(tr("update_stub")) } },
         { key: "achievements",   desc: "achievements_desc",   connGated: false, action: function() { msgBar.show(tr("achievements_stub")) } },
-        { key: "forget",         desc: "forget_desc",         connGated: false, needsRegistration: true, action: function() { settingsScreen.forgetZowi() } },
+        { key: "forget",         desc: "forget_desc",         connGated: false, needsRegistration: true, action: function() { settings.forgetZowi() } },
         { key: "calibrate",      desc: "calibrate_desc",      connGated: true,  action: function() { msgBar.show(tr("calibrate_stub")) } },
         { key: "hospital",       desc: "hospital_desc",       connGated: false, action: function() { Qt.openUrlExternally(Config.get("hospital_url")) } }
     ]
 
     function restoreFirmware() {
         if (msgBar.visible) return
-        if (settingsScreen.restoring) return
+        if (settings.restoring) return
         if (!Robot.connected) {
             msgBar.show(tr("restore_failed"), "#c0392b")
             return
         }
-        settingsScreen.restoring = true
+        settings.restoring = true
         restoreProgress = 0
         msgBar.show(tr("restore_started"))
         // Phase 2: restoreFirmware() runs synchronously on the GUI thread and
@@ -146,8 +148,8 @@ ScreenTemplate {
         if (msgBar.visible) return
         var addr = Session.loadActiveZowiDeviceAddress()
         if (!addr) addr = Robot.deviceAddress
-        settingsScreen._forgettingNoZowi = (addr === "")
-        settingsScreen.forgetting = true
+        settings._forgettingNoZowi = (addr === "")
+        settings.forgetting = true
         // Forget the registered Zowi. The controller also tries a factory
         // rename (zowi_default_name) if it can reach the robot first.
         forgetter.forget(addr)
@@ -156,14 +158,14 @@ ScreenTemplate {
     ForgetController {
         id: forgetter
         onForgetFinished: function(unpaired, message) {
-            settingsScreen.forgetting = false
-            if (settingsScreen._forgettingNoZowi)
+            settings.forgetting = false
+            if (settings._forgettingNoZowi)
                 msgBar.show(tr("reset_no_zowi"), "#c0392b")
             else if (unpaired)
                 msgBar.show(tr("unpair_success"))
             else
                 msgBar.show(tr("unpair_app_only"))
-            settingsScreen.forgetCompleted()
+            settings.forgetCompleted()
         }
         onStatusMessage: function(text) { msgBar.show(text) }
     }
@@ -173,17 +175,17 @@ ScreenTemplate {
         // Phase 2: restore progress/outcome arrive through dedicated signals
         // instead of being multiplexed onto errorOccurred.
         function onFirmwareRestoreStarted() {
-            if (!settingsScreen.restoring) return
+            if (!settings.restoring) return
             restoreProgress = 0
         }
         function onFirmwareRestoreProgress(percent, written, total) {
-            if (!settingsScreen.restoring) return
+            if (!settings.restoring) return
             restoreProgress = percent
         }
         function onFirmwareRestoreFinished(success, message) {
-            if (!settingsScreen.restoring) return
-            settingsScreen.restoring = false
-            settingsScreen.batteryLow = false
+            if (!settings.restoring) return
+            settings.restoring = false
+            settings.batteryLow = false
             restoreProgress = success ? 100 : 0
             if (success)
                 msgBar.show(tr("restore_success"))
@@ -193,8 +195,8 @@ ScreenTemplate {
         // Phase 3: the restore completed the upload but the reported battery is
         // below the safe threshold; ask the user to confirm before finishing.
         function onFirmwareRestoreBatteryLow(level) {
-            if (!settingsScreen.restoring) return
-            settingsScreen.batteryLow = true
+            if (!settings.restoring) return
+            settings.batteryLow = true
         }
     }
 
@@ -226,19 +228,19 @@ ScreenTemplate {
                     spacing: 10
 
                     Text {
-                        text: settingsScreen.tr("connection")
+                        text: settings.tr("connection")
                         font.bold: true
                         font.pixelSize: 16
                         color: "#2d5a2d"
-                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
+                        opacity: (settings.restoring || settings.switching) ? 0.45 : 1.0
                     }
 
                     Text {
                         width: parent.width
-                        text: settingsScreen.connectionStatusText()
+                        text: settings.connectionStatusText()
                         font.pixelSize: 13
-                        color: settingsScreen.connectionStatusColor()
-                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
+                        color: settings.connectionStatusColor()
+                        opacity: (settings.restoring || settings.switching) ? 0.45 : 1.0
                         wrapMode: Text.WordWrap
                     }
 
@@ -246,10 +248,10 @@ ScreenTemplate {
                     Flow {
                         width: parent.width
                         spacing: 8
-                        enabled: !settingsScreen.restoring && !settingsScreen.switching
-                        opacity: (settingsScreen.restoring || settingsScreen.switching) ? 0.45 : 1.0
+                        enabled: !settings.restoring && !settings.switching
+                        opacity: (settings.restoring || settings.switching) ? 0.45 : 1.0
                         Repeater {
-                            model: settingsScreen.connectionActions()
+                            model: settings.connectionActions()
                             delegate: Rectangle {
                                 height: 40
                                 radius: 8
@@ -260,13 +262,13 @@ ScreenTemplate {
                                 Text {
                                     id: actionLabel
                                     anchors.centerIn: parent
-                                    text: settingsScreen.tr(modelData.label)
+                                    text: settings.tr(modelData.label)
                                     color: "#2d5a2d"
                                     font.pixelSize: 13
                                 }
                                 MouseArea {
                                     anchors.fill: parent
-                                    enabled: !settingsScreen.restoring && !settingsScreen.switching
+                                    enabled: !settings.restoring && !settings.switching
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: modelData.action()
                                 }
@@ -277,7 +279,7 @@ ScreenTemplate {
             }
 
             Repeater {
-                model: settingsScreen.options
+                model: settings.options
                 delegate: Rectangle {
                     id: optionRow
                     // Connection-dependent options are enabled only while a
@@ -285,8 +287,8 @@ ScreenTemplate {
                     // option that pops a message bar is locked while a message
                     // is visible, and re-evaluates its state once it clears.
                     property bool effectiveEnabled: (!msgBar.visible) &&
-                        (!settingsScreen.restoring) &&
-                        (!settingsScreen.switching) &&
+                        (!settings.restoring) &&
+                        (!settings.switching) &&
                         (modelData.connGated ? Robot.connected : true) &&
                         (!modelData.needsRegistration || Session.loadActiveZowiDeviceAddress() !== "")
 
@@ -316,13 +318,13 @@ ScreenTemplate {
                         width: parent.width - 70
 
                         Text {
-                            text: settingsScreen.tr(modelData.key)
+                            text: settings.tr(modelData.key)
                             font.bold: true
                             font.pixelSize: 16
                             color: optionRow.effectiveEnabled ? "#2d5a2d" : "#777777"
                         }
                         Text {
-                            text: settingsScreen.tr(modelData.desc)
+                            text: settings.tr(modelData.desc)
                             font.pixelSize: 12
                             color: optionRow.effectiveEnabled ? "#2d5a2d" : "#777777"
                             opacity: 0.7
@@ -356,7 +358,7 @@ ScreenTemplate {
     // status text (yellow) sits above the progress bar.
     Rectangle {
         id: restoreProgressBox
-        visible: settingsScreen.restoring
+        visible: settings.restoring
         z: 1
         anchors {
             left: parent.left
@@ -374,7 +376,7 @@ ScreenTemplate {
                 topMargin: 6
             }
             horizontalAlignment: Text.AlignHCenter
-            text: tr("restore_progress").arg(settingsScreen.restoreProgress)
+            text: tr("restore_progress").arg(settings.restoreProgress)
             color: "#f1c40f"
             font.pixelSize: 13
             font.bold: true
@@ -399,7 +401,7 @@ ScreenTemplate {
                     top: parent.top
                     bottom: parent.bottom
                 }
-                width: Math.max(2, parent.width * (settingsScreen.restoreProgress / 100.0))
+                width: Math.max(2, parent.width * (settings.restoreProgress / 100.0))
                 radius: 5
                 color: "#21a69b"
             }
@@ -411,7 +413,7 @@ ScreenTemplate {
     // light app background, a warning-yellow panel with a dark-green border.
     Rectangle {
         id: batteryLowDialog
-        visible: settingsScreen.batteryLow
+        visible: settings.batteryLow
         anchors.fill: parent
         color: "transparent"
 
@@ -459,7 +461,7 @@ ScreenTemplate {
                             verticalAlignment: Text.AlignVCenter
                         }
                         onClicked: {
-                            settingsScreen.batteryLow = false
+                            settings.batteryLow = false
                             Robot.confirmRestoreBattery(true)
                         }
                     }
@@ -479,7 +481,7 @@ ScreenTemplate {
                             verticalAlignment: Text.AlignVCenter
                         }
                         onClicked: {
-                            settingsScreen.batteryLow = false
+                            settings.batteryLow = false
                             Robot.confirmRestoreBattery(false)
                         }
                     }

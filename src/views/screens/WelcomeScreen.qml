@@ -6,12 +6,13 @@ import "../components"
 
 Rectangle {
     id: welcome
+    property string screenName: "WelcomeScreen"
+
     color: "#f4f9f4"
 
     signal startWizard()
     signal knowMoreClicked()
 
-    property string screenName: "WelcomeScreen"
 
     function tr(source) { return Translator.translate("WelcomeScreen.qml", source) }
 

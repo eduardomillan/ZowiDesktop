@@ -7,12 +7,13 @@ import "../components"
 
 Rectangle {
     id: splash
+    property string screenName: "SplashScreen"
+
     color: "#f4f9f4"
 
     signal splashFinished()
     signal quitRequested()
 
-    property string screenName: "SplashScreen"
     property bool _resetNoZowi: false
 
     function tr(source) { return Translator.translate("SplashScreen.qml", source) }

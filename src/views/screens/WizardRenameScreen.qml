@@ -6,7 +6,7 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 
 ScreenTemplate {
-    id: renameScreen
+    id: wizardRename
     screenName: "WizardRenameScreen"
 
     title: tr("title")
@@ -52,12 +52,12 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 340
             height: 48
-            text: renameScreen.robotName
+            text: wizardRename.robotName
             placeholderText: tr("name_placeholder")
             font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter
             selectByMouse: true
-            enabled: Robot.connected && !renameScreen.renaming && !renameScreen.locked
+            enabled: Robot.connected && !wizardRename.renaming && !wizardRename.locked
             onAccepted: renameButton.clicked()
         }
 
@@ -66,9 +66,9 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: 260
             height: 56
-            text: renameScreen.renaming ? tr("renaming")
+            text: wizardRename.renaming ? tr("renaming")
                   : (Robot.connected ? tr("rename") : tr("wait_pairing"))
-            enabled: Robot.connected && !renameScreen.renaming && !renameScreen.locked && nameField.text.trim() !== ""
+            enabled: Robot.connected && !wizardRename.renaming && !wizardRename.locked && nameField.text.trim() !== ""
 
             contentItem: Text {
                 text: parent.text
@@ -90,10 +90,10 @@ ScreenTemplate {
                     return
                 // Skip rename if the robot already has the requested name.
                 if (Robot.deviceName && Robot.deviceName.toLowerCase() === name.toLowerCase()) {
-                    renameScreen.renamed(name)
+                    wizardRename.renamed(name)
                     return
                 }
-                renameScreen.renaming = true
+                wizardRename.renaming = true
                 statusText.text = tr("sending")
                 statusText.color = "#2d5a2d"
                 statusText.visible = true
@@ -120,7 +120,7 @@ ScreenTemplate {
             text: tr("waiting_data")
             font.pixelSize: 14
             color: "#2d5a2d"
-            visible: Robot.connected && !renameScreen.dataReady && !renameScreen.renaming
+            visible: Robot.connected && !wizardRename.dataReady && !wizardRename.renaming
             horizontalAlignment: Text.AlignHCenter
         }
     }
@@ -129,16 +129,16 @@ ScreenTemplate {
         id: renameTimer
         interval: 8000
         onTriggered: {
-            if (renameScreen.renameDone) return
-            renameScreen.renaming = false
+            if (wizardRename.renameDone) return
+            wizardRename.renaming = false
             // Over USB the robot often does not ACK the rename (no &&F), so the
             // registration must not get stuck. Treat the timeout as best-effort:
             // keep the typed name and continue to Home instead of blocking.
-            if (renameScreen.usbMode) {
+            if (wizardRename.usbMode) {
                 statusText.text = tr("rename_skipped_usb").arg(nameField.text.trim())
                 statusText.color = "#2d5a2d"
                 statusText.visible = true
-                renameScreen.renamed(nameField.text.trim())
+                wizardRename.renamed(nameField.text.trim())
                 return
             }
             statusText.text = tr("rename_failed")
@@ -148,19 +148,19 @@ ScreenTemplate {
     }
 
     Component.onCompleted: {
-        renameScreen._lockExpired = false
+        wizardRename._lockExpired = false
         lockTimer.restart()
     }
 
     onVisibleChanged: {
-        if (renameScreen.visible && !renameScreen.locked && !renameScreen.renaming)
+        if (wizardRename.visible && !wizardRename.locked && !wizardRename.renaming)
             nameField.forceActiveFocus()
     }
 
     // When robot data arrives after the welcome-gesture lock has expired,
     // the controls finally unlock — grab focus so the user can type.
     onLockedChanged: {
-        if (!renameScreen.locked && !renameScreen.renaming) {
+        if (!wizardRename.locked && !wizardRename.renaming) {
             nameField.selectAll()
             nameField.forceActiveFocus()
         }
@@ -171,10 +171,10 @@ ScreenTemplate {
     // can type the name immediately.
     Timer {
         id: lockTimer
-        interval: renameScreen.lockMs
+        interval: wizardRename.lockMs
         onTriggered: {
-            renameScreen._lockExpired = true
-            if (!renameScreen.locked) {
+            wizardRename._lockExpired = true
+            if (!wizardRename.locked) {
                 nameField.selectAll()
                 nameField.forceActiveFocus()
             }
@@ -185,18 +185,18 @@ ScreenTemplate {
         target: Robot
 
         function onDataReceived(data) {
-            if (renameScreen.renaming)
+            if (wizardRename.renaming)
                 console.log("WizardRenameScreen: recv", JSON.stringify(data))
-            if (renameScreen.renaming && !renameScreen.renameDone
+            if (wizardRename.renaming && !wizardRename.renameDone
                     && data.indexOf("&&F") !== -1) {
-                renameScreen.renameDone = true
+                wizardRename.renameDone = true
                 renameTimer.stop()
-                renameScreen.renaming = false
+                wizardRename.renaming = false
                 statusText.text = tr("done").arg(nameField.text.trim())
                 statusText.color = "#2d5a2d"
                 statusText.visible = true
                 Robot.setDeviceName(nameField.text.trim())
-                renameScreen.renamed(nameField.text.trim())
+                wizardRename.renamed(nameField.text.trim())
             }
         }
     }

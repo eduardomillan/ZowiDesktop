@@ -6,12 +6,14 @@ import QtQuick.Controls 2.15
 import "../components"
 
 Rectangle {
+    
     id: root
+    property string screenName: ""
+
     color: "#f4f9f4"
 
     property alias title: titleText.text
     property alias subtitle: subtitleText.text
-    property string screenName: ""
     property bool showBackButton: false
     property bool showDisconnectButton: false
 
