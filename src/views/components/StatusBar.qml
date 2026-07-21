@@ -14,12 +14,15 @@ Rectangle {
               ? (Robot.battery >= 0 && Robot.battery < 50
                  ? (Config.get("statusbar_bg_low_battery") || "#fdecea")
                  : (Config.get("statusbar_bg_connected") || "#e8f5e8"))
-              : (Config.get("statusbar_bg_disconnected") || "#fff3e0"))
+              : (Robot.situation === Robot.SituationTransportLost
+                 ? (Config.get("statusbar_bg_low_battery") || "#fdecea")
+                 : (Config.get("statusbar_bg_disconnected") || "#fff3e0")))
 
     function tr(source) { return Translator.translate("StatusBar.qml", source) }
 
     property bool hasSavedZowi: Session.loadActiveZowiDeviceAddress() !== ""
     property bool canReconnect: !Robot.connected && !Robot.connecting && root.hasSavedZowi
+        && Robot.situation !== Robot.SituationTransportLost
 
     property color dotColor: Robot.connecting
         ? (Config.get("statusbar_fg_connecting") || "#2980b9")
