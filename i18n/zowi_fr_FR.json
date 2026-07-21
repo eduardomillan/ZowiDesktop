@@ -68,7 +68,8 @@
     "status_unavailable": "Zowi indisponible",
     "status_reconnect": "Reconnecter",
     "via_bluetooth": "Bluetooth",
-    "via_usb": "USB"
+    "via_usb": "USB",
+    "status_firmware": "%1"
   },
   "WizardRenameScreen.qml": {
     "title": "Nommez votre Zowi !",
@@ -120,7 +121,7 @@
   "WizardFoundScreen.qml": {
     "title": "Le voilà !",
     "subtitle": "Pour contrôler Zowi, saisissez le code 1234",
-    "subtitle_usb": "Branche le câble USB au PC et au robot et appuie sur Connecter",
+    "subtitle_usb": "Branche le câble USB au PC et au robot et appuie sur Appairer",
     "pair_button": "Apparier avec %1",
     "pair_usb_button": "Apparier via USB",
     "connect_error": "Impossible de se connecter. Assurez-vous que Zowi est allumé et à proximité."
@@ -136,5 +137,13 @@
   },
   "DesktopEntry": {
     "app_coment": "Contrôlez et programmez votre robot Zowi"
+  },
+  "ForgetController.qml": {
+    "renaming": "Restauration du nom d'usine « %1 »…",
+    "renamed": "Zowi a retrouvé son nom d'usine « %1 ».",
+    "rename_skipped": "Impossible de confirmer le renommage d'usine. Zowi a tout de même été oublié.",
+    "reset_no_zowi": "Aucun Zowi n'est actuellement enregistré dans l'application.",
+    "unpair_success": "Appareil Zowi supprimé de l'application et du système Bluetooth.",
+    "unpair_app_only": "Appareil supprimé de l'application, mais impossible de le désapparier du système Bluetooth."
   }
 }

@@ -16,6 +16,7 @@ ScreenTemplate {
     signal forgetCompleted()
 
     property bool forgetting: false
+    property bool _forgettingNoZowi: false
     property bool restoring: false
     property bool switching: false
     property bool batteryLow: false
@@ -54,11 +55,13 @@ ScreenTemplate {
 
     function connectionStatusColor() {
         var s = Robot.situation
-        if (s === Robot.SituationConnected) return "#2d5a2d"
-        if (s === Robot.SituationConnecting) return "#2d5a2d"
+        if (s === Robot.SituationConnected)
+            return Config.get("statusbar_fg_connected") || "#2d5a2d"
+        if (s === Robot.SituationConnecting)
+            return Config.get("statusbar_fg_connected") || "#2d5a2d"
         if (s === Robot.SituationDemo || s === Robot.SituationTransportLost)
-            return "#c0392b"
-        return "#8a6d1f"
+            return Config.get("statusbar_fg_low_battery") || "#c0392b"
+        return Config.get("statusbar_fg_firmware") || "#8a6d1f"
     }
 
     // Returns the list of contextual actions for the current situation. Each
@@ -143,39 +146,30 @@ ScreenTemplate {
         if (msgBar.visible) return
         var addr = Session.loadActiveZowiDeviceAddress()
         if (!addr) addr = Robot.deviceAddress
-        if (!addr) {
-            // Nothing registered to forget: just drop any stale app data and
-            // fall back to Automatic transport.
-            settingsScreen.forgetting = false
-            Session.saveActiveZowiDeviceAddress("")
-            Session.saveActiveZowiName("")
-            Session.saveWizardDismissed(false)
-            Robot.setTransportPreference(Robot.TransportAuto)
-            msgBar.show(tr("reset_no_zowi"), "#c0392b")
-            return
-        }
+        settingsScreen._forgettingNoZowi = (addr === "")
         settingsScreen.forgetting = true
-        if (Robot.connected) Robot.disconnectFromDevice()
-        Robot.unpairDevice(addr)
-        // Forget the registered Zowi: drop every "active*" session key and
-        // mark the wizard as not dismissed so the app returns to a clean state.
-        Session.clearActive()
-        Session.saveWizardDismissed(false)
-        settingsScreen.forgetCompleted()
+        // Forget the registered Zowi. The controller also tries a factory
+        // rename (zowi_default_name) if it can reach the robot first.
+        forgetter.forget(addr)
+    }
+
+    ForgetController {
+        id: forgetter
+        onForgetFinished: function(unpaired, message) {
+            settingsScreen.forgetting = false
+            if (settingsScreen._forgettingNoZowi)
+                msgBar.show(tr("reset_no_zowi"), "#c0392b")
+            else if (unpaired)
+                msgBar.show(tr("unpair_success"))
+            else
+                msgBar.show(tr("unpair_app_only"))
+            settingsScreen.forgetCompleted()
+        }
+        onStatusMessage: function(text) { msgBar.show(text) }
     }
 
     Connections {
         target: Robot
-        function onUnpairFinished(success, message) {
-            if (!settingsScreen.forgetting) return
-            settingsScreen.forgetting = false
-            // The registered Zowi is gone: fall back to Automatic transport.
-            Robot.setTransportPreference(Robot.TransportAuto)
-            if (success)
-                msgBar.show(tr("unpair_success"))
-            else
-                msgBar.show(tr("unpair_app_only"))
-        }
         // Phase 2: restore progress/outcome arrive through dedicated signals
         // instead of being multiplexed onto errorOccurred.
         function onFirmwareRestoreStarted() {

@@ -68,7 +68,8 @@
     "status_unavailable": "Zowi недостъпен",
     "status_reconnect": "Свържи отново",
     "via_bluetooth": "Bluetooth",
-    "via_usb": "USB"
+    "via_usb": "USB",
+    "status_firmware": "%1"
   },
   "WizardRenameScreen.qml": {
     "title": "Наречете вашия Zowi!",
@@ -120,7 +121,7 @@
   "WizardFoundScreen.qml": {
     "title": "Ето го!",
     "subtitle": "За да управлявате Zowi, въведете кода 1234",
-    "subtitle_usb": "Свържи USB кабела и натисни Свързване",
+    "subtitle_usb": "Свържи USB кабела към компютъра и робота и натисни Сдвои",
     "pair_button": "Сдвояване с %1",
     "pair_usb_button": "Сдвояване през USB",
     "connect_error": "Не може да се свърже. Уверете се, че Zowi е включен и наблизо."
@@ -136,5 +137,13 @@
   },
   "DesktopEntry": {
     "app_coment": "Управлявайте и програмирайте вашия робот Zowi"
+  },
+  "ForgetController.qml": {
+    "renaming": "Възстановяване на фабричното име „%1“…",
+    "renamed": "Zowi възстанови фабричното име „%1“.",
+    "rename_skipped": "Не можа да се потвърди фабричното преименуване. Zowi беше забравен.",
+    "reset_no_zowi": "В момента няма регистриран Zowi в приложението.",
+    "unpair_success": "Zowi устройството е премахнато от приложението и от Bluetooth системата.",
+    "unpair_app_only": "Устройството е премахнато от приложението, но не можа да бъде раздвоено от Bluetooth системата."
   }
 }

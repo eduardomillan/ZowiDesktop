@@ -68,7 +68,8 @@
     "status_unavailable": "Zowi no disponible",
     "status_reconnect": "Reconnecta",
     "via_bluetooth": "Bluetooth",
-    "via_usb": "USB"
+    "via_usb": "USB",
+    "status_firmware": "%1"
   },
   "WizardRenameScreen.qml": {
     "title": "Posa nom al teu Zowi!",
@@ -120,7 +121,7 @@
   "WizardFoundScreen.qml": {
     "title": "Allà és!",
     "subtitle": "Per a controlar a Zowi, introdueix el codi 1234",
-    "subtitle_usb": "Posa el cable USB al PC i al robot i prem Connecta",
+    "subtitle_usb": "Posa el cable USB al PC i al robot i prem Emparella",
     "pair_button": "Aparellar amb %1",
     "pair_usb_button": "Aparellar per USB",
     "connect_error": "No s'ha pogut connectar. Assegura't que el Zowi està encès i a prop."
@@ -136,5 +137,13 @@
   },
   "DesktopEntry": {
     "app_coment": "Controla i programa el teu robot Zowi"
+  },
+  "ForgetController.qml": {
+    "renaming": "Restaurant el nom de fàbrica «%1»…",
+    "renamed": "Zowi ha restaurat el nom de fàbrica «%1».",
+    "rename_skipped": "No s'ha pogut confirmar el reanomenament de fàbrica. Zowi s'ha oblidat igualment.",
+    "reset_no_zowi": "No hi ha cap Zowi registrat a l'app.",
+    "unpair_success": "Dispositiu Zowi eliminat de l'app i del sistema Bluetooth.",
+    "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth."
   }
 }

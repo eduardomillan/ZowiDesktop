@@ -16,5 +16,6 @@
         <file>src/views/components/StatusBar.qml</file>
         <file>src/views/components/DevOverlay.qml</file>
         <file>src/views/components/MessageBar.qml</file>
+        <file>src/views/components/ForgetController.qml</file>
     </qresource>
 </RCC>

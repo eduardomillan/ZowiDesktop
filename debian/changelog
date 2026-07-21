@@ -1,3 +1,15 @@
+zowi-desktop (0.6.0-1+noble) unstable; urgency=medium
+
+  * Release 0.6.0 (noble)
+
+ -- Eduardo Millan <dev@zowi.local>  Sun, 19 Jul 2026 20:28:34 +0200
+
+zowi-desktop (0.6.0-1+jammy) unstable; urgency=medium
+
+  * Release 0.6.0 (jammy)
+
+ -- Eduardo Millan <dev@zowi.local>  Sun, 19 Jul 2026 20:27:07 +0200
+
 zowi-desktop (0.2.0-1) unstable; urgency=medium
 
   * Initial Debian/Lliurex packaging: GUI + CLI, system Qt6, automatic

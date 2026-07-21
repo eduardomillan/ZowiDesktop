@@ -9,10 +9,12 @@ Rectangle {
     id: root
     height: 36
     color: Robot.connecting
-          ? "#eaf2fb"
+          ? (Config.get("statusbar_bg_connecting") || "#eaf2fb")
           : (Robot.connected
-              ? (Robot.battery >= 0 && Robot.battery < 50 ? "#fdecea" : "#e8f5e8")
-              : "#fff3e0")
+              ? (Robot.battery >= 0 && Robot.battery < 50
+                 ? (Config.get("statusbar_bg_low_battery") || "#fdecea")
+                 : (Config.get("statusbar_bg_connected") || "#e8f5e8"))
+              : (Config.get("statusbar_bg_disconnected") || "#fff3e0"))
 
     function tr(source) { return Translator.translate("StatusBar.qml", source) }
 
@@ -20,10 +22,12 @@ Rectangle {
     property bool canReconnect: !Robot.connected && !Robot.connecting && root.hasSavedZowi
 
     property color dotColor: Robot.connecting
-        ? "#2980b9"
+        ? (Config.get("statusbar_fg_connecting") || "#2980b9")
         : (Robot.connected
-            ? (Robot.battery >= 0 && Robot.battery < 50 ? "#c0392b" : "#2d5a2d")
-            : "#e67e22")
+            ? (Robot.battery >= 0 && Robot.battery < 50
+               ? (Config.get("statusbar_fg_low_battery") || "#c0392b")
+               : (Config.get("statusbar_fg_connected") || "#2d5a2d"))
+            : (Config.get("statusbar_fg_disconnected") || "#e67e22"))
 
     function statusText() {
         if (Robot.connecting) return root.tr("status_connecting")
@@ -97,7 +101,7 @@ Rectangle {
             height: 16
             width: fwText.implicitWidth + 14
             color: "#ffffff"
-            border.color: "#8a6d1f"
+            border.color: Config.get("statusbar_fg_firmware") || "#8a6d1f"
             border.width: 1
             opacity: 0.75
 
@@ -106,7 +110,7 @@ Rectangle {
                 anchors.centerIn: parent
                 font.pixelSize: 10
                 font.bold: true
-                color: "#8a6d1f"
+                color: Config.get("statusbar_fg_firmware") || "#8a6d1f"
                 text: root.tr("status_firmware").arg(Robot.appId)
             }
         }
@@ -120,7 +124,7 @@ Rectangle {
             rightMargin: 12
         }
         text: root.tr("status_reconnect")
-        color: "#2980b9"
+        color: Config.get("statusbar_fg_connecting") || "#2980b9"
         font.pixelSize: 12
         font.bold: true
         font.underline: true

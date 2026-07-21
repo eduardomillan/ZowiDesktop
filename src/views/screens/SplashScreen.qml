@@ -13,6 +13,7 @@ Rectangle {
     signal quitRequested()
 
     property string screenName: "SplashScreen"
+    property bool _resetNoZowi: false
 
     function tr(source) { return Translator.translate("SplashScreen.qml", source) }
 
@@ -283,33 +284,24 @@ Rectangle {
                 if (msgBar.visible) return
                 var addr = Session.loadActiveZowiDeviceAddress()
                 if (!addr) addr = Robot.deviceAddress
-                if (!addr) {
-                    // No registered Zowi: clear any stale app data, fall back to
-                    // Automatic transport, and warn.
-                    Session.clearActive()
-                    Session.saveWizardDismissed(false)
-                    Robot.setTransportPreference(Robot.TransportAuto)
-                    msgBar.show(tr("reset_no_zowi"), "#c0392b")
-                    return
-                }
-                if (Robot.connected) Robot.disconnectFromDevice()
-                Robot.unpairDevice(addr)
-                // Forget the registered Zowi: drop every "active*" session key
-                // and mark the wizard as not dismissed.
-                Session.clearActive()
-                Session.saveWizardDismissed(false)
-                Robot.setTransportPreference(Robot.TransportAuto)
+                splash._resetNoZowi = (addr === "")
+                // Forget the registered Zowi. The controller also tries a
+                // factory rename (zowi_default_name) if it can reach the robot.
+                forgetter.forget(addr)
             }
         }
     }
 
-    Connections {
-        target: Robot
-        function onUnpairFinished(success, message) {
-            if (success)
+    ForgetController {
+        id: forgetter
+        onForgetFinished: function(unpaired, message) {
+            if (splash._resetNoZowi)
+                msgBar.show(tr("reset_no_zowi"), "#c0392b")
+            else if (unpaired)
                 msgBar.show(tr("unpair_success"))
             else
                 msgBar.show(tr("unpair_app_only"))
         }
+        onStatusMessage: function(text) { msgBar.show(text) }
     }
 }

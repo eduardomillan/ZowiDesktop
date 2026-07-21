@@ -196,7 +196,7 @@ void RobotController::wireBackend()
             m_rxBuffer += data;
             parseIncoming();
         }
-        qInfo() << "robot rx:" << QString::fromStdString(data).trimmed();
+        qDebug() << "robot rx:" << QString::fromStdString(data).trimmed();
         emit dataReceived(QString::fromStdString(data));
     });
 
@@ -519,7 +519,7 @@ RobotController::Situation RobotController::computeSituation() const
     const QString addr = QString::fromStdString(
         session.getString("activeZowiDeviceAddress"));
     const bool registered = !addr.isEmpty();
-    qInfo() << "[situation] addr=" << addr << "registered=" << registered
+    qDebug() << "[situation] addr=" << addr << "registered=" << registered
             << "usb=" << m_usbAvailable << "bt=" << m_bluetoothAvailable
             << "connected=" << isConnected() << "connecting=" << m_connecting
             << "regTransport=" << QString::fromStdString(session.getString("activeZowiTransport"));
@@ -746,7 +746,7 @@ void RobotController::unpairDevice(const QString &address)
 void RobotController::sendData(const QString &data)
 {
     if (!m_backend) return;
-    qInfo() << "robot tx:" << data.trimmed();
+    qDebug() << "robot tx:" << data.trimmed();
     m_backend->send(data.toStdString());
 }
 

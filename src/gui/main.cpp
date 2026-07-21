@@ -26,13 +26,33 @@ namespace {
 QMutex g_logMutex;
 QFile   g_logFile;
 
+// Minimum severity mirrored to the terminal (stderr). Lower number => more
+// verbose. Configured from config.json "log_level" (debug/info/warning/error);
+// defaults to INFO so DEBUG noise stays out of the terminal. The daily file
+// always keeps the full history regardless of this level.
+int g_logLevel = 1; // 0=debug 1=info 2=warning 3=error
+
+int logLevelFromName(const QString &name)
+{
+    if (name.compare("debug", Qt::CaseInsensitive) == 0) return 0;
+    if (name.compare("warning", Qt::CaseInsensitive) == 0 ||
+        name.compare("warn", Qt::CaseInsensitive) == 0) return 2;
+    if (name.compare("error", Qt::CaseInsensitive) == 0) return 3;
+    return 1; // "info" (and anything unrecognized) => INFO and above
+}
+
 void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)
 {
+    int severity;
     const char *level = "DEBUG";
-    if (type == QtInfoMsg)            level = "INFO";
-    else if (type == QtWarningMsg)    level = "WARN";
-    else if (type == QtCriticalMsg)   level = "ERROR";
-    else if (type == QtFatalMsg)     level = "FATAL";
+    switch (type) {
+    case QtDebugMsg:    severity = 0; level = "DEBUG"; break;
+    case QtInfoMsg:     severity = 1; level = "INFO";  break;
+    case QtWarningMsg:  severity = 2; level = "WARN";  break;
+    case QtCriticalMsg: severity = 3; level = "ERROR"; break;
+    case QtFatalMsg:    severity = 3; level = "FATAL"; break;
+    default:            severity = 1; level = "INFO";  break;
+    }
 
     QString category = ctx.category && ctx.category[0]
                        ? QString::fromUtf8(ctx.category) : QString();
@@ -42,10 +62,13 @@ void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const QString
             .arg(category.isEmpty() ? QString() : " (" + category + ")")
             .arg(msg);
 
-    // Mirror to stderr so the terminal still shows output.
-    fprintf(stderr, "%s\n", line.toUtf8().constData());
-    fflush(stderr);
+    // Mirror to stderr only when at or above the configured terminal level.
+    if (severity >= g_logLevel) {
+        fprintf(stderr, "%s\n", line.toUtf8().constData());
+        fflush(stderr);
+    }
 
+    // The daily file keeps the complete history regardless of level.
     QMutexLocker lock(&g_logMutex);
     if (g_logFile.isOpen()) {
         g_logFile.write((line + QStringLiteral("\n")).toUtf8());
@@ -129,6 +152,7 @@ int main(int argc, char *argv[])
     SessionController session;
     RobotController robot;
     ConfigController config;
+    g_logLevel = logLevelFromName(config.get("log_level"));
     robot.setSessionController(&session);
 
     QString locale = session.getString("locale", "");
