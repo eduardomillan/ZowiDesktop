@@ -158,6 +158,11 @@ Rectangle {
 
     Connections {
         target: Robot
+        function onConnectingChanged() { root.statusLabel = root.statusText() }
+    }
+
+    Connections {
+        target: Robot
         function onAppIdChanged() { root.statusLabel = root.statusText() }
     }
 

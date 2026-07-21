@@ -165,6 +165,7 @@ void RobotController::wireBackend()
                     persistRegistrationTransport(m_backendKind);
             }
         } else {
+            setConnecting(false);
             m_dataPollTimer.stop();
             m_deviceName.clear();
             // For USB the "address" is the TTY path, which is stable across the
