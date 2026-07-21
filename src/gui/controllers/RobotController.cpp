@@ -583,11 +583,10 @@ void RobotController::refreshTransports()
         }
         if (m_usbAvailable) {
             QString port = probeZowiOnPort(m_knownUsbPorts.value(0));
-            if (!port.isEmpty()) {
+            if (!port.isEmpty())
                 m_usbPort = port;
-                useSerialBackend();
-                return;
-            }
+            useSerialBackend();
+            return;
         }
     } else if (m_transport == Usb && m_usbAvailable && !isConnected()) {
         useSerialBackend();
