@@ -575,8 +575,26 @@ void RobotController::refreshTransports()
     pollTransports();
 
     // Auto mode: Bluetooth is preferred. USB is only used as fallback when
-    // no Bluetooth adapter is present.
+    // no Bluetooth adapter is present.  However, if a Zowi is already
+    // registered, honour its registered transport so we don't switch away
+    // from it just because a Bluetooth adapter appeared.
     if (m_transport == Auto && !isConnected() && !m_connecting) {
+        zowi::SessionStore session;
+        const QString regAddr = QString::fromStdString(
+            session.getString("activeZowiDeviceAddress"));
+        if (!regAddr.isEmpty()) {
+            const Transport regT = transportFromString(
+                QString::fromStdString(session.getString("activeZowiTransport", "")));
+            if (regT == Usb && m_usbAvailable) {
+                useSerialBackend();
+                return;
+            }
+            if (regT == Bluetooth && m_bluetoothAvailable) {
+                useBluetoothBackend();
+                return;
+            }
+        }
+        // No registered Zowi (or its transport unavailable): Auto logic.
         if (m_bluetoothAvailable) {
             useBluetoothBackend();
             return;
