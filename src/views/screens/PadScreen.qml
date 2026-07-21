@@ -17,6 +17,7 @@ ScreenTemplate {
     property string speedName: tr("speed_medium")
     property string currentCommand: ""
     property string currentAction: ""
+    property int buttonSize: 110
 
     Timer {
         id: repeatTimer
@@ -67,11 +68,11 @@ ScreenTemplate {
         id: movementPad
         anchors {
             left: parent.left
-            top: parent.top
-            bottom: parent.bottom
+            verticalCenter: parent.verticalCenter
             margins: 20
         }
-        width: parent.width * 0.45
+        width: 300
+        height: 300
         color: "#e8f5e8"
         radius: 15
         border.color: "#2d5a2d"
@@ -84,7 +85,7 @@ ScreenTemplate {
                 horizontalCenter: parent.horizontalCenter
                 topMargin: 20
             }
-            spacing: 40
+            spacing: 100
 
             Image {
                 id: turnLeftBtn
@@ -133,15 +134,16 @@ ScreenTemplate {
 
         Column {
             anchors.centerIn: parent
-            spacing: 15
+            spacing: 0
 
             Image {
                 id: upBtn
-                width: 100
-                height: 100
+                width: buttonSize
+                height: buttonSize
+                transform: Translate { y: 40 }
                 source: "qrc:/images/android/pad_walk_forward.png"
-                sourceSize.width: 100
-                sourceSize.height: 100
+                sourceSize.width: buttonSize
+                sourceSize.height: buttonSize
                 fillMode: Image.PreserveAspectFit
                 anchors.horizontalCenter: parent.horizontalCenter
 
@@ -159,16 +161,17 @@ ScreenTemplate {
             }
 
             Row {
-                spacing: 15
+                spacing: 50
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Image {
                     id: leftBtn
-                    width: 100
-                    height: 100
+                    width: buttonSize
+                    height: buttonSize
+                    transform: Translate { x: 10 }
                     source: "qrc:/images/android/pad_moonwalker_left.png"
-                    sourceSize.width: 100
-                    sourceSize.height: 100
+                    sourceSize.width: buttonSize
+                    sourceSize.height: buttonSize
                     fillMode: Image.PreserveAspectFit
 
                     MouseArea {
@@ -186,11 +189,12 @@ ScreenTemplate {
 
                 Image {
                     id: rightBtn
-                    width: 100
-                    height: 100
+                    width: buttonSize
+                    height: buttonSize
+                    transform: Translate { x: -10 }
                     source: "qrc:/images/android/pad_moonwalker_right.png"
-                    sourceSize.width: 100
-                    sourceSize.height: 100
+                    sourceSize.width: buttonSize
+                    sourceSize.height: buttonSize
                     fillMode: Image.PreserveAspectFit
 
                     MouseArea {
@@ -209,11 +213,12 @@ ScreenTemplate {
 
             Image {
                 id: downBtn
-                width: 100
-                height: 100
+                width: buttonSize
+                height: buttonSize
+                transform: Translate { y: -40 }
                 source: "qrc:/images/android/pad_walk_backward.png"
-                sourceSize.width: 100
-                sourceSize.height: 100
+                sourceSize.width: buttonSize
+                sourceSize.height: buttonSize
                 fillMode: Image.PreserveAspectFit
                 anchors.horizontalCenter: parent.horizontalCenter
 
@@ -236,11 +241,11 @@ ScreenTemplate {
         id: actionPad
         anchors {
             right: parent.right
-            top: parent.top
-            bottom: parent.bottom
+            verticalCenter: parent.verticalCenter
             margins: 20
         }
-        width: parent.width * 0.45
+        width: 300
+        height: 300
         color: "#e8f5e8"
         radius: 15
         border.color: "#2d5a2d"
@@ -422,43 +427,24 @@ ScreenTemplate {
         }
     }
 
-    Row {
+    Item {
         id: speedControl
+        width: 60
+        height: 60
         anchors {
             bottom: parent.bottom
             horizontalCenter: parent.horizontalCenter
             bottomMargin: 20
         }
-        spacing: 20
 
         Image {
             id: speedSlowBtn
-            width: 60
-            height: 60
+            anchors.fill: parent
             source: "qrc:/images/android/pad_speed_slow_button.png"
             sourceSize.width: 60
             sourceSize.height: 60
             fillMode: Image.PreserveAspectFit
-            opacity: currentSpeed === 2000 ? 1.0 : 0.4
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    setSpeed(2000, tr("speed_slow"))
-                    console.log("[PadScreen] Speed: slow (2000ms)")
-                }
-            }
-        }
-
-        Image {
-            id: speedMediumBtn
-            width: 60
-            height: 60
-            source: "qrc:/images/android/pad_speed_medium_button.png"
-            sourceSize.width: 60
-            sourceSize.height: 60
-            fillMode: Image.PreserveAspectFit
-            opacity: currentSpeed === 1000 ? 1.0 : 0.4
+            visible: currentSpeed === 2000
 
             MouseArea {
                 anchors.fill: parent
@@ -470,20 +456,37 @@ ScreenTemplate {
         }
 
         Image {
-            id: speedFastBtn
-            width: 60
-            height: 60
-            source: "qrc:/images/android/pad_speed_fast_button.png"
+            id: speedMediumBtn
+            anchors.fill: parent
+            source: "qrc:/images/android/pad_speed_medium_button.png"
             sourceSize.width: 60
             sourceSize.height: 60
             fillMode: Image.PreserveAspectFit
-            opacity: currentSpeed === 700 ? 1.0 : 0.4
+            visible: currentSpeed === 1000
 
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
                     setSpeed(700, tr("speed_fast"))
                     console.log("[PadScreen] Speed: fast (700ms)")
+                }
+            }
+        }
+
+        Image {
+            id: speedFastBtn
+            anchors.fill: parent
+            source: "qrc:/images/android/pad_speed_fast_button.png"
+            sourceSize.width: 60
+            sourceSize.height: 60
+            fillMode: Image.PreserveAspectFit
+            visible: currentSpeed === 700
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    setSpeed(2000, tr("speed_slow"))
+                    console.log("[PadScreen] Speed: slow (2000ms)")
                 }
             }
         }

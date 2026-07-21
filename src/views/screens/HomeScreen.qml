@@ -7,6 +7,7 @@ import "../components"
 Rectangle {
     id: home
     property string screenName: "HomeScreen"
+    property bool robotReady: Robot.connected && Robot.appId !== "" && Robot.battery >= 0
 
 
     color: "#f4f9f4"
@@ -181,9 +182,10 @@ Rectangle {
                         height: cellBox
                         radius: Math.min(cellBox * 0.2, 16)
                         anchors.horizontalCenter: parent.horizontalCenter
-                        color: appMouse.containsMouse ? "#e0f0e0" : "#ffffff"
+                        color: appMouse.containsMouse && home.robotReady ? "#e0f0e0" : "#ffffff"
                         border.color: "#21a69b"
                         border.width: 1
+                        opacity: home.robotReady ? 1.0 : 0.4
 
                         Image {
                             anchors.centerIn: parent
@@ -197,7 +199,8 @@ Rectangle {
                             id: appMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
+                            cursorShape: home.robotReady ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                            enabled: home.robotReady
                             onClicked: {
                                 if (name === tr("gamepad")) {
                                     home.gamepadClicked()
@@ -251,9 +254,10 @@ Rectangle {
                         height: cellBox
                         radius: Math.min(cellBox * 0.2, 16)
                         anchors.horizontalCenter: parent.horizontalCenter
-                        color: projMouse.containsMouse ? "#e0f0e0" : "#ffffff"
+                        color: projMouse.containsMouse && home.robotReady ? "#e0f0e0" : "#ffffff"
                         border.color: "#21a69b"
                         border.width: 1
+                        opacity: home.robotReady ? 1.0 : 0.4
 
                         Image {
                             anchors.centerIn: parent
@@ -267,7 +271,8 @@ Rectangle {
                             id: projMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
+                            cursorShape: home.robotReady ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                            enabled: home.robotReady
                             onClicked: console.log("Home: tapped project", name)
                         }
                     }
