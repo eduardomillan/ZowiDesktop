@@ -188,7 +188,7 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
         if (connected) {
             std::cout << "Connected. Waiting for robot data..." << std::endl;
         } else {
-            std::cout << "Disconnected." << std::endl;
+            std::cout << "\n\nDisconnected." << std::endl;
         }
     });
 
@@ -300,7 +300,9 @@ int runRename(int argc, char **argv, const RenameArgs &a)
             if (g_connected && g_dataReceived && !renameSent) {
                 std::cout << "Connected. Sending rename command..." << std::endl;
                 const std::string cmd = zowi::makeCommand(zowi::Command::SetName, a.name);
-                std::cout << "robot tx: R " << a.name << std::endl;
+                if (g_debugLog) {
+                    std::cout << "robot tx: R " << a.name << std::endl;
+                }
                 bt->send(cmd);
                 renameSent = true;
             }
@@ -508,12 +510,29 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     zowi::QtBluetoothBackend bt;
     resetRobotState();
 
-    zowi::MovementSpeed speed = zowi::MovementSpeed::Medium;
-    if (a.speed == "slow") speed = zowi::MovementSpeed::Slow;
-    else if (a.speed == "fast") speed = zowi::MovementSpeed::Fast;
+    // Speed as an index: 0=slow, 1=medium, 2=fast (matches the original app's
+    // speedArray = {2000, 1000, 700}).
+    int speedIndex = 1;  // default medium
+    if (a.speed == "slow") speedIndex = 0;
+    else if (a.speed == "fast") speedIndex = 2;
     else if (a.speed != "medium") {
         std::cerr << "Unknown speed '" << a.speed << "'; using 'medium'.\n";
     }
+    auto speedFromIndex = [](int idx) -> zowi::MovementSpeed {
+        switch (idx) {
+            case 0: return zowi::MovementSpeed::Slow;
+            case 2: return zowi::MovementSpeed::Fast;
+            default: return zowi::MovementSpeed::Medium;
+        }
+    };
+    auto speedNameFromIndex = [](int idx) -> const char* {
+        switch (idx) {
+            case 0: return "SLOW";
+            case 2: return "FAST";
+            default: return "MEDIUM";
+        }
+    };
+    zowi::MovementSpeed speed = speedFromIndex(speedIndex);
 
     zowi::SessionStore session("ZowiDesktop", "ZowiApp");
     const std::string ctrlAddr = a.address.empty()
@@ -535,7 +554,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
         if (connected) {
             std::cout << "Connected. Drive with the arrow keys (ESC or 'q' to quit)." << std::endl;
         } else {
-            std::cout << "Disconnected." << std::endl;
+            std::cout << "\n\nDisconnected." << std::endl;
         }
     });
     bt.onError([&](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
@@ -569,11 +588,13 @@ int runControl(int argc, char **argv, const ControlArgs &a)
         return 0;
     }
 
-    std::cout << "Controls:  UP=forward  DOWN=backward  LEFT=turn left  RIGHT=turn right  (ESC/q=quit)\n";
+    std::cout << "Controls:  UP/W = forward   DOWN/S = backward   LEFT/A = moonwalker left   RIGHT/D = moonwalker right   Q = turn left   E = turn right   +/- = speed   (ESC/Ctrl+C=quit)\n";
 
     using clock = std::chrono::steady_clock;
     auto lastMove = clock::time_point{};  // epoch: no movement yet
     constexpr auto moveDuration = std::chrono::seconds(1);
+    std::string lastKeyDisplay;
+    std::string lastAction;
 
     while (!g_quit.load()) {
         {
@@ -588,23 +609,40 @@ int runControl(int argc, char **argv, const ControlArgs &a)
                 g_quit.store(true);
                 break;
             }
+            if (key == "speed_up" || key == "speed_down") {
+                if (key == "speed_up" && speedIndex < 2) speedIndex++;
+                if (key == "speed_down" && speedIndex > 0) speedIndex--;
+                speed = speedFromIndex(speedIndex);
+                lastKeyDisplay = (key == "speed_up") ? "+" : "-";
+                lastAction = std::string("speed ") + speedNameFromIndex(speedIndex);
+                std::cout << "\x1b[2K\r[SPEED: " << speedNameFromIndex(speedIndex) << "]" << std::flush;
+                continue;
+            }
             std::string cmd;
             std::string action;
             if (key == "up") { cmd = zowi::commandWalkForward(speed); action = "forward"; }
             else if (key == "down") { cmd = zowi::commandWalkBackward(speed); action = "backward"; }
-            else if (key == "left") { cmd = zowi::commandTurnLeft(speed); action = "turn left"; }
-            else if (key == "right") { cmd = zowi::commandTurnRight(speed); action = "turn right"; }
+            else if (key == "left") { cmd = zowi::commandMoonwalkerLeft(speed); action = "moonwalker left"; }
+            else if (key == "right") { cmd = zowi::commandMoonwalkerRight(speed); action = "moonwalker right"; }
+            else if (key == "turn_left") { cmd = zowi::commandTurnLeft(speed); action = "turn left"; }
+            else if (key == "turn_right") { cmd = zowi::commandTurnRight(speed); action = "turn right"; }
 
             if (!cmd.empty()) {
                 bt.send(cmd);
                 lastMove = clock::now();
-                std::cout << "\r" << action << "          " << std::flush;
+                std::string keyUpper = key;
+                std::transform(keyUpper.begin(), keyUpper.end(), keyUpper.begin(), ::toupper);
+                lastKeyDisplay = keyUpper;
+                lastAction = action;
+                std::cout << "\x1b[2K\r[" << keyUpper << "] " << action << std::flush;
             }
         } else if (lastMove.time_since_epoch().count() != 0
                    && clock::now() - lastMove >= moveDuration) {
             bt.send(zowi::commandStop());
             lastMove = {};  // reset so we only send stop once
-            std::cout << "\r idle        " << std::flush;
+            std::cout << "\x1b[2K\rStatus: idle. Speed: " << speedNameFromIndex(speedIndex)
+                      << ". Last key: " << (lastKeyDisplay.empty() ? "none" : lastKeyDisplay)
+                      << " (" << (lastAction.empty() ? "none" : lastAction) << ")" << std::flush;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }
@@ -613,7 +651,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
     disableRawMode();
     bt.disconnect();
-    std::cout << "\nStopped. Disconnected. Bye!\n";
+    std::cout << "\n\nStopped. Disconnected. Bye!\n";
     return 0;
 }
 
