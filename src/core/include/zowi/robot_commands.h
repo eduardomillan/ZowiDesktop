@@ -23,11 +23,14 @@ enum class MovementSpeed {
 
 // Directional movement. Each command runs one gait cycle; re-send to keep moving.
 // Walk forward/backward: firmware MoveIDs 1-2.
-// Left/right default to moonwalker (MoveIDs 6-7) matching ZowiAppReborn's pad.
+// Turn left/right: firmware MoveIDs 3-4.
+// Moonwalker left/right: firmware MoveIDs 6-7 (matching ZowiAppReborn's pad).
 std::string commandWalkForward(MovementSpeed speed = MovementSpeed::Medium);
 std::string commandWalkBackward(MovementSpeed speed = MovementSpeed::Medium);
 std::string commandTurnLeft(MovementSpeed speed = MovementSpeed::Medium);
 std::string commandTurnRight(MovementSpeed speed = MovementSpeed::Medium);
+std::string commandMoonwalkerLeft(MovementSpeed speed = MovementSpeed::Medium);
+std::string commandMoonwalkerRight(MovementSpeed speed = MovementSpeed::Medium);
 
 // Stop / home: moves all servos to 90 degrees and detaches them.
 std::string commandStop();

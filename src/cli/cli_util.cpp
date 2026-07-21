@@ -73,13 +73,21 @@ std::string readKey()
     ssize_t n = read(g_stdinFd, &c, 1);
     if (n <= 0) return "";
 
-    if (c == 3) return "quit";          // Ctrl-C
-    if (c != 0x1b) {                    // non-escape: only 'q' quits
-        if (c == 'q' || c == 'Q') return "quit";
+    if (c == 3) return "quit";  // Ctrl-C
+    if (c != 0x1b) {
+        if (c == 'w' || c == 'W') return "up";
+        if (c == 's' || c == 'S') return "down";
+        if (c == 'a' || c == 'A') return "left";
+        if (c == 'd' || c == 'D') return "right";
+        if (c == 'q' || c == 'Q') return "turn_left";
+        if (c == 'e' || c == 'E') return "turn_right";
+        if (c == '+') return "speed_up";
+        if (c == '-') return "speed_down";
         return "";
     }
 
-    // Escape sequence: read the rest with a short timeout.
+    // ESC (0x1b): could be a standalone ESC (quit) or the start of an escape
+    // sequence (arrow keys send ESC [ A/B/C/D or ESC O A/B/C/D).
     auto readByte = [](int ms) -> int {
         fd_set fds;
         FD_ZERO(&fds);
@@ -102,7 +110,8 @@ std::string readKey()
             default: break;
         }
     }
-    return "";
+    // Not a recognized escape sequence — treat standalone ESC as quit.
+    return "quit";
 }
 
 bool waitForRobotData(QCoreApplication &qtApp, int timeoutMs)
@@ -123,11 +132,17 @@ bool waitForBatteryLevel(QCoreApplication &qtApp, int timeoutMs)
 
 void requestRobotData(zowi::BluetoothApi &bt)
 {
-    std::cout << "robot tx: E (GetName)" << std::endl;
+    if (g_debugLog) {
+        std::cout << "robot tx: E (GetName)" << std::endl;
+    }
     bt.send(zowi::makeCommand(zowi::Command::GetName));
-    std::cout << "robot tx: I (GetProgramId)" << std::endl;
+    if (g_debugLog) {
+        std::cout << "robot tx: I (GetProgramId)" << std::endl;
+    }
     bt.send(zowi::makeCommand(zowi::Command::GetProgramId));
-    std::cout << "robot tx: B (GetBattery)" << std::endl;
+    if (g_debugLog) {
+        std::cout << "robot tx: B (GetBattery)" << std::endl;
+    }
     bt.send(zowi::makeCommand(zowi::Command::GetBattery));
 }
 

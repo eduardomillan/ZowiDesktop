@@ -40,7 +40,6 @@ zowi_cli <subcommand> [options]
 | `disconnect` | Disconnect and clear pairing data |
 | `status` | Show current Zowi connection status |
 | `control` | Interactive keyboard minigame to drive the robot |
-| `restore` | Restore the original factory firmware |
 | `alarm` | Install the Robot Alarm firmware |
 | `adivinawi` | Install the Adivinawi game firmware |
 
@@ -60,7 +59,6 @@ zowi_cli restore --help      # Restore help
 zowi_cli disconnect --help   # Disconnect help
 zowi_cli status --help      # Status help
 zowi_cli control --help      # Control (minigame) help
-zowi_cli restore --help      # Restore help
 zowi_cli alarm --help        # Alarm help
 zowi_cli adivinawi --help    # Adivinawi help
 ```
@@ -785,22 +783,34 @@ Interactive keyboard minigame that drives the Zowi robot in real time. Connects
 to the paired robot (or to an explicit `--address`) and reads the cursor keys
 from the terminal, sending one movement command per key press. Movement
 commands follow the firmware serial protocol documented in
-`docs/firmware/PROTOCOL.md` (the `M <MoveID> <T>` movement command and the `S`
+`docs/firmware/PROTOCOL.md` (the `M <MoveID> <T> [<MoveSize>]` movement command and the `S`
 stop command).
 
 ### Controls
 
-| Key            | Action        | Firmware command        |
-|----------------|---------------|-------------------------|
-| `↑` (Up)       | Walk forward  | `M 1 <T>`               |
-| `↓` (Down)     | Walk backward | `M 2 <T>`               |
-| `←` (Left)     | Turn left     | `M 3 <T>`               |
-| `→` (Right)    | Turn right    | `M 4 <T>`               |
-| `ESC` or `q`   | Quit          | `S` (stop) on exit      |
+| Key            | Action              | Firmware command           |
+|----------------|---------------------|----------------------------|
+| `↑` / `W`      | Walk forward        | `M 1 <T>`                  |
+| `↓` / `S`      | Walk backward       | `M 2 <T>`                  |
+| `←` / `A`      | Moonwalker left     | `M 6 <T> 30`               |
+| `→` / `D`      | Moonwalker right    | `M 7 <T> 30`               |
+| `Q`            | Turn left           | `M 3 <T>`                  |
+| `E`            | Turn right          | `M 4 <T>`                  |
+| `+`            | Increase speed      | (changes `T` for next move)|
+| `-`            | Decrease speed      | (changes `T` for next move)|
+| `ESC` / `Ctrl-C` | Quit              | `S` (stop) on exit         |
 
-The terminal is switched to raw mode while the minigame runs, so the cursor
-keys are delivered immediately (no Enter needed) and are not echoed. The
-original terminal settings are restored on exit (including on `Ctrl-C`).
+Both the cursor keys and the WASD/Q/E letter keys are supported. The terminal is
+switched to raw mode while the minigame runs, so keys are delivered immediately
+(no Enter needed) and are not echoed. The original terminal settings are
+restored on exit (including on `Ctrl-C`).
+
+When a movement key is pressed, the terminal displays the uppercase key token
+and the action, e.g. `[UP] forward` or `[LEFT] moonwalker left`. When the speed
+is changed, `[SPEED: SLOW]` / `[SPEED: MEDIUM]` / `[SPEED: FAST]` is shown.
+
+After 1 second of inactivity, the robot stops and the terminal shows:
+`Status: idle. Speed: MEDIUM. Last key: UP (forward)`.
 
 ### Basic usage (paired device)
 
@@ -820,8 +830,8 @@ zowi_cli control --address B4:9D:0B:32:41:0E
 zowi_cli control --speed slow     # also: medium (default), fast
 ```
 
-Speed maps to the firmware period `T` in ms: `slow` = 1600, `medium` = 1000,
-`fast` = 600 (larger = slower gait).
+Speed maps to the firmware period `T` in ms: `slow` = 2000, `medium` = 1000,
+`fast` = 700 (larger = slower gait).
 
 ### Custom connection timeout
 
@@ -833,6 +843,10 @@ zowi_cli control -t 5    # wait up to 5 seconds for the connection
 
 - Each key press sends a single gait cycle; hold the key (OS auto-repeat) to
   keep moving.
+- `+` and `-` cycle the speed (slow → medium → fast / fast → medium → slow).
+  The `--speed` option sets the initial speed; changes during the session
+  persist until the next speed change.
+- After 1 second of inactivity, a stop command (`S`) is sent automatically.
 - On exit the robot receives a stop command (`S`) and the terminal is restored.
 - If the battery is below 50% a warning is printed (movement is still allowed).
 - If stdin is not a terminal, the minigame refuses to start (it needs the

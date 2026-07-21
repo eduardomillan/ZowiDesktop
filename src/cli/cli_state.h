@@ -28,6 +28,7 @@ extern bool g_uploadMode;
 extern std::string g_stkBuffer;
 extern std::atomic<bool> g_quit;
 extern int g_stdinFd;
+extern bool g_debugLog;  // true when config log_level == "debug"
 
 // ── Constants ────────────────────────────────────────────────
 extern const float kLowBatteryThreshold;
@@ -37,6 +38,10 @@ extern const char *const kAdivinawiFirmwarePath;
 extern const int kDiscoveryTimeoutMs;
 
 void resetRobotState();
+
+// Reads log_level from src/config.json and sets g_debugLog accordingly.
+// Called by resetRobotState() so every command handler picks it up.
+void loadLogLevel();
 
 std::string trimRobotMessage(const std::string &msg);
 

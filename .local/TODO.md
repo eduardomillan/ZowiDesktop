@@ -7,6 +7,13 @@
 - [ ] Si el robot tiene el firmware modificado (por bitbloq, por ejemplo), el proceso de renombrado falla
 - [X] Si se intenta 'renombrar' a Zowi con el mismo nombre que ya tiene, el proceso de renombrado falla
 - [X] Al iniciar la aplicación con robot registrado, no muestra el porcentaje de batería
+- [X] En Zowi CLI, comando 'control', se mapean las teclas con las teclas de cursor y también con las teclas A,W,S,D,Q,E de la siguiente forma:
+  - Adelante: Flecha arriba del cursor o W. Corresponde al movimiento WALK FORWARD
+  - Atrás: Flecha abajo del cursor o S. Movimiento: WALK BACKWARD
+  - Izquierda: Flecha izquierda del cursor o A. Movimiento MOONWALKER LEFT.
+  - Derecha: Flecha derecha del cursor o D. Movimiento: MOONWALKER_RIGHT.
+  - Giro izquierda. Tecla Q. Movimiento: TURN_LEFT
+  - Giro derecha. Tecla E. Movimiento: TURN_RIGHT
 
 
 ## Nuevas funcionalidades

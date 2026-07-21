@@ -22,16 +22,28 @@ bool discoverDevice(QCoreApplication &qtApp, zowi::QtBluetoothBackend &bt,
                     const std::string &address, int timeoutMs);
 
 // ── Interactive keyboard input (raw terminal mode) ───────────
-// The minigame reads the arrow keys directly from stdin. We switch the
-// terminal to raw mode (no line buffering, no echo) and decode the ANSI
-// escape sequences the cursor keys produce:
+// The minigame reads keys directly from stdin. We switch the terminal to
+// raw mode (no line buffering, no echo) and decode the ANSI escape sequences
+// the cursor keys produce:
 //   ↑ = ESC [ A   ↓ = ESC [ B   → = ESC [ C   ← = ESC [ D
 // (Some terminals emit ESC O A/B/C/D instead of ESC [ A/B/C/D.)
+//
+// Key mappings (like the GUI M3 control pad):
+//   Movement keys                   → movement
+//   Up / W / w                      → walk forward
+//   Down / S / s                    → walk backward
+//   Left / A / a                    → moonwalker left
+//   Right / D / d                   → moonwalker right
+//   Q / q                           → turn left
+//   E / e                           → turn right
+//   +                               → increase speed (slow→medium→fast)
+//   -                               → decrease speed (fast→medium→slow)
+//   Ctrl-C (0x03) / ESC             → quit
 bool enableRawMode();
 void disableRawMode();
 
-// Returns a logical key token ("up"/"down"/"left"/"right"/"quit"), or "" if
-// no (complete) key is available.
+// Returns a logical key token ("up"/"down"/"left"/"right"/"turn_left"/"turn_right"
+// "speed_up"/"speed_down"/"quit"), or "" if no (complete) key is available.
 std::string readKey();
 
 // Waits until name, app id and battery have all been received.

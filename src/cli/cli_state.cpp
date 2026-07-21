@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iostream>
 #include <zowi/protocol.h>
+#include <zowi/config_store.h>
 
 namespace zowi_cli {
 
@@ -21,6 +22,7 @@ bool g_uploadMode = false;
 std::string g_stkBuffer;
 std::atomic<bool> g_quit{false};
 int g_stdinFd = STDIN_FILENO;
+bool g_debugLog = false;
 
 const float kLowBatteryThreshold = 50.0f;
 const char *const kFactoryFirmwarePath = "src/firmware/ZOWI_BASE_v2.hex";
@@ -30,6 +32,7 @@ const int kDiscoveryTimeoutMs = 6000;
 
 void resetRobotState()
 {
+    loadLogLevel();
     std::lock_guard<std::mutex> lock(g_mtx);
     g_robotName.clear();
     g_appId.clear();
@@ -40,6 +43,12 @@ void resetRobotState()
     g_ack = false;
     g_finalAck = false;
     g_dataBuffer.clear();
+}
+
+void loadLogLevel()
+{
+    zowi::ConfigStore config("src/config.json");
+    g_debugLog = (config.get("log_level") == "debug");
 }
 
 std::string trimRobotMessage(const std::string &msg)
@@ -123,8 +132,10 @@ void onDataReceived(const std::string &data)
     std::lock_guard<std::mutex> lock(g_mtx);
     g_dataBuffer += data;
 
-    std::string printable = trimRobotMessage(data);
-    std::cout << "robot rx: " << printable << std::endl;
+    if (g_debugLog) {
+        std::string printable = trimRobotMessage(data);
+        std::cout << "robot rx: " << printable << std::endl;
+    }
 
     // Robot protocol can arrive either as &&E <name>%% / &&I <appId>%% / &&B <battery>%%
     // or as line-based N / U / B messages.

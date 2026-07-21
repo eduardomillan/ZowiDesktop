@@ -30,10 +30,20 @@ std::string commandWalkBackward(MovementSpeed speed)
 
 std::string commandTurnLeft(MovementSpeed speed)
 {
-    return buildMovement(6, static_cast<int>(speed), 30);
+    return buildMovement(3, static_cast<int>(speed));
 }
 
 std::string commandTurnRight(MovementSpeed speed)
+{
+    return buildMovement(4, static_cast<int>(speed));
+}
+
+std::string commandMoonwalkerLeft(MovementSpeed speed)
+{
+    return buildMovement(6, static_cast<int>(speed), 30);
+}
+
+std::string commandMoonwalkerRight(MovementSpeed speed)
 {
     return buildMovement(7, static_cast<int>(speed), 30);
 }
