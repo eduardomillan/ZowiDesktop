@@ -82,7 +82,8 @@
     "status_reconnect": "Reconnecta",
     "via_bluetooth": "Bluetooth",
     "via_usb": "USB",
-    "status_firmware": "%1"
+    "status_firmware": "%1",
+    "status_transport_lost": "Zowi no disponible (%1)"
   },
   "WizardRenameScreen.qml": {
     "title": "Posa nom al teu Zowi!",
