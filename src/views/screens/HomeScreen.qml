@@ -152,72 +152,71 @@ Rectangle {
         interactive: true
 
         // Page 0: Zowi Apps
-        GridView {
-            id: appsGrid
-            cellWidth: Math.floor(width / 3)
-            cellHeight: Math.floor(Math.min(cellWidth,
-                (swipeView.height - 40) / Math.max(Math.ceil(count / 3), 1)))
-            bottomMargin: 40
-            boundsBehavior: Flickable.StopAtBounds
+        Item {
+            ListModel { id: appsModel }
 
-            ScrollBar.vertical: ScrollBar {
-                policy: ScrollBar.AsNeeded
-            }
+            Row {
+                id: appsRow
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    verticalCenter: parent.verticalCenter
+                    leftMargin: spacing * 2
+                    rightMargin: spacing * 2
+                }
+                spacing: 15
 
-            model: ListModel {
-                id: appsModel
-            }
+                Repeater {
+                    model: appsModel
 
-            delegate: Item {
-                width: appsGrid.cellWidth
-                height: appsGrid.cellHeight
-                readonly property real cellBox: Math.min(appsGrid.cellWidth * 0.55, 80)
+                    delegate: Column {
+                        spacing: 6
+                        width: (appsRow.width - appsRow.spacing * (appsModel.count - 1)) / appsModel.count
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 6
+                        readonly property real btnSize: Math.min(width * 0.55, 90)
 
-                    Rectangle {
-                        width: cellBox
-                        height: cellBox
-                        radius: Math.min(cellBox * 0.2, 16)
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        color: appMouse.containsMouse && home.robotReady ? "#e0f0e0" : "#ffffff"
-                        border.color: "#21a69b"
-                        border.width: 1
-                        opacity: home.robotReady ? 1.0 : 0.4
+                        Rectangle {
+                            width: btnSize
+                            height: btnSize
+                            radius: Math.min(btnSize * 0.2, 16)
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            color: appMouse.containsMouse && home.robotReady ? "#e0f0e0" : "#ffffff"
+                            border.color: "#21a69b"
+                            border.width: 1
+                            opacity: home.robotReady ? 1.0 : 0.4
 
-                        Image {
-                            anchors.centerIn: parent
-                            source: icon
-                            sourceSize.width: Math.min(cellBox * 0.65, 50)
-                            sourceSize.height: Math.min(cellBox * 0.65, 50)
-                            fillMode: Image.PreserveAspectFit
-                        }
+                            Image {
+                                anchors.centerIn: parent
+                                source: icon
+                                sourceSize.width: Math.min(btnSize * 0.6, 50)
+                                sourceSize.height: Math.min(btnSize * 0.6, 50)
+                                fillMode: Image.PreserveAspectFit
+                            }
 
-                        MouseArea {
-                            id: appMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: home.robotReady ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                            enabled: home.robotReady
-                            onClicked: {
-                                if (name === tr("gamepad")) {
-                                    home.gamepadClicked()
-                                } else {
-                                    console.log("Home: tapped", name)
+                            MouseArea {
+                                id: appMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: home.robotReady ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                enabled: home.robotReady
+                                onClicked: {
+                                    if (name === tr("gamepad")) {
+                                        home.gamepadClicked()
+                                    } else {
+                                        console.log("Home: tapped", name)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: name
-                        color: "#2d5a2d"
-                        font.pixelSize: Math.min(appsGrid.cellWidth * 0.1, 12)
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: name
+                            color: "#2d5a2d"
+                            font.pixelSize: Math.min(parent.width * 0.1, 12)
+                            font.bold: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
                     }
                 }
             }

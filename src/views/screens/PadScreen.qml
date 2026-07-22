@@ -17,7 +17,9 @@ ScreenTemplate {
     property string speedName: tr("speed_medium")
     property string currentCommand: ""
     property string currentAction: ""
-    property int buttonSize: 110
+    property int rectangleWidth: 290
+    property int buttonPadSize: 110
+    property int buttonExtraSize: 80
 
     Timer {
         id: repeatTimer
@@ -71,8 +73,8 @@ ScreenTemplate {
             verticalCenter: parent.verticalCenter
             margins: 20
         }
-        width: 300
-        height: 300
+        width: rectangleWidth
+        height: rectangleWidth
         color: "#e8f5e8"
         radius: 15
         border.color: "#2d5a2d"
@@ -138,12 +140,12 @@ ScreenTemplate {
 
             Image {
                 id: upBtn
-                width: buttonSize
-                height: buttonSize
+                width: buttonPadSize
+                height: buttonPadSize
                 transform: Translate { y: 40 }
                 source: "qrc:/images/android/pad_walk_forward.png"
-                sourceSize.width: buttonSize
-                sourceSize.height: buttonSize
+                sourceSize.width: buttonPadSize
+                sourceSize.height: buttonPadSize
                 fillMode: Image.PreserveAspectFit
                 anchors.horizontalCenter: parent.horizontalCenter
 
@@ -166,12 +168,12 @@ ScreenTemplate {
 
                 Image {
                     id: leftBtn
-                    width: buttonSize
-                    height: buttonSize
+                    width: buttonPadSize
+                    height: buttonPadSize
                     transform: Translate { x: 10 }
                     source: "qrc:/images/android/pad_moonwalker_left.png"
-                    sourceSize.width: buttonSize
-                    sourceSize.height: buttonSize
+                    sourceSize.width: buttonPadSize
+                    sourceSize.height: buttonPadSize
                     fillMode: Image.PreserveAspectFit
 
                     MouseArea {
@@ -189,12 +191,12 @@ ScreenTemplate {
 
                 Image {
                     id: rightBtn
-                    width: buttonSize
-                    height: buttonSize
+                    width: buttonPadSize
+                    height: buttonPadSize
                     transform: Translate { x: -10 }
                     source: "qrc:/images/android/pad_moonwalker_right.png"
-                    sourceSize.width: buttonSize
-                    sourceSize.height: buttonSize
+                    sourceSize.width: buttonPadSize
+                    sourceSize.height: buttonPadSize
                     fillMode: Image.PreserveAspectFit
 
                     MouseArea {
@@ -213,12 +215,12 @@ ScreenTemplate {
 
             Image {
                 id: downBtn
-                width: buttonSize
-                height: buttonSize
+                width: buttonPadSize
+                height: buttonPadSize
                 transform: Translate { y: -40 }
                 source: "qrc:/images/android/pad_walk_backward.png"
-                sourceSize.width: buttonSize
-                sourceSize.height: buttonSize
+                sourceSize.width: buttonPadSize
+                sourceSize.height: buttonPadSize
                 fillMode: Image.PreserveAspectFit
                 anchors.horizontalCenter: parent.horizontalCenter
 
@@ -244,8 +246,8 @@ ScreenTemplate {
             verticalCenter: parent.verticalCenter
             margins: 20
         }
-        width: 300
-        height: 300
+        width: rectangleWidth
+        height: rectangleWidth
         color: "#e8f5e8"
         radius: 15
         border.color: "#2d5a2d"
@@ -428,8 +430,8 @@ ScreenTemplate {
 
     Item {
         id: speedControl
-        width: 60
-        height: 60
+        width: buttonExtraSize
+        height: buttonExtraSize
         anchors {
             bottom: parent.bottom
             horizontalCenter: parent.horizontalCenter
@@ -440,8 +442,8 @@ ScreenTemplate {
             id: speedSlowBtn
             anchors.fill: parent
             source: "qrc:/images/android/pad_speed_slow_button.png"
-            sourceSize.width: 60
-            sourceSize.height: 60
+            sourceSize.width: buttonExtraSize
+            sourceSize.height: buttonExtraSize
             fillMode: Image.PreserveAspectFit
             visible: currentSpeed === 2000
 
@@ -458,8 +460,8 @@ ScreenTemplate {
             id: speedMediumBtn
             anchors.fill: parent
             source: "qrc:/images/android/pad_speed_medium_button.png"
-            sourceSize.width: 60
-            sourceSize.height: 60
+            sourceSize.width: buttonExtraSize
+            sourceSize.height: buttonExtraSize
             fillMode: Image.PreserveAspectFit
             visible: currentSpeed === 1000
 
@@ -476,8 +478,8 @@ ScreenTemplate {
             id: speedFastBtn
             anchors.fill: parent
             source: "qrc:/images/android/pad_speed_fast_button.png"
-            sourceSize.width: 60
-            sourceSize.height: 60
+            sourceSize.width: buttonExtraSize
+            sourceSize.height: buttonExtraSize
             fillMode: Image.PreserveAspectFit
             visible: currentSpeed === 700
 
@@ -492,16 +494,38 @@ ScreenTemplate {
     }
 
     Image {
-        id: mouthsBtn
-        width: 60
-        height: 60
-        source: "qrc:/images/android/pad_faces_button.png"
-        sourceSize.width: 60
-        sourceSize.height: 60
+        id: animsBtn
+        width: buttonExtraSize
+        height: buttonExtraSize
+        source: "qrc:/images/android/animation_happy_button.png"
+        sourceSize.width: buttonExtraSize
+        sourceSize.height: buttonExtraSize
         fillMode: Image.PreserveAspectFit
         anchors {
-            left: speedControl.left
+            horizontalCenter: parent.horizontalCenter
             bottom: speedControl.top
+            bottomMargin: 15
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                console.log("[PadScreen] Animations button clicked (not yet implemented)")
+            }
+        }
+    }
+
+    Image {
+        id: mouthsBtn
+        width: buttonExtraSize
+        height: buttonExtraSize
+        source: "qrc:/images/android/smile_button.png"
+        sourceSize.width: buttonExtraSize
+        sourceSize.height: buttonExtraSize
+        fillMode: Image.PreserveAspectFit
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: animsBtn.top
             bottomMargin: 15
         }
 
@@ -512,4 +536,5 @@ ScreenTemplate {
             }
         }
     }
+
 }
