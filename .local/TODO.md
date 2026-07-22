@@ -14,10 +14,10 @@
   - Derecha: Flecha derecha del cursor o D. Movimiento: MOONWALKER_RIGHT.
   - Giro izquierda. Tecla Q. Movimiento: TURN_LEFT
   - Giro derecha. Tecla E. Movimiento: TURN_RIGHT
-- [ ] En `src/views/main.qml` falta internacionalizar la línea `rootNotice.show("Robot already named \"" + Robot.deviceName + "\". Keeping it.")`.
+- [X] En `src/views/main.qml` falta internacionalizar la línea `rootNotice.show("Robot already named \"" + Robot.deviceName + "\". Keeping it.")`.
 
 ## Nuevas funcionalidades
 
 - [X] Al "olvidar a Zowi" se debe emitir un renombrado de fábrica (nombre 'Zowi' original), si es posible la conexión al robot.
 - [X] Al conectar con un Zowi nuevo, es posible que tenga almacenado un nombre distinto al default, por una conexión anterior. En ese caso, el wizard no pedirá renombrarlo y saltará a la homescreen directamente.
-- [ ] Añadir un comando en `zowi_cli session` llamado `clear` que borre todos los valores de sesión almacenados.
+- [X] Añadir un comando en `zowi_cli session` llamado `clear` que borre todos los valores de sesión almacenados.

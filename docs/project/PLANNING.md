@@ -6,81 +6,107 @@
 
 | Version | Milestone | Description | Status |
 |---------|-----------|-------------|--------|
-| **0.1.0** | M1 | Project scaffold (screens, i18n, config, session) | ✅ |
-| **0.1.1** | M1 | + First working Windows portable build | ✅ |
-| **0.2.0** | M2 | Bluetooth discovery + device list | ✅ |
-| **0.2.1** | M2 | Pairing + SPP connection | ✅ |
-| **0.2.2** | M2 | Connection status indicator | ✅ |
-| **0.3.0** | M3 | Basic control pad (directions + actions) | |
-| **0.3.1** | M3 | Speed control + face editor | |
-| **0.4.0** | M4 | Demo / autonomous mode | |
-| **0.4.1** | M4 | Guardian + dancing + sound modes | |
-| **0.5.0** | M5 | Firmware flashing (STK500v1) | |
-| **0.6.0** | M6 | Visual block editor | |
-| **0.7.0** | M7 | Projects & tutorials section | |
-| **0.8.0** | M8 | Full i18n + polish | |
-| **1.0.0** | — | Final release | |
+| **0.1.0** | M1 | Initial release: desktop GUI and CLI, Bluetooth connection, behaviours, firmware, i18n (5 locales) | ✅ |
+| **0.2.0** | M2 | Debian/Lliurex packaging + Wayland support | ✅ |
+| **0.3.0** | M3 | Automated GitHub Releases, signed APT repo, translations embedded in binary | ✅ |
+| **0.3.2** | M3 | Multi-distro .deb (jammy + noble), AppImage on older base | ✅ |
+| **0.4.0** | M4 | USB firmware flashing, `ports` subcommand, CLI tests by transport, splash no-BT banner | ✅ |
+| **0.5.0** | M5 | Firmware restore GUI (BT+USB), low-battery confirmation, `adivinawi` CLI, transport selection in GUI | ✅ |
+| **0.6.0** | M6 | Transport situation state machine, automatic transport, persistent preference, DEV overlay, restore feedback | 🚧 |
+| **0.7.0** | M7 | Zowi calibration (servo trims via `C`/`G` protocol commands) | |
+| **0.8.0** | M7 | Face/mouth editor | |
+
+## Architecture
+
+```
+src/
+├── core/          # Qt-free C++20 static library (zowi::core)
+│   ├── session_store       # Persistent key-value store (JSON)
+│   ├── config_store        # Read-only config loader
+│   ├── translation_engine  # JSON-based i18n (5 locales)
+│   ├── robot_commands      # Firmware command builder (20 movements)
+│   ├── bluetooth_api       # Abstract backend interface
+│   ├── protocol            # Firmware framing (&&cmd value%%)
+│   ├── device_info         # Device struct (name, address, rssi)
+│   └── transport_constants # usb/bt transport identifiers
+├── backends/
+│   ├── bt_qt/     # Bluetooth SPP via Qt + BlueZ D-Bus
+│   └── bt_serial/ # USB/serial TTY backend
+├── firmware/      # STK500v1 protocol + bundled .hex files
+├── cli/           # CLI consumer (zowi_cli) — 13 subcommands
+├── gui/           # Qt/QML GUI consumer — 4 controllers
+└── views/         # QML screens (10) + components (5)
+```
+
+- `zowi::core` is intentionally Qt-free (except `translation_engine` which uses `QFile`).
+- GUI and CLI share `core` and `backends` but are independent consumers.
+- Two Bluetooth backends implement `BluetoothApi`: BlueZ D-Bus (SPP) and POSIX termios (serial).
 
 ## Milestones
 
-### M1 — Project scaffold
-- [x] CMake + Qt6 project building and linking
-- [x] QML resource system with images and translations
-- [x] Custom `Translator` class reading `.ts` files (`es_ES`, `ca_ES`, `en_US`)
-- [x] `SessionController` persisting wizard state and active Zowi address
-- [x] Splash screen (`SplashScreen.qml`) with language flags and Continue/Quit
-- [x] Start screen (`StartScreen.qml`) with Start button and know-more link
-- [x] Welcome screen (`WelcomeScreen.qml`) with onboarding choices
-- [x] Scan screen (`ScanScreen.qml`) with Bluetooth device discovery
-- [x] Windows portable build (cross-compiled from Linux)
-- [x] Linux AppImage packaging
+### M1 — Initial release ✅
+- [x] Desktop GUI and CLI to connect to Zowi over Bluetooth
+- [x] Multilingual support (5 locales)
+- [x] Persistent session and device configuration
+- [x] Device discovery and pairing flow
+- [x] Connection status and battery indicators
+- [x] Basic firmware management (restore, alarm)
+- [x] Windows and Linux builds (AppImage + portable)
 
-### M2 — Bluetooth connection & device pairing
-- [x] Device discovery list with name, address, signal strength
-- [x] Implement `QBluetoothSocket` (RFCOMM SPP, UUID `00001101-0000-1000-8000-00805F9B34FB`) — `src/backends/bt_qt/qt_bluetooth_backend.cpp`
-- [x] Pairing flow and persistent storage of paired device (CLI `connect`/`disconnect` + GUI `SessionController`)
-- [x] Connection status indicator (connected / disconnected) — shown in GUI `HomeScreen.qml` and `ScanScreen.qml`
-- [x] Low-battery indicator in the GUI status bar — `RobotController` exposes `battery` (parsed from `&&B`/`B`); `StatusBar.qml` shows the percentage and turns red below 50%
+### M2 — Debian packaging + Wayland ✅
+- [x] Official Debian/Lliurex package (`zowi-desktop`)
+- [x] Signed APT repository for easy install and updates
+- [x] Wayland session support
+- [x] GPG-signed repository metadata
 
-### M3 — Zowi control pad
-- [x] Directional movement pad (forward, backward, turn left/right) — implemented in `zowi_cli control` minigame and shared `zowi::robot_commands` builder (docs/firmware/PROTOCOL.md)
-- [ ] Action buttons (bend, crusaito, flapping, jitter, shake leg, swing, updown, tip-toe, moonwalker, etc.)
-- [x] Speed control (slow / medium / fast)
+### M3 — Automated releases + multi-distro ✅
+- [x] Automated release pipeline (tag → AppImage + `.deb`)
+- [x] Embedded translations in application binary
+- [x] Multi-distro support (Ubuntu 22.04 / 24.04)
+- [x] Forward-compatible AppImage on older base
+
+### M4 — USB support ✅
+- [x] USB/serial connection as alternative to Bluetooth
+- [x] USB port enumeration and auto-detection
+- [x] Firmware flashing over USB
+- [x] Organised test suite by transport type
+- [x] Splash screen guidance when no Bluetooth available
+
+### M5 — Firmware restore GUI + transport selection ✅
+- [x] Restore firmware from GUI (Bluetooth + USB)
+- [x] Battery safety check before restore
+- [x] Game firmware install (Adivinawi)
+- [x] User-selectable transport in Settings
+- [x] Visual feedback during restore (progress bar + status)
+
+### M6 — Transport intelligence + gamepad 🚧
+- [x] Automatic transport detection and switching
+- [x] USB hotplug awareness
+- [x] Persistent transport tied to device registration
+- [x] Developer diagnostics overlay
+- [x] Gamepad control screen (PadScreen) with directional pad and action buttons
+- [ ] Real-time command sending and speed control validation
+
+### M7 — Future
+- [ ] Zowi calibration (servo trims)
 - [ ] Face/mouth editor
-- [x] Real-time command sending over Bluetooth
+- [ ] Pre-programmed modes (demo, guardian, dancing, sound)
+- [ ] Visual block editor
+- [ ] Projects & tutorials section
+- [ ] Polish & i18n (keyboard shortcuts, responsive layout)
 
-### M4 — Pre-programmed modes
-- [ ] Demo / autonomous behaviour mode
-- [ ] Guardian mode (obstacle detection)
-- [ ] Dancing mode
-- [ ] Sound-reactive mode (clap detection)
+## Testing
 
-### M5 — Firmware flashing (STK500v1)
-- [ ] Read `.hex` firmware file
-- [ ] STK500v1 protocol over Bluetooth SPP
-- [ ] Flash progress UI
-- [ ] Factory reset / restore original firmware
-
-### M6 — Visual programming (block editor)
-- [ ] Block palette with Zowi-specific blocks (move, turn, dance, face, etc.)
-- [ ] Drag-and-drop workspace
-- [ ] Code generation → send to robot
-- [ ] Save / load programs
-
-### M7 — Projects & tutorial section
-- [ ] Built-in project gallery (move, choreography, form, biology, gravity, paint, etc.)
-- [ ] Step-by-step tutorial UI
-- [ ] Achievements / badges
-
-### M8 — Polish & i18n
-- [ ] Full translation of all UI strings (es_ES, ca_ES, en_US)
-- [ ] Window icon, app metadata
-- [ ] Keyboard shortcuts
-- [ ] Responsive layout (window resize)
+- **Core unit tests** (`src/core/tests/`): `test_session_store`, `test_config_store`, `test_translation_engine`, `test_robot_commands` — link only `zowi::core`, no Qt dependency.
+- **CLI integration tests** (`src/cli/tests/`): Bluetooth (6 scripts) and USB (8 scripts) — require real hardware.
+- **QML preview scripts** (`src/views/tests/`): Shell scripts to launch individual screens.
+- Run tests: `ctest --test-dir build --output-on-failure`
 
 ## Technical notes
 
 - Bluetooth Classic SPP only — BLE is not supported by Zowi's HC-06/HC-05 module.
 - Firmware flashing uses the same STK500v1 protocol as the original Android app.
-- Translations are loaded from `.ts` XML files at runtime (no `lrelease` needed).
+- Translations are loaded from `.json` files at runtime (no `lrelease` needed). Fallback: English.
 - All robot images and UI assets come from the original Android project (`drawable-xxxhdpi`).
+- GUI debug builds load QML from disk with hot-reload; release builds use `resources.qrc`.
+- Runtime logs: `qDebug`/`qWarning` mirrored to stderr + per-day log file at `AppDataLocation`.

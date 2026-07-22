@@ -130,6 +130,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resource syntax before extracting the HEX to a temporary file (the temp file
   is kept alive for the duration of the upload).
 
+## [0.5.0] - 2026-07-18
+
+### Added
+- **Restore base firmware from the GUI over Bluetooth AND USB.** The
+  *Restore firmware* action in **Settings** now flashes `ZOWI_BASE_v2.hex`
+  directly from the bundled resources. For USB it reopens the TTY at the
+  Optiboot bootloader baud, pulses the DTR reset and uploads via STK500v1,
+  then restores the operating baud and reconnects. For Bluetooth it triggers
+  the STATE-pin reset by reconnecting.
+- **Pre-upload low-battery confirmation on restore.** Before the upload, the
+  running firmware's reported battery level is checked; if it is below the
+  configurable `restore_low_battery_threshold` (default `50`) a confirmation
+  dialog is shown. **Continue** proceeds with the reset+upload; **Cancel**
+  aborts without touching the robot.
+- **`adivinawi` CLI subcommand.** Install the bundled Adivinawi game firmware
+  on the paired Zowi, mirroring the existing `alarm` command. Supports the
+  same options over Bluetooth or USB, and can be reverted with `restore`.
+- **USB/BT transport selection in the GUI.** A new *Connection* selector in
+  **Settings** lets the user pick **Automatic**, **Bluetooth** or **USB cable**.
+  The controller is now transport-agnostic and can drive either backend.
+
+### Changed
+- **Reorganised CLI.** `main.cpp` split into `state`, `util`, and `commands`
+  modules for clearer separation of concerns.
+- **Restore feedback.** While a restore runs, the *Connection* section and the
+  restore option are disabled; the outcome is reported in the message bar and a
+  live progress bar occupies the message-bar position during the upload.
+- `scripts/sync_firmware_from_zowiLibs.sh` now matches the current zowiLibs
+  layout and copies all game firmware, including Adivinawi.
+
 ## [0.4.0] - 2026-07-17
 
 ### Added
