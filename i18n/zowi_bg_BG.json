@@ -42,8 +42,8 @@
     "reset_no_zowi": "В момента няма регистриран Zowi в приложението.",
     "unpair_success": "Zowi устройството е премахнато от приложението и от Bluetooth системата.",
     "unpair_app_only": "Устройството е премахнато от приложението, но не можа да бъде раздвоено от Bluetooth системата.",
-    "connection": "Connection",
-    "connection_desc": "Choose how the app connects to your Zowi.",
+    "connection": "Връзка",
+    "connection_desc": "Изберете как приложението да се свързва с вашия Zowi.",
     "status_connected": "Свързан чрез %1.",
     "status_connecting": "Свързване с вашия Zowi…",
     "status_disconnected": "Zowi е регистриран, но не е свързан.",
@@ -57,12 +57,12 @@
     "action_register": "Регистрирай Zowi",
     "action_connect_usb": "Свържи чрез USB",
     "action_refresh": "Обнови",
-    "transport_auto": "Automatic",
+    "transport_auto": "Автоматично",
     "transport_bluetooth": "Bluetooth",
-    "transport_usb": "USB cable",
-    "transport_auto_hint": "Pick the best available connection automatically.",
-    "transport_bt_hint": "Connect wirelessly over Bluetooth.",
-    "transport_usb_hint": "Connect through the USB cable.",
+    "transport_usb": "USB кабел",
+    "transport_auto_hint": "Изберете най-добрата налична връзка автоматично.",
+    "transport_bt_hint": "Свържете се безжично чрез Bluetooth.",
+    "transport_usb_hint": "Свържете се чрез USB кабела.",
     "transport_switched": "Connection method updated.",
     "transport_failed": "Could not connect with the selected method.",
     "transport_unavailable": "Not available",
@@ -183,5 +183,8 @@
     "reset_no_zowi": "В момента няма регистриран Zowi в приложението.",
     "unpair_success": "Zowi устройството е премахнато от приложението и от Bluetooth системата.",
     "unpair_app_only": "Устройството е премахнато от приложението, но не можа да бъде раздвоено от Bluetooth системата."
+  },
+  "main.qml": {
+    "already_named": "Роботът вече се казва „%1“. Запазва се."
   }
 }

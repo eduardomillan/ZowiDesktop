@@ -183,5 +183,8 @@
     "reset_no_zowi": "No hi ha cap Zowi registrat a l'app.",
     "unpair_success": "Dispositiu Zowi eliminat de l'app i del sistema Bluetooth.",
     "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth."
+  },
+  "main.qml": {
+    "already_named": "El robot ja es diu «%1». Es manté."
   }
 }

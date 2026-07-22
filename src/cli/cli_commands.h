@@ -15,6 +15,7 @@ struct SessionArgs {
     bool get = false;
     bool set = false;
     bool list = false;
+    bool clear = false;
 };
 
 struct TranslateArgs {

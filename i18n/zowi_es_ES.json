@@ -173,5 +173,8 @@
     "reset_no_zowi": "No hay ningún Zowi registrado en la app.",
     "unpair_success": "Dispositivo Zowi borrado de la app y del sistema Bluetooth.",
     "unpair_app_only": "Dispositivo borrado de la app, pero no se pudo desenlazar del sistema Bluetooth."
+  },
+  "main.qml": {
+    "already_named": "El robot ya se llama \"%1\". Se mantiene."
   }
 }

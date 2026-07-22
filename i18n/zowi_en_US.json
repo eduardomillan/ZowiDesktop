@@ -183,5 +183,8 @@
     "reset_no_zowi": "No Zowi is currently registered in the app.",
     "unpair_success": "Zowi device removed from the app and from the Bluetooth system.",
     "unpair_app_only": "Device removed from the app, but could not be unpaired from the Bluetooth system."
+  },
+  "main.qml": {
+    "already_named": "Robot already named \"%1\". Keeping it."
   }
 }

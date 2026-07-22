@@ -13,6 +13,8 @@ Window {
 
     property bool paired: false
 
+    function tr(source) { return Translator.translate("main.qml", source) }
+
     function connectHome(home) {
         home.settingsClicked.connect(function() {
             var settings = stack.push("qrc:/src/views/screens/SettingsScreen.qml")
@@ -123,7 +125,7 @@ Window {
                     "activeTransport=", Robot.activeTransport,
                     "connected=", Robot.connected)
         Session.saveActiveZowiDeviceAddress(Robot.deviceAddress)
-        Session.saveActiveZowiTransport(Robot.activeTransport === Robot.TransportUsb ? "usb" : "bluetooth")
+        Session.saveActiveZowiTransport(Robot.activeTransport === Robot.TransportUsb ? "usb" : "bt")
         Session.saveWizardDismissed(true)
         // Recompute the situation so SettingsScreen reflects a live connection.
         Robot.refreshTransports()
@@ -131,7 +133,7 @@ Window {
         var defaultName = Config.get("zowi_default_name") || "Zowi"
         if (Robot.deviceName && Robot.deviceName.toLowerCase() !== defaultName.toLowerCase()) {
             Session.saveActiveZowiName(Robot.deviceName)
-            rootNotice.show("Robot already named \"" + Robot.deviceName + "\". Keeping it.")
+            rootNotice.show(tr("already_named").arg(Robot.deviceName))
             var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
             connectHome(home)
             return

@@ -18,7 +18,7 @@ public:
     Q_INVOKABLE void saveActiveZowiName(const QString &name);
     Q_INVOKABLE void saveWizardDismissed(bool dismissed);
 
-    // Transport with which the active Zowi was registered ("bluetooth" | "usb").
+    // Transport with which the active Zowi was registered ("bt" | "usb").
     // Empty when no Zowi is registered. Used to tie the transport to the
     // registration (changing transport requires forgetting the Zowi).
     Q_INVOKABLE QString loadActiveZowiTransport();

@@ -14,6 +14,7 @@
 #include <QTimer>
 
 #include <zowi/session_store.h>
+#include <zowi/transport_constants.h>
 #include <zowi/translation_engine.h>
 #include <zowi/config_store.h>
 #include <zowi/robot_commands.h>
@@ -50,6 +51,11 @@ int runSession(const SessionArgs &a)
         for (const auto &k : store.keys()) {
             std::cout << k << "=" << store.getRaw(k) << std::endl;
         }
+    } else if (a.clear) {
+        for (const auto &k : store.keys()) {
+            store.removeKey(k);
+        }
+        std::cout << "Session cleared." << std::endl;
     }
     return 0;
 }
@@ -224,7 +230,7 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
 
     zowi::SessionStore store("ZowiDesktop", "ZowiApp");
     store.setString("activeZowiDeviceAddress", target);
-    store.setString("activeZowiTransport", a.backend == "usb" ? "usb" : "bt");
+    store.setString("activeZowiTransport", a.backend == "usb" ? zowi::kTransportUsb : zowi::kTransportBt);
     if (!g_robotName.empty()) {
         store.setString("activeZowiName", g_robotName);
     }
@@ -257,6 +263,7 @@ int runRename(int argc, char **argv, const RenameArgs &a)
     std::string backend = a.backend;
     if (backend == "auto") {
         backend = session.getString("activeZowiTransport");
+        if (backend == "bt") backend = "bluetooth";
         if (backend.empty()) backend = "bluetooth";
     }
 
@@ -441,6 +448,7 @@ int runStatus(int argc, char **argv, const StatusArgs &a)
     std::string backend = a.backend;
     if (backend == "auto") {
         backend = store.getString("activeZowiTransport");
+        if (backend == "bt") backend = "bluetooth";
         if (backend.empty()) backend = "bluetooth";
     }
 
@@ -514,6 +522,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     std::string backend = a.backend;
     if (backend == "auto") {
         backend = session.getString("activeZowiTransport");
+        if (backend == "bt") backend = "bluetooth";
         if (backend.empty()) backend = "bluetooth";
     }
 

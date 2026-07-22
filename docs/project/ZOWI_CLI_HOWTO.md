@@ -92,6 +92,25 @@ Output:
 false
 ```
 
+### Clear all session data
+
+```bash
+zowi_cli session clear
+```
+
+Output:
+
+```
+Session cleared.
+```
+
+Verify no keys remain:
+
+```bash
+$ zowi_cli session list
+# (no output)
+```
+
 ### Set a value
 
 ```bash

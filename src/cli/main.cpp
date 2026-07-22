@@ -15,6 +15,7 @@ int main(int argc, char **argv)
     auto *sessionCmd = app.add_subcommand("session", "Manage session data");
     auto *getSession = sessionCmd->add_subcommand("get", "Get a session value");
     auto *setSession = sessionCmd->add_subcommand("set", "Set a session value");
+    auto *clearSession = sessionCmd->add_subcommand("clear", "Clear all session data");
     auto *listSession = sessionCmd->add_subcommand("list", "List all session keys and values");
 
     zowi_cli::SessionArgs sessionArgs;
@@ -23,6 +24,7 @@ int main(int argc, char **argv)
     setSession->add_option("value", sessionArgs.setValue, "Value to write")->required();
     getSession->final_callback([&]() { sessionArgs.get = true; });
     setSession->final_callback([&]() { sessionArgs.set = true; });
+    clearSession->final_callback([&]() { sessionArgs.clear = true; });
     listSession->final_callback([&]() { sessionArgs.list = true; });
 
     // ── translate subcommand ──────────────────────────────────

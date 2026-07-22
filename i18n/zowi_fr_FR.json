@@ -183,5 +183,8 @@
     "reset_no_zowi": "Aucun Zowi n'est actuellement enregistré dans l'application.",
     "unpair_success": "Appareil Zowi supprimé de l'application et du système Bluetooth.",
     "unpair_app_only": "Appareil supprimé de l'application, mais impossible de le désapparier du système Bluetooth."
+  },
+  "main.qml": {
+    "already_named": "Le robot s'appelle déjà « %1 ». Conservé."
   }
 }

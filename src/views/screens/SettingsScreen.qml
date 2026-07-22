@@ -35,7 +35,7 @@ ScreenTemplate {
     function registeredTransportLabel() {
         var r = Session.loadActiveZowiTransport()
         if (r === "usb") return tr("via_usb")
-        if (r === "bluetooth") return tr("via_bluetooth")
+        if (r === "bluetooth" || r === "bt") return tr("via_bluetooth")
         return transportLabel(Robot.activeTransport)
     }
 

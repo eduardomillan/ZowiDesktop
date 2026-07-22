@@ -23,6 +23,7 @@
 #endif
 #include <zowi/config_store.h>
 #include <zowi/session_store.h>
+#include <zowi/transport_constants.h>
 #include <zowi/protocol.h>
 #include <zowi/stk500v1.h>
 
@@ -402,7 +403,7 @@ void RobotController::setTransportPreference(int transport)
     m_transport = t;
     emit transportChanged();
     if (m_session) {
-        const char *s = (t == Usb) ? "usb" : (t == Bluetooth ? "bluetooth" : "auto");
+        const char *s = (t == Usb) ? zowi::kTransportUsb : (t == Bluetooth ? zowi::kTransportBt : "auto");
         m_session->saveString("transport", s);
     }
     // Lightweight switch: update the backend/availability logic without a
@@ -447,7 +448,7 @@ bool RobotController::switchTransport(int transport)
     m_transport = t;
     emit transportChanged();
     if (m_session) {
-        const char *s = (t == Usb) ? "usb" : (t == Bluetooth ? "bluetooth" : "auto");
+        const char *s = (t == Usb) ? zowi::kTransportUsb : (t == Bluetooth ? zowi::kTransportBt : "auto");
         m_session->saveString("transport", s);
     }
 
@@ -499,7 +500,7 @@ void RobotController::revertTransport(Transport prev)
     m_transport = prev;
     emit transportChanged();
     if (m_session) {
-        const char *s = (prev == Usb) ? "usb" : (prev == Bluetooth ? "bluetooth" : "auto");
+        const char *s = (prev == Usb) ? zowi::kTransportUsb : (prev == Bluetooth ? zowi::kTransportBt : "auto");
         m_session->saveString("transport", s);
     }
     if (prev == Usb) connectUsb();
@@ -557,7 +558,7 @@ void RobotController::persistRegistrationTransport(Transport t)
 {
     if (!m_session) return;
     if (t != Bluetooth && t != Usb) return;
-    m_session->saveActiveZowiTransport(t == Usb ? "usb" : "bluetooth");
+    m_session->saveActiveZowiTransport(t == Usb ? zowi::kTransportUsb : zowi::kTransportBt);
     maybeEmitSituation();
 }
 
