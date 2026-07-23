@@ -5,6 +5,7 @@
 #include <winrt/Windows.Devices.Bluetooth.h>
 #include <winrt/Windows.Devices.Bluetooth.Rfcomm.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Devices.SerialCommunication.h>
 #include <winrt/Windows.Networking.Sockets.h>
 #include <winrt/Windows.Storage.Streams.h>
 
@@ -23,14 +24,32 @@ using namespace ::winrt::Windows::Foundation;
 using namespace ::winrt::Windows::Devices::Bluetooth;
 using namespace ::winrt::Windows::Devices::Bluetooth::Rfcomm;
 using namespace ::winrt::Windows::Devices::Enumeration;
+using namespace ::winrt::Windows::Devices::SerialCommunication;
 using namespace ::winrt::Windows::Networking::Sockets;
 using namespace ::winrt::Windows::Storage::Streams;
 }
 
+// Bring winrt aliases into file scope for use in zowi:: member definitions.
+using winrt::BluetoothDevice;
+using winrt::BluetoothCacheMode;
+using winrt::BluetoothError;
+using winrt::DeviceInformation;
+using winrt::DevicePairingKinds;
+using winrt::DevicePairingProtectionLevel;
+using winrt::DevicePairingResultStatus;
+using winrt::DeviceUnpairingResultStatus;
+using winrt::InputStreamOptions;
+using winrt::RfcommDeviceService;
+using winrt::SerialDevice;
+using winrt::StreamSocket;
+using winrt::SocketQualityOfService;
+using winrt::DataWriter;
+using winrt::DataReader;
+
 namespace {
 
 constexpr winrt::guid SPP_SERVICE_UUID{
-    0x00001101, 0x0000, 0x1000, {0x80, 0x00, 0x00, 0x80, 0x5F, 0xB3, 0x4F, 0x9B}};
+    0x00001101, 0x0000, 0x1000, {0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB}};
 
 std::string toColonAddr(const std::string &dashes) {
     std::string r = dashes;
@@ -46,11 +65,13 @@ std::string toDashAddr(const std::string &colons) {
 
 std::string extractBtAddress(const winrt::hstring &deviceId) {
     auto s = winrt::to_string(deviceId);
-    std::regex re(R"(([\dA-Fa-f]{2})-([\dA-Fa-f]{2})-([\dA-Fa-f]{2})-([\dA-Fa-f]{2})-([\dA-Fa-f]{2})-([\dA-Fa-f]{2}))");
+    // Formato: Bluetooth#Bluetooth<adapter_addr>-<device_addr>
+    // Ejemplo: Bluetooth#Bluetooth00:1a:7d:da:71:13-c0:84:7d:aa:77:4d
+    // Extraer la segunda dirección MAC (dispositivo remoto)
+    std::regex re(R"(Bluetooth#Bluetooth[\dA-Fa-f:]+-([\dA-Fa-f:]{17}))");
     std::smatch m;
-    if (std::regex_search(s, m, re) && m.size() >= 7)
-        return m[1].str() + ":" + m[2].str() + ":" + m[3].str() + ":" +
-               m[4].str() + ":" + m[5].str() + ":" + m[6].str();
+    if (std::regex_search(s, m, re) && m.size() >= 2)
+        return m[1].str();
     return {};
 }
 
@@ -59,6 +80,9 @@ std::string extractBtAddress(const winrt::hstring &deviceId) {
 namespace zowi {
 
 struct NativeBluetoothBackend::Impl {
+    // SerialDevice path (preferred for SPP)
+    winrt::Windows::Devices::SerialCommunication::SerialDevice serialDevice{nullptr};
+    // StreamSocket fallback (when SerialDevice unavailable)
     winrt::StreamSocket socket{nullptr};
     winrt::DataWriter writer{nullptr};
     winrt::DataReader reader{nullptr};
@@ -75,6 +99,7 @@ NativeBluetoothBackend::~NativeBluetoothBackend() {
     s_reconnectCv.notify_all();
     if (m_reconnectThread.joinable())
         m_reconnectThread.join();
+    stopDiscovery();
     stopReceiveLoop();
     disconnect();
 }
@@ -96,223 +121,471 @@ bool NativeBluetoothBackend::isAdapterAvailable() const {
 }
 
 void NativeBluetoothBackend::startDiscovery() {
-    std::thread([this]() {
-        try {
-            BT_LOG("Starting device discovery...");
-            
-            // Selector para dispositivos Bluetooth Classic (incluye emparejados y no emparejados)
-            // GUID e0cbf06c-cd8b-4647-bb8a-263b43f0f974 = Bluetooth Classic
-            winrt::hstring selector = L"System.Devices.Aep.ProtocolId:=\"{e0cbf06c-cd8b-4647-bb8a-263b43f0f974}\"";
-            
-            auto devices = winrt::DeviceInformation::FindAllAsync(selector).get();
-
-            BT_LOG("Found " + std::to_string(devices.Size()) + " Bluetooth devices");
-
-            for (uint32_t i = 0; i < devices.Size(); ++i) {
-                if (!m_discovering.load()) break;
-
-                auto dev = devices.GetAt(i);
-                auto addr = extractBtAddress(dev.Id());
-                if (addr.empty()) {
-                    BT_LOG("Device " + std::to_string(i) + " has no valid address, skipping");
-                    continue;
-                }
-
-                std::string name = winrt::to_string(dev.Name());
-                if (name.empty()) name = "(unknown)";
-                for (auto &c : name) {
-                    if (c < 0x20 || c > 0x7E) { c = '?'; }
-                }
-
-                BT_LOG("Discovered device: " + name + " address: " + addr + 
-                       " paired: " + (dev.Pairing().IsPaired() ? "true" : "false"));
-
-                {
-                    std::lock_guard<std::mutex> lock(m_mutex);
-                    m_discoveredAddrs.push_back(addr);
-                    m_discoveredNames.push_back(name);
-                    // Almacenar el dispositivo completo para emparejamiento
-                    m_discoveredDevices.insert_or_assign(addr, dev);
-                }
-
-                DeviceInfo info;
-                info.name = name;
-                info.address = addr;
-                if (m_onDevice) m_onDevice(info);
-            }
-        } catch (const winrt::hresult_error &e) {
+    try {
+        BT_LOG("Starting device discovery with DeviceWatcher...");
+        
+        {
             std::lock_guard<std::mutex> lock(m_mutex);
-            m_lastError = winrt::to_string(e.message());
-            BT_LOG("Discovery error: " + m_lastError);
-            if (m_onError) m_onError(m_lastError);
-        } catch (...) {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_lastError = "Discovery failed";
-            BT_LOG("Discovery failed with unknown error");
-            if (m_onError) m_onError(m_lastError);
+            m_discoveredAddrs.clear();
+            m_discoveredNames.clear();
+            m_discoveredDevices.clear();
         }
-
-        m_discovering = false;
-        BT_LOG("Discovery finished");
-        if (m_onScanFinished) m_onScanFinished();
-    }).detach();
-
-    m_discovering = true;
+        
+        winrt::hstring selector = winrt::Windows::Devices::Bluetooth::BluetoothDevice::GetDeviceSelectorFromPairingState(false);
+        
+        m_watcher = winrt::DeviceInformation::CreateWatcher(selector);
+        
+        m_addedToken = m_watcher.Added([this](auto const& sender, auto const& deviceInfo) {
+            onDeviceAdded(sender, deviceInfo);
+        });
+        
+        m_updatedToken = m_watcher.Updated([this](auto const& sender, auto const& deviceInfoUpdate) {
+            onDeviceUpdated(sender, deviceInfoUpdate);
+        });
+        
+        m_removedToken = m_watcher.Removed([this](auto const& sender, auto const& deviceInfoUpdate) {
+            onDeviceRemoved(sender, deviceInfoUpdate);
+        });
+        
+        m_completedToken = m_watcher.EnumerationCompleted([this](auto const& sender, auto const& e) {
+            onEnumerationCompleted(sender, e);
+        });
+        
+        m_discovering = true;
+        
+        m_watcher.Start();
+        
+        BT_LOG("DeviceWatcher started successfully");
+        
+    } catch (const winrt::hresult_error &e) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_lastError = winrt::to_string(e.message());
+        BT_LOG("Discovery error: " + m_lastError);
+        if (m_onError) m_onError(m_lastError);
+    } catch (...) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_lastError = "Discovery failed";
+        BT_LOG("Discovery failed with unknown error");
+        if (m_onError) m_onError(m_lastError);
+    }
 }
 
 void NativeBluetoothBackend::stopDiscovery() {
+    BT_LOG("Stopping device discovery...");
+    
     m_discovering = false;
+    
+    if (m_watcher) {
+        try {
+            m_watcher.Stop();
+            
+            m_watcher.Added(m_addedToken);
+            m_watcher.Updated(m_updatedToken);
+            m_watcher.Removed(m_removedToken);
+            m_watcher.EnumerationCompleted(m_completedToken);
+            
+            m_watcher = nullptr;
+            
+            BT_LOG("DeviceWatcher stopped successfully");
+        } catch (...) {
+            BT_LOG("Error stopping DeviceWatcher");
+        }
+    }
+    
+    if (m_onScanFinished) m_onScanFinished();
 }
 
-bool NativeBluetoothBackend::connect(const std::string &address) {
+void NativeBluetoothBackend::onDeviceAdded(
+    winrt::Windows::Devices::Enumeration::DeviceWatcher const& sender,
+    winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInfo) {
+    
     try {
-        BT_LOG("Connecting to " + address);
+        auto deviceId = winrt::to_string(deviceInfo.Id());
+        BT_LOG("Device added - ID: " + deviceId);
+        BT_LOG("Device added - Name: " + winrt::to_string(deviceInfo.Name()));
         
-        // Buscar el dispositivo en el mapa de dispositivos descubiertos
-        winrt::Windows::Devices::Enumeration::DeviceInformation devInfo{nullptr};
+        auto addr = extractBtAddress(deviceInfo.Id());
+        if (addr.empty()) {
+            BT_LOG("Device added with no valid address, skipping");
+            return;
+        }
+
+        std::string name = winrt::to_string(deviceInfo.Name());
+        if (name.empty()) name = "(unknown)";
+        for (auto &c : name) {
+            if (c < 0x20 || c > 0x7E) { c = '?'; }
+        }
+
+        BT_LOG("Device added: " + name + " address: " + addr + 
+               " paired: " + (deviceInfo.Pairing().IsPaired() ? "true" : "false"));
+
         {
             std::lock_guard<std::mutex> lock(m_mutex);
-            auto it = m_discoveredDevices.find(address);
-            if (it == m_discoveredDevices.end()) {
-                BT_LOG("Device not found in discovered devices map");
-                m_lastError = "Device not found in scan results. Please scan first.";
-                if (m_onError) m_onError(m_lastError);
-                return false;
-            }
-            devInfo = it->second;
+            m_discoveredAddrs.push_back(addr);
+            m_discoveredNames.push_back(name);
+            m_discoveredDevices.insert_or_assign(addr, deviceInfo);
         }
 
-        BT_LOG("Found device in map, checking pairing status...");
-        BT_LOG("Device ID: " + winrt::to_string(devInfo.Id()));
-        BT_LOG("IsPaired: " + std::string(devInfo.Pairing().IsPaired() ? "true" : "false"));
-        BT_LOG("CanPair: " + std::string(devInfo.Pairing().CanPair() ? "true" : "false"));
-
-        // Auto-pair if not already paired (similar to BlueZ agent on Linux)
-        if (!devInfo.Pairing().IsPaired()) {
-            BT_LOG("Device not paired, attempting auto-pair...");
-            
-            if (!devInfo.Pairing().CanPair()) {
-                BT_LOG("Device cannot be paired");
-                std::lock_guard<std::mutex> lock(m_mutex);
-                m_lastError = "Device cannot be paired";
-                if (m_onError) m_onError(m_lastError);
-                return false;
-            }
-
-            // Use custom pairing with automatic PIN "1234" for HC-05
-            auto customPairing = devInfo.Pairing().Custom();
-            
-            // Register handler to provide PIN when requested
-            auto pairingRequestedToken = customPairing.PairingRequested(
-                [](winrt::Windows::Devices::Enumeration::DeviceInformationCustomPairing const& sender,
-                   winrt::Windows::Devices::Enumeration::DevicePairingRequestedEventArgs const& args) {
-                    BT_LOG("Pairing requested, providing PIN 1234");
-                    // Auto-accept with PIN "1234" for HC-05 modules
-                    args.Accept(L"1234");
-                });
-
-            BT_LOG("Starting PairAsync with DevicePairingProtectionLevel::None...");
-            
-            // Perform pairing with no protection (HC-05 uses legacy pairing)
-            auto pairResult = customPairing.PairAsync(
-                winrt::Windows::Devices::Enumeration::DevicePairingKinds::ProvidePin,
-                winrt::Windows::Devices::Enumeration::DevicePairingProtectionLevel::None
-            ).get();
-
-            // Remove the handler
-            customPairing.PairingRequested(pairingRequestedToken);
-
-            BT_LOG("Pairing result status: " + std::to_string(static_cast<int>(pairResult.Status())));
-
-            if (pairResult.Status() != winrt::Windows::Devices::Enumeration::DevicePairingResultStatus::Paired) {
-                BT_LOG("Auto-pairing failed with status: " + std::to_string(static_cast<int>(pairResult.Status())));
-                std::lock_guard<std::mutex> lock(m_mutex);
-                m_lastError = "Auto-pairing failed";
-                if (m_onError) m_onError(m_lastError);
-                return false;
-            }
-
-            BT_LOG("Pairing successful, refreshing device info...");
-            
-            // Refresh device info after pairing
-            devInfo = winrt::DeviceInformation::CreateFromIdAsync(devInfo.Id()).get();
-        }
-
-        BT_LOG("Getting Bluetooth device from ID...");
-        auto btDevice = winrt::Windows::Devices::Bluetooth::BluetoothDevice::FromIdAsync(devInfo.Id()).get();
+        DeviceInfo info;
+        info.name = name;
+        info.address = addr;
+        if (m_onDevice) m_onDevice(info);
         
-        BT_LOG("Getting RFCOMM services...");
-        auto servicesResult = btDevice.GetRfcommServicesAsync(
-            winrt::Windows::Devices::Bluetooth::BluetoothCacheMode::Uncached).get();
+    } catch (...) {
+        BT_LOG("Error in onDeviceAdded");
+    }
+}
 
-        if (servicesResult.Error() != winrt::Windows::Devices::Bluetooth::BluetoothError::Success) {
-            BT_LOG("No RFCOMM services found, error: " + std::to_string(static_cast<int>(servicesResult.Error())));
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_lastError = "No RFCOMM services found";
-            if (m_onError) m_onError(m_lastError);
-            return false;
+void NativeBluetoothBackend::onDeviceUpdated(
+    winrt::Windows::Devices::Enumeration::DeviceWatcher const& sender,
+    winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInfoUpdate) {
+    
+    try {
+        auto addr = extractBtAddress(deviceInfoUpdate.Id());
+        if (addr.empty()) return;
+
+        BT_LOG("Device updated: " + addr);
+        
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = m_discoveredDevices.find(addr);
+        if (it != m_discoveredDevices.end()) {
+            auto updatedInfo = winrt::DeviceInformation::CreateFromIdAsync(deviceInfoUpdate.Id()).get();
+            it->second = updatedInfo;
         }
+    } catch (...) {
+        BT_LOG("Error in onDeviceUpdated");
+    }
+}
 
-        BT_LOG("Found " + std::to_string(servicesResult.Services().Size()) + " RFCOMM services");
+void NativeBluetoothBackend::onDeviceRemoved(
+    winrt::Windows::Devices::Enumeration::DeviceWatcher const& sender,
+    winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInfoUpdate) {
+    
+    try {
+        auto addr = extractBtAddress(deviceInfoUpdate.Id());
+        if (addr.empty()) return;
 
-        winrt::Windows::Devices::Bluetooth::Rfcomm::RfcommDeviceService sppService{nullptr};
-        auto services = servicesResult.Services();
-        for (uint32_t i = 0; i < services.Size(); ++i) {
-            auto service = services.GetAt(i);
-            auto uuid = service.ServiceId().Uuid();
-            
-            // Format UUID as string for logging
-            char uuid_str[64];
-            snprintf(uuid_str, sizeof(uuid_str), 
-                "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
-                uuid.Data1, uuid.Data2, uuid.Data3,
-                uuid.Data4[0], uuid.Data4[1], uuid.Data4[2], uuid.Data4[3],
-                uuid.Data4[4], uuid.Data4[5], uuid.Data4[6], uuid.Data4[7]);
-            
-            BT_LOG("Service " + std::to_string(i) + " UUID: " + uuid_str);
-            
-            if (service.ServiceId().Uuid() == SPP_SERVICE_UUID) {
-                sppService = service;
-                BT_LOG("Found SPP service");
+        BT_LOG("Device removed: " + addr);
+        
+        std::lock_guard<std::mutex> lock(m_mutex);
+        m_discoveredDevices.erase(addr);
+        
+        for (size_t i = 0; i < m_discoveredAddrs.size(); ++i) {
+            if (m_discoveredAddrs[i] == addr) {
+                m_discoveredAddrs.erase(m_discoveredAddrs.begin() + i);
+                m_discoveredNames.erase(m_discoveredNames.begin() + i);
                 break;
             }
         }
+    } catch (...) {
+        BT_LOG("Error in onDeviceRemoved");
+    }
+}
 
-        if (!sppService) {
-            BT_LOG("SPP service not found on device");
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_lastError = "SPP service not found on device";
+void NativeBluetoothBackend::onEnumerationCompleted(
+    winrt::Windows::Devices::Enumeration::DeviceWatcher const& sender,
+    winrt::Windows::Foundation::IInspectable const& e) {
+    
+    BT_LOG("Device enumeration completed");
+    m_discovering = false;
+    
+    if (m_onScanFinished) m_onScanFinished();
+}
+
+// ── Resolve DeviceInformation by MAC address ───────────────────
+winrt::Windows::Devices::Enumeration::DeviceInformation
+NativeBluetoothBackend::resolveDeviceByAddress(const std::string &address)
+{
+    // 1) Check in-memory discovered map first
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        auto it = m_discoveredDevices.find(address);
+        if (it != m_discoveredDevices.end()) return it->second;
+    }
+
+    // 2) Enumerate all Bluetooth devices and match by MAC
+    BT_LOG("Resolving device by MAC: " + address);
+    auto selector = BluetoothDevice::GetDeviceSelector();
+    auto devices = DeviceInformation::FindAllAsync(selector).get();
+    for (uint32_t i = 0; i < devices.Size(); ++i) {
+        auto dev = devices.GetAt(i);
+        if (extractBtAddress(dev.Id()) == address) {
+            BT_LOG("Resolved device, ID: " + winrt::to_string(dev.Id()));
+            return dev;
+        }
+    }
+    return nullptr;
+}
+
+// ── Pair device with PIN "1234" ───────────────────────────────
+bool NativeBluetoothBackend::ensurePaired(
+    winrt::Windows::Devices::Enumeration::DeviceInformation &devInfo)
+{
+    devInfo = winrt::DeviceInformation::CreateFromIdAsync(devInfo.Id()).get();
+
+    if (devInfo.Pairing().IsPaired()) {
+        BT_LOG("Device already paired");
+        return true;
+    }
+
+    BT_LOG("Device not paired, attempting auto-pair with PIN 1234...");
+    auto customPairing = devInfo.Pairing().Custom();
+
+    auto token = customPairing.PairingRequested(
+        [](auto const&, auto const& args) {
+            BT_LOG("Pairing requested, providing PIN 1234");
+            args.Accept(L"1234");
+        });
+
+    auto result = customPairing.PairAsync(
+        DevicePairingKinds::ProvidePin,
+        DevicePairingProtectionLevel::None
+    ).get();
+
+    customPairing.PairingRequested(token);
+
+    BT_LOG("Pairing result: " + std::to_string(static_cast<int>(result.Status())));
+
+    if (result.Status() != DevicePairingResultStatus::Paired) {
+        m_lastError = "Auto-pairing failed";
+        BT_LOG(m_lastError);
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+
+    devInfo = winrt::DeviceInformation::CreateFromIdAsync(devInfo.Id()).get();
+    BT_LOG("Pairing successful");
+    return true;
+}
+
+// ── Try opening via SerialDevice (virtual COM port) ────────────
+bool NativeBluetoothBackend::connectSerialDevice(const std::string &address)
+{
+    BT_LOG("Trying SerialDevice path for " + address);
+
+    auto selector = winrt::Windows::Devices::SerialCommunication::SerialDevice::GetDeviceSelector();
+    auto serialDevices = DeviceInformation::FindAllAsync(selector).get();
+    BT_LOG("Found " + std::to_string(serialDevices.Size()) + " serial devices");
+
+    DeviceInformation serialDevInfo{nullptr};
+    std::string dashAddr = toDashAddr(address);
+    std::string upperDash = dashAddr;
+    for (auto &c : upperDash) c = static_cast<char>(::toupper(static_cast<unsigned char>(c)));
+
+    for (uint32_t i = 0; i < serialDevices.Size(); ++i) {
+        auto dev = serialDevices.GetAt(i);
+        auto id = winrt::to_string(dev.Id());
+        BT_LOG("  Serial device " + std::to_string(i) + ": " + id);
+
+        // SerialDevice IDs look like:
+        //   SWD\DEVICE\VID_0000&PID_0000\BTDEVICE_B4_9D_0B_33_8B_C6
+        // or contain the MAC in various formats. Check case-insensitively.
+        std::string upperId = id;
+        for (auto &c : upperId) c = static_cast<char>(::toupper(static_cast<unsigned char>(c)));
+
+        // Match MAC in dash format: B4-9D-0B-33-8B-C6
+        std::string macDash = upperDash;
+        if (upperId.find(macDash) != std::string::npos) {
+            serialDevInfo = dev;
+            BT_LOG("  -> matched by dash MAC");
+            break;
+        }
+
+        // Match MAC in underscore format: B4_9D_0B_33_8B_C6
+        std::string macUnderscore = upperDash;
+        for (auto &c : macUnderscore) if (c == '-') c = '_';
+        if (upperId.find(macUnderscore) != std::string::npos) {
+            serialDevInfo = dev;
+            BT_LOG("  -> matched by underscore MAC");
+            break;
+        }
+
+        // Match MAC in colon format: B4:9D:0B:33:8B:C6
+        std::string macColon = toColonAddr(address);
+        std::string upperColon = macColon;
+        for (auto &c : upperColon) c = static_cast<char>(::toupper(static_cast<unsigned char>(c)));
+        if (upperId.find(upperColon) != std::string::npos) {
+            serialDevInfo = dev;
+            BT_LOG("  -> matched by colon MAC");
+            break;
+        }
+    }
+
+    if (!serialDevInfo) {
+        BT_LOG("No matching serial device found for this MAC");
+        return false;
+    }
+
+    auto serialDevice = winrt::Windows::Devices::SerialCommunication::SerialDevice::FromIdAsync(
+        serialDevInfo.Id()).get();
+
+    if (!serialDevice) {
+        BT_LOG("SerialDevice::FromIdAsync returned null (permission issue?)");
+        return false;
+    }
+
+    // Configure serial parameters for HC-05
+    serialDevice.BaudRate(9600);
+    serialDevice.DataBits(8);
+    serialDevice.Parity(winrt::Windows::Devices::SerialCommunication::SerialParity::None);
+    serialDevice.StopBits(winrt::Windows::Devices::SerialCommunication::SerialStopBitCount::One);
+    serialDevice.Handshake(winrt::Windows::Devices::SerialCommunication::SerialHandshake::None);
+
+    // ReadTimeout: LoadAsync will throw after this duration if no data arrives.
+    // Unlike CancellationToken, this does NOT destroy the socket/connection.
+    serialDevice.ReadTimeout(std::chrono::milliseconds(500));
+    serialDevice.WriteTimeout(std::chrono::seconds(5));
+
+    BT_LOG("SerialDevice opened, baud=" + std::to_string(serialDevice.BaudRate()));
+
+    // Close any existing connection
+    closeStreams();
+
+    m_impl->serialDevice = serialDevice;
+    m_impl->writer = DataWriter(serialDevice.OutputStream());
+    m_impl->reader = DataReader(serialDevice.InputStream());
+    m_impl->reader.InputStreamOptions(InputStreamOptions::Partial);
+
+    m_deviceAddress = address;
+    m_connected = true;
+
+    BT_LOG("SerialDevice connection successful, starting receive loop...");
+    if (m_onConnect) m_onConnect(true);
+    startReceiveLoop();
+    return true;
+}
+
+// ── Fallback: connect via StreamSocket + RFCOMM ────────────────
+bool NativeBluetoothBackend::connectStreamSocket(const std::string &address,
+                                                  winrt::Windows::Devices::Enumeration::DeviceInformation devInfo)
+{
+    BT_LOG("Trying StreamSocket path for " + address);
+
+    auto btDevice = BluetoothDevice::FromIdAsync(devInfo.Id()).get();
+    auto servicesResult = btDevice.GetRfcommServicesAsync(BluetoothCacheMode::Uncached).get();
+
+    if (servicesResult.Error() != BluetoothError::Success) {
+        BT_LOG("RFCOMM service discovery failed, error: " +
+               std::to_string(static_cast<int>(servicesResult.Error())));
+        m_lastError = "No RFCOMM services found";
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+
+    BT_LOG("Found " + std::to_string(servicesResult.Services().Size()) + " RFCOMM services");
+
+    RfcommDeviceService sppService{nullptr};
+    auto services = servicesResult.Services();
+    for (uint32_t i = 0; i < services.Size(); ++i) {
+        auto service = services.GetAt(i);
+        auto uuid = service.ServiceId().Uuid();
+
+        char uuid_str[64];
+        snprintf(uuid_str, sizeof(uuid_str),
+            "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}",
+            uuid.Data1, uuid.Data2, uuid.Data3,
+            uuid.Data4[0], uuid.Data4[1], uuid.Data4[2], uuid.Data4[3],
+            uuid.Data4[4], uuid.Data4[5], uuid.Data4[6], uuid.Data4[7]);
+
+        BT_LOG("Service " + std::to_string(i) + " UUID: " + uuid_str);
+
+        if (service.ServiceId().Uuid() == SPP_SERVICE_UUID) {
+            sppService = service;
+            BT_LOG("Found SPP service");
+            break;
+        }
+    }
+
+    if (!sppService) {
+        BT_LOG("SPP service not found on device");
+        m_lastError = "SPP service not found on device";
+        if (m_onError) m_onError(m_lastError);
+        return false;
+    }
+
+    closeStreams();
+
+    m_impl->socket = StreamSocket();
+    m_impl->socket.Control().QualityOfService(SocketQualityOfService::LowLatency);
+
+    BT_LOG("Connecting StreamSocket to SPP service...");
+    m_impl->socket.ConnectAsync(
+        sppService.ConnectionHostName(),
+        sppService.ConnectionServiceName()).get();
+
+    BT_LOG("StreamSocket connected, waiting 2s for init...");
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+
+    m_impl->writer = DataWriter(m_impl->socket.OutputStream());
+    m_impl->reader = DataReader(m_impl->socket.InputStream());
+    m_impl->reader.InputStreamOptions(InputStreamOptions::Partial);
+
+    BT_LOG("Writer and Reader created");
+    BT_LOG("  Local:  " + winrt::to_string(m_impl->socket.Information().LocalAddress().CanonicalName()));
+    BT_LOG("  Remote: " + winrt::to_string(m_impl->socket.Information().RemoteAddress().CanonicalName()));
+
+    m_deviceAddress = address;
+    m_connected = true;
+
+    BT_LOG("StreamSocket connection successful, starting receive loop...");
+    if (m_onConnect) m_onConnect(true);
+    startReceiveLoop();
+    return true;
+}
+
+// ── Close existing writer/reader/socket/serialDevice ───────────
+void NativeBluetoothBackend::closeStreams()
+{
+    try { if (m_impl->writer) { m_impl->writer.DetachStream(); m_impl->writer.Close(); m_impl->writer = nullptr; } } catch (...) {}
+    try { if (m_impl->reader) { m_impl->reader.DetachStream(); m_impl->reader.Close(); m_impl->reader = nullptr; } } catch (...) {}
+    try { if (m_impl->socket) { m_impl->socket.Close(); m_impl->socket = nullptr; } } catch (...) {}
+    try { if (m_impl->serialDevice) { m_impl->serialDevice.Close(); m_impl->serialDevice = nullptr; } } catch (...) {}
+}
+
+// ── Main connect entry point ───────────────────────────────────
+bool NativeBluetoothBackend::connect(const std::string &address) {
+    try {
+        BT_LOG("=== Connecting to " + address + " ===");
+
+        // 1. Resolve DeviceInformation
+        auto devInfo = resolveDeviceByAddress(address);
+        if (!devInfo) {
+            BT_LOG("Device not found");
+            m_lastError = "Device not found. Make sure it is powered on and in range.";
             if (m_onError) m_onError(m_lastError);
             return false;
         }
 
-        BT_LOG("Closing existing connections...");
-        try { if (m_impl->writer) { m_impl->writer.Close(); m_impl->writer = nullptr; } } catch (...) {}
-        try { if (m_impl->reader) { m_impl->reader.Close(); m_impl->reader = nullptr; } } catch (...) {}
-        try { if (m_impl->socket) { m_impl->socket.Close(); m_impl->socket = nullptr; } } catch (...) {}
+        BT_LOG("Device ID: " + winrt::to_string(devInfo.Id()));
+        BT_LOG("IsPaired: " + std::string(devInfo.Pairing().IsPaired() ? "true" : "false"));
 
-        BT_LOG("Creating new StreamSocket...");
-        m_impl->socket = winrt::Windows::Networking::Sockets::StreamSocket();
-        m_impl->socket.Control().QualityOfService(
-            winrt::Windows::Networking::Sockets::SocketQualityOfService::LowLatency);
+        // 2. Pair if needed
+        if (!devInfo.Pairing().IsPaired()) {
+            if (!ensurePaired(devInfo))
+                return false;
+        }
 
-        BT_LOG("Connecting to SPP service...");
-        m_impl->socket.ConnectAsync(
-            sppService.ConnectionHostName(),
-            sppService.ConnectionServiceName()).get();
+        // 3. Primary path: SerialDevice (virtual COM port)
+        //    After pairing, Windows creates a virtual COM port for SPP devices.
+        //    SerialDevice has proper ReadTimeout that does NOT destroy the
+        //    connection, unlike StreamSocket CancellationToken behavior.
+        if (connectSerialDevice(address))
+            return true;
 
-        BT_LOG("Creating DataWriter and DataReader...");
-        m_impl->writer = winrt::Windows::Storage::Streams::DataWriter(m_impl->socket.OutputStream());
-        m_impl->reader = winrt::Windows::Storage::Streams::DataReader(m_impl->socket.InputStream());
+        BT_LOG("SerialDevice unavailable, falling back to StreamSocket...");
 
-        m_deviceAddress = address;
-        m_connected = true;
+        // 4. Fallback: StreamSocket + RFCOMM
+        //    Known to be unreliable with HC-05/HC-06 modules but may work on
+        //    some systems where the SerialDevice path isn't available.
+        if (connectStreamSocket(address, devInfo))
+            return true;
 
-        BT_LOG("Connection successful, starting receive loop...");
-        if (m_onConnect) m_onConnect(true);
-
-        startReceiveLoop();
-        return true;
+        // Both paths failed
+        if (m_lastError.empty()) {
+            m_lastError = "Could not establish SPP connection";
+            if (m_onError) m_onError(m_lastError);
+        }
+        return false;
 
     } catch (const winrt::hresult_error &e) {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -322,8 +595,8 @@ bool NativeBluetoothBackend::connect(const std::string &address) {
         return false;
     } catch (...) {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_lastError = "Connection failed";
-        BT_LOG("Connection failed with unknown error");
+        m_lastError = "Connection failed with unknown error";
+        BT_LOG(m_lastError);
         if (m_onError) m_onError(m_lastError);
         return false;
     }
@@ -332,35 +605,13 @@ bool NativeBluetoothBackend::connect(const std::string &address) {
 void NativeBluetoothBackend::disconnect() {
     m_stopReconnect = true;
     s_reconnectCv.notify_all();
-    if (m_reconnectThread.joinable())
-        m_reconnectThread.join();
+    // Don't join the reconnect thread here — it might be blocked in connect()
+    // which can't be cancelled. Let it check m_stopReconnect and exit on its own.
 
     stopReceiveLoop();
 
     m_connected = false;
-
-    try {
-        if (m_impl->writer) {
-            m_impl->writer.DetachStream();
-            m_impl->writer.Close();
-            m_impl->writer = nullptr;
-        }
-    } catch (...) {}
-
-    try {
-        if (m_impl->reader) {
-            m_impl->reader.DetachStream();
-            m_impl->reader.Close();
-            m_impl->reader = nullptr;
-        }
-    } catch (...) {}
-
-    try {
-        if (m_impl->socket) {
-            m_impl->socket.Close();
-            m_impl->socket = nullptr;
-        }
-    } catch (...) {}
+    closeStreams();
 
     bool wasConnected = !m_deviceAddress.empty();
     m_deviceAddress.clear();
@@ -372,18 +623,35 @@ void NativeBluetoothBackend::disconnect() {
 bool NativeBluetoothBackend::send(const std::string &data) {
     std::lock_guard<std::mutex> lock(m_mutex);
     if (!m_impl->writer || !m_connected.load()) {
+        BT_LOG("Send queued (not connected): " + data);
         m_pendingWrite += data;
         return true;
     }
 
     try {
+        BT_LOG("Sending " + std::to_string(data.size()) + " bytes: " + data);
+        
         winrt::array_view<const uint8_t> view(
             reinterpret_cast<const uint8_t *>(data.data()), data.size());
+        
         m_impl->writer.WriteBytes(view);
-        m_impl->writer.StoreAsync().get();
+        
+        auto storeOp = m_impl->writer.StoreAsync();
+        storeOp.get();
+        
+        auto flushOp = m_impl->writer.FlushAsync();
+        flushOp.get();
+        
+        BT_LOG("Send successful");
         return true;
+    } catch (const winrt::hresult_error &e) {
+        m_lastError = "Send failed: " + winrt::to_string(e.message());
+        BT_LOG(m_lastError);
+        if (m_onError) m_onError(m_lastError);
+        return false;
     } catch (...) {
         m_lastError = "Send failed";
+        BT_LOG(m_lastError);
         if (m_onError) m_onError(m_lastError);
         return false;
     }
@@ -410,19 +678,15 @@ void NativeBluetoothBackend::setAutoReconnect(bool enabled, int reconnectInterva
 void NativeBluetoothBackend::unpair(const std::string &address) {
     std::thread([this, address]() {
         try {
-            std::string dashed = toDashAddr(address);
-            std::string deviceId = "Bluetooth#" + dashed + "#Device";
+            auto devInfo = resolveDeviceByAddress(address);
 
-            auto devInfo = winrt::DeviceInformation::CreateFromIdAsync(
-                winrt::to_hstring(deviceId)).get();
-
-            if (!devInfo.Pairing().IsPaired()) {
+            if (!devInfo || !devInfo.Pairing().IsPaired()) {
                 if (m_onUnpairResult) m_onUnpairResult(true, {});
                 return;
             }
 
             auto result = devInfo.Pairing().UnpairAsync().get();
-            bool ok = (result.Status() == winrt::DeviceUnpairingResultStatus::Unpaired);
+            bool ok = (result.Status() == DeviceUnpairingResultStatus::Unpaired);
             if (m_onUnpairResult)
                 m_onUnpairResult(ok, ok ? "" : "Unpair failed");
         } catch (const winrt::hresult_error &e) {
@@ -436,14 +700,28 @@ void NativeBluetoothBackend::unpair(const std::string &address) {
 }
 
 void NativeBluetoothBackend::receiveLoop() {
+    BT_LOG("Receive loop started");
+    
     while (m_receiving.load()) {
         try {
-            if (!m_impl->reader) break;
+            if (!m_impl->reader) {
+                BT_LOG("Reader is null, exiting receive loop");
+                break;
+            }
 
             auto loadOp = m_impl->reader.LoadAsync(4096);
             auto bytesLoaded = loadOp.get();
 
             if (bytesLoaded == 0) {
+                // With SerialDevice this means ReadTimeout expired (no data).
+                // With StreamSocket this means connection closed.
+                if (m_impl->serialDevice) {
+                    // SerialDevice timeout: just continue the loop.
+                    // m_receiving will be checked on next iteration.
+                    continue;
+                }
+                // StreamSocket: peer closed the connection
+                BT_LOG("No bytes loaded (StreamSocket), connection closed");
                 if (m_receiving.load()) {
                     m_receiving = false;
                     m_connected = false;
@@ -456,9 +734,30 @@ void NativeBluetoothBackend::receiveLoop() {
             std::vector<uint8_t> buffer(bytesLoaded);
             m_impl->reader.ReadBytes(buffer);
             std::string str(reinterpret_cast<const char *>(buffer.data()), buffer.size());
+            BT_LOG("Received " + std::to_string(bytesLoaded) + " bytes");
             if (m_onData) m_onData(str);
 
-        } catch (winrt::hresult_error const &) {
+        } catch (winrt::hresult_error const &e) {
+            auto code = e.code();
+            
+            // SerialDevice ReadTimeout throws HRESULT 0x80070102 (ERROR_WAIT_NO) or
+            // similar. Treat as "no data available" and continue.
+            if (m_impl->serialDevice && m_receiving.load()) {
+                // Timeout or transient error on serial device — keep reading.
+                // Only log at debug level to avoid spam.
+                BT_LOG("SerialDevice timeout/error (code 0x" +
+                       std::to_string(static_cast<uint32_t>(code)) + "), continuing");
+                continue;
+            }
+
+            BT_LOG("Receive error: " + winrt::to_string(e.message()) + " (code: 0x" + 
+                   std::to_string(static_cast<uint32_t>(code)) + ")");
+            
+            if (!m_receiving.load()) {
+                BT_LOG("Receive loop stopping");
+                break;
+            }
+            
             if (m_receiving.load()) {
                 m_receiving = false;
                 m_connected = false;
@@ -467,21 +766,47 @@ void NativeBluetoothBackend::receiveLoop() {
             }
             break;
         } catch (...) {
+            if (m_impl->serialDevice && m_receiving.load()) {
+                // Transient error on serial device — keep trying
+                continue;
+            }
+            BT_LOG("Unknown receive error");
             break;
         }
     }
+    BT_LOG("Receive loop ended");
 }
 
 void NativeBluetoothBackend::stopReceiveLoop() {
+    BT_LOG("Stopping receive loop...");
     m_receiving = false;
 
+    // Interrupt the pending LoadAsync by closing the underlying transport.
+    // Closing the DataReader directly is NOT safe when LoadAsync is in
+    // progress — it must be done from the same thread that owns the async
+    // operation.  Instead, closing the socket (or serialDevice) causes
+    // LoadAsync to throw hresult_error or return 0 bytes, both of which
+    // the receive loop already handles.
     try {
-        if (m_impl->reader)
-            m_impl->reader.DetachStream();
+        if (m_impl->socket) {
+            m_impl->socket.Close();
+            m_impl->socket = nullptr;
+        }
+    } catch (...) {}
+    try {
+        if (m_impl->serialDevice) {
+            m_impl->serialDevice.Close();
+            m_impl->serialDevice = nullptr;
+        }
     } catch (...) {}
 
-    if (m_receiveThread.joinable())
+    if (m_receiveThread.joinable()) {
+        BT_LOG("Waiting for receive thread to finish...");
         m_receiveThread.join();
+        BT_LOG("Receive thread finished");
+    }
+
+    // Reader/writer cleanup is handled by closeStreams() in disconnect().
 }
 
 void NativeBluetoothBackend::startReceiveLoop() {

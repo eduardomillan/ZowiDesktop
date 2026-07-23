@@ -36,6 +36,24 @@ private:
     void stopReceiveLoop();
     void startReceiveLoop();
     void startReconnectThread();
+    void closeStreams();
+
+    winrt::Windows::Devices::Enumeration::DeviceInformation
+    resolveDeviceByAddress(const std::string &address);
+    bool ensurePaired(winrt::Windows::Devices::Enumeration::DeviceInformation &devInfo);
+    bool connectSerialDevice(const std::string &address);
+    bool connectStreamSocket(const std::string &address,
+                             winrt::Windows::Devices::Enumeration::DeviceInformation devInfo);
+    
+    // DeviceWatcher event handlers
+    void onDeviceAdded(winrt::Windows::Devices::Enumeration::DeviceWatcher const& sender,
+                       winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInfo);
+    void onDeviceUpdated(winrt::Windows::Devices::Enumeration::DeviceWatcher const& sender,
+                         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInfoUpdate);
+    void onDeviceRemoved(winrt::Windows::Devices::Enumeration::DeviceWatcher const& sender,
+                         winrt::Windows::Devices::Enumeration::DeviceInformationUpdate const& deviceInfoUpdate);
+    void onEnumerationCompleted(winrt::Windows::Devices::Enumeration::DeviceWatcher const& sender,
+                                winrt::Windows::Foundation::IInspectable const& e);
 
     mutable std::mutex m_mutex;
     std::string m_lastError;
@@ -52,6 +70,13 @@ private:
     
     // Almacenar dispositivos completos para emparejamiento
     std::map<std::string, winrt::Windows::Devices::Enumeration::DeviceInformation> m_discoveredDevices;
+    
+    // DeviceWatcher para descubrimiento en tiempo real
+    winrt::Windows::Devices::Enumeration::DeviceWatcher m_watcher{nullptr};
+    winrt::event_token m_addedToken;
+    winrt::event_token m_updatedToken;
+    winrt::event_token m_removedToken;
+    winrt::event_token m_completedToken;
 
     bool m_autoReconnect = true;
     int m_reconnectInterval = 3000;

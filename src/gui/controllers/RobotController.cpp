@@ -137,92 +137,96 @@ void RobotController::wireBackend()
     if (!m_backend) return;
 
     m_backend->onDeviceFound([this](const zowi::DeviceInfo &info) {
-        emit deviceDiscovered(
-            QString::fromStdString(info.name),
-            QString::fromStdString(info.address));
+        auto name  = QString::fromStdString(info.name);
+        auto addr  = QString::fromStdString(info.address);
+        QMetaObject::invokeMethod(this, [this, name, addr]() {
+            emit deviceDiscovered(name, addr);
+        }, Qt::QueuedConnection);
     });
 
     m_backend->onConnectionChanged([this](bool connected) {
-        m_connected = connected;
-        emit connectionChanged();
-        qInfo() << "[conn] connected=" << connected << "kind=" << m_backendKind
-                << "usbPort=" << m_usbPort << "deviceAddress=" << m_deviceAddress
-                << "known=" << m_knownUsbPorts;
-        if (connected) {
-            setConnecting(false);
-            // For USB the address is the TTY path; onConnectionChanged(false)
-            // clears it, so restore it from the known USB port when the link
-            // comes back up (m_deviceAddress may otherwise stay empty).
-            if (m_backendKind == Usb && m_deviceAddress.isEmpty()) {
-                if (!m_usbPort.isEmpty())
-                    m_deviceAddress = m_usbPort;
-                else if (!m_knownUsbPorts.isEmpty())
-                    m_deviceAddress = m_knownUsbPorts.value(0);
-                if (!m_deviceAddress.isEmpty())
-                    emit deviceChanged();
+        QMetaObject::invokeMethod(this, [this, connected]() {
+            m_connected = connected;
+            emit connectionChanged();
+            qInfo() << "[conn] connected=" << connected << "kind=" << m_backendKind
+                    << "usbPort=" << m_usbPort << "deviceAddress=" << m_deviceAddress
+                    << "known=" << m_knownUsbPorts;
+            if (connected) {
+                setConnecting(false);
+                if (m_backendKind == Usb && m_deviceAddress.isEmpty()) {
+                    if (!m_usbPort.isEmpty())
+                        m_deviceAddress = m_usbPort;
+                    else if (!m_knownUsbPorts.isEmpty())
+                        m_deviceAddress = m_knownUsbPorts.value(0);
+                    if (!m_deviceAddress.isEmpty())
+                        emit deviceChanged();
+                }
+                requestRobotData();
+                m_dataPollTimer.start();
+                {
+                    zowi::SessionStore session;
+                    const QString addr = QString::fromStdString(
+                        session.getString("activeZowiDeviceAddress"));
+                    if (!addr.isEmpty())
+                        persistRegistrationTransport(m_backendKind);
+                }
+            } else {
+                setConnecting(false);
+                m_dataPollTimer.stop();
+                m_deviceName.clear();
+                if (m_backendKind != Usb)
+                    m_deviceAddress.clear();
+                m_battery = -1.0f;
+                if (!m_appId.isEmpty()) {
+                    m_appId.clear();
+                    emit appIdChanged();
+                }
+                emit deviceChanged();
+                emit batteryChanged();
             }
-            // Ask the robot for its name, firmware id and battery. The firmware
-            // only reports these on request, so start a periodic poll.
-            requestRobotData();
-            m_dataPollTimer.start();
-            // If a Zowi is registered, tie its registration to the transport we
-            // actually connected with so future launches honour it.
-            {
-                zowi::SessionStore session;
-                const QString addr = QString::fromStdString(
-                    session.getString("activeZowiDeviceAddress"));
-                if (!addr.isEmpty())
-                    persistRegistrationTransport(m_backendKind);
-            }
-        } else {
-            setConnecting(false);
-            m_dataPollTimer.stop();
-            m_deviceName.clear();
-            // For USB the "address" is the TTY path, which is stable across the
-            // connect/disconnect cycle; keep it so registration and the UI can
-            // read it (finishRegistration runs on the connection signal before
-            // the C++-side restore below would repopulate it).
-            if (m_backendKind != Usb)
-                m_deviceAddress.clear();
-            m_battery = -1.0f;
-            if (!m_appId.isEmpty()) {
-                m_appId.clear();
-                emit appIdChanged();
-            }
-            emit deviceChanged();
-            emit batteryChanged();
-        }
-        maybeEmitSituation();
+            maybeEmitSituation();
+        }, Qt::QueuedConnection);
     });
 
     m_backend->onDataReceived([this](const std::string &data) {
-        // Route data to STK500 buffer during firmware upload, otherwise parse normally
-        {
-            std::lock_guard<std::mutex> lock(m_uploadMutex);
-            if (m_uploadMode) {
-                m_stkBuffer += data;
+        auto qdata = QString::fromStdString(data);
+        QMetaObject::invokeMethod(this, [this, qdata]() {
+            auto data = qdata.toStdString();
+            {
+                std::lock_guard<std::mutex> lock(m_uploadMutex);
+                if (m_uploadMode) {
+                    m_stkBuffer += data;
+                }
             }
-        }
-        if (!m_uploadMode) {
-            m_rxBuffer += data;
-            parseIncoming();
-        }
-        qDebug() << "robot rx:" << QString::fromStdString(data).trimmed();
-        emit dataReceived(QString::fromStdString(data));
+            if (!m_uploadMode) {
+                m_rxBuffer += data;
+                parseIncoming();
+            }
+            qDebug() << "robot rx:" << qdata.trimmed();
+            emit dataReceived(qdata);
+        }, Qt::QueuedConnection);
     });
 
     m_backend->onError([this](const std::string &msg) {
-        emit errorOccurred(QString::fromStdString(msg));
+        auto qmsg = QString::fromStdString(msg);
+        QMetaObject::invokeMethod(this, [this, qmsg]() {
+            emit errorOccurred(qmsg);
+        }, Qt::QueuedConnection);
     });
 
     m_backend->onUnpairResult([this](bool ok, const std::string &msg) {
-        emit unpairFinished(ok, QString::fromStdString(msg));
+        auto qmsg = QString::fromStdString(msg);
+        QMetaObject::invokeMethod(this, [this, ok, qmsg]() {
+            emit unpairFinished(ok, qmsg);
+        }, Qt::QueuedConnection);
     });
 
     m_backend->onScanFinished([this]() {
-        m_scanning = false;
-        emit scanningChanged();
-        emit scanFinished();
+        QMetaObject::invokeMethod(this, [this]() {
+            m_scanning = false;
+            emit scanningChanged();
+            emit scanFinished();
+        }, Qt::QueuedConnection);
     });
 }
 
