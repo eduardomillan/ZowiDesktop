@@ -9,15 +9,24 @@ add_executable(zowi_cli
 
 target_link_libraries(zowi_cli PRIVATE
     Zowi::core
-    Zowi::bt_qt
     Zowi::firmware
-    Qt${ZOWI_QT_VERSION}::Bluetooth
+    Qt${ZOWI_QT_VERSION}::Core
     CLI11::CLI11
 )
+
+# Qt Bluetooth backend (Linux/macOS only)
+if(NOT WIN32)
+    target_link_libraries(zowi_cli PRIVATE Zowi::bt_qt Qt${ZOWI_QT_VERSION}::Bluetooth)
+endif()
 target_sources(zowi_cli PRIVATE ${CLI_I18N_RC})
 
 if(NOT WIN32)
     target_link_libraries(zowi_cli PRIVATE Zowi::bt_serial)
+endif()
+
+if(WIN32)
+    target_link_libraries(zowi_cli PRIVATE Zowi::bt_native)
+    target_compile_definitions(zowi_cli PRIVATE ZOWI_HAVE_NATIVE_BT=1)
 endif()
 
 # Grant CAP_NET_ADMIN so the CLI can bind RFCOMM / flash firmware without sudo.

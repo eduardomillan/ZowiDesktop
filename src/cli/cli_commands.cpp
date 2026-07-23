@@ -7,7 +7,12 @@
 #include <algorithm>
 #include <csignal>
 #include <chrono>
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#include <io.h>
+#define isatty _isatty
+#endif
 
 #include <QCoreApplication>
 #include <QEventLoop>
@@ -19,8 +24,12 @@
 #include <zowi/config_store.h>
 #include <zowi/robot_commands.h>
 #include <zowi/protocol.h>
+#ifndef _WIN32
 #include <qt_bluetooth_backend.h>
+#endif
+#ifdef ZOWI_HAVE_SERIAL
 #include <serial_bluetooth_backend.h>
+#endif
 
 namespace zowi_cli {
 
@@ -90,6 +99,7 @@ int runConfig(const ConfigArgs &a)
     return 0;
 }
 
+#ifdef ZOWI_HAVE_SERIAL
 int runPorts()
 {
     auto ports = zowi::SerialBluetoothBackend::listSerialPorts();
@@ -101,11 +111,22 @@ int runPorts()
     }
     return 0;
 }
+#else
+int runPorts()
+{
+    std::cout << "USB serial ports not available on this platform." << std::endl;
+    return 0;
+}
+#endif
 
 int runScan(int argc, char **argv, const ScanArgs &a)
 {
     QCoreApplication qtApp(argc, argv);
+#ifdef ZOWI_HAVE_NATIVE_BT
+    zowi::NativeBluetoothBackend bt;
+#else
     zowi::QtBluetoothBackend bt;
+#endif
 
     zowi::ConfigStore config("src/config.json");
     std::string macPrefix = config.get("zowi_mac_prefix");
@@ -175,13 +196,19 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
 
     // Over USB the robot takes a while to boot and start emitting data, so give
     // it a longer default timeout (8s) unless the user asked for more.
+#ifdef ZOWI_HAVE_SERIAL
     const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+#else
+    const bool isUsb = false;
+#endif
     const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
 
+#ifndef ZOWI_HAVE_NATIVE_BT
     if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
         std::cout << "Discovering " << target << "..." << std::endl;
         discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
     }
+#endif
 
     std::cout << "Connecting to " << target << "..." << std::endl;
 
@@ -271,13 +298,19 @@ int runRename(int argc, char **argv, const RenameArgs &a)
     auto bt = prepareFlashBackend(backend, savedAddr, a.tty, a.baud, target, boundTty);
     if (!bt) return 1;
 
+#ifdef ZOWI_HAVE_SERIAL
     const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+#else
+    const bool isUsb = false;
+#endif
     const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
 
+#ifndef ZOWI_HAVE_NATIVE_BT
     if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
         std::cout << "Discovering " << target << "..." << std::endl;
         discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
     }
+#endif
 
     std::cout << "Connecting to " << target << "..." << std::endl;
 
@@ -346,12 +379,16 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
     if (!bt) return 1;
     // Firmware flashing drives the bootloader explicitly via pulseReset(); do
     // not add the control-connection boot delay.
+#ifdef ZOWI_HAVE_SERIAL
     if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()))
         serial->setBootDelayMs(0);
+#endif
+#ifndef ZOWI_HAVE_NATIVE_BT
     if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
         std::cout << "Discovering " << connectTarget << "..." << std::endl;
         discoverDevice(qtApp, *qtBt, connectTarget, kDiscoveryTimeoutMs);
     }
+#endif
     bt->setAutoReconnect(true, 100);
     bt->onDataReceived([](const std::string &d) { onDataReceived(d); });
     bt->onConnectionChanged([](bool c) {
@@ -391,7 +428,11 @@ int runDisconnect(int argc, char **argv)
                   << " [" << savedAddr << "]..." << std::endl;
 
         QCoreApplication qtApp(argc, argv);
+#ifdef ZOWI_HAVE_NATIVE_BT
+        zowi::NativeBluetoothBackend bt;
+#else
         zowi::QtBluetoothBackend bt;
+#endif
 
         bool unpairOk = false;
         std::string unpairMsg;
@@ -466,12 +507,18 @@ int runStatus(int argc, char **argv, const StatusArgs &a)
         if (!bt) {
             std::cout << "Could not open a backend for '" << addr << "'; showing last known (cached) state." << std::endl;
         } else {
-            const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+        #ifdef ZOWI_HAVE_SERIAL
+    const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+#else
+    const bool isUsb = false;
+#endif
             const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
+#ifndef _WIN32
             if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
                 std::cout << "Discovering " << target << "..." << std::endl;
                 discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
             }
+#endif
 
             bt->onDataReceived([](const std::string &data) { onDataReceived(data); });
             bt->onConnectionChanged([](bool connected) {
@@ -538,7 +585,11 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     auto bt = prepareFlashBackend(backend, ctrlAddr, a.tty, a.baud, target, boundTty);
     if (!bt) return 1;
 
+#ifdef ZOWI_HAVE_SERIAL
     const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+#else
+    const bool isUsb = false;
+#endif
     const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
 
     // Speed as an index: 0=slow, 1=medium, 2=fast (matches the original app's
@@ -565,10 +616,12 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     };
     zowi::MovementSpeed speed = speedFromIndex(speedIndex);
 
+#ifndef ZOWI_HAVE_NATIVE_BT
     if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
         std::cout << "Discovering " << target << "..." << std::endl;
         discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
     }
+#endif
 
     std::cout << "Connecting to " << target << "..." << std::endl;
 

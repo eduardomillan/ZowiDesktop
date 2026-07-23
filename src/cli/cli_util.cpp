@@ -5,15 +5,19 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#ifndef _WIN32
 #include <unistd.h>
 #include <termios.h>
 #include <csignal>
 #include <sys/select.h>
+#endif
 
 #include <zowi/stk500v1.h>
 #include <zowi/robot_commands.h>
 #include <zowi/protocol.h>
+#ifdef ZOWI_HAVE_SERIAL
 #include <serial_bluetooth_backend.h>
+#endif
 
 namespace zowi_cli {
 
@@ -29,6 +33,7 @@ bool waitUntil(QCoreApplication &qtApp, int timeoutMs,
     return false;
 }
 
+#ifndef _WIN32
 bool discoverDevice(QCoreApplication &qtApp, zowi::QtBluetoothBackend &bt,
                     const std::string &address, int timeoutMs)
 {
@@ -42,8 +47,10 @@ bool discoverDevice(QCoreApplication &qtApp, zowi::QtBluetoothBackend &bt,
     bt.onDeviceFound(nullptr);
     return ok;
 }
+#endif
 
 // ── Interactive keyboard input (raw terminal mode) ───────────
+#ifndef _WIN32
 static struct termios g_origTermios;
 static bool g_rawMode = false;
 
@@ -66,7 +73,12 @@ void disableRawMode()
         g_rawMode = false;
     }
 }
+#else
+bool enableRawMode() { return false; }
+void disableRawMode() {}
+#endif
 
+#ifndef _WIN32
 std::string readKey()
 {
     unsigned char c;
@@ -113,6 +125,9 @@ std::string readKey()
     // Not a recognized escape sequence — treat standalone ESC as quit.
     return "quit";
 }
+#else
+std::string readKey() { return ""; }
+#endif
 
 bool waitForRobotData(QCoreApplication &qtApp, int timeoutMs)
 {
@@ -222,11 +237,11 @@ std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
     const bool useUsb    = (backendName == "usb");
     const bool useSerial = (useUsb || backendName == "serial" || !ttyOpt.empty());
 
+#ifdef ZOWI_HAVE_SERIAL
     if (useSerial) {
         std::string tty = ttyOpt;
         if (tty.empty()) {
             if (useUsb) {
-                // ── USB serial backend: auto-pick a port if none given ──
                 auto ports = zowi::SerialBluetoothBackend::listSerialPorts();
                 if (ports.empty()) {
                     std::cerr << "No USB serial ports found (/dev/ttyUSB*, /dev/ttyACM*).\n"
@@ -236,7 +251,6 @@ std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
                 tty = ports.front();
                 std::cerr << "Using USB serial port " << tty << std::endl;
             } else {
-                // ── Serial (RFCOMM TTY) backend over Bluetooth ─────────
                 if (address.empty()) {
                     std::cerr << "No paired device found. Run 'connect' first." << std::endl;
                     return nullptr;
@@ -259,14 +273,23 @@ std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
         backend->setBaudRate(baud);
         return backend;
     }
+#else
+    if (useSerial) {
+        std::cerr << "Serial/USB backend not available on this platform." << std::endl;
+        return nullptr;
+    }
+#endif
 
-    // ── Qt Bluetooth SPP backend (default) ────────────────────
     if (address.empty()) {
         std::cerr << "No paired device found. Run 'connect' first." << std::endl;
         return nullptr;
     }
     connectTarget = address;
+#ifdef ZOWI_HAVE_NATIVE_BT
+    return std::make_unique<zowi::NativeBluetoothBackend>();
+#else
     return std::make_unique<zowi::QtBluetoothBackend>();
+#endif
 }
 
 bool installFirmwareToPairedZowi(QCoreApplication &qtApp,

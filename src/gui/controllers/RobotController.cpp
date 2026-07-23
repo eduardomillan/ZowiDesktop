@@ -17,9 +17,14 @@
 #include <QTemporaryFile>
 #include <QDir>
 
+#ifndef _WIN32
 #include "qt_bluetooth_backend.h"
+#endif
 #ifdef ZOWI_HAVE_SERIAL
 #include "serial_bluetooth_backend.h"
+#endif
+#ifdef ZOWI_HAVE_NATIVE_BT
+#include "native_bluetooth_backend.h"
 #endif
 #include <zowi/config_store.h>
 #include <zowi/session_store.h>
@@ -101,7 +106,11 @@ RobotController::RobotController(QObject *parent)
 void RobotController::useBluetoothBackend()
 {
     if (m_backend && m_backendKind == Bluetooth) return;
+#ifdef ZOWI_HAVE_NATIVE_BT
+    m_backend = std::make_unique<zowi::NativeBluetoothBackend>();
+#else
     m_backend = std::make_unique<zowi::QtBluetoothBackend>();
+#endif
     m_backendKind = Bluetooth;
     wireBackend();
     setActiveTransport(Bluetooth);
@@ -632,7 +641,11 @@ void RobotController::pollTransports()
             m_probedUsbPorts.removeAt(i);
 
     bool usbAvail = !ports.isEmpty();
+#ifdef ZOWI_HAVE_NATIVE_BT
+    bool btAvail = zowi::NativeBluetoothBackend::hasAdapter();
+#else
     bool btAvail = zowi::QtBluetoothBackend::hasAdapter();
+#endif
 
     bool changed = usbChanged || (usbAvail != m_usbAvailable) || (btAvail != m_bluetoothAvailable);
     m_usbAvailable = usbAvail;
@@ -890,6 +903,7 @@ void RobotController::proceedWithRestore()
     if (isUsb) {
         m_backend->disconnect();
         m_backend->setAutoReconnect(false);
+#ifdef ZOWI_HAVE_SERIAL
         // The Optiboot USB bootloader runs at a different baud than the running
         // firmware (usb_baud); switch to the bootloader baud before the reset so
         // the reopened link is already at the speed the bootloader expects.
@@ -903,6 +917,7 @@ void RobotController::proceedWithRestore()
         // races the short post-reset window.
         if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
             serial->pulseReset();
+#endif
         const bool connectOk = m_backend->connect(target.toStdString());
         // The serial backend opens synchronously; upload immediately to catch
         // the short post-reset bootloader window.
@@ -1014,8 +1029,10 @@ void RobotController::continueAfterUpload(bool ok)
     // usable session after the upload.
     if (isUsb) {
         m_backend->disconnect();
+#ifdef ZOWI_HAVE_SERIAL
         if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
             serial->setBaudRate(m_usbBaud);
+#endif
         m_deviceAddress = target;
         connectUsb(target);
     }

@@ -60,7 +60,8 @@ add_subdirectory(src/core)
 add_subdirectory(src/firmware)
 
 # ── Qt Bluetooth (needed by GUI and CLI's BT backend) ───────────
-if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
+# On Windows, we use the native bt_native backend instead of Qt Bluetooth
+if((ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI) AND NOT WIN32)
     find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Bluetooth)
 endif()
 
@@ -69,8 +70,14 @@ if(ZOWI_BUILD_GUI)
 endif()
 
 # ── Qt Bluetooth backend ─────────────────────────────────────────
-if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
+# On Windows, we use bt_native instead of bt_qt
+if((ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI) AND NOT WIN32)
     add_subdirectory(src/backends/bt_qt)
+endif()
+
+# ── Native Windows Bluetooth backend (C++/WinRT SPP) ────────────
+if((ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI) AND WIN32)
+    add_subdirectory(src/backends/bt_native)
 endif()
 
 # ── Serial (RFCOMM TTY + DTR auto-reset) backend ────────────────

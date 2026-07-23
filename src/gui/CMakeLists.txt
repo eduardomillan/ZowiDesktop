@@ -25,17 +25,27 @@ target_compile_definitions(ZowiDesktop PRIVATE ZOWI_VERSION="${PROJECT_VERSION}"
 
 target_link_libraries(ZowiDesktop PRIVATE
     Zowi::core
-    Zowi::bt_qt
     Zowi::firmware
     Qt${ZOWI_QT_VERSION}::Core
     Qt${ZOWI_QT_VERSION}::Quick
     Qt${ZOWI_QT_VERSION}::QuickControls2
 )
 
+# Qt Bluetooth backend (Linux/macOS only)
+if(NOT WIN32)
+    target_link_libraries(ZowiDesktop PRIVATE Zowi::bt_qt)
+endif()
+
 # Serial/USB transport (POSIX-only). Provides the USB connection option.
 if(NOT WIN32)
     target_link_libraries(ZowiDesktop PRIVATE Zowi::bt_serial)
     target_compile_definitions(ZowiDesktop PRIVATE ZOWI_HAVE_SERIAL=1)
+endif()
+
+# Native Windows Bluetooth (C++/WinRT SPP). Replaces BlueZ on Windows.
+if(WIN32)
+    target_link_libraries(ZowiDesktop PRIVATE Zowi::bt_native)
+    target_compile_definitions(ZowiDesktop PRIVATE ZOWI_HAVE_NATIVE_BT=1)
 endif()
 
 add_executable(zowi_screen_preview

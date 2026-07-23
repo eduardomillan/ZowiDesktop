@@ -1,4 +1,7 @@
 #include "qt_bluetooth_backend.h"
+
+#ifndef _WIN32
+
 #include <iostream>
 #include <QDebug>
 #include <QCoreApplication>
@@ -476,3 +479,5 @@ void QtBluetoothBackend::unpair(const std::string &address)
 }
 
 } // namespace zowi
+
+#endif // _WIN32

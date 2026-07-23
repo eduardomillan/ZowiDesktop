@@ -4,6 +4,9 @@
 #include <iostream>
 #include <zowi/protocol.h>
 #include <zowi/config_store.h>
+#ifdef _WIN32
+#include <io.h>
+#endif
 
 namespace zowi_cli {
 
@@ -21,7 +24,11 @@ std::string g_dataBuffer;
 bool g_uploadMode = false;
 std::string g_stkBuffer;
 std::atomic<bool> g_quit{false};
+#ifdef _WIN32
+int g_stdinFd = _fileno(stdin);
+#else
 int g_stdinFd = STDIN_FILENO;
+#endif
 bool g_debugLog = false;
 
 const float kLowBatteryThreshold = 50.0f;
