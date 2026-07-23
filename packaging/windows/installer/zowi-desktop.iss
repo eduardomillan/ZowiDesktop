@@ -26,7 +26,7 @@ DefaultGroupName={#APP_NAME}
 LicenseFile=..\..\..\LICENSE
 OutputDir=..\..\..\dist-installer
 OutputBaseFilename=ZowiDesktop-{#VERSION}-setup-x64
-SetupIconFile=app_icon.ico
+SetupIconFile=..\..\..\images\app_icon.ico
 UninstallDisplayIcon={app}\{#APP_EXE}
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -34,7 +34,6 @@ WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridingAllowed=dialog
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
