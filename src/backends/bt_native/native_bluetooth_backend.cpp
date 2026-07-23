@@ -409,6 +409,15 @@ bool NativeBluetoothBackend::connectSerialDevice(const std::string &address)
             BT_LOG("  -> matched by colon MAC");
             break;
         }
+
+        // Match raw hex MAC (no separators): B49D0B338BC6
+        std::string macRaw;
+        for (auto &c : upperDash) if (c != '-') macRaw += c;
+        if (upperId.find(macRaw) != std::string::npos) {
+            serialDevInfo = dev;
+            BT_LOG("  -> matched by raw hex MAC");
+            break;
+        }
     }
 
     if (!serialDevInfo) {
@@ -639,9 +648,6 @@ bool NativeBluetoothBackend::send(const std::string &data) {
         auto storeOp = m_impl->writer.StoreAsync();
         storeOp.get();
         
-        auto flushOp = m_impl->writer.FlushAsync();
-        flushOp.get();
-        
         BT_LOG("Send successful");
         return true;
     } catch (const winrt::hresult_error &e) {
@@ -782,21 +788,18 @@ void NativeBluetoothBackend::stopReceiveLoop() {
     m_receiving = false;
 
     // Interrupt the pending LoadAsync by closing the underlying transport.
-    // Closing the DataReader directly is NOT safe when LoadAsync is in
-    // progress — it must be done from the same thread that owns the async
-    // operation.  Instead, closing the socket (or serialDevice) causes
-    // LoadAsync to throw hresult_error or return 0 bytes, both of which
-    // the receive loop already handles.
+    //
+    // StreamSocket: closing the socket causes LoadAsync to throw/return 0
+    // immediately — safe from any thread.
+    //
+    // SerialDevice: do NOT close here.  Closing a SerialDevice from another
+    // thread while LoadAsync is pending hangs on Windows (COM apartment
+    // issue).  Instead, rely on the ReadTimeout (500 ms) to make LoadAsync
+    // throw, after which the receive loop checks m_receiving and exits.
     try {
         if (m_impl->socket) {
             m_impl->socket.Close();
             m_impl->socket = nullptr;
-        }
-    } catch (...) {}
-    try {
-        if (m_impl->serialDevice) {
-            m_impl->serialDevice.Close();
-            m_impl->serialDevice = nullptr;
         }
     } catch (...) {}
 

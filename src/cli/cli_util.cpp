@@ -5,11 +5,14 @@
 #include <vector>
 #include <thread>
 #include <chrono>
-#ifndef _WIN32
+#ifdef _WIN32
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#else
 #include <unistd.h>
-#include <termios.h>
 #include <csignal>
-#include <sys/select.h>
 #endif
 
 #include <zowi/stk500v1.h>
@@ -50,7 +53,91 @@ bool discoverDevice(QCoreApplication &qtApp, zowi::QtBluetoothBackend &bt,
 #endif
 
 // ── Interactive keyboard input (raw terminal mode) ───────────
-#ifndef _WIN32
+#ifdef _WIN32
+
+static DWORD g_origConsoleMode = 0;
+static HANDLE g_hStdin = INVALID_HANDLE_VALUE;
+static bool g_rawMode = false;
+
+bool enableRawMode()
+{
+    g_hStdin = GetStdHandle(STD_INPUT_HANDLE);
+    if (g_hStdin == INVALID_HANDLE_VALUE) return false;
+    if (!GetConsoleMode(g_hStdin, &g_origConsoleMode)) return false;
+
+    // Disable line input and echo; keep ENABLE_PROCESSED_INPUT for Ctrl-C.
+    DWORD raw = g_origConsoleMode & ~(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+    if (!SetConsoleMode(g_hStdin, raw)) return false;
+    g_rawMode = true;
+    return true;
+}
+
+void disableRawMode()
+{
+    if (g_rawMode && g_hStdin != INVALID_HANDLE_VALUE) {
+        SetConsoleMode(g_hStdin, g_origConsoleMode);
+        g_rawMode = false;
+    }
+}
+
+static std::string keyNameFromRecord(const KEY_EVENT_RECORD &ke)
+{
+    if (!ke.bKeyDown) return "";
+
+    wchar_t ch = ke.uChar.UnicodeChar;
+    WORD vk = ke.wVirtualKeyCode;
+    bool ctrl = (ke.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0;
+
+    if (ctrl && (ch == 3 || ch == 4)) return "quit";   // Ctrl-C / Ctrl-D
+    if (vk == VK_ESCAPE) return "quit";
+
+    // Arrow keys
+    if (vk == VK_UP)    return "up";
+    if (vk == VK_DOWN)  return "down";
+    if (vk == VK_LEFT)  return "left";
+    if (vk == VK_RIGHT) return "right";
+
+    // WASD + Q/E fallback
+    if (ch == 'w' || ch == 'W') return "up";
+    if (ch == 's' || ch == 'S') return "down";
+    if (ch == 'a' || ch == 'A') return "left";
+    if (ch == 'd' || ch == 'D') return "right";
+    if (ch == 'q' || ch == 'Q') return "turn_left";
+    if (ch == 'e' || ch == 'E') return "turn_right";
+    if (ch == '+') return "speed_up";
+    if (ch == '-') return "speed_down";
+
+    return "";
+}
+
+std::string readKey()
+{
+    if (g_hStdin == INVALID_HANDLE_VALUE) return "";
+
+    // Non-blocking: check if there are pending input events.
+    DWORD count = 0;
+    if (!GetNumberOfConsoleInputEvents(g_hStdin, &count) || count == 0)
+        return "";
+
+    // Drain events until we find a key-down event we understand.
+    // Console input may contain mouse/resize events — skip those.
+    INPUT_RECORD rec;
+    DWORD read;
+    while (count-- > 0) {
+        if (!ReadConsoleInput(g_hStdin, &rec, 1, &read) || read == 0) break;
+        if (rec.EventType == KEY_EVENT) {
+            std::string name = keyNameFromRecord(rec.Event.KeyEvent);
+            if (!name.empty()) return name;
+        }
+    }
+    return "";
+}
+
+#else
+// ── POSIX (Linux / macOS) ────────────────────────────────────
+#include <termios.h>
+#include <sys/select.h>
+
 static struct termios g_origTermios;
 static bool g_rawMode = false;
 
@@ -73,12 +160,7 @@ void disableRawMode()
         g_rawMode = false;
     }
 }
-#else
-bool enableRawMode() { return false; }
-void disableRawMode() {}
-#endif
 
-#ifndef _WIN32
 std::string readKey()
 {
     unsigned char c;
@@ -125,8 +207,6 @@ std::string readKey()
     // Not a recognized escape sequence — treat standalone ESC as quit.
     return "quit";
 }
-#else
-std::string readKey() { return ""; }
 #endif
 
 bool waitForRobotData(QCoreApplication &qtApp, int timeoutMs)
