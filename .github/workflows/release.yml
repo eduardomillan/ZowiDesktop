@@ -133,9 +133,77 @@ jobs:
           name: deb-noble
           path: build/zowi-desktop_*.deb
 
+  # ── Windows: portable zip + Inno Setup installer (MSVC x64) ──
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute version from tag
+        id: ver
+        shell: bash
+        run: |
+          VERSION="${{ github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+          modules: 'qtconnectivity'
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B build-win -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DZOWI_BUILD_CLI=ON
+
+      - name: Build
+        run: cmake --build build-win --config Release
+
+      - name: Collect DLLs with windeployqt
+        run: |
+          New-Item -ItemType Directory -Path dist -Force
+          windeployqt --qmldir src\views --dir dist build-win\src\gui\Release\ZowiDesktop.exe
+
+      - name: Copy executables
+        run: |
+          Copy-Item build-win\src\gui\Release\ZowiDesktop.exe dist\
+          Copy-Item build-win\src\cli\Release\zowi_cli.exe dist\ 2>$null
+
+      - name: Create portable zip
+        shell: bash
+        run: |
+          cd dist
+          7z a "../ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip" .
+
+      - name: Build installer
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc /DVERSION=${{ steps.ver.outputs.version }} packaging\windows\installer\zowi-desktop.iss
+
+      - name: Upload portable zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable
+          path: ZowiDesktop-*-windows-x86_64.zip
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: dist-installer/ZowiDesktop-*-setup-x64.exe
+
   # ── Publish: GitHub Release + signed apt repo (jammy + noble) on gh-pages ──
   publish:
-    needs: [appimage, deb-jammy, deb-noble]
+    needs: [appimage, deb-jammy, deb-noble, windows]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -152,6 +220,8 @@ jobs:
             artifacts/appimage/ZowiDesktop-*.AppImage
             artifacts/deb-jammy/zowi-desktop_*.deb
             artifacts/deb-noble/zowi-desktop_*.deb
+            artifacts/windows-portable/ZowiDesktop-*-windows-x86_64.zip
+            artifacts/windows-installer/ZowiDesktop-*-setup-x64.exe
           generate_release_notes: true
 
       - name: Install aptly and GnuPG
