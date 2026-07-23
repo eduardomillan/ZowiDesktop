@@ -208,7 +208,7 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
     waitForRobotData(qtApp, (effTimeout + 2) * 1000);
 
     bt->disconnect();
-    if (!boundTty.empty()) std::system("rfcomm release 0");
+    if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
 
     std::cout << std::endl;
     if (!g_robotName.empty()) {
@@ -324,7 +324,7 @@ int runRename(int argc, char **argv, const RenameArgs &a)
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     bt->disconnect();
-    if (!boundTty.empty()) std::system("rfcomm release 0");
+    if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
 
     session.setString("activeZowiName", a.name);
     std::cout << "Robot renamed to '" << a.name << "'." << std::endl;
@@ -362,7 +362,7 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
     bt->onError([](const std::string &m) { std::cerr << "Error: " << m << std::endl; });
     if (!bt->connect(connectTarget)) {
         std::cerr << "Failed to connect: " << bt->lastError() << std::endl;
-        if (!boundTty.empty()) std::system("rfcomm release 0");
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
         return 1;
     }
     const bool ok = installFirmwareToPairedZowi(qtApp,
@@ -374,7 +374,7 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
                                                 a.timeout,
                                                 a.forceLowBattery,
                                                 a.protocol);
-    if (!boundTty.empty()) std::system("rfcomm release 0");
+    if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
     return ok ? 0 : 1;
 }
 
@@ -493,7 +493,7 @@ int runStatus(int argc, char **argv, const StatusArgs &a)
                 store.setInt("activeZowiBattery", battery);
             }
             bt->disconnect();
-            if (!boundTty.empty()) std::system("rfcomm release 0");
+            if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
         }
     }
 
@@ -591,7 +591,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
         })) {
         std::cerr << "Could not connect to the robot within " << effTimeout << "s." << std::endl;
         bt->disconnect();
-        if (!boundTty.empty()) std::system("rfcomm release 0");
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
         return 1;
     }
 
@@ -610,7 +610,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
         std::cout << "Interactive control requires a terminal; cannot read arrow keys.\n";
         bt->send(zowi::commandStop());
         bt->disconnect();
-        if (!boundTty.empty()) std::system("rfcomm release 0");
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
         return 0;
     }
 
@@ -677,7 +677,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
     disableRawMode();
     bt->disconnect();
-    if (!boundTty.empty()) std::system("rfcomm release 0");
+    if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
     std::cout << "\n\nStopped. Disconnected. Bye!\n";
     return 0;
 }

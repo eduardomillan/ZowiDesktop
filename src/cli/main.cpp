@@ -10,6 +10,7 @@
 int main(int argc, char **argv)
 {
     CLI::App app{"Zowi Desktop CLI"};
+    app.set_version_flag("--version", std::string(ZOWI_VERSION));
 
     // ── session subcommand ────────────────────────────────────
     auto *sessionCmd = app.add_subcommand("session", "Manage session data");

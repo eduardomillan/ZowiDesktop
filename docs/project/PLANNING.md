@@ -85,10 +85,16 @@ src/
 - [x] Persistent transport tied to device registration
 - [x] Developer diagnostics overlay
 - [x] Gamepad control screen (PadScreen) with directional pad and action buttons
-- [ ] Real-time command sending and speed control validation
+- [X] Real-time command sending and speed control validation
+- [ ] Compile the bt library for Windows
+- [ ] Test the Windows version and fix bugs
 
-### M7 — Future
+### M7 - Calibration and mouth/gestures in gamepad
 - [ ] Zowi calibration (servo trims)
+- [ ] Gamepad mouth control
+- [ ] Gamepad gestures control
+
+### Future milestones
 - [ ] Face/mouth editor
 - [ ] Pre-programmed modes (demo, guardian, dancing, sound)
 - [ ] Visual block editor

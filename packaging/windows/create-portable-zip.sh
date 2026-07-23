@@ -5,6 +5,7 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build-windows"
 DIST_DIR="$BUILD_DIR/dist"
 APP_NAME="ZowiDesktop"
+VERSION=$(grep -oP 'VERSION\s+\K[0-9]+\.[0-9]+\.[0-9]+' "$PROJECT_ROOT/CMakeLists.txt")
 QT_HOST_PATH="${QT_HOST_PATH:-$HOME/Qt/6.5.2/gcc_64}"
 QT_TARGET_PATH="${QT_TARGET_PATH:-$HOME/Qt/6.5.2/6.5.2/mingw_64}"
 
@@ -87,12 +88,11 @@ cp "$PROJECT_ROOT/packaging/windows/qt.conf" "$DIST_DIR/"
 
 echo ""
 echo "=== Step 6: Create portable zip ==="
-TIMESTAMP=$(date +%Y%m%d)
 cd "$DIST_DIR"
-rm -f "${APP_NAME}-windows-x86_64-build-${TIMESTAMP}.zip"
-zip -r "${APP_NAME}-windows-x86_64-build-${TIMESTAMP}.zip" .
+rm -f "${APP_NAME}-${VERSION}-windows-x86_64.zip"
+zip -r "${APP_NAME}-${VERSION}-windows-x86_64.zip" .
 cd "$PROJECT_ROOT"
 
 echo ""
 echo "=== Done ==="
-ls -lh "$DIST_DIR/${APP_NAME}-windows-x86_64-build-${TIMESTAMP}.zip"
+ls -lh "$DIST_DIR/${APP_NAME}-${VERSION}-windows-x86_64.zip"

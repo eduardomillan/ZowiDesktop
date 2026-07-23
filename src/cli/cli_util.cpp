@@ -242,7 +242,7 @@ std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
                     return nullptr;
                 }
                 tty = "/dev/rfcomm0";
-                std::system(("rfcomm bind 0 " + address + " 1").c_str());
+                [[maybe_unused]] int ret = std::system(("rfcomm bind 0 " + address + " 1").c_str());
                 if (access(tty.c_str(), F_OK) != 0) {
                     std::cerr << "Failed to bind RFCOMM TTY " << tty
                               << " (need CAP_NET_ADMIN / root).\n"

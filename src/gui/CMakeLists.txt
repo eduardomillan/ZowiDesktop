@@ -6,7 +6,7 @@ set(GUI_QRC_FILES
     ${CMAKE_SOURCE_DIR}/i18n.qrc
 )
 if(ZOWI_QT_VERSION EQUAL 6)
-    qt6_add_resources(GUI_RESOURCES ${GUI_QRC_FILES})
+    qt6_add_resources(GUI_RESOURCES ${GUI_QRC_FILES} OPTIONS --no-zstd)
 else()
     qt5_add_resources(GUI_RESOURCES ${GUI_QRC_FILES})
 endif()

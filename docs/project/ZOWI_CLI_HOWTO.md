@@ -2,8 +2,10 @@
 
 The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionality without launching the GUI.
 
+
 ## Table of Contents
 
+- [Version](#version)
 - [Quick reference](#quick-reference)
 - [Help](#help)
 - [Session](#session)
@@ -22,6 +24,7 @@ The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionalit
 - [Control](#control)
 - [Building](#building)
 
+
 ## Quick reference
 
 ```bash
@@ -30,6 +33,7 @@ zowi_cli <subcommand> [options]
 
 | Subcommand | Description |
 |-----------|-------------|
+| `--version` | Print CLI version and exit |
 | `session` | Manage session data (persistent key-value store) |
 | `config` | Read app configuration values |
 | `translate` | Translate strings using the i18n engine |
@@ -61,6 +65,20 @@ zowi_cli status --help      # Status help
 zowi_cli control --help      # Control (minigame) help
 zowi_cli alarm --help        # Alarm help
 zowi_cli adivinawi --help    # Adivinawi help
+```
+
+## Version
+
+Print the CLI version and exit. The version is read from `CMakeLists.txt` at build time.
+
+```bash
+zowi_cli --version
+```
+
+Output:
+
+```
+0.6.0
 ```
 
 

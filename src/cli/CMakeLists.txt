@@ -1,5 +1,5 @@
 # src/cli/CMakeLists.txt
-qt6_add_resources(CLI_I18N_RC ${CMAKE_SOURCE_DIR}/i18n.qrc)
+qt6_add_resources(CLI_I18N_RC ${CMAKE_SOURCE_DIR}/i18n.qrc OPTIONS --no-zstd)
 add_executable(zowi_cli
     main.cpp
     cli_state.cpp
@@ -14,6 +14,7 @@ target_link_libraries(zowi_cli PRIVATE
     Qt${ZOWI_QT_VERSION}::Bluetooth
     CLI11::CLI11
 )
+target_compile_definitions(zowi_cli PRIVATE ZOWI_VERSION="${PROJECT_VERSION}")
 target_sources(zowi_cli PRIVATE ${CLI_I18N_RC})
 
 if(NOT WIN32)
