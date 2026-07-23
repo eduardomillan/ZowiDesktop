@@ -257,7 +257,7 @@ void RobotController::parseIncoming()
             float b = std::stof(value);
             if (b != m_battery) { m_battery = b; updated = true; }
         } catch (...) {}
-        buf.erase(0, end + 2);
+        buf.erase(amp, end + 2 - amp);
         amp = buf.find("&&B ");
     }
 
@@ -271,7 +271,7 @@ void RobotController::parseIncoming()
             m_deviceName = QString::fromStdString(value);
             emit deviceChanged();
         }
-        buf.erase(0, end + 2);
+        buf.erase(ampE, end + 2 - ampE);
         ampE = buf.find("&&E ");
     }
 
@@ -289,7 +289,7 @@ void RobotController::parseIncoming()
             if (m_session)
                 m_session->saveActiveZowiAppId(m_appId);
         }
-        buf.erase(0, end + 2);
+        buf.erase(ampI, end + 2 - ampI);
         ampI = buf.find("&&I ");
     }
 

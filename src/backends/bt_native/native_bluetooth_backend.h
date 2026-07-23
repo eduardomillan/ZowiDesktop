@@ -2,6 +2,7 @@
 
 #include <zowi/bluetooth_api.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Foundation.h>
 
 #include <string>
 #include <vector>
@@ -64,6 +65,7 @@ private:
     std::atomic<bool> m_discovering{false};
     std::atomic<bool> m_receiving{false};
     std::thread m_receiveThread;
+    winrt::Windows::Foundation::IAsyncOperation<uint32_t> m_loadOperation{nullptr};
 
     std::vector<std::string> m_discoveredAddrs;
     std::vector<std::string> m_discoveredNames;

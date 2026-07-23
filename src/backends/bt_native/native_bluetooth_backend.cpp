@@ -716,7 +716,20 @@ void NativeBluetoothBackend::receiveLoop() {
             }
 
             auto loadOp = m_impl->reader.LoadAsync(4096);
+
+            // Store the operation so stopReceiveLoop() can cancel it.
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_loadOperation = loadOp;
+            }
+
             auto bytesLoaded = loadOp.get();
+
+            // Clear after successful completion.
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_loadOperation = nullptr;
+            }
 
             if (bytesLoaded == 0) {
                 // With SerialDevice this means ReadTimeout expired (no data).
@@ -743,6 +756,10 @@ void NativeBluetoothBackend::receiveLoop() {
             BT_LOG("Received " + std::to_string(bytesLoaded) + " bytes");
             if (m_onData) m_onData(str);
 
+        } catch (winrt::hresult_canceled const &) {
+            // Cancelled by stopReceiveLoop() — exit immediately.
+            BT_LOG("LoadAsync cancelled, exiting receive loop");
+            break;
         } catch (winrt::hresult_error const &e) {
             auto code = e.code();
             
@@ -787,15 +804,18 @@ void NativeBluetoothBackend::stopReceiveLoop() {
     BT_LOG("Stopping receive loop...");
     m_receiving = false;
 
-    // Interrupt the pending LoadAsync by closing the underlying transport.
-    //
-    // StreamSocket: closing the socket causes LoadAsync to throw/return 0
-    // immediately — safe from any thread.
-    //
-    // SerialDevice: do NOT close here.  Closing a SerialDevice from another
-    // thread while LoadAsync is pending hangs on Windows (COM apartment
-    // issue).  Instead, rely on the ReadTimeout (500 ms) to make LoadAsync
-    // throw, after which the receive loop checks m_receiving and exits.
+    // Cancel any pending LoadAsync operation.
+    // IAsyncOperation::Cancel() is thread-safe and causes LoadAsync().get()
+    // to throw hresult_canceled immediately, regardless of ReadTimeout.
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        if (m_loadOperation) {
+            m_loadOperation.Cancel();
+            m_loadOperation = nullptr;
+        }
+    }
+
+    // For StreamSocket: also close the socket as a safety net.
     try {
         if (m_impl->socket) {
             m_impl->socket.Close();
