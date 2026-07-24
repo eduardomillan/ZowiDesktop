@@ -613,6 +613,8 @@ void RobotController::refreshTransports()
             const Transport regT = transportFromString(
                 QString::fromStdString(session.getString("activeZowiTransport", "")));
             if (regT == Usb && m_usbAvailable) {
+                if (m_knownUsbPorts.contains(regAddr))
+                    m_usbPort = regAddr;
                 useSerialBackend();
                 return;
             }
@@ -627,17 +629,12 @@ void RobotController::refreshTransports()
             return;
         }
         if (m_usbAvailable) {
-            // Snapshot to guard against reentrancy: probeZowiOnPort calls
-            // processEvents() which may fire the poll timer and mutate
-            // m_knownUsbPorts mid-iteration.
-            const auto ports = m_knownUsbPorts;
-            QString port;
-            for (const auto &p : ports) {
-                port = probeZowiOnPort(p);
-                if (!port.isEmpty()) break;
-            }
-            if (!port.isEmpty())
-                m_usbPort = port;
+            // Remember a previously registered USB port so connectUsb() can
+            // use it directly. Do NOT open any port here — on Windows the
+            // port open asserts DTR and resets the robot, even when we
+            // disable DTR immediately after.
+            if (!regAddr.isEmpty() && m_knownUsbPorts.contains(regAddr))
+                m_usbPort = regAddr;
             useSerialBackend();
             return;
         }
@@ -691,16 +688,17 @@ QString RobotController::probeZowiOnPort(const QString &port)
     return QString();
 #else
     if (port.isEmpty()) return QString();
-    // Only handshake a given port once per session: opening it resets the
-    // robot via DTR, so we must not do it repeatedly during polling.
+    // Only handshake a given port once per session (DTR is disabled so the
+    // robot does not reset, but opening/closing is still wasteful to repeat).
     if (m_probedUsbPorts.contains(port)) return QString();
     m_probedUsbPorts << port;
 
     SerialBackend probe;
     probe.setBaudRate(m_usbBaud);
-    // The probe only opens the port to detect a robot; do not block 5s on the
-    // boot delay here (polling would stall). The probe loop below already waits
-    // for the firmware to come up after the DTR reset.
+    // Disable DTR so opening the port does not reset the robot (on Windows
+    // the port default asserts DTR, which triggers the Arduino auto-reset).
+    // The running firmware stays available and responds to commands right away.
+    probe.setDtrEnabled(false);
     probe.setBootDelayMs(0);
 
     std::string rx;
@@ -718,9 +716,9 @@ QString RobotController::probeZowiOnPort(const QString &port)
     if (!probe.connect(port.toStdString()))
         return QString();
 
-    // Give the freshly-reset bootloader a moment, then request the program id.
-    // On Windows the DTR reset on open is unavoidable, so the robot may be in
-    // the bootloader for ~2s before the firmware starts — retry periodically.
+    // Request the program id. DTR is disabled so the robot stays running, but
+    // retry periodically in case the port was just opened and the firmware
+    // hasn't finished its startup sequence yet.
     QElapsedTimer timer;
     timer.start();
     int lastSendMs = 0;

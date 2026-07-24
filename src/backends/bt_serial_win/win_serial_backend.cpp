@@ -1,11 +1,5 @@
 #include "win_serial_backend.h"
 
-#include <SetupAPI.h>
-#include <devguid.h>
-#include <regex>
-
-#pragma comment(lib, "setupapi.lib")
-
 namespace zowi {
 
 namespace {
@@ -27,35 +21,43 @@ int baudToDcbBaud(int baud)
     }
 }
 
-// Probe COM ports by attempting to open each one. This is more reliable than
-// reading the registry because USB-serial adapters appear/disappear dynamically.
-std::vector<std::string> probeComPorts()
+// List COM ports by reading the registry. This is the standard Windows way to
+// enumerate serial ports without opening them (opening a port asserts DTR,
+// which resets the robot on the ZUM board's Arduino-compatible circuit).
+std::vector<std::string> listComPorts()
 {
     std::vector<std::string> ports;
+    HKEY hKey;
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+            L"HARDWARE\\DEVICEMAP\\SERIALCOMM",
+            0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        return ports;
+
+    wchar_t valueName[256];
     wchar_t portName[32];
+    DWORD valueNameSize, portNameSize, type;
+    DWORD index = 0;
 
-    for (int i = 1; i <= 255; ++i) {
-        _snwprintf_s(portName, _countof(portName), L"COM%d", i);
-        std::wstring devicePath = std::wstring(L"\\\\.\\") + portName;
+    while (true) {
+        valueNameSize = sizeof(valueName) / sizeof(wchar_t);
+        portNameSize = sizeof(portName);
+        type = 0;
 
-        HANDLE h = CreateFileW(
-            devicePath.c_str(),
-            GENERIC_READ | GENERIC_WRITE,
-            0,
-            nullptr,
-            OPEN_EXISTING,
-            0,
-            nullptr);
+        LONG ret = RegEnumValueW(hKey, index, valueName, &valueNameSize,
+                                  nullptr, &type, reinterpret_cast<LPBYTE>(portName),
+                                  &portNameSize);
+        if (ret != ERROR_SUCCESS) break;
 
-        if (h != INVALID_HANDLE_VALUE) {
-            CloseHandle(h);
-            // Convert wide string to narrow for the port name (e.g. "COM3").
+        if (type == REG_SZ && portNameSize > 0) {
             char narrow[32];
             WideCharToMultiByte(CP_UTF8, 0, portName, -1, narrow, sizeof(narrow), nullptr, nullptr);
             ports.push_back(narrow);
         }
+        index++;
     }
 
+    RegCloseKey(hKey);
     return ports;
 }
 
@@ -114,7 +116,7 @@ bool WinSerialBackend::connect(const std::string &portName)
     dcb.fParity  = FALSE;
     dcb.fOutxCtsFlow = FALSE;
     dcb.fOutxDsrFlow = FALSE;
-    dcb.fDtrControl   = DTR_CONTROL_ENABLE;
+    dcb.fDtrControl   = m_dtrEnabled ? DTR_CONTROL_ENABLE : DTR_CONTROL_DISABLE;
     dcb.fRtsControl   = RTS_CONTROL_ENABLE;
     dcb.fOutX   = FALSE;
     dcb.fInX    = FALSE;
@@ -207,7 +209,7 @@ void WinSerialBackend::pulseReset()
 
 std::vector<std::string> WinSerialBackend::listSerialPorts()
 {
-    return probeComPorts();
+    return listComPorts();
 }
 
 void WinSerialBackend::readLoop()

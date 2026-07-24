@@ -38,6 +38,12 @@ public:
     // Static so callers can list ports without owning a backend instance.
     static std::vector<std::string> listSerialPorts();
 
+    // Whether to keep DTR asserted while connected. Disable for probing so
+    // the robot does not reset when the port is opened (useful on Windows
+    // where opening a COM port automatically asserts DTR). Defaults to true.
+    void setDtrEnabled(bool on) { m_dtrEnabled = on; }
+    bool dtrEnabled() const { return m_dtrEnabled; }
+
     // Pulse DTR low then high to trigger the Arduino auto-reset into the
     // bootloader. Same as the POSIX backend: DTR falling edge resets via
     // the coupling capacitor on the ZUM board.
@@ -66,6 +72,7 @@ private:
     HANDLE m_handle = INVALID_HANDLE_VALUE;
     int m_baud = 9600;
     int m_bootDelayMs = 5000;
+    bool m_dtrEnabled = true;
     std::string m_lastError;
     std::atomic<bool> m_reading{false};
     std::thread m_readThread;
