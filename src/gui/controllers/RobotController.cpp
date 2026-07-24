@@ -152,6 +152,17 @@ void RobotController::wireBackend()
                 if (!m_deviceAddress.isEmpty())
                     emit deviceChanged();
             }
+            // For Bluetooth, restore m_deviceAddress from the registered Zowi
+            // session so it survives the firmware-restore reconnect cycle.
+            if (m_backendKind == Bluetooth && m_deviceAddress.isEmpty()) {
+                zowi::SessionStore session;
+                const QString addr = QString::fromStdString(
+                    session.getString("activeZowiDeviceAddress"));
+                if (!addr.isEmpty()) {
+                    m_deviceAddress = addr;
+                    emit deviceChanged();
+                }
+            }
             // Ask the robot for its name, firmware id and battery. The firmware
             // only reports these on request, so start a periodic poll.
             requestRobotData();
