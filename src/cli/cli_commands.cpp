@@ -28,7 +28,13 @@
 #include <qt_bluetooth_backend.h>
 #endif
 #ifdef ZOWI_HAVE_SERIAL
+#ifdef _WIN32
+#include <win_serial_backend.h>
+using SerialBackend = zowi::WinSerialBackend;
+#else
 #include <serial_bluetooth_backend.h>
+using SerialBackend = zowi::SerialBluetoothBackend;
+#endif
 #endif
 
 namespace zowi_cli {
@@ -102,7 +108,7 @@ int runConfig(const ConfigArgs &a)
 #ifdef ZOWI_HAVE_SERIAL
 int runPorts()
 {
-    auto ports = zowi::SerialBluetoothBackend::listSerialPorts();
+    auto ports = SerialBackend::listSerialPorts();
     if (ports.empty()) {
         std::cout << "No USB serial ports found (/dev/ttyUSB*, /dev/ttyACM*)." << std::endl;
     } else {
@@ -197,7 +203,7 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
     // Over USB the robot takes a while to boot and start emitting data, so give
     // it a longer default timeout (8s) unless the user asked for more.
 #ifdef ZOWI_HAVE_SERIAL
-    const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+    const bool isUsb = (dynamic_cast<SerialBackend *>(bt.get()) != nullptr);
 #else
     const bool isUsb = false;
 #endif
@@ -299,7 +305,7 @@ int runRename(int argc, char **argv, const RenameArgs &a)
     if (!bt) return 1;
 
 #ifdef ZOWI_HAVE_SERIAL
-    const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+    const bool isUsb = (dynamic_cast<SerialBackend *>(bt.get()) != nullptr);
 #else
     const bool isUsb = false;
 #endif
@@ -380,7 +386,7 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
     // Firmware flashing drives the bootloader explicitly via pulseReset(); do
     // not add the control-connection boot delay.
 #ifdef ZOWI_HAVE_SERIAL
-    if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()))
+    if (auto *serial = dynamic_cast<SerialBackend *>(bt.get()))
         serial->setBootDelayMs(0);
 #endif
 #ifndef ZOWI_HAVE_NATIVE_BT
@@ -508,7 +514,7 @@ int runStatus(int argc, char **argv, const StatusArgs &a)
             std::cout << "Could not open a backend for '" << addr << "'; showing last known (cached) state." << std::endl;
         } else {
         #ifdef ZOWI_HAVE_SERIAL
-    const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+    const bool isUsb = (dynamic_cast<SerialBackend *>(bt.get()) != nullptr);
 #else
     const bool isUsb = false;
 #endif
@@ -586,7 +592,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     if (!bt) return 1;
 
 #ifdef ZOWI_HAVE_SERIAL
-    const bool isUsb = (dynamic_cast<zowi::SerialBluetoothBackend *>(bt.get()) != nullptr);
+    const bool isUsb = (dynamic_cast<SerialBackend *>(bt.get()) != nullptr);
 #else
     const bool isUsb = false;
 #endif

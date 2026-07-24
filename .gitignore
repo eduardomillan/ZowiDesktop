@@ -1,7 +1,5 @@
 # Build
-build/
-build-*/
-build-asan/
+build*/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
@@ -27,7 +25,7 @@ QtCreator.db
 Thumbs.db
 
 # Packaging
-dist/
+dist*
 *.AppImage
 *.zip
 *.exe

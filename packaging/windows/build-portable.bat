@@ -15,6 +15,9 @@ if not defined CMAKE_PATH  set CMAKE_PATH=C:\Qt\Tools\CMake_64\bin
 
 set "PATH=%CMAKE_PATH%;%QT_PATH%\bin;%PATH%"
 
+REM --- Packaged builds ship with dev mode OFF. Re-enabled at runtime via ZOWI_DEV ---
+powershell -NoProfile -Command "$c = [IO.File]::ReadAllText('src\config.json'); $c = $c -replace '(\"dev_mode\"\s*:\s*\")[^\"]*(\")', '${1}false${2}'; [IO.File]::WriteAllText('src\config.json', $c)"
+
 echo === Step 1: Configure with CMake ===
 mkdir %BUILD_DIR% 2>nul
 cd %BUILD_DIR%
@@ -53,5 +56,8 @@ if %ERRORLEVEL% neq 0 (
     echo.
     echo === Done: %ZIPNAME% ===
 )
+
+REM --- Restore dev mode for the development tree ---
+git checkout -- src\config.json 2>nul
 
 pause

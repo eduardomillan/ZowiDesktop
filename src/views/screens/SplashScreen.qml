@@ -5,11 +5,8 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import "../components"
 
-Rectangle {
-    id: splash
-    property string screenName: "SplashScreen"
-
-    color: "#f4f9f4"
+FocusScope {
+    id: splashScope
 
     signal splashFinished()
     signal quitRequested()
@@ -17,6 +14,13 @@ Rectangle {
     property bool _resetNoZowi: false
 
     function tr(source) { return Translator.translate("SplashScreen.qml", source) }
+
+    Rectangle {
+        id: splash
+        anchors.fill: parent
+        property string screenName: "SplashScreen"
+
+        color: "#f4f9f4"
 
     Column {
         anchors.centerIn: parent
@@ -74,7 +78,7 @@ Rectangle {
                 color: continueButton.pressed ? "#17736c" : "#21a69b"
             }
 
-            onClicked: splash.splashFinished()
+            onClicked: splashScope.splashFinished()
         }
 
         Button {
@@ -102,7 +106,7 @@ Rectangle {
                 opacity: 0.5
             }
 
-            onClicked: splash.quitRequested()
+            onClicked: splashScope.quitRequested()
         }
     }
 
@@ -247,7 +251,7 @@ Rectangle {
 
     Item {
         anchors.fill: parent
-        visible: Config.devMode
+        visible: Config.devMode && Config.devOverlayVisible
 
         MessageBar {
             id: msgBar
@@ -285,7 +289,7 @@ Rectangle {
                 if (msgBar.visible) return
                 var addr = Session.loadActiveZowiDeviceAddress()
                 if (!addr) addr = Robot.deviceAddress
-                splash._resetNoZowi = (addr === "")
+                splashScope._resetNoZowi = (addr === "")
                 // Forget the registered Zowi. The controller also tries a
                 // factory rename (zowi_default_name) if it can reach the robot.
                 forgetter.forget(addr)
@@ -296,7 +300,7 @@ Rectangle {
     ForgetController {
         id: forgetter
         onForgetFinished: function(unpaired, message) {
-            if (splash._resetNoZowi)
+            if (splashScope._resetNoZowi)
                 msgBar.show(tr("reset_no_zowi"), "#c0392b")
             else if (unpaired)
                 msgBar.show(tr("unpair_success"))
@@ -304,5 +308,15 @@ Rectangle {
                 msgBar.show(tr("unpair_app_only"))
         }
         onStatusMessage: function(text) { msgBar.show(text) }
+        }
     }
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_D) {
+            Config.devOverlayVisible = !Config.devOverlayVisible
+            splash.forceActiveFocus()
+        }
+    }
+
+    Component.onCompleted: splash.forceActiveFocus()
 }

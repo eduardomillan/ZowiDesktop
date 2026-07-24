@@ -19,7 +19,13 @@
 #include <zowi/robot_commands.h>
 #include <zowi/protocol.h>
 #ifdef ZOWI_HAVE_SERIAL
+#ifdef _WIN32
+#include <win_serial_backend.h>
+using SerialBackend = zowi::WinSerialBackend;
+#else
 #include <serial_bluetooth_backend.h>
+using SerialBackend = zowi::SerialBluetoothBackend;
+#endif
 #endif
 
 namespace zowi_cli {
@@ -322,7 +328,7 @@ std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
         std::string tty = ttyOpt;
         if (tty.empty()) {
             if (useUsb) {
-                auto ports = zowi::SerialBluetoothBackend::listSerialPorts();
+                auto ports = SerialBackend::listSerialPorts();
                 if (ports.empty()) {
                     std::cerr << "No USB serial ports found (/dev/ttyUSB*, /dev/ttyACM*).\n"
                               << "Plug in the robot and pass --tty /dev/ttyUSB0." << std::endl;
@@ -349,7 +355,7 @@ std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
             }
         }
         connectTarget = tty;
-        auto backend = std::make_unique<zowi::SerialBluetoothBackend>();
+        auto backend = std::make_unique<SerialBackend>();
         backend->setBaudRate(baud);
         return backend;
     }

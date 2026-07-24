@@ -8,7 +8,8 @@ Compact guidance for OpenCode sessions in this repo. Read `.github/copilot-instr
 - Core tests in `src/core/tests/` link only `Zowi::core` — keep core Qt-free.
 
 ## Build & test (non-obvious)
-- Normal build: `./build.sh` (Qt 6, GUI+CLI). Scoped: `./build.sh --gui`, `./build.sh --cli`, `./build.sh -5 --cli` (Qt 5), `./build.sh --demo`.
+- Normal build: `./build.sh` (Linux, Qt 6, GUI+CLI). Scoped: `./build.sh --gui`, `./build.sh --cli`, `./build.sh -5 --cli` (Qt 5), `./build.sh --demo`.
+- Windows build: `build.bat` (GUI+CLI) from a **x64 Native Tools Command Prompt for VS 2022** (or any VS 2022 prompt that has `vcvarsall.bat` on PATH). Scoped: `build.bat --gui`, `build.bat --cli`. `windeployqt --qmldir src\views` runs automatically after GUI build.
 - `QT_PATH=~/Qt/6.5.2/gcc_64 ./build.sh` to point at a specific Qt install.
 - Core-only build (no Qt, fast): `cmake -S . -B build -DZOWI_BUILD_GUI=OFF -DZOWI_BUILD_CLI=OFF && cmake --build build`.
 - Tests: `ctest --test-dir build --output-on-failure`. Single test: `ctest --test-dir build -R '^test_translation_engine$' --output-on-failure`. Build one: `cmake --build build --target test_translation_engine`.

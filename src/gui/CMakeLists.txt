@@ -36,9 +36,13 @@ if(NOT WIN32)
     target_link_libraries(ZowiDesktop PRIVATE Zowi::bt_qt)
 endif()
 
-# Serial/USB transport (POSIX-only). Provides the USB connection option.
+# Serial/USB transport. Provides the USB connection option.
 if(NOT WIN32)
     target_link_libraries(ZowiDesktop PRIVATE Zowi::bt_serial)
+    target_compile_definitions(ZowiDesktop PRIVATE ZOWI_HAVE_SERIAL=1)
+endif()
+if(WIN32)
+    target_link_libraries(ZowiDesktop PRIVATE Zowi::bt_serial_win)
     target_compile_definitions(ZowiDesktop PRIVATE ZOWI_HAVE_SERIAL=1)
 endif()
 

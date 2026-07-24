@@ -21,7 +21,11 @@
 #include "qt_bluetooth_backend.h"
 #endif
 #ifdef ZOWI_HAVE_SERIAL
+#ifdef _WIN32
+#include "win_serial_backend.h"
+#else
 #include "serial_bluetooth_backend.h"
+#endif
 #endif
 #ifdef ZOWI_HAVE_NATIVE_BT
 #include "native_bluetooth_backend.h"
@@ -31,6 +35,14 @@
 #include <zowi/transport_constants.h>
 #include <zowi/protocol.h>
 #include <zowi/stk500v1.h>
+
+#ifdef ZOWI_HAVE_SERIAL
+#ifdef _WIN32
+using SerialBackend = zowi::WinSerialBackend;
+#else
+using SerialBackend = zowi::SerialBluetoothBackend;
+#endif
+#endif
 
 namespace {
 // How often (ms) to poll for USB port / Bluetooth adapter appearance.
@@ -120,7 +132,7 @@ void RobotController::useSerialBackend()
 {
 #ifdef ZOWI_HAVE_SERIAL
     if (m_backend && m_backendKind == Usb) return;
-    auto serial = std::make_unique<zowi::SerialBluetoothBackend>();
+    auto serial = std::make_unique<SerialBackend>();
     serial->setBaudRate(m_usbBaud);
     serial->setBootDelayMs(5000);
     m_backend = std::move(serial);
@@ -579,7 +591,7 @@ QStringList RobotController::listUsbPorts() const
 {
     QStringList out;
 #ifdef ZOWI_HAVE_SERIAL
-    for (const auto &p : zowi::SerialBluetoothBackend::listSerialPorts())
+    for (const auto &p : SerialBackend::listSerialPorts())
         out << QString::fromStdString(p);
 #endif
     return out;
@@ -676,7 +688,7 @@ QString RobotController::probeZowiOnPort(const QString &port)
     if (m_probedUsbPorts.contains(port)) return QString();
     m_probedUsbPorts << port;
 
-    zowi::SerialBluetoothBackend probe;
+    SerialBackend probe;
     probe.setBaudRate(m_usbBaud);
     // The probe only opens the port to detect a robot; do not block 5s on the
     // boot delay here (polling would stall). The probe loop below already waits
@@ -911,7 +923,7 @@ void RobotController::proceedWithRestore()
         // The Optiboot USB bootloader runs at a different baud than the running
         // firmware (usb_baud); switch to the bootloader baud before the reset so
         // the reopened link is already at the speed the bootloader expects.
-        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get())) {
+        if (auto *serial = dynamic_cast<SerialBackend *>(m_backend.get())) {
             serial->setBaudRate(m_usbBootloaderBaud);
             // Flashing drives the bootloader explicitly via pulseReset(); do not
             // add the control-connection boot delay.
@@ -919,7 +931,7 @@ void RobotController::proceedWithRestore()
         }
         // Reset into the bootloader before (re)opening the link so the upload
         // races the short post-reset window.
-        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
+        if (auto *serial = dynamic_cast<SerialBackend *>(m_backend.get()))
             serial->pulseReset();
 #endif
         const bool connectOk = m_backend->connect(target.toStdString());
@@ -1034,7 +1046,7 @@ void RobotController::continueAfterUpload(bool ok)
     if (isUsb) {
         m_backend->disconnect();
 #ifdef ZOWI_HAVE_SERIAL
-        if (auto *serial = dynamic_cast<zowi::SerialBluetoothBackend *>(m_backend.get()))
+        if (auto *serial = dynamic_cast<SerialBackend *>(m_backend.get()))
             serial->setBaudRate(m_usbBaud);
 #endif
         m_deviceAddress = target;

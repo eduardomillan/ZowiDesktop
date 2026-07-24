@@ -159,6 +159,12 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup -y
 
+      - name: Disable dev mode for packaged build
+        shell: pwsh
+        run: |
+          $f = "src/config.json"
+          (Get-Content $f) -replace '("dev_mode"\s*:\s*")[^"]*(")', '$1false$2' | Set-Content $f
+
       - name: Configure CMake
         run: |
           cmake -S . -B build-win -G "Visual Studio 17 2022" -A x64 `

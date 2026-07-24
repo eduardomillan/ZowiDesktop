@@ -17,6 +17,11 @@ else()
     set(CMAKE_CXX_STANDARD 17)
 endif()
 
+# Windows: prevent min/max macros from windows.h from clashing with std::min/std::max.
+if(WIN32)
+    add_compile_definitions(NOMINMAX)
+endif()
+
 # ── Build options ────────────────────────────────────────────────
 option(ZOWI_BUILD_GUI   "Build Qt${ZOWI_QT_VERSION} GUI application" ON)
 option(ZOWI_BUILD_CLI   "Build command-line tool"                    ON)
@@ -81,10 +86,13 @@ if((ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI) AND WIN32)
 endif()
 
 # ── Serial (RFCOMM TTY + DTR auto-reset) backend ────────────────
-# POSIX-only (termios, unistd, ioctl). Excluded on Windows. Used by the CLI
+# POSIX (termios, unistd, ioctl) or Windows (CreateFile/COM). Used by the CLI
 # for USB flashing and by the GUI for the USB transport.
 if((ZOWI_BUILD_CLI OR ZOWI_BUILD_GUI) AND NOT WIN32)
     add_subdirectory(src/backends/bt_serial)
+endif()
+if((ZOWI_BUILD_CLI OR ZOWI_BUILD_GUI) AND WIN32)
+    add_subdirectory(src/backends/bt_serial_win)
 endif()
 
 # ── CLI executable ──────────────────────────────────────────────
