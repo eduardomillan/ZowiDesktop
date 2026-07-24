@@ -13,6 +13,7 @@ ScreenTemplate {
 
     property string pairingCode: Config.get("pairing_code") || "1234"
     property bool pairingAttempt: false
+    property bool pairingDone: false
     // When true the pair button connects over USB instead of Bluetooth SPP,
     // skipping the Bluetooth pairing step (used when only USB is available).
     property bool usbMode: false
@@ -107,9 +108,11 @@ ScreenTemplate {
         target: Robot
 
         function onConnectionChanged() {
+            if (wizardFound.pairingDone) return
             if (Robot.connected) {
                 pairingTimer.stop()
                 wizardFound.pairingAttempt = false
+                wizardFound.pairingDone = true
                 wizardFound.paired()
             } else if (wizardFound.pairingAttempt) {
                 pairingTimer.stop()
@@ -119,6 +122,7 @@ ScreenTemplate {
         }
 
         function onErrorOccurred(message) {
+            if (wizardFound.pairingDone) return
             if (wizardFound.pairingAttempt) {
                 pairingTimer.stop()
                 wizardFound.pairingAttempt = false

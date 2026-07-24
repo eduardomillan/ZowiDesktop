@@ -627,7 +627,15 @@ void RobotController::refreshTransports()
             return;
         }
         if (m_usbAvailable) {
-            QString port = probeZowiOnPort(m_knownUsbPorts.value(0));
+            // Snapshot to guard against reentrancy: probeZowiOnPort calls
+            // processEvents() which may fire the poll timer and mutate
+            // m_knownUsbPorts mid-iteration.
+            const auto ports = m_knownUsbPorts;
+            QString port;
+            for (const auto &p : ports) {
+                port = probeZowiOnPort(p);
+                if (!port.isEmpty()) break;
+            }
             if (!port.isEmpty())
                 m_usbPort = port;
             useSerialBackend();
@@ -711,17 +719,23 @@ QString RobotController::probeZowiOnPort(const QString &port)
         return QString();
 
     // Give the freshly-reset bootloader a moment, then request the program id.
+    // On Windows the DTR reset on open is unavoidable, so the robot may be in
+    // the bootloader for ~2s before the firmware starts — retry periodically.
     QElapsedTimer timer;
     timer.start();
-    bool sent = false;
+    int lastSendMs = 0;
     while (timer.elapsed() < kProbeTimeoutMs && !identified) {
-        if (!sent && timer.elapsed() > 300) {
+        int elapsed = static_cast<int>(timer.elapsed());
+        if (elapsed > 300 && elapsed - lastSendMs >= 500) {
             probe.send(zowi::makeCommand(zowi::Command::GetProgramId));
-            sent = true;
+            lastSendMs = elapsed;
         }
         QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
     }
     probe.disconnect();
+    // Drain any queued callbacks from the reader thread that captured
+    // references to local variables before the probe goes out of scope.
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     return identified ? port : QString();
 #endif
 }
@@ -760,7 +774,18 @@ void RobotController::connectUsb(const QString &port)
 {
     QString target = port;
     if (target.isEmpty()) target = m_usbPort;
-    if (target.isEmpty()) target = m_knownUsbPorts.value(0);
+    if (target.isEmpty()) {
+        // Snapshot to guard against reentrancy (same reason as refreshTransports).
+        const auto ports = m_knownUsbPorts;
+        for (const auto &p : ports) {
+            // User-initiated action: allow re-probe even if already probed in
+            // background polling (e.g. the previous probe may have failed due
+            // to the robot still being in the bootloader after DTR reset).
+            m_probedUsbPorts.removeAll(p);
+            target = probeZowiOnPort(p);
+            if (!target.isEmpty()) break;
+        }
+    }
     if (target.isEmpty()) {
         emit errorOccurred(tr("No USB robot detected"));
         return;

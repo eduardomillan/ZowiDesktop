@@ -118,8 +118,13 @@ ScreenTemplate {
     // `connGated: true` options are only usable while a Zowi is connected
     // (mirrors ZowiAppReborn's zowiDependantViews: rename, restore firmware,
     // calibrate). The rest are always available.
+    // Restore is also disabled if the robot already has the base firmware.
+    function isBaseFirmware() {
+        return Robot.appId === "ZOWI_BASE_v2"
+    }
+
     property var options: [
-        { key: "restore",        desc: "restore_desc",        connGated: true,  action: function() { settings.restoreFirmware() } },
+        { key: "restore",        desc: "restore_desc",        connGated: true,  action: function() { settings.restoreFirmware() }, enabledWhen: function() { return !settings.isBaseFirmware() } },
         { key: "rename",         desc: "rename_desc",         connGated: true,  action: function() { settings.renameRequested() } },
         { key: "update",         desc: "update_desc",         connGated: false, action: function() { msgBar.show(tr("update_stub")) } },
         { key: "achievements",   desc: "achievements_desc",   connGated: false, action: function() { msgBar.show(tr("achievements_stub")) } },
@@ -133,6 +138,10 @@ ScreenTemplate {
         if (settings.restoring) return
         if (!Robot.connected) {
             msgBar.show(tr("restore_failed"), "#c0392b")
+            return
+        }
+        if (settings.isBaseFirmware()) {
+            msgBar.show(tr("restore_already_base"))
             return
         }
         settings.restoring = true
@@ -286,11 +295,14 @@ ScreenTemplate {
                     // Zowi is connected; the rest are always enabled. Any
                     // option that pops a message bar is locked while a message
                     // is visible, and re-evaluates its state once it clears.
+                    // Some options (like restore) may have an additional
+                    // enabledWhen() predicate (e.g. disable when on base firmware).
                     property bool effectiveEnabled: (!msgBar.visible) &&
                         (!settings.restoring) &&
                         (!settings.switching) &&
                         (modelData.connGated ? Robot.connected : true) &&
-                        (!modelData.needsRegistration || Session.loadActiveZowiDeviceAddress() !== "")
+                        (!modelData.needsRegistration || Session.loadActiveZowiDeviceAddress() !== "") &&
+                        (modelData.enabledWhen === undefined || modelData.enabledWhen())
 
                     width: optionCol.width
                     height: 76

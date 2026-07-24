@@ -20,6 +20,7 @@
     "restore_started": "Restoring the original firmware… keep Zowi nearby and powered on.",
     "restore_success": "Firmware restored successfully.",
     "restore_failed": "Firmware restore failed. Please try again.",
+    "restore_already_base": "Zowi already has the BASE firmware installed.",
     "restore_progress": "Restoring… %1%",
     "restore_battery_low": "Battery is below 50%. Continue anyway?",
     "confirm": "Continue",

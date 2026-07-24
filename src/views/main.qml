@@ -124,7 +124,9 @@ Window {
         console.log("[finishRegistration] deviceAddress=", Robot.deviceAddress,
                     "activeTransport=", Robot.activeTransport,
                     "connected=", Robot.connected)
-        Session.saveActiveZowiDeviceAddress(Robot.deviceAddress)
+        var addr = Robot.deviceAddress
+        if (addr && addr !== "")
+            Session.saveActiveZowiDeviceAddress(addr)
         Session.saveActiveZowiTransport(Robot.activeTransport === Robot.TransportUsb ? "usb" : "bt")
         Session.saveWizardDismissed(true)
         // Recompute the situation so SettingsScreen reflects a live connection.
