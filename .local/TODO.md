@@ -15,6 +15,8 @@
   - Giro izquierda. Tecla Q. Movimiento: TURN_LEFT
   - Giro derecha. Tecla E. Movimiento: TURN_RIGHT
 - [X] En `src/views/main.qml` falta internacionalizar la línea `rootNotice.show("Robot already named \"" + Robot.deviceName + "\". Keeping it.")`.
+- [ ] Cuando no hay disponible ningún robot ni por USB ni Bt y hay un robot registrado, el programa se queda en "Conectando..." por siempre, cuando debería haber un timeout de unos 10 segundos y pasar a "modo demo".
+
 
 ## Nuevas funcionalidades
 

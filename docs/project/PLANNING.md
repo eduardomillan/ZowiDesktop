@@ -85,8 +85,8 @@ src/
 - [x] Persistent transport tied to device registration
 - [x] Developer diagnostics overlay
 - [x] Gamepad control screen (PadScreen) with directional pad and action buttons
-- [X] Real-time command sending and speed control validation
-- [ ] Compile the bt library for Windows
+- [x] Real-time command sending and speed control validation
+- [x] Compile the bt library for Windows
 - [ ] Test the Windows version and fix bugs
 
 ### M7 - Calibration and mouth/gestures in gamepad
