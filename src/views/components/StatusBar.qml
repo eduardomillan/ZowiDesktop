@@ -15,8 +15,9 @@ Rectangle {
                  ? (Config.get("statusbar_bg_low_battery") || "#fdecea")
                  : (Config.get("statusbar_bg_connected") || "#e8f5e8"))
               : (Robot.situation === Robot.SituationTransportLost
-                 ? (Config.get("statusbar_bg_low_battery") || "#fdecea")
-                 : (Config.get("statusbar_bg_disconnected") || "#fff3e0")))
+                 || Robot.situation === Robot.SituationDemo
+                  ? (Config.get("statusbar_bg_low_battery") || "#fdecea")
+                  : (Config.get("statusbar_bg_disconnected") || "#fff3e0")))
 
     function tr(source) { return Translator.translate("StatusBar.qml", source) }
 
@@ -31,8 +32,9 @@ Rectangle {
                ? (Config.get("statusbar_fg_low_battery") || "#c0392b")
                : (Config.get("statusbar_fg_connected") || "#2d5a2d"))
             : (Robot.situation === Robot.SituationTransportLost
-               ? (Config.get("statusbar_fg_low_battery") || "#c0392b")
-               : (Config.get("statusbar_fg_disconnected") || "#e67e22")))
+               || Robot.situation === Robot.SituationDemo
+                ? (Config.get("statusbar_fg_low_battery") || "#c0392b")
+                : (Config.get("statusbar_fg_disconnected") || "#e67e22")))
 
     function statusText() {
         if (Robot.connecting) return root.tr("status_connecting")
@@ -53,6 +55,7 @@ Rectangle {
             var label = (t === "usb") ? root.tr("via_usb") : root.tr("via_bluetooth")
             return root.tr("status_transport_lost").arg(label)
         }
+        if (Robot.situation === Robot.SituationDemo) return root.tr("status_demo")
         if (root.hasSavedZowi) return root.tr("status_unavailable")
         return root.tr("not_connected")
     }
