@@ -187,7 +187,6 @@ void RobotController::wireBackend()
                     if (!m_deviceAddress.isEmpty())
                         emit deviceChanged();
                 }
-                }
                 requestRobotData();
                 m_dataPollTimer.start();
                 {
@@ -768,7 +767,9 @@ QString RobotController::probeZowiOnPort(const QString &port)
     // Disable DTR so opening the port does not reset the robot (on Windows
     // the port default asserts DTR, which triggers the Arduino auto-reset).
     // The running firmware stays available and responds to commands right away.
+#ifdef _WIN32
     probe.setDtrEnabled(false);
+#endif
     probe.setBootDelayMs(0);
 
     std::string rx;
