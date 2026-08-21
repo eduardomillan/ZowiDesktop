@@ -152,6 +152,10 @@ private:
     void parseIncoming();
     void requestRobotData();
     void setConnecting(bool value);
+    // Fired when a connection attempt outlives connect_timeout (config.json):
+    // cancels the attempt and drops the situation into Demo instead of hanging
+    // on "Connecting..." forever.
+    void onConnectTimeout();
 
     // Backend management.
     void useBluetoothBackend();
@@ -228,6 +232,12 @@ private:
     int m_usbBaud = 9600;
     int m_usbBootloaderBaud = 115200;
     int m_transportTimeoutMs = 1500;
+    // Max time (ms) for any connection attempt before falling back to Demo.
+    QTimer m_connectTimer;             // single-shot, armed by setConnecting(true)
+    bool m_connectTimedOut = false;    // last attempt timed out: pin situation to Demo
+    int m_connectTimeoutMs = 10000;
+    // True while a background demo-mode retry is in flight (no UI state).
+    bool m_silentRetryPending = false;
     SessionController *m_session = nullptr;
     bool m_restoring = false;
     bool m_simulateLowBattery = false; // TEMP: force low-battery dialog for testing

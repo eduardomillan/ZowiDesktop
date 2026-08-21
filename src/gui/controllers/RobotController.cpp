@@ -86,6 +86,10 @@ RobotController::RobotController(QObject *parent)
         std::string t = cfg.get("transport_timeout");
         if (!t.empty()) m_transportTimeoutMs = std::stoi(t);
     } catch (...) {}
+    try {
+        std::string t = cfg.get("connect_timeout");
+        if (!t.empty()) m_connectTimeoutMs = std::stoi(t);
+    } catch (...) {}
     // TEMP (restore battery dialog test): force a low-battery reading so the
     // confirmation dialog appears without waiting for the real battery to drain.
     try {
@@ -107,6 +111,13 @@ RobotController::RobotController(QObject *parent)
     // firmware only reports these on request, so keep polling while connected.
     m_dataPollTimer.setInterval(1000);
     connect(&m_dataPollTimer, &QTimer::timeout, this, &RobotController::requestRobotData);
+
+    // Connection-attempt watchdog: every setConnecting(true) arms it; if the
+    // attempt has not landed within connect_timeout (config.json) the situation
+    // falls back to Demo instead of hanging on "Connecting..." forever.
+    m_connectTimer.setSingleShot(true);
+    m_connectTimer.setInterval(m_connectTimeoutMs);
+    connect(&m_connectTimer, &QTimer::timeout, this, &RobotController::onConnectTimeout);
 
     // Initial availability snapshot + auto-detection.
     refreshTransports();
@@ -158,6 +169,7 @@ void RobotController::wireBackend()
 
     m_backend->onConnectionChanged([this](bool connected) {
         QMetaObject::invokeMethod(this, [this, connected]() {
+            m_silentRetryPending = false;
             m_connected = connected;
             emit connectionChanged();
             qInfo() << "[conn] connected=" << connected << "kind=" << m_backendKind
@@ -165,6 +177,8 @@ void RobotController::wireBackend()
                     << "known=" << m_knownUsbPorts;
             if (connected) {
                 setConnecting(false);
+                // A landed attempt clears the demo-after-timeout pin.
+                m_connectTimedOut = false;
                 if (m_backendKind == Usb && m_deviceAddress.isEmpty()) {
                     if (!m_usbPort.isEmpty())
                         m_deviceAddress = m_usbPort;
@@ -172,6 +186,7 @@ void RobotController::wireBackend()
                         m_deviceAddress = m_knownUsbPorts.value(0);
                     if (!m_deviceAddress.isEmpty())
                         emit deviceChanged();
+                }
                 }
                 requestRobotData();
                 m_dataPollTimer.start();
@@ -222,6 +237,14 @@ void RobotController::wireBackend()
     m_backend->onError([this](const std::string &msg) {
         auto qmsg = QString::fromStdString(msg);
         QMetaObject::invokeMethod(this, [this, qmsg]() {
+            m_silentRetryPending = false;
+            // Silent demo-mode retries probe the saved address in the
+            // background; their failures must not spam the UI error paths
+            // (MessageBars).
+            if (m_connectTimedOut && !m_connecting && !isConnected()) {
+                qDebug() << "[conn] silent retry failed:" << qmsg;
+                return;
+            }
             emit errorOccurred(qmsg);
         }, Qt::QueuedConnection);
     });
@@ -376,8 +399,34 @@ void RobotController::setConnecting(bool value)
 {
     if (m_connecting == value) return;
     m_connecting = value;
+    if (value)
+        m_connectTimer.start(m_connectTimeoutMs);
+    else
+        m_connectTimer.stop();
     emit connectingChanged();
     maybeEmitSituation();
+}
+
+// A connection attempt outlived connect_timeout: cancel it and drop into
+// Demo instead of showing "Connecting..." forever. The saved address is kept
+// so pollTransports() can keep probing silently in the background; when the
+// robot answers, onConnectionChanged(true) resumes the normal flow.
+void RobotController::onConnectTimeout()
+{
+    if (!m_connecting) return;
+    qInfo() << "[conn] connect timeout after" << m_connectTimeoutMs
+            << "ms -> demo mode";
+    m_connectTimedOut = true;
+    // Cancel whatever the attempt left behind. Only Bluetooth owns async
+    // state here (pending socket, BlueZ agent); the serial backend fails
+    // synchronously inside connectUsb(), so there is nothing to clean up.
+    if (m_backend && m_backendKind == Bluetooth)
+        m_backend->disconnect();
+    m_deviceName.clear();
+    m_battery = -1.0f;
+    emit deviceChanged();
+    emit batteryChanged();
+    setConnecting(false);
 }
 
 bool RobotController::isScanning() const
@@ -567,6 +616,9 @@ RobotController::Situation RobotController::computeSituation() const
     if (isConnected()) return Connected;
     if (m_connecting)  return Connecting;
     if (!regTransportAvail) return TransportLost;
+    // The registered transport is there but the robot never answered within
+    // connect_timeout: fall back to Demo instead of a permanent "Connecting".
+    if (m_connectTimedOut) return Demo;
     return Disconnected;
 }
 
@@ -678,6 +730,24 @@ void RobotController::pollTransports()
         if (usbAvail && btAvail)
             emit bothTransportsAvailable();
     }
+
+    // Post-timeout recovery. Bluetooth: probe the saved address silently
+    // (without flipping the UI back to Connecting); when the robot answers,
+    // onConnectionChanged(true) clears the demo pin and resumes normally.
+    // USB: the serial backend cannot reconnect on its own, so a newly seen
+    // port triggers a fresh (visible) attempt.
+    if (m_connectTimedOut && !isConnected() && !m_connecting) {
+        if (m_backendKind == Bluetooth && m_bluetoothAvailable
+            && !m_deviceAddress.isEmpty() && !m_silentRetryPending) {
+            m_silentRetryPending = true;
+            qDebug() << "[conn] demo-mode silent retry ->" << m_deviceAddress;
+            m_backend->connect(m_deviceAddress.toStdString());
+        } else if (m_backendKind == Usb && usbChanged && usbAvail) {
+            qDebug() << "[conn] demo-mode USB re-plug -> reconnect";
+            connectUsb();
+        }
+    }
+
     maybeEmitSituation();
 }
 
@@ -761,6 +831,8 @@ void RobotController::stopScan()
 void RobotController::connectToDevice(const QString &address)
 {
     if (address.isEmpty()) return;
+    // A fresh attempt leaves demo-after-timeout and re-arms the watchdog.
+    m_connectTimedOut = false;
     if (m_backendKind != Bluetooth) useBluetoothBackend();
     m_deviceAddress = address;
     setConnecting(true);
@@ -788,11 +860,20 @@ void RobotController::connectUsb(const QString &port)
         emit errorOccurred(tr("No USB robot detected"));
         return;
     }
+    // A fresh attempt leaves demo-after-timeout and re-arms the watchdog.
+    m_connectTimedOut = false;
     if (m_backendKind != Usb) useSerialBackend();
     m_usbPort = target;
     m_deviceAddress = target;
     setConnecting(true);
-    m_backend->connect(target.toStdString());
+    // The serial backend opens the TTY synchronously and reports failure by
+    // return value only (no callback), so handle it here: otherwise
+    // m_connecting would stay true until the watchdog fires.
+    if (!m_backend->connect(target.toStdString())) {
+        emit errorOccurred(tr("Could not open the USB connection"));
+        setConnecting(false);
+        return;
+    }
     emit deviceChanged();
 }
 
