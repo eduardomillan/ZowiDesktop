@@ -25,7 +25,5 @@ sudo echo "deb [signed-by=/usr/share/keyrings/zowi-desktop-archive-keyring.gpg] 
 sudo apt update && sudo apt install zowi-desktop
 ```
 
-Releases are built automatically from `v*` tags by GitHub Actions
-(see `.github/workflows/release.yml`): each tag produces a GitHub Release
-with the AppImage and the Debian package, and updates the signed apt
-repository published on GitHub Pages.
+Releases are created manually as GitHub Releases with the AppImage and
+Debian packages attached.
