@@ -10,6 +10,7 @@ Compact guidance for OpenCode sessions in this repo. Read `.github/copilot-instr
 ## Build & test (non-obvious)
 - Normal build: `./build.sh` (Linux, Qt 6, GUI+CLI). Scoped: `./build.sh --gui`, `./build.sh --cli`, `./build.sh -5 --cli` (Qt 5), `./build.sh --demo`.
 - Windows build: `build.bat` (GUI+CLI) from a **x64 Native Tools Command Prompt for VS 2022** (or any VS 2022 prompt that has `vcvarsall.bat` on PATH). Scoped: `build.bat --gui`, `build.bat --cli`. `windeployqt --qmldir src\views` runs automatically after GUI build.
+- Windows CI: `.github/workflows/windows.yml` (manual `workflow_dispatch`) builds the portable zip + installer on `windows-latest` with MSVC + Qt 6.8. There is **no MinGW cross-compile from Linux** (the WinRT `bt_native`/Win32 `bt_serial_win` backends need the Windows SDK) — `create-portable-zip.sh`, `mingw-toolchain.cmake`, and `qt.conf` were removed. Download the CI artifacts into `build-windows/dist/` and `dist-installer/` before `create-gh-release.sh --with-apt`.
 - `QT_PATH=~/Qt/6.5.2/gcc_64 ./build.sh` to point at a specific Qt install.
 - Core-only build (no Qt, fast): `cmake -S . -B build -DZOWI_BUILD_GUI=OFF -DZOWI_BUILD_CLI=OFF && cmake --build build`.
 - Tests: `ctest --test-dir build --output-on-failure`. Single test: `ctest --test-dir build -R '^test_translation_engine$' --output-on-failure`. Build one: `cmake --build build --target test_translation_engine`.
@@ -26,6 +27,6 @@ Compact guidance for OpenCode sessions in this repo. Read `.github/copilot-instr
 
 ## Website & releases (easy to break)
 - The project website lives on the `gh-pages` branch under `docs/` and coexists with the signed apt repo (`docs/dists`, `docs/pool`, `docs/keyring.gpg`, `.nojekyll`). It is NOT in `main` (only `docs/project`, `docs/tests`, `docs/firmware` dev docs remain there).
-- `release.yml` publishes the apt repo on `gh-pages` and is configured with `force_orphan: false` + `keep_files: true` precisely so the website survives. Do NOT flip `force_orphan` back to `true` — it would wipe the website.
-- Releases are automatic from `v*` tags (AppImage + `.deb` jammy/noble + apt repo). Do not add a manual release step unless asked.
+- There is NO GitHub Actions release workflow anymore (the `release.yml` files were removed). Releases are **manual**: run `packaging/create-gh-release.sh --with-apt`, which creates the tag + GitHub Release (AppImage, `.deb` jammy/noble, Windows zip/installer) and then publishes the signed apt repo to `gh-pages` under `docs/` via `packaging/publish-apt-repo.sh`. Both scripts copy only under `docs/` (equivalent to `force_orphan: false` + `keep_files: true`) so the website survives. Do NOT delete `docs/` on `gh-pages` — it would wipe the website.
+- Publish the apt repo only from a machine with the GPG signing key; set `GPG_PASSPHRASE` (or `APTLY_GPG_PASSPHRASE`) and have `aptly` + `gnupg` installed.
 - The website is served at `https://eduardomillan.github.io/ZowiDesktop/docs/`; install docs point users at the apt repo there.

@@ -84,7 +84,7 @@ cmake --build build
 | **Linux (native)** | `build/src/gui/ZowiDesktop` | `./build.sh` |
 | **Linux (AppImage)** | `build/ZowiDesktop-<version>-x86_64.AppImage` | `./packaging/linux/create-appimage.sh` |
 | **Linux (.deb)** | `build/zowi-desktop_<version>-1+<distro>_amd64.deb` | `./packaging/linux/create-deb.sh` |
-| **Windows (.zip)** | `build-windows/ZowiDesktop-windows-x86_64.zip` | `./packaging/windows/create-portable-zip.sh` |
+| **Windows (zip + installer)** | `dist/` + `dist-installer/` | Windows machine (`build.bat`, `build-installer.bat`) or GitHub Actions (`windows.yml`) |
 
 ## Linux AppImage
 
@@ -118,47 +118,89 @@ The resulting `.deb` files are placed in `build/`.
 
 ## GitHub Releases
 
-To create a GitHub release with the AppImage and Debian packages:
+Releases are created **manually** (no CI workflow). To create a GitHub release
+attached with the AppImage and Debian packages:
 
 ```bash
+# GitHub Release with Linux artifacts (+ Windows zip/installer if present)
 ./packaging/create-gh-release.sh
+
+# Same, and also publish the signed apt repo (jammy+noble) to gh-pages
+./packaging/create-gh-release.sh --with-apt
 ```
 
 The script:
 - Reads the version from `CMakeLists.txt`
-- Verifies all required artifacts exist (AppImage + .deb jammy + .deb noble)
+- Verifies the required artifacts exist (AppImage + .deb jammy + .deb noble)
+- Attaches the Windows portable zip and installer too, if found in
+  `build-windows/dist/` and `dist-installer/`
 - Extracts changelog entries from `debian/changelog`
 - Creates a git tag `v<version>` and pushes it
 - Creates a GitHub Release with the artifacts attached
+- With `--with-apt`, signs and publishes the apt repo (jammy+noble) under
+  `docs/` on `gh-pages` via `packaging/publish-apt-repo.sh` (keeps the website)
 
-Requires the `gh` CLI authenticated (`gh auth login`).
+Requires the `gh` CLI authenticated (`gh auth login`). Publishing the apt repo
+additionally requires `aptly`, `gnupg`, the repo's GPG signing key on this
+machine, and `GPG_PASSPHRASE` (or `APTLY_GPG_PASSPHRASE`) set.
 
-## Windows portable .zip
+## Windows builds
 
-Cross-compilation requires:
+Windows requires the **MSVC toolchain + Windows SDK** (the native WinRT
+`bt_native` backend and the Win32 `bt_serial_win` backend do not compile with
+MinGW). There is no cross-compile from Linux — build on a real Windows machine
+or use GitHub Actions.
 
-1. **MinGW toolchain**
-   ```bash
-   sudo apt install mingw-w64 mingw-w64-tools
-   ```
+### On a Windows machine (MSVC)
 
-2. **Qt 6 for MinGW** — download from https://www.qt.io/download-open-source
-   and install selecting *Qt 6.x → MinGW 64-bit*.
+From a **x64 Native Tools Command Prompt for VS 2022**:
 
-3. Set `QT_MINGW_PATH` and run the script:
-   ```bash
-   export QT_MINGW_PATH=~/Qt/6.5.2/mingw_64
-   ./packaging/windows/create-portable-zip.sh
-   ```
+```bat
+build.bat --gui          :: GUI only
+build.bat --cli          :: CLI only
+build.bat                :: GUI + CLI
+```
 
-The script runs `windeployqt` to collect all required DLLs and packages
-everything into a portable `.zip`. No installation needed on the target
-Windows machine.
+`windeployqt --qmldir src\views` runs automatically to bundle Qt DLLs/QML.
 
-> **Note:** Cross-compiled builds from Linux do not include working Bluetooth
-> (Qt6 Bluetooth requires WinRT, only available with MSVC).
-> See [bt_native](packaging/windows/bt_native/README.md) for a native Windows
-> Bluetooth DLL that can be compiled separately on Windows with Visual Studio.
+### Windows installer (.exe, Inno Setup)
+
+From the same MSVC prompt, with Inno Setup 6 installed:
+
+```bat
+packaging\windows\installer\build-installer.bat
+```
+
+Produces `dist-installer\ZowiDesktop-<version>-setup-x64.exe` from everything in
+`dist\`.
+
+### Windows portable .zip (MSVC)
+
+`packaging/windows/build-portable.bat` builds `ZowiDesktop.exe` and packs it
+(with Qt DLLs/QML via `windeployqt`) into `ZowiDesktop-windows-x86_64-build-<YYYYMMDD>.zip`.
+
+> The old `create-portable-zip.sh` MinGW cross-compile script has been removed:
+> the WinRT `bt_native` backend requires the Windows SDK and does not build with
+> MinGW, so it never produced a functional Bluetooth build.
+
+## Windows CI (GitHub Actions + MSVC)
+
+The repository ships `.github/workflows/windows.yml` which compiles Windows
+artifacts on a `windows-latest` runner using the MSVC 2022 toolchain and Qt 6.8:
+
+- **Trigger**: manual (`workflow_dispatch`) — consistent with the manual-
+  release philosophy (no automatic releases).
+- **Produced artifacts**:
+  - `ZowiDesktop-<version>-windows-x86_64.zip` (portable, GUI + CLI)
+  - `ZowiDesktop-<version>-setup-x64.exe` (Inno Setup installer)
+
+To run it: **Actions → Windows CI → Run workflow**. When it finishes, download
+the two artifacts. To attach them to a manual GitHub Release, place the zip in
+`build-windows/dist/` and the installer in `dist-installer/`, then run:
+
+```bash
+./packaging/create-gh-release.sh --with-apt
+```
 
 ## Windows native Bluetooth (bt_native)
 

@@ -3,6 +3,16 @@ set -e
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
+WIN_BUILD_DIR="$PROJECT_ROOT/build-windows"
+WIN_DIST_DIR="$WIN_BUILD_DIR/dist"
+INSTALLER_DIR="$PROJECT_ROOT/dist-installer"
+
+# Global release flag. When --with-apt is given, the script also builds and
+# publishes the signed apt repo (jammy + noble) to the gh-pages branch.
+PUBLISH_APT=0
+if [ "$1" = "--with-apt" ]; then
+    PUBLISH_APT=1
+fi
 
 if ! command -v gh &>/dev/null; then
     echo "ERROR: gh CLI is required. Install it from https://cli.github.com/" >&2
@@ -23,36 +33,57 @@ echo "Version: $VERSION"
 echo "Tag:     $TAG"
 
 echo ""
-echo "=== Checking artifacts in $BUILD_DIR ==="
+echo "=== Checking artifacts ==="
 MISSING=0
+RELEASE_FILES=()
 
 APPIMAGE=$(ls "$BUILD_DIR"/ZowiDesktop-*.AppImage 2>/dev/null | head -n1)
 if [ -z "$APPIMAGE" ]; then
-    echo "  MISSING: ZowiDesktop-*.AppImage" >&2
+    echo "  MISSING (build/): ZowiDesktop-*.AppImage" >&2
     MISSING=1
 else
     echo "  OK: $(basename "$APPIMAGE")"
+    RELEASE_FILES+=("$APPIMAGE")
 fi
 
 DEB_JAMMY=$(ls "$BUILD_DIR"/zowi-desktop_"${VERSION}"-1+jammy_amd64.deb 2>/dev/null | head -n1)
 if [ -z "$DEB_JAMMY" ]; then
-    echo "  MISSING: zowi-desktop_${VERSION}-1+jammy_amd64.deb" >&2
+    echo "  MISSING (build/): zowi-desktop_${VERSION}-1+jammy_amd64.deb" >&2
     MISSING=1
 else
     echo "  OK: $(basename "$DEB_JAMMY")"
+    RELEASE_FILES+=("$DEB_JAMMY")
 fi
 
 DEB_NOBLE=$(ls "$BUILD_DIR"/zowi-desktop_"${VERSION}"-1+noble_amd64.deb 2>/dev/null | head -n1)
 if [ -z "$DEB_NOBLE" ]; then
-    echo "  MISSING: zowi-desktop_${VERSION}-1+noble_amd64.deb" >&2
+    echo "  MISSING (build/): zowi-desktop_${VERSION}-1+noble_amd64.deb" >&2
     MISSING=1
 else
     echo "  OK: $(basename "$DEB_NOBLE")"
+    RELEASE_FILES+=("$DEB_NOBLE")
+fi
+
+# Windows artifacts are optional but attached when present.
+WIN_ZIP=$(ls "$WIN_DIST_DIR"/ZowiDesktop-${VERSION}-windows-x86_64.zip 2>/dev/null | head -n1)
+if [ -n "$WIN_ZIP" ]; then
+    echo "  OK: $(basename "$WIN_ZIP")"
+    RELEASE_FILES+=("$WIN_ZIP")
+else
+    echo "  (optional) no portable zip found at $WIN_DIST_DIR/ZowiDesktop-${VERSION}-windows-x86_64.zip"
+fi
+
+WIN_INSTALLER=$(ls "$INSTALLER_DIR"/ZowiDesktop-${VERSION}-setup-x64.exe 2>/dev/null | head -n1)
+if [ -n "$WIN_INSTALLER" ]; then
+    echo "  OK: $(basename "$WIN_INSTALLER")"
+    RELEASE_FILES+=("$WIN_INSTALLER")
+else
+    echo "  (optional) no installer found at $INSTALLER_DIR/ZowiDesktop-${VERSION}-setup-x64.exe"
 fi
 
 if [ "$MISSING" -eq 1 ]; then
     echo ""
-    echo "Build the missing artifacts before running this script:" >&2
+    echo "Build the missing Linux artifacts before running this script:" >&2
     echo "  bash packaging/linux/create-appimage.sh" >&2
     echo "  DISTRO_SUFFIX=jammy bash packaging/linux/create-deb.sh   # on Ubuntu 22.04" >&2
     echo "  DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04" >&2
@@ -95,9 +126,12 @@ fi
 
 echo ""
 echo "Ready to create tag $TAG and GitHub Release with:"
-echo "  - $(basename "$APPIMAGE")"
-echo "  - $(basename "$DEB_JAMMY")"
-echo "  - $(basename "$DEB_NOBLE")"
+for f in "${RELEASE_FILES[@]}"; do
+    echo "  - $(basename "$f")"
+done
+if [ "$PUBLISH_APT" -eq 1 ]; then
+    echo "  (+ signed apt repo jammy+noble published to gh-pages/docs)"
+fi
 read -rp "Continue? [y/N] " confirm
 if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
     echo "Aborted."
@@ -117,9 +151,12 @@ echo "=== Creating GitHub Release ==="
 gh -C "$PROJECT_ROOT" release create "$TAG" \
     --title "$TAG" \
     --notes "$NOTES" \
-    "$APPIMAGE" \
-    "$DEB_JAMMY" \
-    "$DEB_NOBLE"
+    "${RELEASE_FILES[@]}"
+
+REPO="$PROJECT_ROOT"
+if [ "$PUBLISH_APT" -eq 1 ]; then
+    bash "$PROJECT_ROOT/packaging/publish-apt-repo.sh" "$VERSION" "$BUILD_DIR"
+fi
 
 echo ""
 echo "=== Done ==="
