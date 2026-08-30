@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.15
 
 Item {
     id: root
-    visible: Config.devMode
+    visible: Config.devOverlayVisible
     property bool collapsed: false
     width: 320
     height: Math.min(400, parent ? parent.height * 0.6 : 400)

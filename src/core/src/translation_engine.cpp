@@ -1,6 +1,7 @@
 #include <zowi/translation_engine.h>
 #include <QFile>
 #include <QTextStream>
+#include <QDebug>
 #include <nlohmann/json.hpp>
 
 namespace zowi {
@@ -8,24 +9,22 @@ namespace zowi {
 TranslationEngine::TranslationEngine() = default;
 
 namespace {
-// Read a JSON translation file of the form:
-//   { "Context.qml": { "key": "value", ... }, ... }
-// Returns an empty map if the file is missing or malformed.
-// `path` may be a regular filesystem path or a Qt resource URL
-// (e.g. ":/i18n/zowi_es_ES.json") so translations work both during
-// development (filesystem) and in packaged builds (compiled into the
-// binary via the qrc).
 std::unordered_map<std::string, std::unordered_map<std::string, std::string>>
 readJson(const std::string &path) {
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> map;
     QFile file(QString::fromStdString(path));
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "[i18n] Failed to open" << QString::fromStdString(path)
+                    << "- error:" << file.errorString();
         return map;
+    }
 
     nlohmann::json j;
     try {
         j = nlohmann::json::parse(file.readAll().toStdString());
-    } catch (...) {
+    } catch (const std::exception &e) {
+        qWarning() << "[i18n] Failed to parse" << QString::fromStdString(path)
+                    << "- exception:" << e.what();
         return map;
     }
 
@@ -64,13 +63,18 @@ void TranslationEngine::load(const std::string &locale) {
     m_fallback.clear();
     m_currentLocale = locale;
 
-    m_translations = readJson(resolvePath(m_resourceBasePath, locale).toStdString());
+    const QString localePath = resolvePath(m_resourceBasePath, locale);
+    m_translations = readJson(localePath.toStdString());
 
     // Always keep English as a fallback so missing translations degrade
     // gracefully instead of showing the raw key.
     if (locale != "en_US") {
         m_fallback = readJson(resolvePath(m_resourceBasePath, "en_US").toStdString());
     }
+
+    qInfo() << "[i18n] Loaded" << m_translations.size() << "contexts for"
+            << QString::fromStdString(locale)
+            << (m_translations.empty() ? "(EMPTY!)" : "OK");
 
     if (m_onChanged) m_onChanged();
 }

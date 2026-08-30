@@ -4,6 +4,7 @@
 
 ConfigController::ConfigController(QObject *parent)
     : QObject(parent)
+    , m_devOverlayVisible(false)
 {
     QFile file(":/src/config.json");
     if (file.open(QIODevice::ReadOnly)) {
@@ -13,6 +14,7 @@ ConfigController::ConfigController(QObject *parent)
     } else {
         qWarning() << "ConfigController: cannot open config.json";
     }
+    m_devOverlayVisible = devMode();
 }
 
 bool ConfigController::devMode() const
@@ -30,4 +32,17 @@ bool ConfigController::devMode() const
 QString ConfigController::get(const QString &key) const
 {
     return QString::fromStdString(m_store.get(key.toStdString()));
+}
+
+bool ConfigController::devOverlayVisible() const
+{
+    return m_devOverlayVisible;
+}
+
+void ConfigController::setDevOverlayVisible(bool visible)
+{
+    if (m_devOverlayVisible != visible) {
+        m_devOverlayVisible = visible;
+        emit devOverlayVisibleChanged();
+    }
 }

@@ -4,13 +4,8 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import "../components"
 
-Rectangle {
-    id: home
-    property string screenName: "HomeScreen"
-    property bool robotReady: Robot.connected && Robot.appId !== "" && Robot.battery >= 0
-
-
-    color: "#f4f9f4"
+FocusScope {
+    id: homeScope
 
     signal settingsClicked()
     signal achievementsClicked()
@@ -18,8 +13,16 @@ Rectangle {
     signal goSplash()
     signal goWelcome()
 
+    property string screenName: "HomeScreen"
 
     function tr(source) { return Translator.translate("HomeScreen.qml", source) }
+
+    Rectangle {
+        id: home
+        anchors.fill: parent
+        property bool robotReady: Robot.connected && Robot.appId !== "" && Robot.battery >= 0
+
+        color: "#f4f9f4"
 
     // Top bar with Settings and Achievements
     Row {
@@ -49,7 +52,7 @@ Rectangle {
                 color: settingsBtn.pressed ? "#e0f0e0" : "transparent"
             }
 
-            onClicked: home.settingsClicked()
+            onClicked: homeScope.settingsClicked()
         }
 
         Item { width: parent.width - 220; height: 1 }
@@ -71,7 +74,7 @@ Rectangle {
                 color: achievementsBtn.pressed ? "#e0f0e0" : "transparent"
             }
 
-            onClicked: home.achievementsClicked()
+            onClicked: homeScope.achievementsClicked()
         }
     }
 
@@ -201,7 +204,7 @@ Rectangle {
                                 enabled: home.robotReady
                                 onClicked: {
                                     if (name === tr("gamepad")) {
-                                        home.gamepadClicked()
+                                        homeScope.gamepadClicked()
                                     } else {
                                         console.log("Home: tapped", name)
                                     }
@@ -291,7 +294,7 @@ Rectangle {
 
     Row {
         id: devNav
-        visible: Config.devMode
+        visible: Config.devMode && Config.devOverlayVisible
         anchors.bottom: pageIndicator.top
         anchors.bottomMargin: 8
         anchors.horizontalCenter: parent.horizontalCenter
@@ -315,7 +318,7 @@ Rectangle {
                 color: "#e67e22"
             }
 
-            onClicked: home.goSplash()
+            onClicked: homeScope.goSplash()
         }
 
         Button {
@@ -336,7 +339,7 @@ Rectangle {
                 color: "#e67e22"
             }
 
-            onClicked: home.goWelcome()
+            onClicked: homeScope.goWelcome()
         }
     }
 
@@ -402,4 +405,14 @@ Rectangle {
         for (var i = 0; i < projects.length; i++)
             projectsModel.append(projects[i])
     }
+    }
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_D) {
+            Config.devOverlayVisible = !Config.devOverlayVisible
+            homeScope.forceActiveFocus()
+        }
+    }
+
+    Component.onCompleted: homeScope.forceActiveFocus()
 }
