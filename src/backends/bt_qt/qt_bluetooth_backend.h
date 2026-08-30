@@ -2,12 +2,16 @@
 
 #include <zowi/bluetooth_api.h>
 #include <QObject>
-#include <QBluetoothLocalDevice>
-#include <QBluetoothDeviceDiscoveryAgent>
-#include <QBluetoothSocket>
 #include <QTimer>
 #include <QHash>
 #include <QVector>
+
+#ifndef _WIN32
+#include <QBluetoothLocalDevice>
+#include <QBluetoothDeviceDiscoveryAgent>
+#include <QBluetoothSocket>
+#endif
+
 #ifdef Q_OS_LINUX
 #include <QDBusConnection>
 #include <QDBusObjectPath>
@@ -48,6 +52,7 @@ private:
 };
 #endif
 
+#ifndef _WIN32
 class QtBluetoothBackend : public QObject, public BluetoothApi {
     Q_OBJECT
 public:
@@ -111,5 +116,26 @@ private:
 #endif
     bool m_unpairPending = false;
 };
+#else
+// Stub for Windows - not used, bt_native is used instead
+class QtBluetoothBackend : public QObject, public BluetoothApi {
+public:
+    explicit QtBluetoothBackend(QObject *parent = nullptr) : QObject(parent) {}
+    ~QtBluetoothBackend() override = default;
+
+    static bool hasAdapter() { return false; }
+    bool init() override { return false; }
+    bool isAdapterAvailable() const override { return false; }
+    void startDiscovery() override {}
+    void stopDiscovery() override {}
+    bool connect(const std::string &) override { return false; }
+    void disconnect() override {}
+    bool send(const std::string &) override { return false; }
+    bool isConnected() const override { return false; }
+    std::string lastError() const override { return "Not available on Windows"; }
+    void setAutoReconnect(bool, int = 3000) override {}
+    void unpair(const std::string &) override {}
+};
+#endif
 
 } // namespace zowi

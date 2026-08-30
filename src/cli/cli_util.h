@@ -8,7 +8,12 @@
 #include <QCoreApplication>
 #include <zowi/bluetooth_api.h>
 #include <zowi/session_store.h>
+#ifndef _WIN32
 #include <qt_bluetooth_backend.h>
+#endif
+#ifdef ZOWI_HAVE_NATIVE_BT
+#include <native_bluetooth_backend.h>
+#endif
 
 namespace zowi_cli {
 
@@ -16,10 +21,12 @@ namespace zowi_cli {
 bool waitUntil(QCoreApplication &qtApp, int timeoutMs,
                const std::function<bool()> &predicate);
 
+#ifndef _WIN32
 // Scan until the given Bluetooth address is discovered by BlueZ, so that a
 // subsequent connectToService() does not fail with "Unknown remote device".
 bool discoverDevice(QCoreApplication &qtApp, zowi::QtBluetoothBackend &bt,
                     const std::string &address, int timeoutMs);
+#endif
 
 // ── Interactive keyboard input (raw terminal mode) ───────────
 // The minigame reads keys directly from stdin. We switch the terminal to

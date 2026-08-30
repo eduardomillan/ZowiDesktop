@@ -11,7 +11,7 @@ Grab the latest `ZowiDesktop-*.AppImage` or `zowi-desktop_*.deb` from the
 ## Option B — apt repository (recommended, auto-updates)
 
 ```bash
-sudo curl -fsSL https://eduardomillan.github.io/ZowiDesktop/keyring.gpg \
+sudo curl -fsSL https://eduardomillan.github.io/ZowiDesktop/docs/keyring.gpg \
   -o /usr/share/keyrings/zowi-desktop-archive-keyring.gpg
 
 # Pick the suite that matches your base:
@@ -20,7 +20,7 @@ sudo curl -fsSL https://eduardomillan.github.io/ZowiDesktop/keyring.gpg \
 DISTRO=jammy   # change to "noble" on Lliurex 25
 
 sudo echo "deb [signed-by=/usr/share/keyrings/zowi-desktop-archive-keyring.gpg] \
-  https://eduardomillan.github.io/ZowiDesktop $DISTRO main" \
+  https://eduardomillan.github.io/ZowiDesktop/docs $DISTRO main" \
   | sudo tee /etc/apt/sources.list.d/zowi-desktop.list
 sudo apt update && sudo apt install zowi-desktop
 ```

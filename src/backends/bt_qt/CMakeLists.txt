@@ -4,8 +4,13 @@ add_library(zowi_bt_qt STATIC
 )
 
 target_link_libraries(zowi_bt_qt
-    PUBLIC  Zowi::core Qt${ZOWI_QT_VERSION}::Core Qt${ZOWI_QT_VERSION}::Bluetooth
+    PUBLIC  Zowi::core Qt${ZOWI_QT_VERSION}::Core
 )
+
+# Qt Bluetooth is only available on non-Windows platforms
+if(NOT WIN32)
+    target_link_libraries(zowi_bt_qt PUBLIC Qt${ZOWI_QT_VERSION}::Bluetooth)
+endif()
 
 # QtDBus / BlueZ is only available on Linux; Windows uses the WinRT backend.
 if(UNIX AND NOT APPLE)
