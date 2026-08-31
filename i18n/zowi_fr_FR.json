@@ -68,6 +68,7 @@
     "transport_failed": "Could not connect with the selected method.",
     "transport_unavailable": "Not available",
     "usb_no_ports": "No robot detected on USB.",
+    "usb_identity_mismatch": "Le nom du robot connecté ne correspond pas au Zowi enregistré.",
     "usb_refresh": "Refresh",
     "usb_connect": "Connect via USB",
     "usb_select_port": "Select a USB port"

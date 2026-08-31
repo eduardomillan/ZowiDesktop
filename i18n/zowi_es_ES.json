@@ -60,7 +60,8 @@
     "action_refresh": "Actualizar",
     "transport_switched": "Conectado con tu Zowi.",
     "transport_failed": "No se pudo conectar con tu Zowi.",
-    "usb_no_ports": "No se detecta ningún robot por USB."
+    "usb_no_ports": "No se detecta ningún robot por USB.",
+    "usb_identity_mismatch": "El nombre del robot conectado no coincide con el Zowi registrado."
   },
   "StatusBar.qml": {
     "connected": "Conectado",

@@ -61,6 +61,7 @@
     "transport_switched": "Connected to your Zowi.",
     "transport_failed": "Could not connect to your Zowi.",
     "usb_no_ports": "No robot detected on USB.",
+    "usb_identity_mismatch": "The connected robot's name does not match the registered Zowi.",
     "transport_auto": "Automatic",
     "transport_bluetooth": "Bluetooth",
     "transport_usb": "USB cable",

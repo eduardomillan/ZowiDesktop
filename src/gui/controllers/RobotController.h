@@ -141,6 +141,7 @@ signals:
     void appIdChanged();
     void dataReceived(const QString &data);
     void errorOccurred(const QString &message);
+    void usbIdentityMismatch();
     void firmwareRestoreStarted();
     void firmwareRestoreProgress(int percent, int written, int total);
     void firmwareRestoreFinished(bool success, const QString &message);
@@ -205,6 +206,9 @@ private:
     // GUI checks the reported battery; if it is low it asks the user to confirm
     // via the UI and defers finishing until confirmRestoreBattery() is called.
     bool m_batteryPending = false;
+
+    bool m_verifyPending = false;
+    QString m_verifyExpectedName;
 
     // Restore context carried from restoreFirmware() (GUI thread) to the
     // post-upload continuation.

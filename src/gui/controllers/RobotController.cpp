@@ -198,18 +198,30 @@ void RobotController::wireBackend()
                         emit deviceChanged();
                     }
                 }
+                {
+                    zowi::SessionStore session;
+                    const QString addr = QString::fromStdString(
+                        session.getString("activeZowiDeviceAddress"));
+                    if (!addr.isEmpty() && m_backendKind == Usb) {
+                        m_verifyPending = true;
+                        m_verifyExpectedName = QString::fromStdString(
+                            session.getString("activeZowiName", "Zowi"));
+                    }
+                }
                 requestRobotData();
                 m_dataPollTimer.start();
                 {
                     zowi::SessionStore session;
                     const QString addr = QString::fromStdString(
                         session.getString("activeZowiDeviceAddress"));
-                    if (!addr.isEmpty())
+                    if (!addr.isEmpty() && !m_verifyPending)
                         persistRegistrationTransport(m_backendKind);
                 }
             } else {
                 setConnecting(false);
                 m_dataPollTimer.stop();
+                m_verifyPending = false;
+                m_verifyExpectedName.clear();
                 m_deviceName.clear();
                 if (m_backendKind != Usb)
                     m_deviceAddress.clear();
@@ -317,6 +329,21 @@ void RobotController::parseIncoming()
             emit deviceChanged();
         }
         buf.erase(ampE, end + 2 - ampE);
+        if (m_verifyPending) {
+            m_verifyPending = false;
+            if (m_deviceName == m_verifyExpectedName) {
+                if (m_session)
+                    m_session->saveActiveZowiDeviceAddress(m_deviceAddress);
+                persistRegistrationTransport(Usb);
+            } else {
+                m_verifyExpectedName.clear();
+                if (m_backend)
+                    m_backend->disconnect();
+                emit usbIdentityMismatch();
+            }
+            m_verifyExpectedName.clear();
+            return;
+        }
         ampE = buf.find("&&E ");
     }
 
@@ -353,6 +380,21 @@ void RobotController::parseIncoming()
             if (value != m_deviceName.toStdString()) {
                 m_deviceName = QString::fromStdString(value);
                 emit deviceChanged();
+            }
+            if (m_verifyPending) {
+                m_verifyPending = false;
+                if (m_deviceName == m_verifyExpectedName) {
+                    if (m_session)
+                        m_session->saveActiveZowiDeviceAddress(m_deviceAddress);
+                    persistRegistrationTransport(Usb);
+                } else {
+                    m_verifyExpectedName.clear();
+                    if (m_backend)
+                        m_backend->disconnect();
+                    emit usbIdentityMismatch();
+                }
+                m_verifyExpectedName.clear();
+                return;
             }
         }
         nl = buf.find('\n');

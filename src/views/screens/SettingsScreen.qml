@@ -214,6 +214,9 @@ ScreenTemplate {
             if (!settings.restoring) return
             settings.batteryLow = true
         }
+        function onUsbIdentityMismatch() {
+            msgBar.show(tr("usb_identity_mismatch"), "#c0392b")
+        }
         function onSituationChanged() {
             settings.connectionStatus = settings.connectionStatusText()
             settings.connectionStatusColor = settings.connectionStatusColor()
