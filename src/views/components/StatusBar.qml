@@ -36,6 +36,11 @@ Rectangle {
                 ? (Config.get("statusbar_fg_low_battery") || "#c0392b")
                 : (Config.get("statusbar_fg_disconnected") || "#e67e22")))
 
+    function withName(base) {
+        var n = Session.loadActiveZowiName() || ""
+        return n !== "" ? base + " · " + n : base
+    }
+
     function statusText() {
         if (Robot.connecting) return root.tr("status_connecting")
         if (Robot.connected) {
@@ -53,10 +58,10 @@ Rectangle {
         if (Robot.situation === Robot.SituationTransportLost) {
             var t = Session.loadActiveZowiTransport()
             var label = (t === "usb") ? root.tr("via_usb") : root.tr("via_bluetooth")
-            return root.tr("status_transport_lost").arg(label)
+            return root.withName(root.tr("status_transport_lost").arg(label))
         }
-        if (Robot.situation === Robot.SituationDemo) return root.tr("status_demo")
-        if (root.hasSavedZowi) return root.tr("status_unavailable")
+        if (Robot.situation === Robot.SituationDemo) return root.withName(root.tr("status_demo"))
+        if (root.hasSavedZowi) return root.withName(root.tr("status_unavailable"))
         return root.tr("not_connected")
     }
 

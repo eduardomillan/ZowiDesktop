@@ -84,6 +84,7 @@
     "via_bluetooth": "Bluetooth",
     "via_usb": "USB",
     "status_firmware": "%1",
+    "status_demo": "Няма Bluetooth или USB: демо режим.",
     "status_transport_lost": "Zowi недостъпен (%1)"
   },
   "WizardRenameScreen.qml": {
@@ -108,7 +109,7 @@
     "found_devices": "Намерени %1 устройства",
     "no_devices_hint": "Все още няма намерени устройства.",
     "back": "Назад",
-    "no_devices_item": "(няма намерени устройства)"
+    "no_devices_item": "Не са намерени роботи наблизо по Bluetooth"
   },
   "HomeScreen.qml": {
     "zowi_apps": "Игри",

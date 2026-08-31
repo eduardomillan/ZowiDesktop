@@ -23,6 +23,8 @@ ScreenTemplate {
     property bool switching: false
     property bool batteryLow: false
     property int restoreProgress: 0
+    property string connectionStatus: settings.connectionStatusText()
+    property color connectionStatusColor: settings.connectionStatusColor()
 
     function tr(source) { return Translator.translate("SettingsScreen.qml", source) }
 
@@ -40,19 +42,24 @@ ScreenTemplate {
     }
 
     // --- Connection situation helpers -------------------------------------
+    function withName(base) {
+        var n = Session.loadActiveZowiName() || ""
+        return n !== "" ? base + " " + n : base
+    }
+
     function connectionStatusText() {
         var s = Robot.situation
         if (s === Robot.SituationConnected)
-            return tr("status_connected").arg(transportLabel(Robot.activeTransport))
+            return withName(tr("status_connected").arg(transportLabel(Robot.activeTransport)))
         if (s === Robot.SituationConnecting)
             return tr("status_connecting")
         if (s === Robot.SituationDisconnected)
-            return tr("status_disconnected")
+            return withName(tr("status_disconnected"))
         if (s === Robot.SituationTransportLost)
-            return tr("status_transport_lost").arg(registeredTransportLabel())
+            return withName(tr("status_transport_lost").arg(registeredTransportLabel()))
         if (s === Robot.SituationUnregistered)
             return tr("status_unregistered")
-        return tr("status_demo")
+        return withName(tr("status_demo"))
     }
 
     function connectionStatusColor() {
@@ -207,6 +214,22 @@ ScreenTemplate {
             if (!settings.restoring) return
             settings.batteryLow = true
         }
+        function onSituationChanged() {
+            settings.connectionStatus = settings.connectionStatusText()
+            settings.connectionStatusColor = settings.connectionStatusColor()
+        }
+        function onConnectingChanged() {
+            settings.connectionStatus = settings.connectionStatusText()
+            settings.connectionStatusColor = settings.connectionStatusColor()
+        }
+    }
+
+    Connections {
+        target: Session
+        function onSessionChanged() {
+            settings.connectionStatus = settings.connectionStatusText()
+            settings.connectionStatusColor = settings.connectionStatusColor()
+        }
     }
 
     Flickable {
@@ -246,9 +269,9 @@ ScreenTemplate {
 
                     Text {
                         width: parent.width
-                        text: settings.connectionStatusText()
+                        text: settings.connectionStatus
                         font.pixelSize: 13
-                        color: settings.connectionStatusColor()
+                        color: settings.connectionStatusColor
                         opacity: (settings.restoring || settings.switching) ? 0.45 : 1.0
                         wrapMode: Text.WordWrap
                     }

@@ -23,6 +23,7 @@ ScreenTemplate {
 
     property bool scanOnStart: true
     property string macPrefix: Config.get("zowi_mac_prefix")
+    property bool searchStarted: false
 
     function tr(source) { return Translator.translate("ScanScreen.qml", source) }
 
@@ -46,6 +47,7 @@ ScreenTemplate {
                 id: deviceList
                 anchors.fill: parent
                 anchors.margins: 1
+                visible: devicesModel.count > 0
                 model: ListModel { id: devicesModel }
                 delegate: deviceDelegate
                 spacing: 2
@@ -61,16 +63,16 @@ ScreenTemplate {
                         opacity: 0.6
                     }
                 }
+            }
 
-                Text {
-                    anchors.centerIn: parent
-                    text: tr("no_devices_hint")
-                    color: "#2d5a2d"
-                    font.pixelSize: 14
-                    opacity: 0.4
-                    horizontalAlignment: Text.AlignHCenter
-                    visible: deviceList.count === 0
-                }
+            Text {
+                anchors.centerIn: parent
+                text: Robot.scanning ? tr("no_devices_hint") : tr("no_devices_item")
+                color: Robot.scanning ? "#2d5a2d" : "#c0392b"
+                font.pixelSize: 14
+                opacity: 0.8
+                horizontalAlignment: Text.AlignHCenter
+                visible: scan.searchStarted && devicesModel.count === 0
             }
         }
 
@@ -247,9 +249,6 @@ ScreenTemplate {
         }
 
         function onScanFinished() {
-            if (devicesModel.count === 0) {
-                devicesModel.append({ deviceName: tr("no_devices_item"), address: "" })
-            }
         }
 
         function onConnectionChanged() {
@@ -263,8 +262,12 @@ ScreenTemplate {
 
     StackView.onActivated: {
         devicesModel.clear()
+        searchStarted = true
         Robot.startScan()
     }
 
-    StackView.onDeactivated: Robot.stopScan()
+    StackView.onDeactivated: {
+        searchStarted = false
+        Robot.stopScan()
+    }
 }

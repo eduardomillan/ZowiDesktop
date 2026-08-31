@@ -84,6 +84,7 @@
     "via_bluetooth": "Bluetooth",
     "via_usb": "USB",
     "status_firmware": "%1",
+    "status_demo": "Sense Bluetooth ni USB: mode demo.",
     "status_transport_lost": "Zowi no disponible (%1)"
   },
   "WizardRenameScreen.qml": {
@@ -108,7 +109,7 @@
     "found_devices": "%1 dispositius trobats",
     "no_devices_hint": "No s'han trobat dispositius encara.",
     "back": "Enrere",
-    "no_devices_item": "(no s'han trobat dispositius)"
+    "no_devices_item": "No s'han trobat robots a prop per Bluetooth"
   },
   "HomeScreen.qml": {
     "zowi_apps": "Jocs",
