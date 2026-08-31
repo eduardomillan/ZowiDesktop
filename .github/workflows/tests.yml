@@ -1,0 +1,47 @@
+# Linux CI — build the core + CLI and run the automated test suites.
+#
+# Runs on every push and pull request:
+#   - white-box unit tests in src/core/tests (via CTest)
+#   - black-box CLI tests that need no physical robot (cli_blackbox via CTest)
+#
+# Hardware-dependent tests (Bluetooth/USB with a real robot) are intentionally
+# NOT run in CI; run them locally with scripts/test/run-cli-blackbox.sh (opt-in)
+# or the src/cli/tests/{bt,usb}/run_all.sh scripts.
+
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 (Core + Bluetooth)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+          modules: 'qtconnectivity'
+
+      - name: Configure CMake (CLI only)
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DZOWI_BUILD_GUI=OFF \
+            -DZOWI_BUILD_CLI=ON
+
+      - name: Build
+        run: cmake --build build --target zowi_cli
+
+      - name: Run tests (white-box + black-box)
+        run: ctest --test-dir build --output-on-failure

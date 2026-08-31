@@ -1,0 +1,54 @@
+# Windows CI — build the CLI (MSVC) and run the automated test suites.
+#
+# Runs on every push and pull request. Complements tests.yml (Linux) with the
+# same philosophy: white-box unit tests (via CTest) plus the backend-agnostic
+# black-box CLI tests (cli_blackbox_win).
+#
+# The black-box suite here only covers cases stable across platforms (help,
+# session, config, translate and empty-session failure paths). USB/Bluetooth
+# reachability tests are not run in CI on Windows because the backend is
+# bt_native (WinRT)/WinSerial and its output differs from Linux/BlueZ.
+#
+# This is a build/test workflow and is separate from windows.yml, which is the
+# manual release workflow that produces the portable zip + installer.
+
+name: Tests (Windows)
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 (MSVC)
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.*'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+          modules: 'qtconnectivity'
+
+      - name: Configure CMake (CLI only)
+        shell: bash
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DZOWI_BUILD_GUI=OFF \
+            -DZOWI_BUILD_CLI=ON
+
+      - name: Build CLI
+        shell: bash
+        run: cmake --build build --target zowi_cli --config Release
+
+      - name: Run tests (white-box + black-box)
+        shell: bash
+        run: ctest --test-dir build -C Release --output-on-failure

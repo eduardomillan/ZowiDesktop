@@ -104,6 +104,22 @@ endif()
 if(BUILD_TESTS)
     enable_testing()
     add_subdirectory(src/core/tests)
+
+    # Black-box CLI tests (no physical robot required). Bash-based; runs from
+    # the repository root and isolates session state in a temp dir.
+    if(ZOWI_BUILD_CLI AND NOT WIN32)
+        add_test(NAME cli_blackbox
+            COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/test/run-cli-blackbox.sh
+        )
+    endif()
+
+    # Windows black-box CLI tests (backend-agnostic, bash under MSYS). Driven by
+    # the tests-windows workflow; requires bash (present on windows-latest).
+    if(ZOWI_BUILD_CLI AND WIN32)
+        add_test(NAME cli_blackbox_win
+            COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/test/run-cli-blackbox-win.sh
+        )
+    endif()
 endif()
 
 # ── GUI application ─────────────────────────────────────────────

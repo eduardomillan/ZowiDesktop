@@ -18,11 +18,13 @@ command -v "$CLI" >/dev/null 2>&1 || fail "zowi_cli not found at $CLI (build it 
 "$CLI" control --help 2>&1 | grep -q -- "--baud" || fail "control --help missing --baud option"
 echo "ok: control --help shows expected options"
 
-# 2. A non-existent USB port must fail to connect and exit non-zero (bounded by -t).
-if "$CLI" control --backend usb --tty /dev/ttyUSB99 -t 1 >/tmp/control_usb_out.log 2>&1; then
+# 2. A non-existent USB port must fail to connect and exit non-zero (bounded by
+# -t). --address is required so the USB backend path is reached (otherwise the
+# CLI bails earlier with "No paired device found").
+if "$CLI" control --backend usb --address /dev/ttyUSB99 -t 1 >/tmp/control_usb_out.log 2>&1; then
     fail "control connected to a non-existent USB port (unexpected)"
 fi
-grep -qi "Could not connect\|No such file\|not found" /tmp/control_usb_out.log || fail "expected a connection failure message"
+grep -qi "Could not connect\|No such file\|not found\|No USB serial ports found\|Plug in the robot\|not available" /tmp/control_usb_out.log || fail "expected a connection failure message"
 echo "ok: control fails cleanly when the USB port is unavailable"
 
 echo "All USB control smoke tests passed."

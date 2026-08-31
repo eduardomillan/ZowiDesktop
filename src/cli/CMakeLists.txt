@@ -23,9 +23,11 @@ target_sources(zowi_cli PRIVATE ${CLI_I18N_RC})
 
 if(NOT WIN32)
     target_link_libraries(zowi_cli PRIVATE Zowi::bt_serial)
+    target_compile_definitions(zowi_cli PRIVATE ZOWI_HAVE_SERIAL=1)
 endif()
 if(WIN32)
     target_link_libraries(zowi_cli PRIVATE Zowi::bt_serial_win)
+    target_compile_definitions(zowi_cli PRIVATE ZOWI_HAVE_SERIAL=1)
 endif()
 
 if(WIN32)
