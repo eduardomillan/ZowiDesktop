@@ -140,6 +140,11 @@ void SerialBluetoothBackend::onReadyRead()
     while ((n = ::read(m_fd, buf, sizeof(buf))) > 0) {
         if (m_onData) m_onData(std::string(buf, static_cast<std::size_t>(n)));
     }
+    if (n < 0 && (errno == EIO || errno == ENODEV || errno == EBADF)) {
+        delete m_notifier; m_notifier = nullptr;
+        ::close(m_fd); m_fd = -1;
+        if (m_onConnect) m_onConnect(false);
+    }
 }
 
 void SerialBluetoothBackend::pulseReset()

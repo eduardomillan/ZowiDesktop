@@ -221,7 +221,16 @@ void WinSerialBackend::readLoop()
 
         if (!ok) {
             if (!m_reading.load()) break;
-            // Transient error (e.g. timeout) — keep reading.
+            DWORD err = GetLastError();
+            if (err == ERROR_ACCESS_DENIED || err == ERROR_BAD_COMMAND
+                || err == ERROR_GEN_FAILURE || err == ERROR_OPERATION_ABORTED
+                || err == ERROR_INVALID_HANDLE) {
+                m_reading = false;
+                CloseHandle(m_handle);
+                m_handle = INVALID_HANDLE_VALUE;
+                if (m_onConnect) m_onConnect(false);
+                return;
+            }
             continue;
         }
 

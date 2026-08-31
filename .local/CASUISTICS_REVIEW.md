@@ -37,7 +37,7 @@ Leyenda de estados de la máquina de situación:
 ## D. Casos límite y conflictos
 
 - [X] **D1 — Doble presencia del mismo robot (Bt + USB a la vez)**: un único transporte activo (Bt prioritario) y aviso del cable.
-- [ ] **D2 — Robot USB distinto al registrado por Bt**: no autoconecta; pregunta si *olvidar* el actual y registrar el conectado por USB.
+- [X] **D2 — Robot USB distinto al registrado por Bt**: no autoconecta; pregunta si *olvidar* el actual y registrar el conectado por USB.
 - [ ] **D3 — Transporte aparece/desaparece en runtime** (enchufar cable, activar/desactivar Bt): reevaluación sin reiniciar la app (`usbAvailable`, adaptador Bt, `situation`).
 - [ ] **D4 — Modo demo con transporte que aparece después**: ofrece salir del demo e iniciar el registro correspondiente.
 
