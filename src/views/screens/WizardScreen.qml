@@ -85,7 +85,7 @@ ScreenTemplate {
                         noTransportTimer.restart()
                         return
                     }
-                    if (Robot.usbAvailable && Robot.bluetoothAvailable) {
+                    if (Robot.usbZowiConfirmed && Robot.bluetoothAvailable) {
                         usbWarnBar.textColor = "#2d5a2d"
                         usbWarnBar.show(tr("usb_recommend_disconnect"), "#f1c40f")
                         wizard._pendingStart = true

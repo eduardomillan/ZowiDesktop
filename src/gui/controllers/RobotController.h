@@ -49,6 +49,10 @@ private:
     Q_PROPERTY(int TransportUsb READ transportUsb CONSTANT)
     Q_PROPERTY(bool bluetoothAvailable READ isBluetoothAvailable NOTIFY transportsChanged)
     Q_PROPERTY(bool usbAvailable READ isUsbAvailable NOTIFY transportsChanged)
+    // True when a Zowi is registered to USB and its registered port is present
+    // right now (as opposed to usbAvailable, which is true for any serial port
+    // even before it is confirmed to be a Zowi).
+    Q_PROPERTY(bool usbZowiConfirmed READ isUsbZowiConfirmed NOTIFY transportsChanged)
     Q_PROPERTY(int transport READ transport WRITE setTransport NOTIFY transportChanged)
     Q_PROPERTY(int activeTransport READ activeTransport NOTIFY activeTransportChanged)
     Q_PROPERTY(bool connected READ isConnected NOTIFY connectionChanged)
@@ -89,6 +93,7 @@ public:
 
     bool isBluetoothAvailable() const;
     bool isUsbAvailable() const;
+    bool isUsbZowiConfirmed() const;
     int transport() const;
     int activeTransport() const;
     bool isConnected() const;

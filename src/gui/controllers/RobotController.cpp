@@ -385,6 +385,18 @@ bool RobotController::isUsbAvailable() const
     return m_usbAvailable;
 }
 
+bool RobotController::isUsbZowiConfirmed() const
+{
+    zowi::SessionStore session;
+    const QString regAddr = QString::fromStdString(
+        session.getString("activeZowiDeviceAddress"));
+    if (regAddr.isEmpty()) return false;
+    const Transport regT = transportFromString(
+        QString::fromStdString(session.getString("activeZowiTransport")));
+    if (regT != Usb) return false;
+    return m_knownUsbPorts.contains(regAddr);
+}
+
 int RobotController::transport() const
 {
     return static_cast<int>(m_transport);
