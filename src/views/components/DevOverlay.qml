@@ -2,97 +2,227 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
+// DevOverlay: a DEV panel that stays contained inside the main window.
+// It is movable (drag via the "DEV" header) and resizable on all 4 sides +
+// corners. Geometry is persisted in the session. Shown/hidden with Ctrl+D
+// (Config.devOverlayVisible), toggled globally from main.qml.
 Item {
     id: root
     visible: Config.devOverlayVisible
-    property bool collapsed: false
+
+    readonly property int minHeight: 300
+
     width: 320
-    height: Math.min(400, parent ? parent.height * 0.6 : 400)
+    height: parent ? parent.height / 2 : minHeight
+    x: 0
+    y: 0
 
-    x: parent ? parent.width - width - 8 : 0
-    y: parent ? parent.height * 0.15 : 8
+    // Default position: right side of the parent window.
+    Component.onCompleted: {
+        x = Math.max(0, parent.width - width - 8)
+        y = 8
+    }
 
-    onCollapsedChanged: if (!collapsed) refreshSession()
+    // Keep the panel contained within the parent window.
+    function clamp() {
+        if (!parent) return
+        x = Math.max(0, Math.min(x, parent.width - width))
+        y = Math.max(0, Math.min(y, parent.height - height))
+        width = Math.max(200, Math.min(width, parent.width))
+        height = Math.max(minHeight, Math.min(height, parent.height))
+    }
 
-    // ── Resize handles (only when expanded) ──
-    // Resizing is computed in the parent coordinate system so the drag does not
-    // fight the window's own size/position (the handle moves with the window,
-    // which would otherwise make the local mouse delta unreliable).
-    MouseArea {
+    onXChanged: { clamp() }
+    onYChanged: { clamp() }
+    onWidthChanged: { clamp() }
+    onHeightChanged: { clamp() }
+
+    onVisibleChanged: if (visible) refreshSession()
+
+    // ── Resize handles (edges + corners) ──
+    // Position/drag math runs in the parent coordinate system so it does not
+    // fight the window's own layout.
+    MouseArea { // left edge
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 6
+        cursorShape: Qt.SizeHorCursor
+        property int startPX
+        property int startLX
+        property int startW
+        onPressed: (mouse) => {
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            startPX = p.x; startW = root.width; startLX = root.x
+        }
+        onPositionChanged: (mouse) => {
+            if (!pressed) return
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            var nw = Math.max(200, Math.min(startW + (startLX - p.x), root.parent.width))
+            root.x = Math.max(0, startLX + (startW - nw))
+            root.width = nw
+        }
+    }
+    MouseArea { // right edge
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 6
         cursorShape: Qt.SizeHorCursor
-        enabled: !root.collapsed
         property int startPX
-        property int startRX
         property int startW
         onPressed: (mouse) => {
             var p = mapToItem(root.parent, mouse.x, mouse.y)
-            startPX = p.x; startW = root.width; startRX = root.x + root.width
+            startPX = p.x; startW = root.width
         }
         onPositionChanged: (mouse) => {
             if (!pressed) return
             var p = mapToItem(root.parent, mouse.x, mouse.y)
-            var nw = Math.max(200, Math.min(startW + (p.x - startPX),
-                            root.parent ? root.parent.width - 16 : 2000))
-            // Keep the right edge pinned under the cursor by sliding the left edge.
-            root.x = Math.max(8, startRX - nw)
-            root.width = nw
+            root.width = Math.max(200, Math.min(startW + (p.x - startPX), root.parent.width - root.x))
         }
     }
-    MouseArea {
+    MouseArea { // top edge
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 6
+        cursorShape: Qt.SizeVerCursor
+        property int startPY
+        property int startTY
+        property int startH
+        onPressed: (mouse) => {
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            startPY = p.y; startH = root.height; startTY = root.y
+        }
+        onPositionChanged: (mouse) => {
+            if (!pressed) return
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            var nh = Math.max(120, Math.min(startH + (startTY - p.y), root.parent.height))
+            root.y = Math.max(0, startTY + (startH - nh))
+            root.height = nh
+        }
+    }
+    MouseArea { // bottom edge
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         height: 6
         cursorShape: Qt.SizeVerCursor
-        enabled: !root.collapsed
         property int startPY
-        property int startBY
         property int startH
         onPressed: (mouse) => {
             var p = mapToItem(root.parent, mouse.x, mouse.y)
-            startPY = p.y; startH = root.height; startBY = root.y + root.height
+            startPY = p.y; startH = root.height
         }
         onPositionChanged: (mouse) => {
             if (!pressed) return
             var p = mapToItem(root.parent, mouse.x, mouse.y)
-            var nh = Math.max(120, Math.min(startH + (p.y - startPY),
-                            root.parent ? root.parent.height - 16 : 2000))
-            root.y = Math.max(8, startBY - nh)
-            root.height = nh
+            root.height = Math.max(120, Math.min(startH + (p.y - startPY), root.parent.height - root.y))
         }
     }
-    MouseArea {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
+    MouseArea { // top-left corner
+        anchors.left: parent.left
+        anchors.top: parent.top
         width: 12
         height: 12
         cursorShape: Qt.SizeFDiagCursor
-        enabled: !root.collapsed
         property int startPX
         property int startPY
-        property int startRX
-        property int startBY
+        property int startLX
+        property int startTY
         property int startW
         property int startH
         onPressed: (mouse) => {
             var p = mapToItem(root.parent, mouse.x, mouse.y)
             startPX = p.x; startPY = p.y
             startW = root.width; startH = root.height
-            startRX = root.x + root.width; startBY = root.y + root.height
+            startLX = root.x; startTY = root.y
         }
         onPositionChanged: (mouse) => {
             if (!pressed) return
             var p = mapToItem(root.parent, mouse.x, mouse.y)
-            var nw = Math.max(200, Math.min(startW + (p.x - startPX),
-                            root.parent ? root.parent.width - 16 : 2000))
-            var nh = Math.max(120, Math.min(startH + (p.y - startPY),
-                            root.parent ? root.parent.height - 16 : 2000))
-            root.x = Math.max(8, startRX - nw)
-            root.y = Math.max(8, startBY - nh)
+            var nw = Math.max(200, Math.min(startW + (startLX - p.x), root.parent.width))
+            var nh = Math.max(120, Math.min(startH + (startTY - p.y), root.parent.height))
+            root.x = Math.max(0, startLX + (startW - nw))
+            root.y = Math.max(0, startTY + (startH - nh))
+            root.width = nw
+            root.height = nh
+        }
+    }
+    MouseArea { // top-right corner
+        anchors.right: parent.right
+        anchors.top: parent.top
+        width: 12
+        height: 12
+        cursorShape: Qt.SizeBDiagCursor
+        property int startPX
+        property int startPY
+        property int startTY
+        property int startW
+        property int startH
+        onPressed: (mouse) => {
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            startPX = p.x; startPY = p.y
+            startW = root.width; startH = root.height
+            startTY = root.y
+        }
+        onPositionChanged: (mouse) => {
+            if (!pressed) return
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            var nw = Math.max(200, Math.min(startW + (p.x - startPX), root.parent.width - root.x))
+            var nh = Math.max(120, Math.min(startH + (startTY - p.y), root.parent.height))
+            root.y = Math.max(0, startTY + (startH - nh))
+            root.width = nw
+            root.height = nh
+        }
+    }
+    MouseArea { // bottom-left corner
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        width: 12
+        height: 12
+        cursorShape: Qt.SizeBDiagCursor
+        property int startPX
+        property int startPY
+        property int startLX
+        property int startW
+        property int startH
+        onPressed: (mouse) => {
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            startPX = p.x; startPY = p.y
+            startW = root.width; startH = root.height
+            startLX = root.x
+        }
+        onPositionChanged: (mouse) => {
+            if (!pressed) return
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            var nw = Math.max(200, Math.min(startW + (startLX - p.x), root.parent.width))
+            var nh = Math.max(120, Math.min(startH + (p.y - startPY), root.parent.height - root.y))
+            root.x = Math.max(0, startLX + (startW - nw))
+            root.width = nw
+            root.height = nh
+        }
+    }
+    MouseArea { // bottom-right corner
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 12
+        height: 12
+        cursorShape: Qt.SizeFDiagCursor
+        property int startPX
+        property int startPY
+        property int startW
+        property int startH
+        onPressed: (mouse) => {
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            startPX = p.x; startPY = p.y
+            startW = root.width; startH = root.height
+        }
+        onPositionChanged: (mouse) => {
+            if (!pressed) return
+            var p = mapToItem(root.parent, mouse.x, mouse.y)
+            var nw = Math.max(200, Math.min(startW + (p.x - startPX), root.parent.width - root.x))
+            var nh = Math.max(120, Math.min(startH + (p.y - startPY), root.parent.height - root.y))
             root.width = nw
             root.height = nh
         }
@@ -104,251 +234,267 @@ Item {
         radius: 8
         border.color: "#444"
         border.width: 1
+        clip: true
 
-        ColumnLayout {
-            anchors.fill: parent
+        // Header: title + drag to move + close button. Fixed at the top so it
+        // never shifts when the panel is resized.
+        Column {
+            id: header
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: 6
-            spacing: 4
+            spacing: 0
 
-            // Header: always visible. Click to toggle, drag to move.
-            MouseArea {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 16
-                cursorShape: Qt.OpenHandCursor
-                drag.target: root
-                drag.axis: Drag.XAndYAxis
-                drag.threshold: 4
-                property point pressPos
-                function handlePress(mouse) {
-                    pressPos = Qt.point(mouse.x, mouse.y)
-                    cursorShape = Qt.ClosedHandCursor
-                }
-                function handleRelease(mouse) {
-                    cursorShape = Qt.OpenHandCursor
-                    if (Math.abs(mouse.x - pressPos.x) < 4 &&
-                        Math.abs(mouse.y - pressPos.y) < 4)
-                        root.collapsed = !root.collapsed
-                }
-                onPressed: (mouse) => handlePress(mouse)
-                onReleased: (mouse) => handleRelease(mouse)
+            RowLayout {
+                width: parent.width
+                height: 18
+                spacing: 6
 
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 6
+                MouseArea {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    cursorShape: Qt.OpenHandCursor
+                    drag.target: root
+                    drag.axis: Drag.XAndYAxis
+                    drag.threshold: 4
+                    onPressed: cursorShape = Qt.ClosedHandCursor
+                    onReleased: cursorShape = Qt.OpenHandCursor
 
                     Text {
+                        anchors.verticalCenter: parent.verticalCenter
                         text: "DEV"
                         color: "#e74c3c"
                         font.bold: true
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                     }
+                }
 
-                    Item { Layout.fillWidth: true }
+                Button {
+                    width: 18
+                    height: 18
+                    text: "✕"
+                    font.pixelSize: 10
 
-                    Text {
-                        text: root.collapsed ? "▶" : "▼"
-                        color: "#888"
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#ccc"
                         font.pixelSize: 10
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
                     }
+
+                    background: Rectangle {
+                        color: parent.pressed ? "#666" : "#444"
+                        radius: 3
+                    }
+
+                    onClicked: Config.devOverlayVisible = false
+                }
+            }
+        }
+
+        ColumnLayout {
+            anchors {
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+                top: header.bottom
+                topMargin: 2
+                leftMargin: 6
+                rightMargin: 6
+                bottomMargin: 6
+            }
+            spacing: 4
+
+            Text {
+                Layout.fillWidth: true
+                color: "#ddd"
+                font.pixelSize: 9
+                wrapMode: Text.WordWrap
+                text: {
+                    var s = Robot.connected ? "● Connected" : "● Disconnected"
+                    if (Robot.connected && Robot.deviceAddress)
+                        s += "  " + Robot.deviceName + " (" + Robot.deviceAddress + ")"
+                    return s
                 }
             }
 
-            // Detailed content — hidden when collapsed
-            ColumnLayout {
-                visible: !root.collapsed
+            Text {
+                Layout.fillWidth: true
+                color: "#ddd"
+                font.pixelSize: 9
+                wrapMode: Text.WordWrap
+                text: "Battery: " + (Robot.battery >= 0 ? Robot.battery + "%" : "N/A")
+            }
+
+            Text {
+                Layout.fillWidth: true
+                color: "#ddd"
+                font.pixelSize: 9
+                wrapMode: Text.WordWrap
+                text: "Firmware (appId): " + (Robot.appId !== "" ? Robot.appId : "N/A")
+            }
+
+            Rectangle {
+                height: 1
+                color: "#555"
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Text {
+                    text: "SESSION"
+                    color: "#3498db"
+                    font.pixelSize: 9
+                    font.bold: true
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    implicitWidth: 40
+                    implicitHeight: 16
+                    font.pixelSize: 8
+                    text: "refresh"
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#ccc"
+                        font.pixelSize: 8
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    background: Rectangle {
+                        color: "#444"
+                        radius: 3
+                    }
+
+                    onClicked: refreshSession()
+                }
+            }
+
+            Flickable {
+                id: sessionFlick
+                Layout.fillWidth: true
+                Layout.fillHeight: false
+                Layout.preferredHeight: sessionCol.height
+                Layout.minimumHeight: 40
+                clip: true
+                contentWidth: sessionCol.width
+                contentHeight: sessionCol.height
+                onVisibleChanged: if (visible) refreshSession()
+                Component.onCompleted: if (visible) refreshSession()
+
+                Column {
+                    id: sessionCol
+                    width: childrenRect.width
+                    spacing: 2
+
+                    Repeater {
+                        model: ListModel { id: sessionModel }
+                        delegate: Text {
+                            width: sessionFlick.width
+                            text: model.key + " = " + model.value
+                            color: "#aaa"
+                            font.pixelSize: 8
+                            font.family: "monospace"
+                            wrapMode: Text.WordWrap
+                        }
+                    }
+                }
+
+                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
+            }
+
+            Rectangle {
+                height: 1
+                color: "#555"
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Text {
+                    text: "LOG"
+                    color: "#e67e22"
+                    font.pixelSize: 9
+                    font.bold: true
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    implicitWidth: 40
+                    implicitHeight: 16
+                    font.pixelSize: 8
+                    text: "copy"
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#ccc"
+                        font.pixelSize: 8
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    background: Rectangle {
+                        color: "#444"
+                        radius: 3
+                    }
+
+                    onClicked: {
+                        var txt = ""
+                        for (var i = 0; i < logModel.count; ++i)
+                            txt += logModel.get(i).text + "\n"
+                        Robot.copyText(txt)
+                    }
+                }
+
+                Button {
+                    implicitWidth: 40
+                    implicitHeight: 16
+                    font.pixelSize: 8
+                    text: "clear"
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#ccc"
+                        font.pixelSize: 8
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    background: Rectangle {
+                        color: "#444"
+                        radius: 3
+                    }
+
+                    onClicked: logModel.clear()
+                }
+            }
+
+            ListView {
+                id: logList
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                spacing: 4
+                clip: true
 
-                Text {
-                    Layout.fillWidth: true
-                    color: "#ddd"
-                    font.pixelSize: 9
+                model: ListModel { id: logModel }
+
+                delegate: Text {
+                    width: logList.width
+                    text: model.text
+                    color: model.isError ? "#e74c3c" : "#aaa"
+                    font.pixelSize: 8
+                    font.family: "monospace"
                     wrapMode: Text.WordWrap
-                    text: {
-                        var s = Robot.connected ? "● Connected" : "● Disconnected"
-                        if (Robot.connected && Robot.deviceAddress)
-                            s += "  " + Robot.deviceName + " (" + Robot.deviceAddress + ")"
-                        return s
-                    }
                 }
 
-                Text {
-                    Layout.fillWidth: true
-                    color: "#ddd"
-                    font.pixelSize: 9
-                    wrapMode: Text.WordWrap
-                    text: "Battery: " + (Robot.battery >= 0 ? Robot.battery + "%" : "N/A")
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    color: "#ddd"
-                    font.pixelSize: 9
-                    wrapMode: Text.WordWrap
-                    text: "Firmware (appId): " + (Robot.appId !== "" ? Robot.appId : "N/A")
-                }
-
-                Rectangle {
-                    height: 1
-                    color: "#555"
-                    Layout.fillWidth: true
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Text {
-                        text: "SESSION"
-                        color: "#3498db"
-                        font.pixelSize: 9
-                        font.bold: true
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    Button {
-                        implicitWidth: 40
-                        implicitHeight: 16
-                        font.pixelSize: 8
-                        text: "refresh"
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#ccc"
-                            font.pixelSize: 8
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        background: Rectangle {
-                            color: "#444"
-                            radius: 3
-                        }
-
-                        onClicked: refreshSession()
-                    }
-                }
-
-                Flickable {
-                    id: sessionFlick
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 100
-                    Layout.minimumHeight: 40
-                    Layout.fillHeight: false
-                    clip: true
-                    contentWidth: sessionCol.width
-                    contentHeight: sessionCol.height
-                    onVisibleChanged: if (visible) refreshSession()
-                    Component.onCompleted: if (visible) refreshSession()
-
-                    Column {
-                        id: sessionCol
-                        width: childrenRect.width
-                        spacing: 2
-
-                        Repeater {
-                            model: ListModel { id: sessionModel }
-                            delegate: Text {
-                                width: sessionFlick.width
-                                text: model.key + " = " + model.value
-                                color: "#aaa"
-                                font.pixelSize: 8
-                                font.family: "monospace"
-                                wrapMode: Text.WordWrap
-                            }
-                        }
-                    }
-
-                    ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
-                    ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
-                }
-
-                Rectangle {
-                    height: 1
-                    color: "#555"
-                    Layout.fillWidth: true
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-
-                    Text {
-                        text: "LOG"
-                        color: "#e67e22"
-                        font.pixelSize: 9
-                        font.bold: true
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    Button {
-                        implicitWidth: 40
-                        implicitHeight: 16
-                        font.pixelSize: 8
-                        text: "copy"
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#ccc"
-                            font.pixelSize: 8
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        background: Rectangle {
-                            color: "#444"
-                            radius: 3
-                        }
-
-                        onClicked: {
-                            var txt = ""
-                            for (var i = 0; i < logModel.count; ++i)
-                                txt += logModel.get(i).text + "\n"
-                            Robot.copyText(txt)
-                        }
-                    }
-
-                    Button {
-                        implicitWidth: 40
-                        implicitHeight: 16
-                        font.pixelSize: 8
-                        text: "clear"
-
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#ccc"
-                            font.pixelSize: 8
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        background: Rectangle {
-                            color: "#444"
-                            radius: 3
-                        }
-
-                        onClicked: logModel.clear()
-                    }
-                }
-
-                ListView {
-                    id: logList
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    clip: true
-
-                    model: ListModel { id: logModel }
-
-                    delegate: Text {
-                        width: logList.width
-                        text: model.text
-                        color: model.isError ? "#e74c3c" : "#aaa"
-                        font.pixelSize: 8
-                        font.family: "monospace"
-                        wrapMode: Text.WordWrap
-                    }
-
-                    ScrollBar.vertical: ScrollBar {
-                        policy: ScrollBar.AsNeeded
-                    }
+                ScrollBar.vertical: ScrollBar {
+                    policy: ScrollBar.AsNeeded
                 }
             }
         }
@@ -374,7 +520,7 @@ Item {
         target: Session
 
         function onSessionChanged() {
-            if (!root.collapsed)
+            if (root.visible)
                 refreshSession()
         }
     }

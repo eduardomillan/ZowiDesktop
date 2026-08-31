@@ -407,12 +407,5 @@ FocusScope {
     }
     }
 
-    Keys.onPressed: (event) => {
-        if (event.key === Qt.Key_D) {
-            Config.devOverlayVisible = !Config.devOverlayVisible
-            homeScope.forceActiveFocus()
-        }
-    }
-
     Component.onCompleted: homeScope.forceActiveFocus()
 }

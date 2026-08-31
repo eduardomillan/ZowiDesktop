@@ -163,6 +163,15 @@ Window {
     DevOverlay {
     }
 
+    // Toggle the DEV overlay from every screen (Ctrl+D). Captured at window
+    // scope so it works regardless of which screen has active focus, without
+    // colliding with typing the letter "d" (e.g. in the rename field).
+    Shortcut {
+        sequence: "Ctrl+D"
+        context: Qt.WindowShortcut
+        onActivated: Config.devOverlayVisible = !Config.devOverlayVisible
+    }
+
     MessageBar {
         id: rootNotice
     }

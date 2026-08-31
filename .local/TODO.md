@@ -23,7 +23,7 @@
 - [X] Al "olvidar a Zowi" se debe emitir un renombrado de fábrica (nombre 'Zowi' original), si es posible la conexión al robot.
 - [X] Al conectar con un Zowi nuevo, es posible que tenga almacenado un nombre distinto al default, por una conexión anterior. En ese caso, el wizard no pedirá renombrarlo y saltará a la homescreen directamente.
 - [X] Añadir un comando en `zowi_cli session` llamado `clear` que borre todos los valores de sesión almacenados.
-- [X] La ventana DEV se puede mostrar/ocultar con la tecla D en splash y home screens.
+- [X] La ventana DEV se puede mostrar/ocultar con Ctrl+D en cualquier screen. Es un panel contenido dentro de la ventana principal, movible y redimensionable en 4 lados/esquinas, con geometría persistente (se centraliza en main.qml, no por pantalla).
 
 
 ## Pruebas automatizadas
