@@ -16,6 +16,7 @@ Rectangle {
     property alias subtitle: subtitleText.text
     property bool showBackButton: false
     property bool showDisconnectButton: false
+    property bool showStatusBar: true
 
     signal backClicked()
     signal disconnectClicked()
@@ -28,6 +29,8 @@ Rectangle {
 
     StatusBar {
         id: statusBar
+        visible: root.showStatusBar
+        height: root.showStatusBar ? 36 : 0
         anchors {
             top: parent.top
             left: parent.left

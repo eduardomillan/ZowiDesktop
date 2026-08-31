@@ -12,8 +12,9 @@ ScreenTemplate {
     title: tr("searching_title")
     subtitle: tr("searching_subtitle")
 
-    showBackButton: false
+    showBackButton: true
     showDisconnectButton: true
+    showStatusBar: false
 
     onBackClicked: scan.back()
     onDisconnectClicked: Robot.disconnectFromDevice()
@@ -83,33 +84,6 @@ ScreenTemplate {
                 horizontalCenter: parent.horizontalCenter
             }
             spacing: 20
-
-            Button {
-                id: backButton
-                implicitWidth: 160
-                height: 44
-                text: "\u2190 " + tr("back")
-
-                contentItem: Text {
-                    text: parent.text
-                    font.pixelSize: 14
-                    font.bold: true
-                    color: "#2d5a2d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    opacity: 0.8
-                }
-
-                background: Rectangle {
-                    radius: 22
-                    color: "transparent"
-                    border.color: "#2d5a2d"
-                    border.width: 2
-                    opacity: 0.5
-                }
-
-                onClicked: scan.back()
-            }
 
             Button {
                 id: scanButton

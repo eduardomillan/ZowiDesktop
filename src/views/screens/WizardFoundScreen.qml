@@ -19,6 +19,7 @@ ScreenTemplate {
     property bool usbMode: false
 
     showBackButton: !pairingAttempt
+    showStatusBar: false
 
     signal paired()
 

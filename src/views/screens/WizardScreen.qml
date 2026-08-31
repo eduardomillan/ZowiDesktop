@@ -14,6 +14,8 @@ ScreenTemplate {
     signal startClicked()
     signal dismissed()
 
+    showStatusBar: false
+
     property bool _pendingStart: false
 
     function tr(source) { return Translator.translate("WizardScreen.qml", source) }
