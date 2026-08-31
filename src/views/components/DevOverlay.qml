@@ -11,6 +11,10 @@ Item {
     visible: Config.devOverlayVisible
 
     readonly property int minHeight: 300
+    readonly property int defaultPixelSize: 10
+    readonly property int headPixelSize: 11
+    readonly property int buttonPixelSize: 11
+    readonly property int titlePixelSize: 12
 
     width: 320
     height: parent ? parent.height / 2 : minHeight
@@ -263,10 +267,10 @@ Item {
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "DEV"
+                        text: "Debug"
                         color: "#e74c3c"
                         font.bold: true
-                        font.pixelSize: 12
+                        font.pixelSize: root.titlePixelSize
                     }
                 }
 
@@ -274,12 +278,12 @@ Item {
                     width: 18
                     height: 18
                     text: "✕"
-                    font.pixelSize: 10
+                    font.pixelSize: root.headerPixelSize
 
                     contentItem: Text {
                         text: parent.text
                         color: "#ccc"
-                        font.pixelSize: 10
+                        font.pixelSize: root.headerPixelSize
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -310,7 +314,7 @@ Item {
             Text {
                 Layout.fillWidth: true
                 color: "#ddd"
-                font.pixelSize: 9
+                font.pixelSize: root.defaultPixelSize
                 wrapMode: Text.WordWrap
                 text: {
                     var s = Robot.connected ? "● Connected" : "● Disconnected"
@@ -323,7 +327,7 @@ Item {
             Text {
                 Layout.fillWidth: true
                 color: "#ddd"
-                font.pixelSize: 9
+                font.pixelSize: root.defaultPixelSize
                 wrapMode: Text.WordWrap
                 text: "Battery: " + (Robot.battery >= 0 ? Robot.battery + "%" : "N/A")
             }
@@ -331,7 +335,7 @@ Item {
             Text {
                 Layout.fillWidth: true
                 color: "#ddd"
-                font.pixelSize: 9
+                font.pixelSize: root.defaultPixelSize
                 wrapMode: Text.WordWrap
                 text: "Firmware (appId): " + (Robot.appId !== "" ? Robot.appId : "N/A")
             }
@@ -348,7 +352,7 @@ Item {
                 Text {
                     text: "SESSION"
                     color: "#3498db"
-                    font.pixelSize: 9
+                    font.pixelSize: root.headPixelSize
                     font.bold: true
                 }
 
@@ -357,13 +361,13 @@ Item {
                 Button {
                     implicitWidth: 40
                     implicitHeight: 16
-                    font.pixelSize: 8
+                    font.pixelSize: root.buttonPixelSize
                     text: "refresh"
 
                     contentItem: Text {
                         text: parent.text
                         color: "#ccc"
-                        font.pixelSize: 8
+                        font.pixelSize: root.buttonPixelSize
                         horizontalAlignment: Text.AlignHCenter
                     }
 
@@ -399,7 +403,7 @@ Item {
                             width: sessionFlick.width
                             text: model.key + " = " + model.value
                             color: "#aaa"
-                            font.pixelSize: 8
+                            font.pixelSize: root.defaultPixelSize
                             font.family: "monospace"
                             wrapMode: Text.WordWrap
                         }
@@ -422,7 +426,7 @@ Item {
                 Text {
                     text: "LOG"
                     color: "#e67e22"
-                    font.pixelSize: 9
+                    font.pixelSize: root.headPixelSize
                     font.bold: true
                 }
 
@@ -431,13 +435,13 @@ Item {
                 Button {
                     implicitWidth: 40
                     implicitHeight: 16
-                    font.pixelSize: 8
+                    font.pixelSize: root.buttonPixelSize
                     text: "copy"
 
                     contentItem: Text {
                         text: parent.text
                         color: "#ccc"
-                        font.pixelSize: 8
+                        font.pixelSize: root.buttonPixelSize
                         horizontalAlignment: Text.AlignHCenter
                     }
 
@@ -457,13 +461,13 @@ Item {
                 Button {
                     implicitWidth: 40
                     implicitHeight: 16
-                    font.pixelSize: 8
+                    font.pixelSize: root.buttonPixelSize
                     text: "clear"
 
                     contentItem: Text {
                         text: parent.text
                         color: "#ccc"
-                        font.pixelSize: 8
+                        font.pixelSize: root.buttonPixelSize
                         horizontalAlignment: Text.AlignHCenter
                     }
 
@@ -488,7 +492,7 @@ Item {
                     width: logList.width
                     text: model.text
                     color: model.isError ? "#e74c3c" : "#aaa"
-                    font.pixelSize: 8
+                    font.pixelSize: root.defaultPixelSize
                     font.family: "monospace"
                     wrapMode: Text.WordWrap
                 }

@@ -18,6 +18,8 @@ ScreenTemplate {
     // skipping the Bluetooth pairing step (used when only USB is available).
     property bool usbMode: false
 
+    showBackButton: !pairingAttempt
+
     signal paired()
 
     function tr(source) { return Translator.translate("WizardFoundScreen.qml", source) }

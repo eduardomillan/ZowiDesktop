@@ -38,7 +38,7 @@ Rectangle {
 
     function withName(base) {
         var n = Session.loadActiveZowiName() || ""
-        return n !== "" ? base + " · " + n : base
+        return n !== "" ? base + " " + n : base
     }
 
     function statusText() {
