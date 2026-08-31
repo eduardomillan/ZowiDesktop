@@ -60,7 +60,7 @@ ScreenTemplate {
 
                     contentItem: Rectangle {
                         radius: 4
-                        color: "#21a69b"
+                        color: Config.get("color_accent") || "#21a69b"
                         opacity: 0.6
                     }
                 }
@@ -69,7 +69,7 @@ ScreenTemplate {
             Text {
                 anchors.centerIn: parent
                 text: Robot.scanning ? tr("no_devices_hint") : tr("no_devices_item")
-                color: Robot.scanning ? "#2d5a2d" : "#c0392b"
+                color: Robot.scanning ? Config.get("color_primary") || "#2d5a2d" : Config.get("color_error") || "#c0392b"
                 font.pixelSize: 14
                 opacity: 0.8
                 horizontalAlignment: Text.AlignHCenter
@@ -105,7 +105,7 @@ ScreenTemplate {
 
                 background: Rectangle {
                     radius: 22
-                    color: Robot.scanning ? "#999999" : (scanButton.pressed ? "#17736c" : "#21a69b")
+                    color: Robot.scanning ? "#999999" : (scanButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b")
                 }
 
                 onClicked: {
@@ -153,7 +153,7 @@ ScreenTemplate {
                     height: 36
                     radius: 18
                     anchors.verticalCenter: parent.verticalCenter
-                    color: "#21a69b"
+                    color: Config.get("color_accent") || "#21a69b"
 
                     Text {
                         anchors.centerIn: parent
@@ -171,7 +171,7 @@ ScreenTemplate {
 
                     Text {
                         text: deviceName
-                        color: "#2d5a2d"
+                        color: Config.get("color_primary") || "#2d5a2d"
                         font.pixelSize: 14
                         font.bold: true
                         elide: Text.ElideRight
@@ -180,7 +180,7 @@ ScreenTemplate {
 
                     Text {
                         text: address
-                        color: "#2d5a2d"
+                        color: Config.get("color_primary") || "#2d5a2d"
                         font.pixelSize: 11
                         opacity: 0.5
                     }
@@ -189,7 +189,7 @@ ScreenTemplate {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: "\u203A"
-                    color: "#21a69b"
+                    color: Config.get("color_accent") || "#21a69b"
                     font.pixelSize: 22
                     font.bold: true
                 }

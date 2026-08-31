@@ -67,7 +67,7 @@ ScreenTemplate {
 
             background: Rectangle {
                 radius: 28
-                color: !pairButton.enabled ? "#999999" : (pairButton.pressed ? "#17736c" : "#21a69b")
+                color: !pairButton.enabled ? "#999999" : (pairButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b")
             }
 
             enabled: !wizardFound.pairingAttempt
@@ -98,7 +98,7 @@ ScreenTemplate {
             id: errorText
             anchors.horizontalCenter: parent.horizontalCenter
             text: tr("connect_error")
-            color: "#e74c3c"
+            color: Config.get("color_danger") || "#e74c3c"
             font.pixelSize: 13
             visible: false
             horizontalAlignment: Text.AlignHCenter

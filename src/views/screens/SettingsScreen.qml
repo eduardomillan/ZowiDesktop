@@ -65,12 +65,12 @@ ScreenTemplate {
     function connectionStatusColor() {
         var s = Robot.situation
         if (s === Robot.SituationConnected)
-            return Config.get("statusbar_fg_connected") || "#2d5a2d"
+            return Config.get("color_primary") || "#2d5a2d"
         if (s === Robot.SituationConnecting)
-            return Config.get("statusbar_fg_connected") || "#2d5a2d"
+            return Config.get("color_primary") || "#2d5a2d"
         if (s === Robot.SituationDemo || s === Robot.SituationTransportLost)
-            return Config.get("statusbar_fg_low_battery") || "#c0392b"
-        return Config.get("statusbar_fg_firmware") || "#8a6d1f"
+            return Config.get("color_error") || "#c0392b"
+        return Config.get("color_firmware") || "#8a6d1f"
     }
 
     // Returns the list of contextual actions for the current situation. Each
@@ -103,7 +103,7 @@ ScreenTemplate {
         var ok = Robot.switchTransport(Robot.TransportAuto)
         settings.switching = false
         if (ok) msgBar.show(tr("transport_switched"))
-        else msgBar.show(tr("transport_failed"), "#c0392b")
+        else msgBar.show(tr("transport_failed"), Config.get("color_error") || "#c0392b")
     }
 
     function connectUsb() {
@@ -144,7 +144,7 @@ ScreenTemplate {
         if (msgBar.visible) return
         if (settings.restoring) return
         if (!Robot.connected) {
-            msgBar.show(tr("restore_failed"), "#c0392b")
+            msgBar.show(tr("restore_failed"), Config.get("color_error") || "#c0392b")
             return
         }
         if (settings.isBaseFirmware()) {
@@ -176,7 +176,7 @@ ScreenTemplate {
         onForgetFinished: function(unpaired, message) {
             settings.forgetting = false
             if (settings._forgettingNoZowi)
-                msgBar.show(tr("reset_no_zowi"), "#c0392b")
+                msgBar.show(tr("reset_no_zowi"), Config.get("color_error") || "#c0392b")
             else if (unpaired)
                 msgBar.show(tr("unpair_success"))
             else
@@ -206,7 +206,7 @@ ScreenTemplate {
             if (success)
                 msgBar.show(tr("restore_success"))
             else
-                msgBar.show(tr("restore_failed"), "#c0392b")
+                msgBar.show(tr("restore_failed"), Config.get("color_error") || "#c0392b")
         }
         // Phase 3: the restore completed the upload but the reported battery is
         // below the safe threshold; ask the user to confirm before finishing.
@@ -215,7 +215,7 @@ ScreenTemplate {
             settings.batteryLow = true
         }
         function onUsbIdentityMismatch() {
-            msgBar.show(tr("usb_identity_mismatch"), "#c0392b")
+            msgBar.show(tr("usb_identity_mismatch"), Config.get("color_error") || "#c0392b")
         }
         function onSituationChanged() {
             settings.connectionStatus = settings.connectionStatusText()
@@ -251,7 +251,7 @@ ScreenTemplate {
             Rectangle {
                 width: optionCol.width
                 height: connCol.implicitHeight + 28
-                color: "#f4f9f4"
+                color: Config.get("color_bg_app") || "#f4f9f4"
 
                 Column {
                     id: connCol
@@ -266,7 +266,7 @@ ScreenTemplate {
                         text: settings.tr("connection")
                         font.bold: true
                         font.pixelSize: 16
-                        color: "#2d5a2d"
+                        color: Config.get("color_primary") || "#2d5a2d"
                         opacity: (settings.restoring || settings.switching) ? 0.45 : 1.0
                     }
 
@@ -292,13 +292,13 @@ ScreenTemplate {
                                 radius: 8
                                 width: actionLabel.implicitWidth + 28
                                 color: "#ffffff"
-                                border.color: "#21a69b"
+                                border.color: Config.get("color_accent") || "#21a69b"
                                 border.width: 1
                                 Text {
                                     id: actionLabel
                                     anchors.centerIn: parent
                                     text: settings.tr(modelData.label)
-                                    color: "#2d5a2d"
+                                    color: Config.get("color_primary") || "#2d5a2d"
                                     font.pixelSize: 13
                                 }
                                 MouseArea {
@@ -333,7 +333,7 @@ ScreenTemplate {
                     width: optionCol.width
                     height: 76
                     enabled: optionRow.effectiveEnabled
-                    color: rowMouse.pressed ? "#e0f0e0" : (index % 2 ? "#ffffff" : "#f4f9f4")
+                    color: rowMouse.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : (index % 2 ? "#ffffff" : Config.get("color_bg_app") || "#f4f9f4")
                     opacity: optionRow.effectiveEnabled ? 1.0 : 0.45
 
                     MouseArea {
@@ -359,12 +359,12 @@ ScreenTemplate {
                             text: settings.tr(modelData.key)
                             font.bold: true
                             font.pixelSize: 16
-                            color: optionRow.effectiveEnabled ? "#2d5a2d" : "#777777"
+                            color: optionRow.effectiveEnabled ? Config.get("color_primary") || "#2d5a2d" : "#777777"
                         }
                         Text {
                             text: settings.tr(modelData.desc)
                             font.pixelSize: 12
-                            color: optionRow.effectiveEnabled ? "#2d5a2d" : "#777777"
+                            color: optionRow.effectiveEnabled ? Config.get("color_primary") || "#2d5a2d" : "#777777"
                             opacity: 0.7
                             wrapMode: Text.WordWrap
                         }
@@ -378,7 +378,7 @@ ScreenTemplate {
                         }
                         text: "›"
                         font.pixelSize: 26
-                        color: "#21a69b"
+                        color: Config.get("color_accent") || "#21a69b"
                         visible: optionRow.effectiveEnabled
                     }
                 }
@@ -404,7 +404,7 @@ ScreenTemplate {
             bottom: parent.bottom
         }
         height: 56
-        color: "#17736c"
+        color: Config.get("color_accent_pressed") || "#17736c"
 
         Text {
             anchors {
@@ -415,7 +415,7 @@ ScreenTemplate {
             }
             horizontalAlignment: Text.AlignHCenter
             text: tr("restore_progress").arg(settings.restoreProgress)
-            color: "#f1c40f"
+            color: Config.get("color_warning_text") || "#f1c40f"
             font.pixelSize: 13
             font.bold: true
         }
@@ -441,7 +441,7 @@ ScreenTemplate {
                 }
                 width: Math.max(2, parent.width * (settings.restoreProgress / 100.0))
                 radius: 5
-                color: "#21a69b"
+                color: Config.get("color_accent") || "#21a69b"
             }
         }
     }
@@ -461,7 +461,7 @@ ScreenTemplate {
             height: confirmColumn.height + 36
             radius: 12
             color: "#fdfbe7"
-            border.color: "#2d5a2d"
+            border.color: Config.get("color_primary") || "#2d5a2d"
             border.width: 2
 
             Column {
@@ -475,7 +475,7 @@ ScreenTemplate {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
                     text: tr("restore_battery_low")
-                    color: "#2d5a2d"
+                    color: Config.get("color_primary") || "#2d5a2d"
                     font.pixelSize: 14
                     font.bold: true
                 }
@@ -487,7 +487,7 @@ ScreenTemplate {
                     Button {
                         text: tr("confirm")
                         background: Rectangle {
-                            color: "#21a69b"
+                            color: Config.get("color_accent") || "#21a69b"
                             radius: 6
                         }
                         contentItem: Text {
@@ -507,7 +507,7 @@ ScreenTemplate {
                     Button {
                         text: tr("cancel")
                         background: Rectangle {
-                            color: "#e74c3c"
+                            color: Config.get("color_danger") || "#e74c3c"
                             radius: 6
                         }
                         contentItem: Text {

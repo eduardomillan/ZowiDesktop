@@ -40,7 +40,7 @@ ScreenTemplate {
     footer: MessageBar {
         id: usbWarnBar
         duration: 3000
-        textColor: "#2d5a2d"
+        textColor: Config.get("color_primary") || "#2d5a2d"
     }
 
     Column {
@@ -77,19 +77,19 @@ ScreenTemplate {
 
                 background: Rectangle {
                     radius: 28
-                    color: startButton.pressed ? "#17736c" : "#21a69b"
+                    color: startButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
                 }
 
                 onClicked: {
                     if (!Robot.bluetoothAvailable && !Robot.usbAvailable) {
-                        usbWarnBar.textColor = "#f1c40f"
-                        usbWarnBar.show(tr("no_transport_error"), "#c0392b")
+                        usbWarnBar.textColor = Config.get("color_warning_text") || "#f1c40f"
+                        usbWarnBar.show(tr("no_transport_error"), Config.get("color_error") || "#c0392b")
                         noTransportTimer.restart()
                         return
                     }
                     if (Robot.usbZowiConfirmed && Robot.bluetoothAvailable) {
-                        usbWarnBar.textColor = "#2d5a2d"
-                        usbWarnBar.show(tr("usb_recommend_disconnect"), "#f1c40f")
+                        usbWarnBar.textColor = Config.get("color_primary") || "#2d5a2d"
+                        usbWarnBar.show(tr("usb_recommend_disconnect"), Config.get("color_warning_text") || "#f1c40f")
                         wizard._pendingStart = true
                         usbWarnTimer.restart()
                     } else {
@@ -108,7 +108,7 @@ ScreenTemplate {
                     text: parent.text
                     font.pixelSize: 14
                     font.bold: true
-                    color: "#2d5a2d"
+                    color: Config.get("color_primary") || "#2d5a2d"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     opacity: 0.8
@@ -117,7 +117,7 @@ ScreenTemplate {
                 background: Rectangle {
                     radius: 28
                     color: "transparent"
-                    border.color: "#2d5a2d"
+                    border.color: Config.get("color_primary") || "#2d5a2d"
                     border.width: 2
                     opacity: 0.5
                 }

@@ -20,7 +20,7 @@ FocusScope {
         anchors.fill: parent
         property string screenName: "SplashScreen"
 
-        color: "#f4f9f4"
+        color: Config.get("color_bg_app") || "#f4f9f4"
 
     Column {
         anchors.centerIn: parent
@@ -38,7 +38,7 @@ FocusScope {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: tr("zowi")
-            color: "#2d5a2d"
+            color: Config.get("color_primary") || "#2d5a2d"
             font.pixelSize: 48
             font.bold: true
             font.family: "monospace"
@@ -47,7 +47,7 @@ FocusScope {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: tr("desktop")
-            color: "#2d5a2d"
+            color: Config.get("color_primary") || "#2d5a2d"
             font.pixelSize: 18
             opacity: 0.7
         }
@@ -75,7 +75,7 @@ FocusScope {
 
             background: Rectangle {
                 radius: 25
-                color: continueButton.pressed ? "#17736c" : "#21a69b"
+                color: continueButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
             }
 
             onClicked: splashScope.splashFinished()
@@ -92,7 +92,7 @@ FocusScope {
                 text: parent.text
                 font.pixelSize: 14
                 font.bold: true
-                color: "#2d5a2d"
+                color: Config.get("color_primary") || "#2d5a2d"
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 opacity: 0.8
@@ -101,7 +101,7 @@ FocusScope {
             background: Rectangle {
                 radius: 25
                 color: "transparent"
-                border.color: "#2d5a2d"
+                border.color: Config.get("color_primary") || "#2d5a2d"
                 border.width: 2
                 opacity: 0.5
             }
@@ -120,7 +120,7 @@ FocusScope {
         height: noBtText.implicitHeight + 24
         radius: 12
         color: "#fff4e5"
-        border.color: "#e67e22"
+        border.color: Config.get("color_warning") || "#e67e22"
         border.width: 1
 
         Text {
@@ -141,7 +141,7 @@ FocusScope {
         anchors.bottom: langRow.top
         anchors.bottomMargin: 10
         text: tr("select_language")
-        color: "#2d5a2d"
+        color: Config.get("color_primary") || "#2d5a2d"
         font.pixelSize: 13
         opacity: 0.6
     }
@@ -190,7 +190,7 @@ FocusScope {
 
             contentItem: Text {
                 text: langCombo.displayText
-                color: "#2d5a2d"
+                color: Config.get("color_primary") || "#2d5a2d"
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
                 font: langCombo.font
@@ -198,7 +198,7 @@ FocusScope {
 
             background: Rectangle {
                 radius: 18
-                border.color: "#2d5a2d"
+                border.color: Config.get("color_primary") || "#2d5a2d"
                 border.width: 1
                 opacity: 0.5
                 color: "transparent"
@@ -212,14 +212,14 @@ FocusScope {
 
                 contentItem: Text {
                     text: model.text
-                    color: "#2d5a2d"
+                    color: Config.get("color_primary") || "#2d5a2d"
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignHCenter
                     font: langCombo.font
                 }
 
                 background: Rectangle {
-                    color: langCombo.highlightedIndex === index ? "#e0f0e0" : "transparent"
+                    color: langCombo.highlightedIndex === index ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
                 }
             }
 
@@ -242,7 +242,7 @@ FocusScope {
                 background: Rectangle {
                     color: "#ffffff"
                     radius: 8
-                    border.color: "#2d5a2d"
+                    border.color: Config.get("color_primary") || "#2d5a2d"
                     border.width: 1
                 }
             }
@@ -280,7 +280,7 @@ FocusScope {
 
             background: Rectangle {
                 radius: 16
-                color: resetButton.pressed ? "#d35400" : "#e67e22"
+                color: resetButton.pressed ? "#d35400" : Config.get("color_warning") || "#e67e22"
             }
 
             enabled: !msgBar.visible
@@ -301,7 +301,7 @@ FocusScope {
         id: forgetter
         onForgetFinished: function(unpaired, message) {
             if (splashScope._resetNoZowi)
-                msgBar.show(tr("reset_no_zowi"), "#c0392b")
+                msgBar.show(tr("reset_no_zowi"), Config.get("color_error") || "#c0392b")
             else if (unpaired)
                 msgBar.show(tr("unpair_success"))
             else

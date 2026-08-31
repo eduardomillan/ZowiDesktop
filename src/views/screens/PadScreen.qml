@@ -75,9 +75,9 @@ ScreenTemplate {
         }
         width: rectangleWidth
         height: rectangleWidth
-        color: "#e8f5e8"
+        color: Config.get("color_bg_connected") || "#e8f5e8"
         radius: 15
-        border.color: "#2d5a2d"
+        border.color: Config.get("color_primary") || "#2d5a2d"
         border.width: 2
 
         Row {
@@ -248,9 +248,9 @@ ScreenTemplate {
         }
         width: rectangleWidth
         height: rectangleWidth
-        color: "#e8f5e8"
+        color: Config.get("color_bg_connected") || "#e8f5e8"
         radius: 15
-        border.color: "#2d5a2d"
+        border.color: Config.get("color_primary") || "#2d5a2d"
         border.width: 2
 
         Column {

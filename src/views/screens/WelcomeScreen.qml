@@ -8,7 +8,7 @@ Rectangle {
     id: welcome
     property string screenName: "WelcomeScreen"
 
-    color: "#f4f9f4"
+    color: Config.get("color_bg_app") || "#f4f9f4"
 
     signal startWizard()
     signal knowMoreClicked()
@@ -31,7 +31,7 @@ Rectangle {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: tr("zowi")
-            color: "#2d5a2d"
+            color: Config.get("color_primary") || "#2d5a2d"
             font.pixelSize: 36
             font.bold: true
             font.family: "monospace"
@@ -40,7 +40,7 @@ Rectangle {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: tr("tagline")
-            color: "#2d5a2d"
+            color: Config.get("color_primary") || "#2d5a2d"
             font.pixelSize: 16
             opacity: 0.8
         }
@@ -68,7 +68,7 @@ Rectangle {
 
                 background: Rectangle {
                     radius: 28
-                    color: startButton.pressed ? "#17736c" : "#21a69b"
+                    color: startButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
                 }
 
                 onClicked: welcome.startWizard()
@@ -84,7 +84,7 @@ Rectangle {
                     text: parent.text
                     font.pixelSize: 14
                     font.bold: true
-                    color: "#2d5a2d"
+                    color: Config.get("color_primary") || "#2d5a2d"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     opacity: 0.8
@@ -93,7 +93,7 @@ Rectangle {
                 background: Rectangle {
                     radius: 28
                     color: "transparent"
-                    border.color: "#2d5a2d"
+                    border.color: Config.get("color_primary") || "#2d5a2d"
                     border.width: 2
                     opacity: 0.5
                 }

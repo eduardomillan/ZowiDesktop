@@ -81,7 +81,7 @@ ScreenTemplate {
 
             background: Rectangle {
                 radius: 28
-                color: renameButton.pressed ? "#17736c" : "#21a69b"
+                color: renameButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
             }
 
             onClicked: {
@@ -95,7 +95,7 @@ ScreenTemplate {
                 }
                 wizardRename.renaming = true
                 statusText.text = tr("sending")
-                statusText.color = "#2d5a2d"
+                statusText.color = Config.get("color_primary") || "#2d5a2d"
                 statusText.visible = true
                 renameTimer.restart()
                 // Firmware command: "R <name>\r"
@@ -119,7 +119,7 @@ ScreenTemplate {
             anchors.horizontalCenter: parent.horizontalCenter
             text: tr("waiting_data")
             font.pixelSize: 14
-            color: "#2d5a2d"
+            color: Config.get("color_primary") || "#2d5a2d"
             visible: Robot.connected && !wizardRename.dataReady && !wizardRename.renaming
             horizontalAlignment: Text.AlignHCenter
         }
@@ -136,13 +136,13 @@ ScreenTemplate {
             // keep the typed name and continue to Home instead of blocking.
             if (wizardRename.usbMode) {
                 statusText.text = tr("rename_skipped_usb").arg(nameField.text.trim())
-                statusText.color = "#2d5a2d"
+                statusText.color = Config.get("color_primary") || "#2d5a2d"
                 statusText.visible = true
                 wizardRename.renamed(nameField.text.trim())
                 return
             }
             statusText.text = tr("rename_failed")
-            statusText.color = "#e74c3c"
+            statusText.color = Config.get("color_danger") || "#e74c3c"
             statusText.visible = true
         }
     }
@@ -193,7 +193,7 @@ ScreenTemplate {
                 renameTimer.stop()
                 wizardRename.renaming = false
                 statusText.text = tr("done").arg(nameField.text.trim())
-                statusText.color = "#2d5a2d"
+                statusText.color = Config.get("color_primary") || "#2d5a2d"
                 statusText.visible = true
                 Robot.setDeviceName(nameField.text.trim())
                 wizardRename.renamed(nameField.text.trim())

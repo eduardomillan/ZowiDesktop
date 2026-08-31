@@ -22,7 +22,7 @@ FocusScope {
         anchors.fill: parent
         property bool robotReady: Robot.connected && Robot.appId !== "" && Robot.battery >= 0
 
-        color: "#f4f9f4"
+        color: Config.get("color_bg_app") || "#f4f9f4"
 
     // Top bar with Settings and Achievements
     Row {
@@ -49,7 +49,7 @@ FocusScope {
 
             background: Rectangle {
                 radius: 44
-                color: settingsBtn.pressed ? "#e0f0e0" : "transparent"
+                color: settingsBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
             }
 
             onClicked: homeScope.settingsClicked()
@@ -71,7 +71,7 @@ FocusScope {
 
             background: Rectangle {
                 radius: 44
-                color: achievementsBtn.pressed ? "#e0f0e0" : "transparent"
+                color: achievementsBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
             }
 
             onClicked: homeScope.achievementsClicked()
@@ -106,7 +106,7 @@ FocusScope {
 
             Text {
                 text: tr("zowi_apps")
-                color: swipeView.currentIndex === 0 ? "#21a69b" : "#2d5a2d"
+                color: swipeView.currentIndex === 0 ? Config.get("color_accent") || "#21a69b" : Config.get("color_primary") || "#2d5a2d"
                 font.pixelSize: 18
                 font.bold: swipeView.currentIndex === 0
                 opacity: swipeView.currentIndex === 0 ? 1.0 : 0.5
@@ -120,14 +120,14 @@ FocusScope {
 
             Text {
                 text: "|"
-                color: "#2d5a2d"
+                color: Config.get("color_primary") || "#2d5a2d"
                 font.pixelSize: 18
                 opacity: 0.3
             }
 
             Text {
                 text: tr("projects")
-                color: swipeView.currentIndex === 1 ? "#21a69b" : "#2d5a2d"
+                color: swipeView.currentIndex === 1 ? Config.get("color_accent") || "#21a69b" : Config.get("color_primary") || "#2d5a2d"
                 font.pixelSize: 18
                 font.bold: swipeView.currentIndex === 1
                 opacity: swipeView.currentIndex === 1 ? 1.0 : 0.5
@@ -183,8 +183,8 @@ FocusScope {
                             height: btnSize
                             radius: Math.min(btnSize * 0.2, 16)
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: appMouse.containsMouse && home.robotReady ? "#e0f0e0" : "#ffffff"
-                            border.color: "#21a69b"
+                            color: appMouse.containsMouse && home.robotReady ? Config.get("color_bg_hover") || "#e0f0e0" : "#ffffff"
+                            border.color: Config.get("color_accent") || "#21a69b"
                             border.width: 1
                             opacity: home.robotReady ? 1.0 : 0.4
 
@@ -215,7 +215,7 @@ FocusScope {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: name
-                            color: "#2d5a2d"
+                            color: Config.get("color_primary") || "#2d5a2d"
                             font.pixelSize: Math.min(parent.width * 0.1, 12)
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
@@ -256,8 +256,8 @@ FocusScope {
                         height: cellBox
                         radius: Math.min(cellBox * 0.2, 16)
                         anchors.horizontalCenter: parent.horizontalCenter
-                        color: projMouse.containsMouse && home.robotReady ? "#e0f0e0" : "#ffffff"
-                        border.color: "#21a69b"
+                        color: projMouse.containsMouse && home.robotReady ? Config.get("color_bg_hover") || "#e0f0e0" : "#ffffff"
+                        border.color: Config.get("color_accent") || "#21a69b"
                         border.width: 1
                         opacity: home.robotReady ? 1.0 : 0.4
 
@@ -282,7 +282,7 @@ FocusScope {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: name
-                        color: "#2d5a2d"
+                        color: Config.get("color_primary") || "#2d5a2d"
                         font.pixelSize: Math.min(projectsGrid.cellWidth * 0.1, 12)
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
@@ -315,7 +315,7 @@ FocusScope {
 
             background: Rectangle {
                 radius: 14
-                color: "#e67e22"
+                color: Config.get("color_warning") || "#e67e22"
             }
 
             onClicked: homeScope.goSplash()
@@ -336,7 +336,7 @@ FocusScope {
 
             background: Rectangle {
                 radius: 14
-                color: "#e67e22"
+                color: Config.get("color_warning") || "#e67e22"
             }
 
             onClicked: homeScope.goWelcome()
@@ -358,7 +358,7 @@ FocusScope {
                 width: swipeView.currentIndex === index ? 12 : 8
                 height: 8
                 radius: 4
-                color: swipeView.currentIndex === index ? "#21a69b" : "#cccccc"
+                color: swipeView.currentIndex === index ? Config.get("color_accent") || "#21a69b" : "#cccccc"
 
                 MouseArea {
                     anchors.fill: parent

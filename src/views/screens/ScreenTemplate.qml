@@ -10,7 +10,7 @@ Rectangle {
     id: root
     property string screenName: ""
 
-    color: "#f4f9f4"
+    color: Config.get("color_bg_app") || "#f4f9f4"
 
     property alias title: titleText.text
     property alias subtitle: subtitleText.text
@@ -53,15 +53,15 @@ Rectangle {
         contentItem: Text {
             text: "\u2190"
             font.pixelSize: 22
-            color: "#2d5a2d"
+            color: Config.get("color_primary") || "#2d5a2d"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
         }
 
         background: Rectangle {
             radius: 20
-            color: backBtn.pressed ? "#e0f0e0" : "transparent"
-            border.color: "#2d5a2d"
+            color: backBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+            border.color: Config.get("color_primary") || "#2d5a2d"
             border.width: 1
             opacity: 0.4
         }
@@ -93,7 +93,7 @@ Rectangle {
 
         background: Rectangle {
             radius: 16
-            color: disconnectBtn.pressed ? "#c0392b" : "#e74c3c"
+            color: disconnectBtn.pressed ? Config.get("color_error") || "#c0392b" : Config.get("color_danger") || "#e74c3c"
         }
 
         onClicked: root.disconnectClicked()
@@ -110,7 +110,7 @@ Rectangle {
 
         Text {
             id: titleText
-            color: "#2d5a2d"
+            color: Config.get("color_primary") || "#2d5a2d"
             font.pixelSize: 36
             font.bold: true
             font.family: "monospace"
@@ -119,7 +119,7 @@ Rectangle {
 
         Text {
             id: subtitleText
-            color: "#2d5a2d"
+            color: Config.get("color_primary") || "#2d5a2d"
             font.pixelSize: 16
             opacity: 0.8
             horizontalAlignment: Text.AlignHCenter

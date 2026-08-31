@@ -9,7 +9,7 @@ Window {
     width: 1024
     height: 600
     title: "ZowiDesktop - " + AppVersion + (stack.currentItem && stack.currentItem.screenName ? " - " + stack.currentItem.screenName : "")
-    color: "#f4f9f4"
+    color: Config.get("color_bg_app") || "#f4f9f4"
 
     property bool paired: false
 

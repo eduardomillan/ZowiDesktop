@@ -12,10 +12,10 @@ Rectangle {
         bottom: parent.bottom
     }
     height: 40
-    color: "#17736c"
+    color: Config.get("color_accent_pressed") || "#17736c"
 
     property alias message: msgText.text
-    property color textColor: "#f1c40f"
+    property color textColor: Config.get("color_warning_text") || "#f1c40f"
     property int duration: 2000
 
     signal dismissed()
@@ -31,7 +31,7 @@ Rectangle {
     function show(text, bg) {
         msgText.text = text || ""
         if (msgText.text === "") return
-        root.color = (bg !== undefined) ? bg : "#17736c"
+        root.color = (bg !== undefined) ? bg : Config.get("color_accent_pressed") || "#17736c"
         root.visible = true
         root.opacity = 1
         hideTimer.restart()
