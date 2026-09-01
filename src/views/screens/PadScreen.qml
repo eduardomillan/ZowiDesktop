@@ -428,111 +428,116 @@ ScreenTemplate {
         }
     }
 
-    Item {
-        id: speedControl
-        width: buttonExtraSize
-        height: buttonExtraSize
-        anchors {
-            bottom: parent.bottom
-            horizontalCenter: parent.horizontalCenter
-            bottomMargin: 20
-        }
-
-        Image {
-            id: speedSlowBtn
-            anchors.fill: parent
-            source: "qrc:/images/android/pad_speed_slow_button.png"
-            sourceSize.width: buttonExtraSize
-            sourceSize.height: buttonExtraSize
-            fillMode: Image.PreserveAspectFit
-            visible: currentSpeed === 2000
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    setSpeed(1000, tr("speed_medium"))
-                    console.log("[PadScreen] Speed: medium (1000ms)")
-                }
-            }
-        }
-
-        Image {
-            id: speedMediumBtn
-            anchors.fill: parent
-            source: "qrc:/images/android/pad_speed_medium_button.png"
-            sourceSize.width: buttonExtraSize
-            sourceSize.height: buttonExtraSize
-            fillMode: Image.PreserveAspectFit
-            visible: currentSpeed === 1000
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    setSpeed(700, tr("speed_fast"))
-                    console.log("[PadScreen] Speed: fast (700ms)")
-                }
-            }
-        }
-
-        Image {
-            id: speedFastBtn
-            anchors.fill: parent
-            source: "qrc:/images/android/pad_speed_fast_button.png"
-            sourceSize.width: buttonExtraSize
-            sourceSize.height: buttonExtraSize
-            fillMode: Image.PreserveAspectFit
-            visible: currentSpeed === 700
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    setSpeed(2000, tr("speed_slow"))
-                    console.log("[PadScreen] Speed: slow (2000ms)")
-                }
-            }
-        }
-    }
-
-    Image {
-        id: animsBtn
-        width: buttonExtraSize
-        height: buttonExtraSize
-        source: "qrc:/images/android/animation_happy_button.png"
-        sourceSize.width: buttonExtraSize
-        sourceSize.height: buttonExtraSize
-        fillMode: Image.PreserveAspectFit
+    Rectangle {
+        id: controlPad
         anchors {
             horizontalCenter: parent.horizontalCenter
-            bottom: speedControl.top
-            bottomMargin: 15
+            verticalCenter: parent.verticalCenter
+            margins: 20
         }
+        width: rectangleWidth
+        height: rectangleWidth
+        color: Config.get("color_bg_connected") || "#e8f5e8"
+        radius: 15
+        border.color: Config.get("color_primary") || "#2d5a2d"
+        border.width: 2
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                console.log("[PadScreen] Animations button clicked (not yet implemented)")
+        Column {
+            anchors.centerIn: parent
+            spacing: 20
+
+            Image {
+                id: mouthsBtn
+                width: buttonExtraSize
+                height: buttonExtraSize
+                source: "qrc:/images/android/smile_button.png"
+                sourceSize.width: buttonExtraSize
+                sourceSize.height: buttonExtraSize
+                fillMode: Image.PreserveAspectFit
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        console.log("[PadScreen] Mouths button clicked (not yet implemented)")
+                    }
+                }
             }
-        }
-    }
 
-    Image {
-        id: mouthsBtn
-        width: buttonExtraSize
-        height: buttonExtraSize
-        source: "qrc:/images/android/smile_button.png"
-        sourceSize.width: buttonExtraSize
-        sourceSize.height: buttonExtraSize
-        fillMode: Image.PreserveAspectFit
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            bottom: animsBtn.top
-            bottomMargin: 15
-        }
+            Image {
+                id: animsBtn
+                width: buttonExtraSize
+                height: buttonExtraSize
+                source: "qrc:/images/android/animation_happy_button.png"
+                sourceSize.width: buttonExtraSize
+                sourceSize.height: buttonExtraSize
+                fillMode: Image.PreserveAspectFit
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                console.log("[PadScreen] Mouths button clicked (not yet implemented)")
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        console.log("[PadScreen] Animations button clicked (not yet implemented)")
+                    }
+                }
+            }
+
+            Item {
+                id: speedControl
+                width: buttonExtraSize
+                height: buttonExtraSize
+
+                Image {
+                    id: speedSlowBtn
+                    anchors.fill: parent
+                    source: "qrc:/images/android/pad_speed_slow_button.png"
+                    sourceSize.width: buttonExtraSize
+                    sourceSize.height: buttonExtraSize
+                    fillMode: Image.PreserveAspectFit
+                    visible: currentSpeed === 2000
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            setSpeed(1000, tr("speed_medium"))
+                            console.log("[PadScreen] Speed: medium (1000ms)")
+                        }
+                    }
+                }
+
+                Image {
+                    id: speedMediumBtn
+                    anchors.fill: parent
+                    source: "qrc:/images/android/pad_speed_medium_button.png"
+                    sourceSize.width: buttonExtraSize
+                    sourceSize.height: buttonExtraSize
+                    fillMode: Image.PreserveAspectFit
+                    visible: currentSpeed === 1000
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            setSpeed(700, tr("speed_fast"))
+                            console.log("[PadScreen] Speed: fast (700ms)")
+                        }
+                    }
+                }
+
+                Image {
+                    id: speedFastBtn
+                    anchors.fill: parent
+                    source: "qrc:/images/android/pad_speed_fast_button.png"
+                    sourceSize.width: buttonExtraSize
+                    sourceSize.height: buttonExtraSize
+                    fillMode: Image.PreserveAspectFit
+                    visible: currentSpeed === 700
+
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            setSpeed(2000, tr("speed_slow"))
+                            console.log("[PadScreen] Speed: slow (2000ms)")
+                        }
+                    }
+                }
             }
         }
     }
