@@ -100,10 +100,30 @@ ScreenTemplate {
     function retryConnection() {
         if (msgBar.visible || settings.restoring || settings.switching) return
         settings.switching = true
-        var ok = Robot.switchTransport(Robot.TransportAuto)
-        settings.switching = false
-        if (ok) msgBar.show(tr("transport_switched"))
-        else msgBar.show(tr("transport_failed"), Config.get("color_error") || "#c0392b")
+        var ok = false
+
+        // Disconnected: retry with registered transport (don't change preference)
+        if (Robot.situation === Robot.SituationDisconnected) {
+            var regTransport = Session.loadActiveZowiTransport()
+            if (regTransport === "usb") {
+                Robot.connectUsb()
+                ok = Robot.connected
+            } else if (regTransport === "bt" || regTransport === "bluetooth") {
+                var addr = Session.loadActiveZowiDeviceAddress()
+                if (addr) {
+                    Robot.connectToDevice(addr)
+                    ok = Robot.connected
+                }
+            }
+            settings.switching = false
+            if (ok) msgBar.show(tr("transport_switched"))
+            else msgBar.show(tr("transport_failed"), Config.get("color_error") || "#c0392b")
+        }
+        // TransportLost: refresh availability; auto-reconnect handles re-plug
+        else if (Robot.situation === Robot.SituationTransportLost) {
+            settings.switching = false
+            Robot.refreshTransports()
+        }
     }
 
     function connectUsb() {
