@@ -132,17 +132,22 @@ Window {
         // Recompute the situation so SettingsScreen reflects a live connection.
         Robot.refreshTransports()
 
+        if (!Robot.deviceName) {
+            _waitForName(function() { _routeAfterNameCheck() })
+            return
+        }
+        _routeAfterNameCheck()
+    }
+
+    function _routeAfterNameCheck() {
         var defaultName = Config.get("zowi_default_name") || "Zowi"
         if (Robot.deviceName && Robot.deviceName.toLowerCase() !== defaultName.toLowerCase()) {
             Session.saveActiveZowiName(Robot.deviceName)
             rootNotice.show(tr("already_named").arg(Robot.deviceName))
-            var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
-            connectHome(home)
+            homeTransitionTimer.start()
             return
         }
         var rename = stack.push("qrc:/src/views/screens/WizardRenameScreen.qml")
-        // Flag USB-only connections so the rename is best-effort (the robot may
-        // not ACK the rename over USB).
         rename.usbMode = Robot.usbAvailable && !Robot.bluetoothAvailable
         rename.backClicked.connect(function() { stack.pop() })
         rename.renamed.connect(function(name) {
@@ -152,11 +157,43 @@ Window {
         })
     }
 
+    function _waitForName(callback) {
+        var done = false
+        var handler = function() {
+            if (!done && Robot.deviceName) {
+                done = true
+                Robot.deviceChanged.disconnect(handler)
+                callback()
+            }
+        }
+        Robot.deviceChanged.connect(handler)
+        var safetyTimer = Qt.createQmlObject(
+            'import QtQuick 2.15; Timer { interval: 5000; repeat: false }', main)
+        safetyTimer.triggered.connect(function() {
+            if (!done) {
+                done = true
+                Robot.deviceChanged.disconnect(handler)
+                safetyTimer.destroy()
+                callback()
+            }
+        })
+        safetyTimer.start()
+    }
+
     StackView {
         id: stack
         anchors.fill: parent
         initialItem: SplashScreen {
             Component.onCompleted: connectSplash(this)
+        }
+    }
+
+    Timer {
+        id: homeTransitionTimer
+        interval: 800
+        onTriggered: {
+            var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
+            connectHome(home)
         }
     }
 

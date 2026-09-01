@@ -38,15 +38,15 @@ Leyenda de estados de la máquina de situación:
 
 - [X] **D1 — Doble presencia del mismo robot (Bt + USB a la vez)**: un único transporte activo (Bt prioritario) y aviso del cable.
 - [X] **D2 — Robot USB distinto al registrado por Bt**: no autoconecta; pregunta si *olvidar* el actual y registrar el conectado por USB.
-- [ ] **D3 — Transporte aparece/desaparece en runtime** (enchufar cable, activar/desactivar Bt): reevaluación sin reiniciar la app (`usbAvailable`, adaptador Bt, `situation`).
-- [ ] **D4 — Modo demo con transporte que aparece después**: ofrece salir del demo e iniciar el registro correspondiente.
+- [X] **D3 — Transporte aparece/desaparece en runtime** (enchufar cable, activar/desactivar Bt): reevaluación sin reiniciar la app (`usbAvailable`, adaptador Bt, `situation`).
+- [X] **D4 — Modo demo con transporte que aparece después**: sale del modo demo y recupera el registro existente.
 
 ## E. Robot rehecho / renombrado previamente (detectado en pruebas)
 
-- [ ] **E2 — Registro con nombre ≠ defecto**: al volver a registrar, si el nombre leído no es el nombre por defecto (`zowi_default_name`, case-insensitive) **se salta `WizardRenameScreen`** y va a `HomeScreen`, conservando el nombre.
-- [ ] **E3 — Aviso de nombre existente**: al saltar el rename se muestra un `MessageBar` indicando el nombre que ya tenía el robot ("Robot already named \"X\". Keeping it.").
-- [ ] **E4 — Lectura y persistencia del firmware (appId)**: se parsea `&&I <appId>%%`, se expone `Robot.appId`, y se persiste en sesión `activeZowiAppId`.
-- [ ] **E5 — El appId se muestra en la UI**: pill `FW <appId>` en `StatusBar` (cuando conectado) y línea *Firmware (appId)* en `DevOverlay`.
+- [X] **E2 — Registro con nombre ≠ defecto**: al volver a registrar, si el nombre leído no es el nombre por defecto (`zowi_default_name`, case-insensitive) **muestra `WizardRenameScreen`** con el nombre leído y va a `HomeScreen`, aplicando el nombre indicado.
+- [X] **E3 — Aviso de nombre existente**: al saltar el rename se muestra un `MessageBar` indicando el nombre que ya tenía el robot ("Robot already named \"X\". Keeping it.").
+- [X] **E4 — Lectura y persistencia del firmware (appId)**: se parsea `&&I <appId>%%`, se expone `Robot.appId`, y se persiste en sesión `activeZowiAppId`.
+- [X] **E5 — El appId se muestra en la UI**: pill `FW <appId>` en `StatusBar` (cuando conectado) y línea *Firmware (appId)* en `DevOverlay`.
 
 
 
