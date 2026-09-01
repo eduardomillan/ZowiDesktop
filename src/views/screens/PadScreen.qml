@@ -437,10 +437,8 @@ ScreenTemplate {
         }
         width: rectangleWidth
         height: rectangleWidth
-        color: Config.get("color_bg_connected") || "#e8f5e8"
-        radius: 15
-        border.color: Config.get("color_primary") || "#2d5a2d"
-        border.width: 2
+        color: "transparent"
+        border.width: 0
 
         Column {
             anchors.centerIn: parent
