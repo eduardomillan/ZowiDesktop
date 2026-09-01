@@ -11,7 +11,13 @@ else()
     qt5_add_resources(GUI_RESOURCES ${GUI_QRC_FILES})
 endif()
 
-add_executable(ZowiDesktop
+if(WIN32)
+    set(ZOWI_ICON_PATH "${CMAKE_SOURCE_DIR}/images/app_icon.ico")
+    configure_file(${CMAKE_SOURCE_DIR}/images/app_icon.rc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/app_icon.rc @ONLY)
+endif()
+
+add_executable(ZowiDesktop WIN32
     main.cpp
     controllers/SessionController.cpp
     controllers/TranslatorController.cpp
@@ -19,6 +25,10 @@ add_executable(ZowiDesktop
     controllers/ConfigController.cpp
     ${GUI_RESOURCES}
 )
+
+if(WIN32)
+    target_sources(ZowiDesktop PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/app_icon.rc")
+endif()
 
 target_include_directories(ZowiDesktop PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(ZowiDesktop PRIVATE ZOWI_VERSION="${PROJECT_VERSION}")

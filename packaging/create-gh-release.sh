@@ -5,7 +5,6 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
 WIN_BUILD_DIR="$PROJECT_ROOT/build-windows"
 WIN_DIST_DIR="$WIN_BUILD_DIR/dist"
-INSTALLER_DIR="$PROJECT_ROOT/dist-installer"
 
 # Global release flag. When --with-apt is given, the script also builds and
 # publishes the signed apt repo (jammy + noble) to the gh-pages branch.
@@ -64,7 +63,8 @@ else
     RELEASE_FILES+=("$DEB_NOBLE")
 fi
 
-# Windows artifacts are optional but attached when present.
+# Windows artifacts (portable zip + installer) are optional but attached when
+# present; both live under build-windows/dist/ (see RELEASE.md).
 WIN_ZIP=$(ls "$WIN_DIST_DIR"/ZowiDesktop-${VERSION}-windows-x86_64.zip 2>/dev/null | head -n1)
 if [ -n "$WIN_ZIP" ]; then
     echo "  OK: $(basename "$WIN_ZIP")"
@@ -73,12 +73,12 @@ else
     echo "  (optional) no portable zip found at $WIN_DIST_DIR/ZowiDesktop-${VERSION}-windows-x86_64.zip"
 fi
 
-WIN_INSTALLER=$(ls "$INSTALLER_DIR"/ZowiDesktop-${VERSION}-setup-x64.exe 2>/dev/null | head -n1)
+WIN_INSTALLER=$(ls "$WIN_DIST_DIR"/ZowiDesktop-${VERSION}-setup-x64.exe 2>/dev/null | head -n1)
 if [ -n "$WIN_INSTALLER" ]; then
     echo "  OK: $(basename "$WIN_INSTALLER")"
     RELEASE_FILES+=("$WIN_INSTALLER")
 else
-    echo "  (optional) no installer found at $INSTALLER_DIR/ZowiDesktop-${VERSION}-setup-x64.exe"
+    echo "  (optional) no installer found at $WIN_DIST_DIR/ZowiDesktop-${VERSION}-setup-x64.exe"
 fi
 
 if [ "$MISSING" -eq 1 ]; then

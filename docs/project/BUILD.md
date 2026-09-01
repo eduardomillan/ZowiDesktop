@@ -84,7 +84,7 @@ cmake --build build
 | **Linux (native)** | `build/src/gui/ZowiDesktop` | `./build.sh` |
 | **Linux (AppImage)** | `build/ZowiDesktop-<version>-x86_64.AppImage` | `./packaging/linux/create-appimage.sh` |
 | **Linux (.deb)** | `build/zowi-desktop_<version>-1+<distro>_amd64.deb` | `./packaging/linux/create-deb.sh` |
-| **Windows (zip + installer)** | `dist/` + `dist-installer/` | Windows machine (`build.bat`, `build-installer.bat`) or GitHub Actions (`windows.yml`) |
+| **Windows (zip + installer)** | `build-windows/dist/` | Windows machine (`build.bat`, `build-installer.bat`) or GitHub Actions (`windows.yml`) |
 
 ## Linux AppImage
 
@@ -121,6 +121,9 @@ The resulting `.deb` files are placed in `build/`.
 Releases are created **manually** (no CI workflow). To create a GitHub release
 attached with the AppImage and Debian packages:
 
+> The complete end-to-end release guide (version bumps, all platform artifacts,
+> apt repo publishing) lives in [docs/project/RELEASE.md](RELEASE.md).
+
 ```bash
 # GitHub Release with Linux artifacts (+ Windows zip/installer if present)
 ./packaging/create-gh-release.sh
@@ -133,7 +136,7 @@ The script:
 - Reads the version from `CMakeLists.txt`
 - Verifies the required artifacts exist (AppImage + .deb jammy + .deb noble)
 - Attaches the Windows portable zip and installer too, if found in
-  `build-windows/dist/` and `dist-installer/`
+  `build-windows/dist/`
 - Extracts changelog entries from `debian/changelog`
 - Creates a git tag `v<version>` and pushes it
 - Creates a GitHub Release with the artifacts attached
@@ -171,13 +174,14 @@ From the same MSVC prompt, with Inno Setup 6 installed:
 packaging\windows\installer\build-installer.bat
 ```
 
-Produces `dist-installer\ZowiDesktop-<version>-setup-x64.exe` from everything in
-`dist\`.
+Produces `build-windows\dist\ZowiDesktop-<version>-setup-x64.exe` from
+everything in `dist\`.
 
 ### Windows portable .zip (MSVC)
 
-`packaging/windows/build-portable.bat` builds `ZowiDesktop.exe` and packs it
-(with Qt DLLs/QML via `windeployqt`) into `ZowiDesktop-windows-x86_64-build-<YYYYMMDD>.zip`.
+`packaging/windows/build-portable.bat` builds `ZowiDesktop.exe` and
+`zowi_cli.exe` and packs them (with Qt DLLs/QML via `windeployqt`) into
+`build-windows\dist\ZowiDesktop-<version>-windows-x86_64.zip`.
 
 > The old `create-portable-zip.sh` MinGW cross-compile script has been removed:
 > the WinRT `bt_native` backend requires the Windows SDK and does not build with
@@ -195,8 +199,8 @@ artifacts on a `windows-latest` runner using the MSVC 2022 toolchain and Qt 6.8:
   - `ZowiDesktop-<version>-setup-x64.exe` (Inno Setup installer)
 
 To run it: **Actions → Windows CI → Run workflow**. When it finishes, download
-the two artifacts. To attach them to a manual GitHub Release, place the zip in
-`build-windows/dist/` and the installer in `dist-installer/`, then run:
+the two artifacts. To attach them to a manual GitHub Release, place them in
+`build-windows/dist/`, then run:
 
 ```bash
 ./packaging/create-gh-release.sh --with-apt

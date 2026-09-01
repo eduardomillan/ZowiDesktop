@@ -17,7 +17,7 @@ set SCRIPT_DIR=%~dp0
 for %%i in ("%SCRIPT_DIR%..\..\..") do set PROJECT_ROOT=%%~fi
 set BUILD_DIR=%PROJECT_ROOT%\build-win-installer
 set DIST_DIR=%PROJECT_ROOT%\dist
-set DIST_INST=%PROJECT_ROOT%\dist-installer
+set DIST_INST=%PROJECT_ROOT%\build-windows\dist
 
 REM --- Locate tools ---
 if not defined QT_PATH     set QT_PATH=C:\Qt\6.11.1\msvc2022_64
@@ -31,8 +31,12 @@ set VERSION=
 for /f %%v in ('powershell -NoProfile -Command "$c = Get-Content '%PROJECT_ROOT%\CMakeLists.txt' -Raw; if ($c -match 'project\(.*VERSION\s+([\d\.]+)') { $Matches[1] }"') do set VERSION=%%v
 echo Detected version: %VERSION%
 
+REM --- Back up src/config.json so uncommitted changes survive packaging ---
+copy "%PROJECT_ROOT%\src\config.json" "%TEMP%\zowi_config_backup.json" >nul
+
 REM --- Packaged builds ship with dev mode OFF. Re-enabled at runtime via ZOWI_DEV ---
-powershell -NoProfile -Command "$c = [IO.File]::ReadAllText('%PROJECT_ROOT%\src\config.json'); $c = $c -replace '(\"dev_mode\"\s*:\s*\")[^\"]*(\")', '${1}false${2}'; [IO.File]::WriteAllText('%PROJECT_ROOT%\src\config.json', $c)"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%..\set_dev_mode.ps1" false "%PROJECT_ROOT%\src\config.json"
+if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 REM --- Step 1: Configure ---
 echo.
@@ -67,13 +71,15 @@ echo === Step 5: Build installer with Inno Setup ===
 if not exist "%DIST_INST%" mkdir "%DIST_INST%"
 "%ISCC_PATH%\iscc.exe" /DVERSION=%VERSION% "%SCRIPT_DIR%zowi-desktop.iss"
 if %ERRORLEVEL% neq 0 (
-    git checkout -- "%PROJECT_ROOT%\src\config.json" 2>nul
+    copy /y "%TEMP%\zowi_config_backup.json" "%PROJECT_ROOT%\src\config.json" >nul
+    del "%TEMP%\zowi_config_backup.json" >nul 2>nul
     echo ERROR: Inno Setup failed
     exit /b %ERRORLEVEL%
 )
 
 REM --- Restore dev mode for the development tree ---
-git checkout -- "%PROJECT_ROOT%\src\config.json" 2>nul
+copy /y "%TEMP%\zowi_config_backup.json" "%PROJECT_ROOT%\src\config.json" >nul
+del "%TEMP%\zowi_config_backup.json" >nul 2>nul
 
 echo.
 echo === Done ===

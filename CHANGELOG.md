@@ -5,32 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.0] - 2026-07-19 (en pruebas)
-
-> **Estado:** esta versión está en fase de pruebas. Los cambios de transporte y
-> la máquina de estados de situación aún se están validando; pueden aparecer
-> ajustes antes del release definitivo.
-
-### Changed
-- **Transport is no longer user-selectable.** The *Connection* selector in
-  **Settings** (Automatic / Bluetooth / USB) has been replaced by a status panel
-  driven by a `RobotController` situation state machine
-  (`Demo` / `Unregistered` / `Connecting` / `Connected` / `Disconnected` /
-  `TransportLost`). The app now picks the best available transport on its own and
-  offers only contextual actions (retry, register, forget & reconfigure, connect
-  via USB, refresh).
-- **The registered transport is now tied to the Zowi registration.**
-  `RobotController` persists `activeZowiTransport` (bt/usb) when a registered
-  Zowi connects, so switching transports requires *forgetting* the Zowi.
-- **Renamed `BluetoothController` → `RobotController`** and the QML context
-  property `Bluetooth` → `Robot`, reflecting that the controller is
-  transport-agnostic (covers connection, registration, firmware restore and the
-  new situation state machine).
-- **Window title now shows the app version.** Format:
-  `ZowiDesktop - {version} - {screen name}`.
-- **DEV overlay** no longer duplicates the robot name/address line.
-
-
+## [0.6.0] - 2026-09-01
 
 ### Added
 - **Choose USB or Bluetooth in the GUI.** The desktop app is no longer locked
@@ -40,8 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   serial/USB backend.
 - **Automatic transport detection (hybrid).** In *Automatic* mode the app
   detects the best available connection at startup and preselects it, giving
-  USB priority when a robot is found on a port. The chosen transport is shown
-  and can be overridden at any time; unavailable options are disabled.
+  Bluetooth priority when a robot is found on a port. 
 - **USB robot identification handshake.** Before treating a USB serial port as
   a robot, the app performs a lightweight `I` (program-id) handshake and only
   accepts ports that reply with a valid Zowi app id, avoiding false positives
@@ -89,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`setTransportPreference`).
 - **Rename lock after pairing.** `WizardRenameScreen` disables the name field
   and rename button for a configurable period (`rename_lock_ms`, default
-  `1500 ms`) after appearing, giving the robot time to finish its welcome
+  `3000 ms`) after appearing, giving the robot time to finish its welcome
   gesture before the user types/confirms.
 - **DEV overlay improvements (diagnostic).** The `DevOverlay` now opens expanded
   by default, word-wraps its text, is resizable from its right / bottom / corner
@@ -102,10 +76,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the reset+upload; **Cancel** aborts without touching the robot. New signal
   `firmwareRestoreBatteryLow(level)` and the `confirmRestoreBattery(bool)` slot
   back this handshake.
+- **Native Windows support.** The Windows port now uses a dedicated C++/WinRT
+  Bluetooth backend (`NativeBluetoothBackend`) with classic device discovery,
+  automatic pairing (`PIN 1234`) and an SPP/RFCOMM `StreamSocket`, replacing Qt
+  Bluetooth / BlueZ on Windows; the `bt_native` backend is shared by the GUI and
+  the CLI. USB runs over the WinSerial backend (COM ports), with DTR-driven
+  resets suppressed while enumerating and polling ports. A `build.bat`, portable
+  zip, Inno Setup installer and a manual release flow for the Windows artifacts
+  complete the platform support.
+- **New PadScreen.** Drives the robot with click-and-hold controls (directional
+  pad, turns, side action buttons) and an entry point to the Animations view;
+  the Home screen buttons were reorganised into a single centred row.
+- **CLI `control` subcommand.** Interactive driving with arrow keys / WASD, Q/E
+  turns and speed presets, also available over USB with `--backend usb`.
+- **ARM action movements in core.** Added `bend`, `shake_leg`, `updown`,
+  `jitter`, `swing`, `flapping`, `crusaito`, and other action commands.
+- **CLI black-box test suite.** `scripts/test/run-cli-blackbox*.sh` covers the
+  CLI end to end and is wired into `run-tests.sh` and CI.
+- **Per-day log file.** The GUI logs to `ZowiDesktop-YYYY-MM-DD.log` under the
+  platform AppData location (e.g. `~/.local/share/ZowiDesktop/`); the console
+  output is filtered by `log_level` while the file keeps the full history.
+- **Locales persisted across sessions** via the session store.
+- **Bluetooth-off detection.** `hasAdapter()` now uses the WinRT Radios API and
+  only reports an adapter when a Bluetooth radio is actually powered on.
+- **USB auto-reconnect.** When a previously used USB port reappears the app
+  reconnects automatically, and USB disconnects are detected.
 
 ### Changed
+- **Transport is no longer user-selectable.** The *Connection* selector in
+  **Settings** (Automatic / Bluetooth / USB) has been replaced by a status panel
+  driven by a `RobotController` situation state machine
+  (`Demo` / `Unregistered` / `Connecting` / `Connected` / `Disconnected` /
+  `TransportLost`). The app now picks the best available transport on its own and
+  offers only contextual actions (retry, register, forget & reconfigure, connect
+  via USB, refresh).
+- **The registered transport is now tied to the Zowi registration.**
+  `RobotController` persists `activeZowiTransport` (bt/usb) when a registered
+  Zowi connects, so switching transports requires *forgetting* the Zowi.
+- **Renamed `BluetoothController` → `RobotController`** and the QML context
+  property `Bluetooth` → `Robot`, reflecting that the controller is
+  transport-agnostic (covers connection, registration, firmware restore and the
+  new situation state machine).
+- **Window title now shows the app version.** Format:
+  `ZowiDesktop - {version} - {screen name}`.
+- **DEV overlay** no longer duplicates the robot name/address line.
+- **`[bt_native]` messages now go through Qt logging.** The per-second
+  send/receive trace (GUI and CLI) only appears when `log_level` is `debug`;
+  real errors surface as `qWarning`. The CLI installs a matching message handler
+  that mirrors warnings/errors and only prints debug output at `log_level=debug`.
+- **Auto-transport refinements.** Auto mode honours the registered transport,
+  forces the USB backend when Bluetooth is unavailable, and shows the USB
+  disconnect hint only for a confirmed Zowi over USB.
+- **Semantic colors unified** in `config.json`; transport values are normalised
+  to the `bt` / `usb` constants shared by core.
+- **ScanScreen** hides the device list until a scan starts and appends the robot
+  name to status messages.
+- **StatusBar** distinguishes `TransportLost` from `Disconnected`, and its
+  visibility is fixed.
 - `config.json` gains `usb_bootloader_baud` (`115200`), `transport_timeout`
-  (`1500`), `rename_lock_ms` (`1500`), `restore_low_battery_threshold` (`50`),
+  (`1500`), `rename_lock_ms` (`5000`), `restore_low_battery_threshold` (`50`),
   `restore_simulate_low_battery` (testing aid) and `factory_firmware_path`.
 - Transport persistence now goes through the shared `SessionController` store so
   the DEV *SESSION* panel reflects the live `transport` value.
@@ -120,6 +149,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   device otherwise.
 
 ### Fixed
+- **Windows fixes.** The CLI interactive `control` mode, SerialDevice port
+  matching and the portable build were fixed; the GUI no longer hangs on close
+  and *Forget Zowi* no longer crashes (the transport is closed, not the reader,
+  to safely interrupt `LoadAsync`); the Inno Setup installer script was
+  corrected.
+- **Connection-attempt timeout falls back to Demo.** A connection attempt that
+  outlives `connect_timeout` no longer leaves the UI stuck in *Connecting…*; it
+  drops into Demo and keeps probing in the background.
+- **USB robot identity verified against the registered Zowi.** A USB port is
+  only treated as the registered robot when the reported name matches.
+- **Wait for the robot name** before applying the *already named* rename skip.
 - **USB restore failed silently.** `restoreFirmware` trusted `m_deviceAddress`,
   which the serial backend clears on every reconnect, so the USB target was
   empty and the upload bailed out before even reopening the port. It now falls
@@ -129,6 +169,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `qrc:/` URL syntax used by QML; the path is now normalised to the `:/`
   resource syntax before extracting the HEX to a temporary file (the temp file
   is kept alive for the duration of the upload).
+- **Remaining i18n keys translated** in `bg_BG`, `ca_ES` and `fr_FR`
+  (connection, transport and USB labels), and the DevOverlay close-button font
+  size no longer references an undefined property.
 
 ## [0.5.0] - 2026-07-18
 

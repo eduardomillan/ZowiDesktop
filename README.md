@@ -44,6 +44,10 @@ Cross-platform build with Qt (C++ core + QML GUI):
 
 Full build details live in [docs/project/BUILD.md](docs/project/BUILD.md).
 
+## Releases
+
+Releases are manual. See [docs/project/RELEASE.md](docs/project/RELEASE.md) for the end-to-end guide on building the Linux (AppImage + Debian) and Windows (portable + installer) artifacts, publishing the GitHub Release, and updating the signed apt repository.
+
 ## Testing
 
 ```bash

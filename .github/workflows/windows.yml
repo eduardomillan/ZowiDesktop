@@ -87,4 +87,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
-          path: dist-installer/ZowiDesktop-${{ steps.ver.outputs.version }}-setup-x64.exe
+          path: build-windows/dist/ZowiDesktop-${{ steps.ver.outputs.version }}-setup-x64.exe
