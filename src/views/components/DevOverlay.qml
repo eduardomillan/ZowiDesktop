@@ -278,12 +278,12 @@ Item {
                     width: 18
                     height: 18
                     text: "✕"
-                    font.pixelSize: root.headerPixelSize
+                    font.pixelSize: root.headPixelSize
 
                     contentItem: Text {
                         text: parent.text
                         color: "#ccc"
-                        font.pixelSize: root.headerPixelSize
+                        font.pixelSize: root.headPixelSize
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }

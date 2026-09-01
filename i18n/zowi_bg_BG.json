@@ -10,7 +10,7 @@
     "unpair_app_only": "Устройството е премахнато от приложението, но не можа да бъде раздвоено от Bluetooth системата.",
     "reset_no_zowi": "В момента няма регистриран Zowi в приложението.",
     "no_bluetooth_demo": "Не е открито Bluetooth устройство. Приложението ще работи само в демо режим.",
-    "no_connection": "No Bluetooth adapter or USB robot detected. Plug in your Zowi via USB or enable Bluetooth."
+    "no_connection": "Не е открито Bluetooth устройство или USB робот. Свържете вашия Zowi чрез USB или активирайте Bluetooth."
   },
   "SettingsScreen.qml": {
     "settings": "Настройки",
@@ -64,14 +64,13 @@
     "transport_auto_hint": "Изберете най-добрата налична връзка автоматично.",
     "transport_bt_hint": "Свържете се безжично чрез Bluetooth.",
     "transport_usb_hint": "Свържете се чрез USB кабела.",
-    "transport_switched": "Connection method updated.",
-    "transport_failed": "Could not connect with the selected method.",
-    "transport_unavailable": "Not available",
-    "usb_no_ports": "No robot detected on USB.",
-    "usb_identity_mismatch": "Името на свързания робот не съвпада с регистрирания Zowi.",
-    "usb_refresh": "Refresh",
-    "usb_connect": "Connect via USB",
-    "usb_select_port": "Select a USB port"
+    "transport_switched": "Свързано с вашия Zowi.",
+    "transport_failed": "Неуспешно свързване с вашия Zowi.",
+    "transport_unavailable": "Не е налично",
+    "usb_no_ports": "Не е открит робот на USB.",
+    "usb_refresh": "Обнови",
+    "usb_connect": "Свързване чрез USB",
+    "usb_select_port": "Изберете USB порт"
   },
   "StatusBar.qml": {
     "connected": "Свързан",

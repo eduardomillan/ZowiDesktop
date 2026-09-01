@@ -31,4 +31,4 @@
 - [ ] Smoke test de la GUI headless (arranque/cierre con `QT_QPA_PLATFORM=offscreen`), fuera del alcance de la fase inicial de pruebas de caja negra del CLI.
 
 ## Windows
-- [ ] Implementar la conexión por USB y probar todo el flujo de la aplicación
+- [X] Implementar la conexión por USB y probar todo el flujo de la aplicación
