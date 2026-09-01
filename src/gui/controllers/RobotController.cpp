@@ -783,6 +783,12 @@ void RobotController::pollTransports()
         m_backend->disconnect();
     }
 
+    if (usbChanged && m_backendKind == Usb && !m_connected && !m_connecting 
+        && !m_connectTimedOut && !m_usbPort.isEmpty() && ports.contains(m_usbPort)) {
+        qInfo() << "[conn] USB port reappeared, auto-reconnecting";
+        connectUsb(m_usbPort);
+    }
+
     bool usbAvail = !ports.isEmpty();
 #ifdef ZOWI_HAVE_NATIVE_BT
     bool btAvail = zowi::NativeBluetoothBackend::hasAdapter();
