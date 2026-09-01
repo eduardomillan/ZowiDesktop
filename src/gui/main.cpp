@@ -78,7 +78,11 @@ void messageHandler(QtMsgType type, const QMessageLogContext &ctx, const QString
 
 QString openLogFile()
 {
-    const QString dir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    // Logs live under ~/.local/share/ZowiDesktop (Linux) regardless of the
+    // application/organization names, so use the generic data location and
+    // append the app folder explicitly (AppDataLocation would produce a
+    // duplicated ~/.local/share/ZowiDesktop/ZowiDesktop on Linux).
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/ZowiDesktop";
     if (!QDir().mkpath(dir))
         return QString();
     // One file per day, e.g. ZowiDesktop-2026-07-19.log
@@ -122,7 +126,16 @@ static void watchQmlDir(QFileSystemWatcher &watcher, const QString &dir)
 
 int main(int argc, char *argv[])
 {
-    // Install the log handler first so every message (including ones emitted
+    // Create the application and set its identity first: QStandardPaths
+    // (and thus the AppDataLocation used for the daily log) depend on the
+    // application/organization names being set.
+    QQuickStyle::setStyle("Basic");
+    QGuiApplication app(argc, argv);
+    app.setApplicationName("ZowiDesktop");
+    app.setOrganizationName("ZowiDesktop");
+    app.setWindowIcon(QIcon(":/images/app_icon.png"));
+
+    // Install the log handler early so every message (including ones emitted
     // during setup below) is captured to the daily file.
     const QString logPath = openLogFile();
     qInstallMessageHandler(messageHandler);
@@ -137,12 +150,6 @@ int main(int argc, char *argv[])
         qWarning() << "Logging: could not open daily log file under AppDataLocation";
     else
         qInfo() << "ZowiDesktop started; logging to" << logPath;
-
-    QQuickStyle::setStyle("Basic");
-    QGuiApplication app(argc, argv);
-    app.setApplicationName("ZowiDesktop");
-    app.setOrganizationName("ZowiDesktop");
-    app.setWindowIcon(QIcon(":/images/app_icon.png"));
 
     QString appDir = QCoreApplication::applicationDirPath();
     app.addLibraryPath(appDir);
