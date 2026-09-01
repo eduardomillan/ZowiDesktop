@@ -141,7 +141,11 @@ int main(int argc, char **argv)
 
     CLI11_PARSE(app, argc, argv);
 
-    // ── Dispatch ──────────────────────────────────────────────
+    // ── Logging setup ────────────────────────────────────────────
+    zowi_cli::loadLogLevel();
+    zowi_cli::installLogHandler();
+
+    // ── Dispatch ──────────────────────────────────────────────────
     if (*sessionCmd)    return zowi_cli::runSession(sessionArgs);
     if (*translateCmd)  return zowi_cli::runTranslate(translateArgs);
     if (*configCmd)     return zowi_cli::runConfig(configArgs);

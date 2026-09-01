@@ -43,6 +43,10 @@ void resetRobotState();
 // Called by resetRobotState() so every command handler picks it up.
 void loadLogLevel();
 
+// Installs a Qt message handler that mirrors qWarning/qCritical/qInfo/qFatal to
+// stderr and only prints qDebug output when log_level == "debug".
+void installLogHandler();
+
 std::string trimRobotMessage(const std::string &msg);
 
 // Parses a single already-delimited robot message (a &&-token or a legacy

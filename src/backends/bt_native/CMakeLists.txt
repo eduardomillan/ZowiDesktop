@@ -5,7 +5,7 @@ add_library(zowi_bt_native STATIC
 
 target_link_libraries(zowi_bt_native
     PUBLIC Zowi::core
-    PRIVATE runtimeobject ole32 windowsapp
+    PRIVATE Qt${ZOWI_QT_VERSION}::Core runtimeobject ole32 windowsapp
 )
 
 target_include_directories(zowi_bt_native

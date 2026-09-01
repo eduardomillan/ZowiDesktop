@@ -1,7 +1,11 @@
 #include "cli_state.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <cstdlib>
 #include <iostream>
+#include <QDebug>
+#include <QString>
 #include <zowi/protocol.h>
 #include <zowi/config_store.h>
 #ifdef _WIN32
@@ -56,6 +60,35 @@ void loadLogLevel()
 {
     zowi::ConfigStore config("src/config.json");
     g_debugLog = (config.get("log_level") == "debug");
+}
+
+static void cliMessageHandler(QtMsgType type, const QMessageLogContext &ctx, const QString &msg)
+{
+    Q_UNUSED(ctx);
+    switch (type) {
+    case QtDebugMsg:
+        if (!g_debugLog) return;
+        fprintf(stderr, "[DEBUG] %s\n", msg.toUtf8().constData());
+        break;
+    case QtWarningMsg:
+        fprintf(stderr, "[WARN] %s\n", msg.toUtf8().constData());
+        break;
+    case QtCriticalMsg:
+        fprintf(stderr, "[ERROR] %s\n", msg.toUtf8().constData());
+        break;
+    case QtFatalMsg:
+        fprintf(stderr, "[FATAL] %s\n", msg.toUtf8().constData());
+        abort();
+        break;
+    default:
+        fprintf(stderr, "[INFO] %s\n", msg.toUtf8().constData());
+        break;
+    }
+}
+
+void installLogHandler()
+{
+    qInstallMessageHandler(cliMessageHandler);
 }
 
 std::string trimRobotMessage(const std::string &msg)
