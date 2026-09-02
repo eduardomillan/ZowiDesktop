@@ -16,6 +16,7 @@ ScreenTemplate {
 
     signal renameRequested()
     signal forgetCompleted()
+    signal calibrationRequested()
 
     property bool forgetting: false
     property bool _forgettingNoZowi: false
@@ -156,7 +157,7 @@ ScreenTemplate {
         { key: "update",         desc: "update_desc",         connGated: false, action: function() { msgBar.show(tr("update_stub")) } },
         { key: "achievements",   desc: "achievements_desc",   connGated: false, action: function() { msgBar.show(tr("achievements_stub")) } },
         { key: "forget",         desc: "forget_desc",         connGated: false, needsRegistration: true, action: function() { settings.forgetZowi() } },
-        { key: "calibrate",      desc: "calibrate_desc",      connGated: true,  action: function() { msgBar.show(tr("calibrate_stub")) } },
+        { key: "calibrate",      desc: "calibrate_desc",      connGated: true,  enabledWhen: function() { return settings.isBaseFirmware() }, action: function() { settings.calibrationRequested() } },
         { key: "hospital",       desc: "hospital_desc",       connGated: false, action: function() { Qt.openUrlExternally(Config.get("hospital_url")) } }
     ]
 

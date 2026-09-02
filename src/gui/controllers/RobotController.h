@@ -111,6 +111,10 @@ public:
 
     Q_INVOKABLE void setDeviceName(const QString &name);
 
+    // Pause/resume the periodic data poll (name/appId/battery). Used while the
+    // calibration screen is open so the BLE link carries only live G commands.
+    Q_INVOKABLE void setDataPollingEnabled(bool enabled);
+
     // Transport / USB helpers.
     Q_INVOKABLE QStringList listUsbPorts() const;
     Q_INVOKABLE void refreshTransports();

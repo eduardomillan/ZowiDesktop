@@ -189,5 +189,21 @@
   },
   "main.qml": {
     "already_named": "Robot already named \"%1\". Keeping it."
+  },
+  "CalibrationScreen.qml": {
+    "calibration": "Calibrate Zowi",
+    "warning": "This will move Zowi's servos and let you adjust the position of its legs and feet. The calibration is saved permanently to the robot's EEPROM.",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "left_leg": "Left leg",
+    "right_leg": "Right leg",
+    "left_foot": "Left foot",
+    "right_foot": "Right foot",
+    "next_step": "Next step",
+    "finish": "Finish",
+    "check_desc": "Check that Zowi stands correctly. Test the movement or confirm to save the calibration.",
+    "test_movement": "Test movement",
+    "restart": "Restart",
+    "confirm": "Confirm"
   }
 }

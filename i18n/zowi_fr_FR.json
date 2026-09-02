@@ -188,5 +188,21 @@
   },
   "main.qml": {
     "already_named": "Le robot s'appelle déjà « %1 ». Conservé."
+  },
+  "CalibrationScreen.qml": {
+    "calibration": "Calibrer Zowi",
+    "warning": "Cela déplacera les servos de Zowi et vous permettra d'ajuster la position de ses pattes et de ses pieds. Le calibrage est sauvegardé de façon permanente dans l'EEPROM du robot.",
+    "cancel": "Annuler",
+    "continue": "Continuer",
+    "left_leg": "Patte gauche",
+    "right_leg": "Patte droite",
+    "left_foot": "Pied gauche",
+    "right_foot": "Pied droit",
+    "next_step": "Étape suivante",
+    "finish": "Terminer",
+    "check_desc": "Vérifiez que Zowi est bien stable. Testez le mouvement ou confirmez pour sauvegarder le calibrage.",
+    "test_movement": "Tester le mouvement",
+    "restart": "Recommencer",
+    "confirm": "Confirmer"
   }
 }

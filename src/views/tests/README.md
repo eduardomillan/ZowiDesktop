@@ -70,6 +70,8 @@ These options are forwarded to the `zowi_screen_preview` executable:
 
 - `--connected` — Simulate a connected robot state
 - `--locale <locale>` — Set the application locale (e.g., `es_ES`, `fr_FR`, `en_US`)
+- `--step <N>` — Open a screen on an internal step (used by CalibrationScreen):
+  `0` = Warning, `1` = Legs, `2` = Feet, `3` = Check
 
 **Example:**
 ```bash
@@ -79,6 +81,10 @@ These options are forwarded to the `zowi_screen_preview` executable:
 ### Environment Variables
 
 - `QT_PATH` — Path to Qt installation (e.g., `~/Qt/6.5.2/gcc_64`)
+- `PREVIEW_GRAB_DIR` — If set, the preview captures the window to
+  `<dir>/<ScreenName>_step<N>.png` and exits (headless layout checks), instead
+  of showing an interactive window. Good for iterating on layout in CI or
+  without a display.
 
 **Example:**
 ```bash
@@ -105,6 +111,7 @@ The preview executable loads the QML screen in isolation, providing mock context
 | `preview-scan.sh` | ScanScreen | — |
 | `preview-home.sh` | HomeScreen | `--connected` |
 | `preview-pad.sh` | PadScreen | `--connected` |
+| `preview-calibration.sh` | CalibrationScreen | `--connected` |
 
 ## Adding a New Preview Script
 

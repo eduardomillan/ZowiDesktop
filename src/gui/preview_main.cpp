@@ -1,7 +1,9 @@
 #include <QColor>
 #include <QCoreApplication>
+#include <QDir>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QImage>
 #include <QQmlContext>
 #include <QQuickStyle>
 #include <QQuickView>
@@ -120,6 +122,10 @@ public:
         emit connectionChanged();
     }
 
+    // No-op: the preview has no periodic data poll to pause. Present so the
+    // CalibrationScreen preview can call it safely.
+    Q_INVOKABLE void setDataPollingEnabled(bool /*enabled*/) {}
+
     Q_INVOKABLE void sendData(const QString &data) {
         // Simulate the firmware's acknowledge flow for the rename command
         // ("R <name>\r"): it replies with &&A (received) then &&F (final ack
@@ -162,6 +168,7 @@ struct PreviewOptions
     QString deviceName = QStringLiteral("Zowi Demo");
     QString deviceAddress = QStringLiteral("B4:9D:0B:32:41:0E");
     bool connected = false;
+    int step = -1;   // -1 = not specified (screen uses its internal default)
 };
 
 static PreviewOptions parseOptions(const QStringList &arguments)
@@ -184,6 +191,10 @@ static PreviewOptions parseOptions(const QStringList &arguments)
             options.deviceAddress = arg.section(QLatin1Char('='), 1);
         } else if (arg == QStringLiteral("--device-address") && i + 1 < arguments.size()) {
             options.deviceAddress = arguments.at(++i);
+        } else if (arg.startsWith(QStringLiteral("--step="))) {
+            options.step = arg.section(QLatin1Char('='), 1).toInt();
+        } else if (arg == QStringLiteral("--step") && i + 1 < arguments.size()) {
+            options.step = arguments.at(++i).toInt();
         } else if (!arg.startsWith(QStringLiteral("--")) && options.screenPath.isEmpty()) {
             options.screenPath = arg;
         }
@@ -206,7 +217,7 @@ int main(int argc, char *argv[])
 
     const PreviewOptions options = parseOptions(QCoreApplication::arguments());
     if (options.screenPath.isEmpty()) {
-        qCritical("Usage: zowi_screen_preview <screen.qml> [--locale xx_YY] [--connected] [--device-name NAME] [--device-address MAC]");
+        qCritical("Usage: zowi_screen_preview <screen.qml> [--locale xx_YY] [--connected] [--device-name NAME] [--device-address MAC] [--step N]");
         return 1;
     }
 
@@ -229,6 +240,10 @@ int main(int argc, char *argv[])
     view.rootContext()->setContextProperty(QStringLiteral("Session"), &session);
     view.rootContext()->setContextProperty(QStringLiteral("Robot"), &robot);
     view.rootContext()->setContextProperty(QStringLiteral("AppVersion"), QString(ZOWI_VERSION));
+    // Optional: let a screen open on an internal step (e.g. calibration steps
+    // 0..3). Screens read it as `PreviewStep` and fall back to their own default.
+    if (options.step >= 0)
+        view.rootContext()->setContextProperty(QStringLiteral("PreviewStep"), options.step);
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setWidth(1024);
     view.setHeight(600);
@@ -241,6 +256,27 @@ int main(int argc, char *argv[])
     loadScreen(view, options.screenPath);
     if (view.status() != QQuickView::Ready)
         return 1;
+
+    // Optional headless screen capture: when PREVIEW_GRAB_DIR is set, grab the
+    // window to "<dir>/<ScreenName>_step<N>.png" (or _step-1 when none) and exit.
+    // Useful for iterating on layout without a display.
+    const QByteArray grabDirEnv = qgetenv("PREVIEW_GRAB_DIR");
+    if (!grabDirEnv.isEmpty()) {
+        const QString grabDir = QString::fromUtf8(grabDirEnv);
+        QTimer::singleShot(300, &view, [&view, grabDir, options]() {
+            QImage img = view.grabWindow();
+            const QString name = QFileInfo(options.screenPath).baseName();
+            const QString path = QDir(grabDir).filePath(
+                QStringLiteral("%1_step%2.png").arg(name).arg(options.step));
+            if (img.save(path))
+                qInfo().noquote() << "[preview] saved" << path;
+            else
+                qWarning().noquote() << "[preview] failed to write" << path;
+            QCoreApplication::quit();
+        });
+        view.show();
+        return app.exec();
+    }
 
     view.show();
     return app.exec();

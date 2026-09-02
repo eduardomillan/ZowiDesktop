@@ -415,6 +415,16 @@ void RobotController::requestRobotData()
     m_backend->send(zowi::makeCommand(zowi::Command::GetBattery));
 }
 
+void RobotController::setDataPollingEnabled(bool enabled)
+{
+    if (enabled) {
+        if (m_connected && !m_uploadMode)
+            m_dataPollTimer.start(1000);
+    } else {
+        m_dataPollTimer.stop();
+    }
+}
+
 // --- Property getters -------------------------------------------------------
 
 bool RobotController::isBluetoothAvailable() const

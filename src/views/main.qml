@@ -46,6 +46,10 @@ Window {
         settings.backClicked.connect(function() {
             stack.pop()
         })
+        settings.calibrationRequested.connect(function() {
+            var calib = stack.push("qrc:/src/views/screens/CalibrationScreen.qml")
+            calib.backClicked.connect(function() { stack.pop() })
+        })
         settings.renameRequested.connect(function() {
             var rename = stack.push("qrc:/src/views/screens/WizardRenameScreen.qml")
             rename.backClicked.connect(function() { stack.pop() })

@@ -12,11 +12,13 @@
         <file>src/views/screens/SettingsScreen.qml</file>
         <file>src/views/screens/PadScreen.qml</file>
         <file>src/views/screens/ScreenTemplate.qml</file>
+        <file>src/views/screens/CalibrationScreen.qml</file>
         <!-- Components -->
         <file>src/views/components/AnimatedZowi.qml</file>
         <file>src/views/components/StatusBar.qml</file>
         <file>src/views/components/DevOverlay.qml</file>
         <file>src/views/components/MessageBar.qml</file>
         <file>src/views/components/ForgetController.qml</file>
+        <file>src/views/components/CalibrationTrimColumn.qml</file>
     </qresource>
 </RCC>

@@ -188,5 +188,21 @@
   },
   "main.qml": {
     "already_named": "El robot ja es diu «%1». Es manté."
+  },
+  "CalibrationScreen.qml": {
+    "calibration": "Calibrar Zowi",
+    "warning": "Això mourà els servos de Zowi i et permetrà ajustar la posició de les seves potes i peus. La calibració es guarda de manera permanent a l'EEPROM del robot.",
+    "cancel": "Cancel·la",
+    "continue": "Continua",
+    "left_leg": "Cama esquerra",
+    "right_leg": "Cama dreta",
+    "left_foot": "Peu esquerre",
+    "right_foot": "Peu dret",
+    "next_step": "Pas següent",
+    "finish": "Finalitza",
+    "check_desc": "Comprova que Zowi es manté dret. Prova el moviment o confirma per guardar la calibració.",
+    "test_movement": "Provar moviment",
+    "restart": "Reinicia",
+    "confirm": "Confirma"
   }
 }
