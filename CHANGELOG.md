@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `commandMouth()`, `commandMouthById()`, `commandGesture(GestureId)` and
   `commandSing()` functions. A new `CommandsController` exposes all robot commands
   to QML, replacing hardcoded protocol strings in `PadScreen`.
+- **CLI robot control subcommands.** New `move`, `gesture`, `mouth` and `sing`
+  subcommands for one-shot robot control from the command line. Each accepts
+  either a name or numeric ID, and supports `--list` to show available options.
+  Examples: `zowi_cli move forward --speed fast`, `zowi_cli gesture victory`,
+  `zowi_cli mouth smile`, `zowi_cli sing happy`.
 
 ### Changed
 - **PadScreen refactor.** All movement/action buttons now use `Commands.xxx()`
