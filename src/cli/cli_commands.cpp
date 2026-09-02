@@ -5,8 +5,10 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <array>
 #include <csignal>
 #include <chrono>
+#include <thread>
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -739,6 +741,360 @@ int runControl(int argc, char **argv, const ControlArgs &a)
     if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
     std::cout << "\n\nStopped. Disconnected. Bye!\n";
     return 0;
+}
+
+// Interactive or one-shot servo-trim calibration (protocol commands C/G).
+// Interactive mode walks WARNING → LEGS → FEET → CHECK like the Android app,
+// sending live G commands so the user sees each change on the robot. Trims are
+// clamped to ±60°. Direct mode (all four trims given via --yl/--yr/--rl/--rr)
+// persists them with a single C command.
+int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
+{
+    constexpr int kBaseGrade = 90;
+    constexpr int kMinTrim = -60;
+    constexpr int kMaxTrim = 60;
+    // The firmware moves each servo for ~200 ms; don't flood it with faster
+    // consecutive G commands during the interactive wizard.
+    constexpr auto kDebounce = std::chrono::milliseconds(200);
+
+    auto clampTrim = [&](int v) {
+        return std::max(kMinTrim, std::min(kMaxTrim, v));
+    };
+
+    QCoreApplication qtApp(argc, argv);
+    resetRobotState();
+
+    zowi::SessionStore session("ZowiDesktop", "ZowiApp");
+
+    std::string backend = a.backend;
+    if (backend == "auto") {
+        backend = session.getString("activeZowiTransport");
+        if (backend == "bt") backend = "bluetooth";
+        if (backend.empty()) backend = "bluetooth";
+    }
+
+    const std::string targetAddr = a.address.empty()
+                                       ? session.getString("activeZowiDeviceAddress")
+                                       : a.address;
+    if (targetAddr.empty()) {
+        std::cerr << "No paired device found. Run 'connect' first or pass --address." << std::endl;
+        return 1;
+    }
+
+    std::string target, boundTty;
+    auto bt = prepareFlashBackend(backend, targetAddr, a.tty, a.baud, target, boundTty);
+    if (!bt) return 1;
+
+#ifdef ZOWI_HAVE_SERIAL
+    const bool isUsb = (dynamic_cast<SerialBackend *>(bt.get()) != nullptr);
+#else
+    const bool isUsb = false;
+#endif
+    const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
+
+#ifndef ZOWI_HAVE_NATIVE_BT
+    if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+        std::cout << "Discovering " << target << "..." << std::endl;
+        discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
+    }
+#endif
+
+    std::cout << "Connecting to " << target << "..." << std::endl;
+
+    bt->onDataReceived([](const std::string &data) { onDataReceived(data); });
+    bt->onConnectionChanged([&](bool connected) {
+        g_connected = connected;
+        if (connected) {
+            std::cout << "Connected." << std::endl;
+        } else {
+            std::cout << "\n\nDisconnected." << std::endl;
+        }
+    });
+    bt->onError([&](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
+
+    bt->connect(target);
+
+    if (!waitUntil(qtApp, effTimeout * 1000, []() {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            return g_connected;
+        })) {
+        std::cerr << "Could not connect to the robot within " << effTimeout << "s." << std::endl;
+        bt->disconnect();
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        return 1;
+    }
+
+    const bool lowBattery = waitForBatteryLevel(qtApp, 2000)
+                            && g_battery >= 0 && g_battery < kLowBatteryThreshold;
+
+    // Persist trims with a C command and wait for the EEPROM final ack (&&F).
+    auto persistTrims = [&](const std::array<int, 4> &t) -> bool {
+        {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            g_finalAck = false;
+        }
+        bt->send(zowi::commandSetTrims(t[0], t[1], t[2], t[3]));
+        return waitUntil(qtApp, effTimeout * 1000, []() {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            return g_finalAck;
+        });
+    };
+
+    // Move the four servos to 90 + trim in real time (volatile G command).
+    auto sendServos = [&](const std::array<int, 4> &t) {
+        bt->send(zowi::commandServoAt(kBaseGrade + t[0], kBaseGrade + t[1],
+                                      kBaseGrade + t[2], kBaseGrade + t[3]));
+    };
+
+    // VICTORY gesture (firmware gesture id 12) unless --no-victory.
+    auto playVictory = [&]() {
+        if (!a.noVictory) {
+            bt->send(zowi::commandGesture(12));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+    };
+
+    // Reset stored trims and move every servo back to neutral.
+    auto resetCalibration = [&]() {
+        bt->send(zowi::commandSetTrims(0, 0, 0, 0));
+        std::this_thread::sleep_for(kDebounce);
+        bt->send(zowi::commandServoAt(kBaseGrade, kBaseGrade, kBaseGrade, kBaseGrade));
+    };
+
+    // ── Direct mode: --yl --yr --rl --rr given, no wizard ─────────
+    if (a.direct) {
+        std::array<int, 4> trims{{a.yl, a.yr, a.rl, a.rr}};
+        const std::array<const char *, 4> names{{"YL", "YR", "RL", "RR"}};
+        for (size_t i = 0; i < trims.size(); ++i) {
+            const int clamped = clampTrim(trims[i]);
+            if (clamped != trims[i]) {
+                std::cout << "Warning: " << names[i] << " trim " << trims[i]
+                          << " clamped to " << clamped << " (range " << kMinTrim
+                          << ".." << kMaxTrim << ").\n";
+                trims[i] = clamped;
+            }
+        }
+
+        std::cout << "Setting trims: YL=" << trims[0] << " YR=" << trims[1]
+                  << " RL=" << trims[2] << " RR=" << trims[3] << "\n";
+
+        if (lowBattery) {
+            std::cout << "Warning: battery is low (" << g_battery << "%). Consider recharging.\n";
+        }
+
+        if (persistTrims(trims)) {
+            std::cout << "Trims saved to EEPROM.\n";
+        } else {
+            std::cerr << "Warning: the robot did not acknowledge the trim save; the trims may not have been persisted.\n";
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        playVictory();
+
+        bt->disconnect();
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        return 0;
+    }
+
+    // ── Interactive wizard ─────────────────────────────────────
+    const bool interactive = isatty(g_stdinFd) && enableRawMode();
+    if (!interactive) {
+        std::cerr << "Calibration requires a terminal. Pass the four trims (--yl --yr --rl --rr) for non-interactive use.\n";
+        bt->disconnect();
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        return 1;
+    }
+    std::atexit(disableRawMode);
+    std::signal(SIGINT, [](int) {
+        g_quit.store(true);
+        disableRawMode();
+    });
+
+    enum class Step { Warning, Legs, Feet, Check };
+    Step step = Step::Warning;
+    std::array<int, 4> trims{{0, 0, 0, 0}};
+    int selection = 0;  // index into trims, within the current step's pair
+    bool needSend = false;
+    using clock = std::chrono::steady_clock;
+    auto lastServoSend = clock::time_point{};
+    bool finished = false;
+    int result = 0;
+
+    // Send G if the debounce allows; otherwise flag a pending flush.
+    auto trySendServos = [&](bool force) {
+        const auto now = clock::now();
+        if (!force && now - lastServoSend < kDebounce) {
+            needSend = true;
+            return;
+        }
+        sendServos(trims);
+        lastServoSend = now;
+        needSend = false;
+    };
+
+    // Full-screen repaint of the current step.
+    auto render = [&]() {
+        std::cout << "\x1b[2J\x1b[H";
+        std::cout << "Zowi Calibration — " << target << "\n";
+        std::cout << "  YL=" << trims[0] << "  YR=" << trims[1]
+                  << "  RL=" << trims[2] << "  RR=" << trims[3] << "\n";
+        std::cout << "  range: " << kMinTrim << ".." << kMaxTrim << " deg\n";
+        std::cout << "----------------------------------------------\n";
+
+        switch (step) {
+            case Step::Warning:
+                std::cout << "\nThis will move Zowi's servos to their neutral position\n"
+                             "and let you adjust the four trim offsets. Trims are\n"
+                             "saved permanently to the robot's EEPROM.\n";
+                if (lowBattery) {
+                    std::cout << "\nNOTE: battery is low (" << g_battery
+                              << "%). Consider recharging.\n";
+                }
+                std::cout << "\n[y] Continue   [x] Cancel\n";
+                break;
+            case Step::Legs:
+                std::cout << "\nStep 1/3 — Legs. Selected servo: "
+                          << (selection == 0 ? "YL (left)" : "YR (right)") << "\n\n"
+                          << "  <- / a  select left    -> / d  select right\n"
+                          << "  up      +10            down    -10\n"
+                          << "  +       +1             -       -1\n\n"
+                          << "  [n] Next step (feet)   [x] Cancel\n";
+                break;
+            case Step::Feet:
+                std::cout << "\nStep 2/3 — Feet. Selected servo: "
+                          << (selection == 2 ? "RL (left)" : "RR (right)") << "\n\n"
+                          << "  <- / a  select left    -> / d  select right\n"
+                          << "  up      +10            down    -10\n"
+                          << "  +       +1             -       -1\n\n"
+                          << "  [n] Next step (check)  [x] Cancel\n";
+                break;
+            case Step::Check:
+                std::cout << "\nStep 3/3 — Check.\n\n"
+                          << "  [t] Test movement (save trims + victory)\n"
+                          << "  [r] Restart (reset trims to 0)\n"
+                          << "  [c] Confirm and save to EEPROM\n"
+                          << "  [x] Cancel\n";
+                break;
+        }
+        std::cout << std::flush;
+    };
+
+    auto warningContinue = [&]() {
+        resetCalibration();
+        std::this_thread::sleep_for(kDebounce);
+        step = Step::Legs;
+        selection = 0;
+        lastServoSend = clock::time_point{};
+        render();
+    };
+
+    render();
+
+    while (!g_quit.load() && !finished) {
+        {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            if (!g_connected) break;
+        }
+        qtApp.processEvents();
+
+        if (needSend) trySendServos(false);
+
+        std::string key = readCalibrationKey();
+        if (key.empty()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
+            continue;
+        }
+
+        bool changed = false;
+        switch (step) {
+            case Step::Warning:
+                if (key == "yes") {
+                    warningContinue();
+                    changed = true;
+                } else if (key == "quit") {
+                    finished = true;
+                    result = 0;
+                    std::cout << "\n\nCalibration cancelled. Trims unchanged.\n";
+                }
+                break;
+
+            case Step::Legs:
+            case Step::Feet: {
+                const int lo = (step == Step::Legs) ? 0 : 2;
+                const int hi = lo + 1;
+
+                if (key == "select_left") {
+                    selection = (selection == lo) ? hi : lo;
+                    changed = true;
+                } else if (key == "select_right") {
+                    selection = (selection == hi) ? lo : hi;
+                    changed = true;
+                } else {
+                    int delta = 0;
+                    if (key == "coarse_up") delta = 10;
+                    else if (key == "coarse_down") delta = -10;
+                    else if (key == "fine_up") delta = 1;
+                    else if (key == "fine_down") delta = -1;
+                    if (delta != 0) {
+                        const int newVal = clampTrim(trims[selection] + delta);
+                        if (newVal != trims[selection]) {
+                            trims[selection] = newVal;
+                            changed = true;
+                            trySendServos(false);  // live move: G 90+trim
+                        }
+                    } else if (key == "next") {
+                        step = (step == Step::Legs) ? Step::Feet : Step::Check;
+                        selection = (step == Step::Feet) ? 2 : 0;
+                        changed = true;
+                    } else if (key == "quit") {
+                        finished = true;
+                        result = 0;
+                        std::cout << "\n\nCalibration cancelled. Trims unchanged.\n";
+                    }
+                }
+                break;
+            }
+
+            case Step::Check:
+                if (key == "test" || key == "confirm") {
+                    if (persistTrims(trims)) {
+                        std::cout << "\nTrims saved to EEPROM.\n";
+                    } else {
+                        std::cerr << "\nWarning: the robot did not acknowledge the trim save; the trims may not have been persisted.\n";
+                    }
+                    playVictory();
+                    if (key == "test") {
+                        // Back to the live calibration pose so the user can
+                        // keep adjusting.
+                        sendServos(trims);
+                        render();
+                    } else {
+                        finished = true;
+                        result = 0;
+                        std::cout << "\n\nCalibration saved. Bye!\n";
+                    }
+                } else if (key == "restart") {
+                    resetCalibration();
+                    trims = {{0, 0, 0, 0}};
+                    selection = 0;
+                    step = Step::Warning;
+                    lastServoSend = clock::time_point{};
+                    render();
+                } else if (key == "quit") {
+                    finished = true;
+                    result = 0;
+                    std::cout << "\n\nCalibration cancelled. Trims unchanged.\n";
+                }
+                break;
+        }
+
+        if (changed && !finished) render();
+    }
+
+    disableRawMode();
+    bt->disconnect();
+    if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+    return result;
 }
 
 } // namespace zowi_cli

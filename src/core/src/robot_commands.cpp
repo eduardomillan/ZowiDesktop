@@ -123,4 +123,26 @@ std::string commandStop()
     return makeCommand(Command::Stop);
 }
 
+// Calibration: C <YL> <YR> <RL> <RR>\r — persists the trims to EEPROM.
+std::string commandSetTrims(int yl, int yr, int rl, int rr)
+{
+    std::string args = std::to_string(yl) + ' ' + std::to_string(yr) + ' '
+                     + std::to_string(rl) + ' ' + std::to_string(rr);
+    return makeCommand(Command::Trims, args);
+}
+
+// Calibration: G <YL> <YR> <RL> <RR>\r — positions the servos in real time.
+std::string commandServoAt(int yl, int yr, int rl, int rr)
+{
+    std::string args = std::to_string(yl) + ' ' + std::to_string(yr) + ' '
+                     + std::to_string(rl) + ' ' + std::to_string(rr);
+    return makeCommand(Command::Servo, args);
+}
+
+// Gesture: H <id>\r (firmware gestos 1-13; 12 = VICTORY).
+std::string commandGesture(int gestureId)
+{
+    return makeCommand(Command::Gesture, std::to_string(gestureId));
+}
+
 } // namespace zowi

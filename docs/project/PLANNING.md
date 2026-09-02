@@ -79,7 +79,7 @@ src/
 - [x] User-selectable transport in Settings
 - [x] Visual feedback during restore (progress bar + status)
 
-### M6 — Transport intelligence + gamepad 🚧
+### M6 — Transport intelligence + gamepad ✅
 - [x] Automatic transport detection and switching
 - [x] USB hotplug awareness
 - [x] Persistent transport tied to device registration
@@ -87,9 +87,9 @@ src/
 - [x] Gamepad control screen (PadScreen) with directional pad and action buttons
 - [x] Real-time command sending and speed control validation
 - [x] Compile the bt library for Windows
-- [ ] Test the Windows version and fix bugs
+- [x] Test the Windows version and fix bugs
 
-### M7 - Calibration and mouth/gestures in gamepad
+### M7 - Calibration and mouth/gestures in gamepad 🚧
 - [ ] Zowi calibration (servo trims)
 - [ ] Gamepad mouth control
 - [ ] Gamepad gestures control

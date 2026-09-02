@@ -139,7 +139,25 @@ int main(int argc, char **argv)
     controlCmd->add_option("--tty", controlArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
     controlCmd->add_option("--baud", controlArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
 
+    // ── calibrate subcommand ────────────────────────────────
+    auto *calibCmd = app.add_subcommand("calibrate", "Calibrate Zowi servo trims (C/G protocol)\nInteractive wizard by default; pass all four trims to apply them non-interactively.\nTrims are clamped to +/-60 degrees.");
+    zowi_cli::CalibrateArgs calibArgs;
+    calibCmd->add_option("--address,-a", calibArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path (e.g. /dev/ttyUSB0)")->default_val("");
+    calibCmd->add_option("--timeout,-t", calibArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    calibCmd->add_option("--backend", calibArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    calibCmd->add_option("--tty", calibArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
+    calibCmd->add_option("--baud", calibArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
+    calibCmd->add_flag("--no-victory,-N", calibArgs.noVictory, "Skip the victory animation when calibration is confirmed");
+    calibCmd->add_option("--yl", calibArgs.yl, "Left leg trim (all four trims are required for direct mode)");
+    calibCmd->add_option("--yr", calibArgs.yr, "Right leg trim (all four trims are required for direct mode)");
+    calibCmd->add_option("--rl", calibArgs.rl, "Left foot trim (all four trims are required for direct mode)");
+    calibCmd->add_option("--rr", calibArgs.rr, "Right foot trim (all four trims are required for direct mode)");
+
     CLI11_PARSE(app, argc, argv);
+
+    // Direct mode only when at least one trim option was explicitly given.
+    calibArgs.direct = calibCmd->count("--yl") || calibCmd->count("--yr")
+                       || calibCmd->count("--rl") || calibCmd->count("--rr");
 
     // ── Logging setup ────────────────────────────────────────────
     zowi_cli::loadLogLevel();
@@ -159,6 +177,7 @@ int main(int argc, char **argv)
     if (*disconnectCmd) return zowi_cli::runDisconnect(argc, argv);
     if (*statusCmd)     return zowi_cli::runStatus(argc, argv, statusArgs);
     if (*controlCmd)    return zowi_cli::runControl(argc, argv, controlArgs);
+    if (*calibCmd)      return zowi_cli::runCalibrate(argc, argv, calibArgs);
 
     return 0;
 }

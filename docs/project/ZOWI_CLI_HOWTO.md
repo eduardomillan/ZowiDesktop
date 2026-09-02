@@ -19,9 +19,10 @@ The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionalit
 - [Adivinawi](#adivinawi)
 - [Disconnect](#disconnect)
 - [Status](#status)
+- [Control](#control)
+- [Calibrate](#calibrate)
 - [Test Scripts](#test-scripts)
 - [Examples](#examples)
-- [Control](#control)
 - [Building](#building)
 
 
@@ -43,6 +44,7 @@ zowi_cli <subcommand> [options]
 | `restore` | Restore the original factory firmware/functions |
 | `disconnect` | Disconnect and clear pairing data |
 | `status` | Show current Zowi connection status |
+| `calibrate` | Calibrate the 4 servo trims (interactive wizard or direct) |
 | `control` | Interactive keyboard minigame to drive the robot |
 | `alarm` | Install the Robot Alarm firmware |
 | `adivinawi` | Install the Adivinawi game firmware |
@@ -666,6 +668,212 @@ Output when no device is paired:
 No Zowi connected.
 ```
 
+## Control
+
+Interactive keyboard minigame that drives the Zowi robot in real time. Connects
+to the paired robot (or to an explicit `--address`) and reads the cursor keys
+from the terminal, sending one movement command per key press. Movement
+commands follow the firmware serial protocol documented in
+`docs/firmware/PROTOCOL.md` (the `M <MoveID> <T> [<MoveSize>]` movement command and the `S`
+stop command).
+
+Supports both Bluetooth (default) and USB serial transport. Use `--backend usb`
+to drive the robot over a USB cable instead of Bluetooth.
+
+### Backend selection
+
+| `--backend` | Backend | Needs root / setcap? |
+|---|---|---|
+| `auto` (default) | Uses the transport registered at `connect` time; falls back to Bluetooth | No |
+| `bluetooth` | Qt Bluetooth SPP (BlueZ) | No |
+| `usb` | USB serial (`/dev/ttyUSB*`, `/dev/ttyACM*`) | No |
+
+When `--tty` is given, the USB serial backend is selected automatically
+regardless of `--backend`.
+
+### Controls
+
+| Key            | Action              | Firmware command           |
+|----------------|---------------------|----------------------------|
+| `↑` / `W`      | Walk forward        | `M 1 <T>`                  |
+| `↓` / `S`      | Walk backward       | `M 2 <T>`                  |
+| `←` / `A`      | Moonwalker left     | `M 6 <T> 30`               |
+| `→` / `D`      | Moonwalker right    | `M 7 <T> 30`               |
+| `Q`            | Turn left           | `M 3 <T>`                  |
+| `E`            | Turn right          | `M 4 <T>`                  |
+| `+`            | Increase speed      | (changes `T` for next move)|
+| `-`            | Decrease speed      | (changes `T` for next move)|
+| `ESC` / `Ctrl-C` | Quit              | `S` (stop) on exit         |
+
+Both the cursor keys and the WASD/Q/E letter keys are supported. The terminal is
+switched to raw mode while the minigame runs, so keys are delivered immediately
+(no Enter needed) and are not echoed. The original terminal settings are
+restored on exit (including on `Ctrl-C`).
+
+When a movement key is pressed, the terminal displays the uppercase key token
+and the action, e.g. `[UP] forward` or `[LEFT] moonwalker left`. When the speed
+is changed, `[SPEED: SLOW]` / `[SPEED: MEDIUM]` / `[SPEED: FAST]` is shown.
+
+After 1 second of inactivity, the robot stops and the terminal shows:
+`Status: idle. Speed: MEDIUM. Last key: UP (forward)`.
+
+### Basic usage (paired device)
+
+```bash
+zowi_cli control
+```
+
+### Connect to a specific robot
+
+```bash
+zowi_cli control --address B4:9D:0B:32:41:0E
+```
+
+### Choose a movement speed
+
+```bash
+zowi_cli control --speed slow     # also: medium (default), fast
+```
+
+Speed maps to the firmware period `T` in ms: `slow` = 2000, `medium` = 1000,
+`fast` = 700 (larger = slower gait).
+
+### Custom connection timeout
+
+```bash
+zowi_cli control -t 5    # wait up to 5 seconds for the connection
+```
+
+### Drive over USB
+
+```bash
+zowi_cli control --backend usb --tty /dev/ttyUSB0
+```
+
+Or let the CLI auto-detect the USB port:
+
+```bash
+zowi_cli control --backend usb
+```
+
+When using USB, the connection timeout is automatically extended to at least 8
+seconds to account for the robot's boot delay over serial. The baud rate
+defaults to 115200 (the control firmware's rate); override with `--baud` if
+needed.
+
+### Behavior notes
+
+- Each key press sends a single gait cycle; hold the key (OS auto-repeat) to
+  keep moving.
+- `+` and `-` cycle the speed (slow → medium → fast / fast → medium → slow).
+  The `--speed` option sets the initial speed; changes during the session
+  persist until the next speed change.
+- After 1 second of inactivity, a stop command (`S`) is sent automatically.
+- On exit the robot receives a stop command (`S`) and the terminal is restored.
+- If the battery is below 50% a warning is printed (movement is still allowed).
+- If stdin is not a terminal, the minigame refuses to start (it needs the
+  keyboard) and exits without driving the robot.
+
+## Calibrate
+
+Calibrate Zowi's four servo trims (protocol commands `C`/`G`). Each servo —
+left leg `YL`, right leg `YR`, left foot `RL`, right foot `RR` — gets a signed
+offset (in degrees) added to every commanded angle, compensating for mechanical
+misalignment. The robot stores the trims in EEPROM, so they survive power cycles
+and are re-applied automatically on every boot.
+
+`calibrate` connects to the paired robot (or the `--address` target) and works in
+one of two modes:
+
+- **Interactive wizard** (default, requires a terminal) — mirrors the Android
+  app's flow: WARNING → LEGS → FEET → CHECK, sending live `G` commands so the
+  robot moves as you adjust.
+- **Direct mode** — pass all four trims (`--yl --yr --rl --rr`) to persist them
+  with a single `C` command. Useful for scripting/automation.
+
+Trims are clamped to **±60°**, matching the servo's physical working range around
+the 90° neutral position (the stock Android app only allowed ±30°). In direct
+mode an out-of-range value is clamped with a warning; the interactive wizard
+simply stops at the limit.
+
+A **VICTORY** animation is played after saving, unless skipped with
+`--no-victory` (`-N`).
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-a, --address` | Robot Bluetooth address to override the paired device (or a USB TTY path) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
+| `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
+| `--baud` | Serial baud rate (control firmware uses `115200`) |
+| `-N, --no-victory` | Skip the victory animation when calibration is confirmed |
+| `--yl` | Left leg trim (direct mode) |
+| `--yr` | Right leg trim (direct mode) |
+| `--rl` | Left foot trim (direct mode) |
+| `--rr` | Right foot trim (direct mode) |
+
+### Interactive wizard
+
+```bash
+zowi_cli calibrate
+```
+
+Screens, in order:
+
+1. **WARNING** — explains that the servos will be moved and that trims are saved
+   permanently. `y` continues, `x` cancels.
+2. **LEGS** — adjust `YL` and `YR`; `n` advances to the feet.
+3. **FEET** — adjust `RL` and `RR`; `n` advances to the check screen.
+4. **CHECK** — `t` test movement, `r` restart, `c` confirm & save.
+
+Key layout while adjusting (LEGS/FEET):
+
+| Key | Action |
+|-----|--------|
+| `←` / `a` | select the left servo of the pair |
+| `→` / `d` | select the right servo of the pair |
+| `↑` | increase the selected trim by 10° |
+| `↓` | decrease the selected trim by 10° |
+| `+` | increase the selected trim by 1° |
+| `-` | decrease the selected trim by 1° |
+| `n` | next step |
+| `x` / `q` / `ESC` / `Ctrl-C` | cancel (trims unchanged) |
+
+Consecutive changes are sent no faster than every 200 ms (the firmware moves
+each servo for ~200 ms). Calibration requires a terminal; without one, pass the
+four trims for direct mode.
+
+### Direct mode
+
+```bash
+zowi_cli calibrate --yl 40 --yr 0 --rl -8 --rr 3 -N
+```
+
+Sets and persists the four trims, waits for the robot's EEPROM final ack
+(`&&F`), and reports the result:
+
+```
+Setting trims: YL=40 YR=0 RL=-8 RR=3
+Trims saved to EEPROM.
+```
+
+Out-of-range values are clamped:
+
+```
+Warning: YR trim 75 clamped to 60 (range -60..60).
+```
+
+### Requires a connected robot
+
+`calibrate` needs a reachable robot (paired device or explicit `--address`).
+With an empty session it fails cleanly:
+
+```
+No paired device found. Run 'connect' first or pass --address.
+```
+
 ## Test Scripts
 
 Shell scripts for testing CLI commands are grouped by transport:
@@ -813,112 +1021,6 @@ Welcome
 
 
 
-
-## Control
-
-Interactive keyboard minigame that drives the Zowi robot in real time. Connects
-to the paired robot (or to an explicit `--address`) and reads the cursor keys
-from the terminal, sending one movement command per key press. Movement
-commands follow the firmware serial protocol documented in
-`docs/firmware/PROTOCOL.md` (the `M <MoveID> <T> [<MoveSize>]` movement command and the `S`
-stop command).
-
-Supports both Bluetooth (default) and USB serial transport. Use `--backend usb`
-to drive the robot over a USB cable instead of Bluetooth.
-
-### Backend selection
-
-| `--backend` | Backend | Needs root / setcap? |
-|---|---|---|
-| `auto` (default) | Uses the transport registered at `connect` time; falls back to Bluetooth | No |
-| `bluetooth` | Qt Bluetooth SPP (BlueZ) | No |
-| `usb` | USB serial (`/dev/ttyUSB*`, `/dev/ttyACM*`) | No |
-
-When `--tty` is given, the USB serial backend is selected automatically
-regardless of `--backend`.
-
-### Controls
-
-| Key            | Action              | Firmware command           |
-|----------------|---------------------|----------------------------|
-| `↑` / `W`      | Walk forward        | `M 1 <T>`                  |
-| `↓` / `S`      | Walk backward       | `M 2 <T>`                  |
-| `←` / `A`      | Moonwalker left     | `M 6 <T> 30`               |
-| `→` / `D`      | Moonwalker right    | `M 7 <T> 30`               |
-| `Q`            | Turn left           | `M 3 <T>`                  |
-| `E`            | Turn right          | `M 4 <T>`                  |
-| `+`            | Increase speed      | (changes `T` for next move)|
-| `-`            | Decrease speed      | (changes `T` for next move)|
-| `ESC` / `Ctrl-C` | Quit              | `S` (stop) on exit         |
-
-Both the cursor keys and the WASD/Q/E letter keys are supported. The terminal is
-switched to raw mode while the minigame runs, so keys are delivered immediately
-(no Enter needed) and are not echoed. The original terminal settings are
-restored on exit (including on `Ctrl-C`).
-
-When a movement key is pressed, the terminal displays the uppercase key token
-and the action, e.g. `[UP] forward` or `[LEFT] moonwalker left`. When the speed
-is changed, `[SPEED: SLOW]` / `[SPEED: MEDIUM]` / `[SPEED: FAST]` is shown.
-
-After 1 second of inactivity, the robot stops and the terminal shows:
-`Status: idle. Speed: MEDIUM. Last key: UP (forward)`.
-
-### Basic usage (paired device)
-
-```bash
-zowi_cli control
-```
-
-### Connect to a specific robot
-
-```bash
-zowi_cli control --address B4:9D:0B:32:41:0E
-```
-
-### Choose a movement speed
-
-```bash
-zowi_cli control --speed slow     # also: medium (default), fast
-```
-
-Speed maps to the firmware period `T` in ms: `slow` = 2000, `medium` = 1000,
-`fast` = 700 (larger = slower gait).
-
-### Custom connection timeout
-
-```bash
-zowi_cli control -t 5    # wait up to 5 seconds for the connection
-```
-
-### Drive over USB
-
-```bash
-zowi_cli control --backend usb --tty /dev/ttyUSB0
-```
-
-Or let the CLI auto-detect the USB port:
-
-```bash
-zowi_cli control --backend usb
-```
-
-When using USB, the connection timeout is automatically extended to at least 8
-seconds to account for the robot's boot delay over serial. The baud rate
-defaults to 115200 (the control firmware's rate); override with `--baud` if
-needed.
-
-### Behavior notes
-
-- Each key press sends a single gait cycle; hold the key (OS auto-repeat) to
-  keep moving.
-- `+` and `-` cycle the speed (slow → medium → fast / fast → medium → slow).
-  The `--speed` option sets the initial speed; changes during the session
-  persist until the next speed change.
-- After 1 second of inactivity, a stop command (`S`) is sent automatically.
-- On exit the robot receives a stop command (`S`) and the terminal is restored.
-- If the battery is below 50% a warning is printed (movement is still allowed).
-- If stdin is not a terminal, the minigame refuses to start (it needs the
-  keyboard) and exits without driving the robot.
 
 ## Building
 

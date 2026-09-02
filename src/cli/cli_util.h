@@ -53,6 +53,13 @@ void disableRawMode();
 // "speed_up"/"speed_down"/"quit"), or "" if no (complete) key is available.
 std::string readKey();
 
+// Calibration key reader: reads a single keystroke and maps it to calibration
+// tokens ("select_left"/"select_right"/"coarse_up"/"coarse_down"/"fine_up"/
+// "fine_down"/"next"/"yes"/"test"/"restart"/"confirm"/"quit"), or "" if no key.
+// Distinct from readKey(): the minigame and the calibration wizard use
+// different key layouts.
+std::string readCalibrationKey();
+
 // Waits until name, app id and battery have all been received.
 bool waitForRobotData(QCoreApplication &qtApp, int timeoutMs);
 

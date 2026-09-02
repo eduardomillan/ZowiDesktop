@@ -81,6 +81,22 @@ struct StatusArgs {
     int timeout = 3;
 };
 
+// Interactive servo-trim calibration (C/G protocol). The wizard clamps trims
+// to [-60, 60]; pass all four trims to apply them non-interactively.
+struct CalibrateArgs {
+    std::string address;
+    std::string tty;
+    int baud = 115200;
+    std::string backend = "auto";
+    int timeout = 3;
+    bool noVictory = false;
+    bool direct = false;
+    int yl = 0;
+    int yr = 0;
+    int rl = 0;
+    int rr = 0;
+};
+
 int runSession(const SessionArgs &a);
 int runTranslate(const TranslateArgs &a);
 int runConfig(const ConfigArgs &a);
@@ -92,6 +108,7 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
 int runDisconnect(int argc, char **argv);
 int runStatus(int argc, char **argv, const StatusArgs &a);
 int runControl(int argc, char **argv, const ControlArgs &a);
+int runCalibrate(int argc, char **argv, const CalibrateArgs &a);
 
 } // namespace zowi_cli
 

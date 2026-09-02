@@ -45,4 +45,19 @@ grep -qi "Could not connect\|unreachable\|Invalid address\|not available" /tmp/c
     || fail "control did not report a Bluetooth connection failure"
 echo "ok: control fails cleanly over Bluetooth when the robot is unreachable"
 
+echo "=== Step 5: calibrate with no paired device fails cleanly ==="
+if "$CLI" calibrate --yl 10 --yr 0 --rl -5 --rr 2 >/tmp/calib_out.log 2>&1; then
+    fail "calibrate with an empty session unexpectedly succeeded"
+fi
+grep -qi "No paired device" /tmp/calib_out.log || fail "calibrate did not report the missing device"
+echo "ok: calibrate fails cleanly with no paired device"
+
+echo "=== Step 6: calibrate over USB without a present port fails cleanly ==="
+if "$CLI" calibrate --backend usb --address /dev/ttyUSB99 --yl 10 -t 1 >/tmp/calib_usb.log 2>&1; then
+    fail "calibrate over USB unexpectedly succeeded with no port"
+fi
+grep -qi "No USB serial ports found\|Plug in the robot\|not available" /tmp/calib_usb.log \
+    || fail "calibrate did not report the missing USB port"
+echo "ok: calibrate fails cleanly over USB when no port is present"
+
 echo "All clean-failure-path tests passed."

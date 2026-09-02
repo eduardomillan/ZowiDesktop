@@ -51,6 +51,20 @@ std::string commandAscendingTurn(MovementSpeed speed = MovementSpeed::Medium, in
 // Stop / home: moves all servos to 90 degrees and detaches them.
 std::string commandStop();
 
+// Calibration. The firmware keeps no range enforcement of its own: the only
+// hard limit is the servo's physical span (0-180°), so a trim of +60 produces
+// 90+60=150°. Callers are responsible for keeping values inside +/-60.
+//
+// commandSetTrims persists the four offsets to EEPROM (survives power cycles).
+std::string commandSetTrims(int yl, int yr, int rl, int rr);
+
+// commandServoAt moves the four servos to the given raw angles in real time
+// (volatile, does not persist). For calibration use 90+trim per servo.
+std::string commandServoAt(int yl, int yr, int rl, int rr);
+
+// Gesture animation: H <id> (firmware gestos 1-13). 12 = VICTORY.
+std::string commandGesture(int gestureId);
+
 } // namespace zowi
 
 #endif // ZOWI_ROBOT_COMMANDS_H

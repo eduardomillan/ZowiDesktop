@@ -38,6 +38,13 @@ int main()
 
     check(commandStop(), "S\r", "stop");
 
+    check(commandSetTrims(0, 0, 0, 0), "C 0 0 0 0\r", "trims all zero");
+    check(commandSetTrims(20, 0, -8, 3), "C 20 0 -8 3\r", "trims mixed");
+    check(commandSetTrims(-60, 60, -30, 30), "C -60 60 -30 30\r", "trims extremes");
+    check(commandServoAt(90, 90, 90, 90), "G 90 90 90 90\r", "servo neutral");
+    check(commandServoAt(150, 30, 96, 78), "G 150 30 96 78\r", "servo mixed");
+    check(commandGesture(12), "H 12\r", "gesture victory");
+
     if (failures == 0) {
         std::cout << "All robot_commands tests passed.\n";
         return 0;

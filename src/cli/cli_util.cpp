@@ -142,6 +142,58 @@ std::string readKey()
     return "";
 }
 
+static std::string calibrationKeyFromRecord(const KEY_EVENT_RECORD &ke)
+{
+    if (!ke.bKeyDown) return "";
+
+    wchar_t ch = ke.uChar.UnicodeChar;
+    WORD vk = ke.wVirtualKeyCode;
+    bool ctrl = (ke.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) != 0;
+
+    if (ctrl && (ch == 3 || ch == 4)) return "quit";  // Ctrl-C / Ctrl-D
+    if (vk == VK_ESCAPE) return "quit";
+
+    // Arrows: up/down = ±10, left/right = move the selection.
+    if (vk == VK_UP) return "coarse_up";
+    if (vk == VK_DOWN) return "coarse_down";
+    if (vk == VK_LEFT) return "select_left";
+    if (vk == VK_RIGHT) return "select_right";
+
+    switch (ch) {
+        case 'y': case 'Y': return "yes";
+        case 'n': case 'N':
+        case '\r': case '\n': return "next";
+        case 'x': case 'X': return "quit";
+        case 'q': case 'Q': return "quit";
+        case 'a': case 'A': return "select_left";
+        case 'd': case 'D': return "select_right";
+        case '+': case '=': return "fine_up";
+        case '-': case '_': return "fine_down";
+        case 't': case 'T': return "test";
+        case 'r': case 'R': return "restart";
+        case 'c': case 'C': return "confirm";
+        default: return "";
+    }
+}
+
+std::string readCalibrationKey()
+{
+    if (g_hStdin == INVALID_HANDLE_VALUE) return "";
+    DWORD count = 0;
+    if (!GetNumberOfConsoleInputEvents(g_hStdin, &count) || count == 0)
+        return "";
+    INPUT_RECORD rec;
+    DWORD read;
+    while (count-- > 0) {
+        if (!ReadConsoleInput(g_hStdin, &rec, 1, &read) || read == 0) break;
+        if (rec.EventType == KEY_EVENT) {
+            std::string name = calibrationKeyFromRecord(rec.Event.KeyEvent);
+            if (!name.empty()) return name;
+        }
+    }
+    return "";
+}
+
 #else
 // ── POSIX (Linux / macOS) ────────────────────────────────────
 #include <termios.h>
@@ -214,6 +266,58 @@ std::string readKey()
         }
     }
     // Not a recognized escape sequence — treat standalone ESC as quit.
+    return "quit";
+}
+
+std::string readCalibrationKey()
+{
+    unsigned char c;
+    ssize_t n = read(g_stdinFd, &c, 1);
+    if (n <= 0) return "";
+
+    if (c == 3) return "quit";  // Ctrl-C
+    if (c != 0x1b) {
+        switch (c) {
+            case 'y': case 'Y': return "yes";
+            case 'n': case 'N':
+            case 0x0a: case 0x0d: return "next";
+            case 'x': case 'X': return "quit";
+            case 'q': case 'Q': return "quit";
+            case 'a': case 'A': return "select_left";
+            case 'd': case 'D': return "select_right";
+            case '+': case '=': return "fine_up";
+            case '-': case '_': return "fine_down";
+            case 't': case 'T': return "test";
+            case 'r': case 'R': return "restart";
+            case 'c': case 'C': return "confirm";
+            default: return "";
+        }
+    }
+
+    // ESC (0x1b): standalone = quit; escape sequences carry the arrow keys
+    // (ESC [ / ESC O + A/B/C/D).
+    auto readByte = [](int ms) -> int {
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(g_stdinFd, &fds);
+        struct timeval tv{0, ms * 1000};
+        if (select(g_stdinFd + 1, &fds, nullptr, nullptr, &tv) <= 0) return -1;
+        unsigned char b;
+        if (read(g_stdinFd, &b, 1) != 1) return -1;
+        return b;
+    };
+
+    int b1 = readByte(50);
+    if (b1 == '[' || b1 == 'O') {
+        int b2 = readByte(50);
+        switch (b2) {
+            case 'A': return "coarse_up";    // up arrow
+            case 'B': return "coarse_down";  // down arrow
+            case 'C': return "select_right"; // right arrow
+            case 'D': return "select_left";  // left arrow
+            default: break;
+        }
+    }
     return "quit";
 }
 #endif

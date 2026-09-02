@@ -10,11 +10,11 @@ fail() { echo "FAIL: $1" >&2; exit 1; }
 command -v "$CLI" >/dev/null 2>&1 || fail "zowi_cli not found at $CLI (build it first: ./build.sh --cli)"
 
 # Every subcommand must appear in the top-level help.
-for sub in session translate config ports scan connect rename restore alarm adivinawi disconnect status control; do
+for sub in session translate config ports scan connect rename restore alarm adivinawi disconnect status control calibrate; do
     "$CLI" --help 2>&1 | grep -qw -- "$sub" \
         || fail "top-level --help missing '$sub' subcommand"
 done
-echo "ok: all 13 subcommands are listed in top-level --help"
+echo "ok: all 14 subcommands are listed in top-level --help"
 
 # Each subcommand must have a --help routing and expose its key options.
 "$CLI" session   --help 2>&1 | grep -qw "get"  || fail "session --help missing 'get'"
@@ -47,5 +47,12 @@ done
 
 "$CLI" control   --help 2>&1 | grep -q -- "--speed"  || fail "control --help missing --speed"
 "$CLI" control   --help 2>&1 | grep -q -- "--backend" || fail "control --help missing --backend"
+
+"$CLI" calibrate --help 2>&1 | grep -q -- "--backend" || fail "calibrate --help missing --backend"
+"$CLI" calibrate --help 2>&1 | grep -q -- "--no-victory" || fail "calibrate --help missing --no-victory"
+"$CLI" calibrate --help 2>&1 | grep -q -- "-N" || fail "calibrate --help missing -N"
+for opt in "--yl" "--yr" "--rl" "--rr"; do
+    "$CLI" calibrate --help 2>&1 | grep -q -- "$opt" || fail "calibrate --help missing $opt"
+done
 
 echo "All --help smoke tests passed."
