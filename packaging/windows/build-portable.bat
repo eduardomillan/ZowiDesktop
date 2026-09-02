@@ -21,7 +21,7 @@ set "PATH=%CMAKE_PATH%;%QT_PATH%\bin;%PATH%"
 REM --- Back up src/config.json so uncommitted changes survive packaging ---
 copy src\config.json "%TEMP%\zowi_config_backup.json" >nul
 
-REM --- Packaged builds ship with dev mode OFF. Re-enabled at runtime via ZOWI_DEV ---
+REM --- Packaged builds ship with dev mode OFF. Re-enabled at runtime via DEV_MODE ---
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0set_dev_mode.ps1" false "src\config.json"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 

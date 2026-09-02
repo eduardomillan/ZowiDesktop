@@ -19,7 +19,7 @@ ConfigController::ConfigController(QObject *parent)
 
 bool ConfigController::devMode() const
 {
-    QString env = qEnvironmentVariable("ZOWI_DEV");
+    QString env = qEnvironmentVariable("DEV_MODE");
     if (!env.isEmpty()) {
         static const QStringList truthy = {"1", "true", "on"};
         return truthy.contains(env.trimmed().toLower());

@@ -63,7 +63,7 @@ void CalibrationSessionController::jumpToStep(int stepIndex)
 QString CalibrationSessionController::resetToNeutral()
 {
     reset();
-    return QString::fromStdString(m_session.neutralCommand());
+    return QStringLiteral("S\r");
 }
 
 bool CalibrationSessionController::sendServos()

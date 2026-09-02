@@ -1,5 +1,26 @@
 # Building Zowi Desktop
 
+## Table of contents
+
+- [Prerequisites](#prerequisites)
+- [Quick start (native Linux)](#quick-start-native-linux)
+- [Running](#running)
+  - [Linux](#linux)
+  - [Windows](#windows)
+  - [Environment variables](#environment-variables)
+- [Manual CMake invocations](#manual-cmake-invocations)
+- [Build targets](#build-targets)
+- [Platform builds](#platform-builds)
+- [Linux AppImage](#linux-appimage)
+- [Linux Debian packages](#linux-debian-packages)
+- [GitHub Releases](#github-releases)
+- [Windows builds](#windows-builds)
+  - [On a Windows machine (MSVC)](#on-a-windows-machine-msvc)
+  - [Windows installer (.exe, Inno Setup)](#windows-installer-exe-inno-setup)
+  - [Windows portable .zip (MSVC)](#windows-portable-zip-msvc)
+- [Windows CI (GitHub Actions + MSVC)](#windows-ci-github-actions--msvc)
+- [Windows native Bluetooth (bt_native)](#windows-native-bluetooth-bt_native)
+
 ## Prerequisites
 
 - CMake 3.16+
@@ -38,6 +59,113 @@ To build with **Qt 5** instead of Qt 6:
 ```bash
 ./build.sh -5            # everything with Qt 5
 ./build.sh -5 --cli      # CLI only with Qt 5
+```
+
+## Running
+
+### Linux
+
+**GUI (ZowiDesktop)**:
+
+```bash
+./build.sh --gui
+./build/src/gui/ZowiDesktop
+```
+
+**CLI (zowi_cli)**:
+
+```bash
+./build.sh --cli
+./build/src/cli/zowi_cli --help
+./build/src/cli/zowi_cli calibrate        # interactive servo calibration
+./build/src/cli/zowi_cli scan              # scan for nearby Zowis
+```
+
+> **Bluetooth permissions**: the CLI needs `cap_net_admin` to open Bluetooth
+> sockets without root. After every rebuild:
+> ```bash
+> sudo setcap cap_net_admin+ep build/src/cli/zowi_cli
+> ```
+> A helper script is provided: `sudo ./scripts/grant_bluetooth_cap.sh`
+
+**Both (GUI + CLI)**:
+
+```bash
+./build.sh
+./build/src/gui/ZowiDesktop               # launch the GUI
+./build/src/cli/zowi_cli --help            # or use the CLI
+```
+
+### Windows
+
+Open a **x64 Native Tools Command Prompt for VS 2022** (search "x64" in the
+Start menu). This sets up the MSVC compiler and Windows SDK environment.
+
+**GUI (ZowiDesktop)**:
+
+```bat
+build.bat --gui
+build\src\gui\Release\ZowiDesktop.exe
+```
+
+**CLI (zowi_cli)**:
+
+```bat
+build.bat --cli
+build\src\cli\Release\zowi_cli.exe --help
+build\src\cli\Release\zowi_cli.exe calibrate
+build\src\cli\Release\zowi_cli.exe scan
+```
+
+**Both (GUI + CLI)**:
+
+```bat
+build.bat
+build\src\gui\Release\ZowiDesktop.exe
+build\src\cli\Release\zowi_cli.exe --help
+```
+
+`windeployqt` runs automatically after the GUI build to copy Qt DLLs and QML
+files alongside the executable.
+
+> **Tip**: `build.bat --demo` compiles the CLI and runs a quick demo of the
+> most common commands (session, config, translate, scan).
+
+### Environment variables
+
+The following environment variables can be set at runtime to influence
+application behavior for testing:
+
+| Variable | Accepted values | Effect |
+|---|---|---|
+| `DEV_MODE` | `1`, `true`, `on` (case-insensitive) | Enables dev mode and shows the dev overlay on the GUI. Overrides the `dev_mode` value in `src/config.json`. |
+
+**Examples:**
+
+Linux:
+```bash
+DEV_MODE=1 ./build/src/gui/ZowiDesktop          # dev mode on
+DEV_MODE=true ./build/src/gui/ZowiDesktop       # same
+```
+
+Windows (cmd):
+```bat
+set DEV_MODE=1 && build\src\gui\Release\ZowiDesktop.exe
+```
+
+Windows (PowerShell):
+```powershell
+$env:DEV_MODE="1"; build\src\gui\Release\ZowiDesktop.exe
+```
+
+Additionally, the **screen preview tool** (`zowi_screen_preview`) accepts:
+
+| Variable | Effect |
+|---|---|
+| `PREVIEW_GRAB_DIR` | When set, captures a headless screenshot of the preview window to `<dir>/<ScreenName>_step<N>.png` and exits. Useful for iterating on QML layouts without a display. |
+
+```bash
+PREVIEW_GRAB_DIR=/tmp/grabs build/src/gui/zowi_screen_preview src/views/screens/SettingsScreen.qml
 ```
 
 ## Manual CMake invocations

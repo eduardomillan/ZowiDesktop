@@ -5,6 +5,25 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **Calibration entry caused an unwanted leg sweep.** Entering calibration
+  (GUI or CLI) used to send `C 0 0 0 0` followed immediately by
+  `G 90 90 90 90`. Because the firmware's `receiveTrims` handler calls
+  `zowi.home()` internally, this produced two back-to-back moves to 90°
+  with a detach/re-attach in between — causing the legs to sag, re-energise
+  with a visible clunk, and appear to "collide at the rear" when swinging
+  inward from an arbitrary posture. The entry sequence now sends a single
+  `S` (stop) command, which invokes the firmware's `home()` exactly once,
+  settling the robot cleanly to rest without the redundant second move.
+
+### Changed
+- **Renamed `ZOWI_DEV` environment variable to `DEV_MODE`.** The env var
+  that enables dev mode and the dev overlay is now `DEV_MODE` (accepted
+  values: `1`, `true`, `on`, case-insensitive). The `dev_mode` key in
+  `config.json` is unchanged.
+
 ## [0.6.0] - 2026-09-01
 
 ### Added

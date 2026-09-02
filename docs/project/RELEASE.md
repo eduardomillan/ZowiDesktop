@@ -132,7 +132,7 @@ packaging\windows\build-portable.bat               :: portable zip
 - The local portable zip includes the **GUI + CLI** (`ZOWI_BUILD_CLI=ON`), just
   like the CI zip.
 - Packaged builds ship with `dev_mode=false` in the compiled config (re-enable
-  at runtime via the `ZOWI_DEV` environment variable).
+  at runtime via the `DEV_MODE` environment variable).
 
 ## Publish the GitHub Release
 

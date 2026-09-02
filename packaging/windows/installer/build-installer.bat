@@ -34,7 +34,7 @@ echo Detected version: %VERSION%
 REM --- Back up src/config.json so uncommitted changes survive packaging ---
 copy "%PROJECT_ROOT%\src\config.json" "%TEMP%\zowi_config_backup.json" >nul
 
-REM --- Packaged builds ship with dev mode OFF. Re-enabled at runtime via ZOWI_DEV ---
+REM --- Packaged builds ship with dev mode OFF. Re-enabled at runtime via DEV_MODE ---
 powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%..\set_dev_mode.ps1" false "%PROJECT_ROOT%\src\config.json"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 

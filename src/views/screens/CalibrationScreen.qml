@@ -58,8 +58,7 @@ ScreenTemplate {
 
     function resetToNeutral() {
         cancelPendingServos()
-        // "C 0 0 0 0\r" persists a zeroed trim; then return all servos to 90°.
-        send("C 0 0 0 0\r")
+        // Single stop command → firmware homes all servos to 90° and detaches.
         send(Calibration.resetToNeutral())
     }
 

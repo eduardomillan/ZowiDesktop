@@ -848,10 +848,10 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
 
     // Reset stored trims and move every servo back to neutral.
     auto resetCalibration = [&]() {
-        bt->send(zowi::commandSetTrims(0, 0, 0, 0));
+        calibration.reset();
+        bt->send(zowi::commandStop());
         std::this_thread::sleep_for(
             std::chrono::milliseconds(zowi::CalibrationSession::kDebounceMs));
-        bt->send(calibration.neutralCommand());
     };
 
     // ── Direct mode: --yl --yr --rl --rr given, no wizard ─────────

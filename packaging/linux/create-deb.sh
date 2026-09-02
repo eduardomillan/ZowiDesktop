@@ -113,7 +113,7 @@ PYEOF
 
 echo "=== Building .deb ==="
 # Packaged builds ship with dev mode OFF. It can be re-enabled at runtime
-# via the ZOWI_DEV environment variable.
+# via the DEV_MODE environment variable.
 sed -i -E 's/("dev_mode"\s*:\s*")[^"]*(")/\1false\2/' "$PROJECT_ROOT/src/config.json"
 mkdir -p "$BUILD_DIR"
 dpkg-buildpackage -b -us -uc
