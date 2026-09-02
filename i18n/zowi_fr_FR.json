@@ -201,7 +201,7 @@
     "next_step": "Étape suivante",
     "finish": "Terminer",
     "check_desc": "Vérifiez que Zowi est bien stable. Testez le mouvement ou confirmez pour sauvegarder le calibrage.",
-    "test_movement": "Tester le mouvement",
+    "test_movement": "Tester",
     "restart": "Recommencer",
     "confirm": "Confirmer"
   }

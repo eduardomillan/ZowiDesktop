@@ -79,6 +79,15 @@ ScreenTemplate {
     function showStep(s) { Calibration.jumpToStep(s) }
 
     Component.onCompleted: {
+        // Always start a fresh calibration on step 0 with trims zeroed. The
+        // controller is a single global instance whose session keeps its state
+        // between screen openings, so without this a previous run's step 3
+        // would reappear. The preview can still open on a specific step by
+        // exposing PreviewStep (zowi_screen_preview --step N).
+        if (typeof PreviewStep !== "undefined")
+            Calibration.jumpToStep(PreviewStep)
+        else
+            Calibration.reset()
         // Keep the BLE channel clean during calibration: pause the periodic
         // name/appId/battery poll so only live G commands are in flight,
         // exactly like zowi_cli calibrate. Resume it when the screen goes away.
@@ -112,18 +121,21 @@ ScreenTemplate {
 
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 18
+                    spacing: 20
 
                     Button {
+                        id: cancelButton
+                        implicitWidth: 200
+                        height: 56
                         text: root.tr("cancel")
                         background: Rectangle {
-                            color: Config.get("color_danger") || "#e74c3c"
-                            radius: 6
+                            color: cancelButton.pressed ? Config.get("color_danger_pressed") || "#c0392b" : Config.get("color_danger") || "#e74c3c"
+                            radius: 28
                         }
                         contentItem: Text {
                             text: parent.text
                             color: "#ffffff"
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -132,15 +144,18 @@ ScreenTemplate {
                     }
 
                     Button {
+                        id: continueButton
+                        implicitWidth: 200
+                        height: 56
                         text: root.tr("continue")
                         background: Rectangle {
-                            color: Config.get("color_accent") || "#21a69b"
-                            radius: 6
+                            color: continueButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
+                            radius: 28
                         }
                         contentItem: Text {
                             text: parent.text
                             color: "#ffffff"
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -195,16 +210,19 @@ ScreenTemplate {
                 }
 
                 Button {
+                    id: nextStepButton
                     anchors.horizontalCenter: parent.horizontalCenter
+                    implicitWidth: 260
+                    height: 56
                     text: root.tr("next_step")
                     background: Rectangle {
-                        color: Config.get("color_accent") || "#21a69b"
-                        radius: 6
+                        color: nextStepButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
+                        radius: 28
                     }
                     contentItem: Text {
                         text: parent.text
                         color: "#ffffff"
-                        font.pixelSize: 13
+                        font.pixelSize: 16
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -255,16 +273,19 @@ ScreenTemplate {
                 }
 
                 Button {
+                    id: finishButton
                     anchors.horizontalCenter: parent.horizontalCenter
+                    implicitWidth: 260
+                    height: 56
                     text: root.tr("finish")
                     background: Rectangle {
-                        color: Config.get("color_accent") || "#21a69b"
-                        radius: 6
+                        color: finishButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
+                        radius: 28
                     }
                     contentItem: Text {
                         text: parent.text
                         color: "#ffffff"
-                        font.pixelSize: 13
+                        font.pixelSize: 16
                         font.bold: true
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
@@ -278,7 +299,7 @@ ScreenTemplate {
         Item {
             Column {
                 anchors.centerIn: parent
-                width: Math.min(parent.width - 60, 560)
+                width: Math.min(parent.width - 60, 640)
                 spacing: 20
 
                 Image {
@@ -300,18 +321,21 @@ ScreenTemplate {
 
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 14
+                    spacing: 20
 
                     Button {
+                        id: testButton
+                        implicitWidth: 190
+                        height: 56
                         text: root.tr("test_movement")
                         background: Rectangle {
-                            color: Config.get("color_accent") || "#21a69b"
-                            radius: 6
+                            color: testButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
+                            radius: 28
                         }
                         contentItem: Text {
                             text: parent.text
                             color: "#ffffff"
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -320,15 +344,18 @@ ScreenTemplate {
                     }
 
                     Button {
+                        id: restartButton
+                        implicitWidth: 190
+                        height: 56
                         text: root.tr("restart")
                         background: Rectangle {
-                            color: Config.get("color_warning") || "#e67e22"
-                            radius: 6
+                            color: restartButton.pressed ? Config.get("color_warning_pressed") || "#d35400" : Config.get("color_warning") || "#e67e22"
+                            radius: 28
                         }
                         contentItem: Text {
                             text: parent.text
                             color: "#ffffff"
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
@@ -340,15 +367,18 @@ ScreenTemplate {
                     }
 
                     Button {
+                        id: confirmButton
+                        implicitWidth: 190
+                        height: 56
                         text: root.tr("confirm")
                         background: Rectangle {
-                            color: Config.get("color_primary") || "#2d5a2d"
-                            radius: 6
+                            color: confirmButton.pressed ? Config.get("color_primary_pressed") || "#1c3a1c" : Config.get("color_primary") || "#2d5a2d"
+                            radius: 28
                         }
                         contentItem: Text {
                             text: parent.text
                             color: "#ffffff"
-                            font.pixelSize: 13
+                            font.pixelSize: 16
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter

@@ -202,7 +202,7 @@
     "next_step": "Next step",
     "finish": "Finish",
     "check_desc": "Check that Zowi stands correctly. Test the movement or confirm to save the calibration.",
-    "test_movement": "Test movement",
+    "test_movement": "Test",
     "restart": "Restart",
     "confirm": "Confirm"
   }

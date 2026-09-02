@@ -237,6 +237,8 @@ int main(int argc, char *argv[])
     }
 
     // Let the calibration screen open on a specific step (0..3) from --step.
+    // Handled inside the QML via the UI's PreviewStep hook (see Context
+    // property set below), which the screen reads in Component.onCompleted.
     if (options.step >= 0)
         calibration.jumpToStep(options.step);
 
