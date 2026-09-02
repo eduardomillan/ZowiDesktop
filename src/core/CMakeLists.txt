@@ -4,6 +4,7 @@ add_library(zowi_core STATIC
     src/config_store.cpp
     src/translation_engine.cpp
     src/robot_commands.cpp
+    src/calibration_session.cpp
 )
 
 target_include_directories(zowi_core

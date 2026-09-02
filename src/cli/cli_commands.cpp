@@ -26,6 +26,7 @@
 #include <zowi/config_store.h>
 #include <zowi/robot_commands.h>
 #include <zowi/protocol.h>
+#include <zowi/calibration_session.h>
 #ifndef _WIN32
 #include <qt_bluetooth_backend.h>
 #endif
@@ -750,16 +751,8 @@ int runControl(int argc, char **argv, const ControlArgs &a)
 // persists them with a single C command.
 int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
 {
-    constexpr int kBaseGrade = 90;
-    constexpr int kMinTrim = -60;
-    constexpr int kMaxTrim = 60;
-    // The firmware moves each servo for ~200 ms; don't flood it with faster
-    // consecutive G commands during the interactive wizard.
-    constexpr auto kDebounce = std::chrono::milliseconds(200);
-
-    auto clampTrim = [&](int v) {
-        return std::max(kMinTrim, std::min(kMaxTrim, v));
-    };
+    // Shared calibration domain model (clamps, commands, debounce policy).
+    zowi::CalibrationSession calibration;
 
     QCoreApplication qtApp(argc, argv);
     resetRobotState();
@@ -841,9 +834,8 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
     };
 
     // Move the four servos to 90 + trim in real time (volatile G command).
-    auto sendServos = [&](const std::array<int, 4> &t) {
-        bt->send(zowi::commandServoAt(kBaseGrade + t[0], kBaseGrade + t[1],
-                                      kBaseGrade + t[2], kBaseGrade + t[3]));
+    auto sendServos = [&]() {
+        bt->send(calibration.servosCommand());
     };
 
     // VICTORY gesture (firmware gesture id 12) unless --no-victory.
@@ -857,22 +849,25 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
     // Reset stored trims and move every servo back to neutral.
     auto resetCalibration = [&]() {
         bt->send(zowi::commandSetTrims(0, 0, 0, 0));
-        std::this_thread::sleep_for(kDebounce);
-        bt->send(zowi::commandServoAt(kBaseGrade, kBaseGrade, kBaseGrade, kBaseGrade));
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(zowi::CalibrationSession::kDebounceMs));
+        bt->send(calibration.neutralCommand());
     };
 
     // ── Direct mode: --yl --yr --rl --rr given, no wizard ─────────
     if (a.direct) {
-        std::array<int, 4> trims{{a.yl, a.yr, a.rl, a.rr}};
+        const std::array<int, 4> in{{a.yl, a.yr, a.rl, a.rr}};
         const std::array<const char *, 4> names{{"YL", "YR", "RL", "RR"}};
-        for (size_t i = 0; i < trims.size(); ++i) {
-            const int clamped = clampTrim(trims[i]);
-            if (clamped != trims[i]) {
-                std::cout << "Warning: " << names[i] << " trim " << trims[i]
-                          << " clamped to " << clamped << " (range " << kMinTrim
-                          << ".." << kMaxTrim << ").\n";
-                trims[i] = clamped;
+        std::array<int, 4> trims{{0, 0, 0, 0}};
+        for (size_t i = 0; i < in.size(); ++i) {
+            const int clamped = calibration.clamp(in[i]);
+            if (clamped != in[i]) {
+                std::cout << "Warning: " << names[i] << " trim " << in[i]
+                          << " clamped to " << clamped << " (range "
+                          << zowi::CalibrationSession::kMinTrim << ".."
+                          << zowi::CalibrationSession::kMaxTrim << ").\n";
             }
+            trims[i] = clamped;
         }
 
         std::cout << "Setting trims: YL=" << trims[0] << " YR=" << trims[1]
@@ -910,39 +905,42 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
         disableRawMode();
     });
 
-    enum class Step { Warning, Legs, Feet, Check };
-    Step step = Step::Warning;
-    std::array<int, 4> trims{{0, 0, 0, 0}};
-    int selection = 0;  // index into trims, within the current step's pair
-    bool needSend = false;
+    const int kDebounceMs = zowi::CalibrationSession::kDebounceMs;
+
     using clock = std::chrono::steady_clock;
-    auto lastServoSend = clock::time_point{};
+    int selection = 0;  // index into trims, within the current step's pair
+    long long lastServoSendMs = 0;
+    bool needSend = false;
     bool finished = false;
     int result = 0;
 
     // Send G if the debounce allows; otherwise flag a pending flush.
     auto trySendServos = [&](bool force) {
-        const auto now = clock::now();
-        if (!force && now - lastServoSend < kDebounce) {
+        const long long now = force
+                                 ? lastServoSendMs + kDebounceMs + 1
+                                 : std::chrono::duration_cast<std::chrono::milliseconds>(
+                                       clock::now().time_since_epoch()).count();
+        if (calibration.shouldSend(now, lastServoSendMs)) {
+            sendServos();
+            needSend = false;
+        } else {
             needSend = true;
-            return;
         }
-        sendServos(trims);
-        lastServoSend = now;
-        needSend = false;
     };
 
     // Full-screen repaint of the current step.
     auto render = [&]() {
+        const int step = calibration.stepIndex();
         std::cout << "\x1b[2J\x1b[H";
         std::cout << "Zowi Calibration — " << target << "\n";
-        std::cout << "  YL=" << trims[0] << "  YR=" << trims[1]
-                  << "  RL=" << trims[2] << "  RR=" << trims[3] << "\n";
-        std::cout << "  range: " << kMinTrim << ".." << kMaxTrim << " deg\n";
+        std::cout << "  YL=" << calibration.trim(0) << "  YR=" << calibration.trim(1)
+                  << "  RL=" << calibration.trim(2) << "  RR=" << calibration.trim(3) << "\n";
+        std::cout << "  range: " << zowi::CalibrationSession::kMinTrim << ".."
+                  << zowi::CalibrationSession::kMaxTrim << " deg\n";
         std::cout << "----------------------------------------------\n";
 
         switch (step) {
-            case Step::Warning:
+            case 0:
                 std::cout << "\nThis will move Zowi's servos to their neutral position\n"
                              "and let you adjust the four trim offsets. Trims are\n"
                              "saved permanently to the robot's EEPROM.\n";
@@ -952,7 +950,7 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
                 }
                 std::cout << "\n[y] Continue   [x] Cancel\n";
                 break;
-            case Step::Legs:
+            case 1:
                 std::cout << "\nStep 1/3 — Legs. Selected servo: "
                           << (selection == 0 ? "YL (left)" : "YR (right)") << "\n\n"
                           << "  <- / a  select left    -> / d  select right\n"
@@ -960,7 +958,7 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
                           << "  +       +1             -       -1\n\n"
                           << "  [n] Next step (feet)   [x] Cancel\n";
                 break;
-            case Step::Feet:
+            case 2:
                 std::cout << "\nStep 2/3 — Feet. Selected servo: "
                           << (selection == 2 ? "RL (left)" : "RR (right)") << "\n\n"
                           << "  <- / a  select left    -> / d  select right\n"
@@ -968,7 +966,7 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
                           << "  +       +1             -       -1\n\n"
                           << "  [n] Next step (check)  [x] Cancel\n";
                 break;
-            case Step::Check:
+            case 3:
                 std::cout << "\nStep 3/3 — Check.\n\n"
                           << "  [t] Test movement (save trims + victory)\n"
                           << "  [r] Restart (reset trims to 0)\n"
@@ -981,10 +979,12 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
 
     auto warningContinue = [&]() {
         resetCalibration();
-        std::this_thread::sleep_for(kDebounce);
-        step = Step::Legs;
+        calibration.reset();
+        std::this_thread::sleep_for(std::chrono::milliseconds(kDebounceMs));
+        calibration.nextStep();
         selection = 0;
-        lastServoSend = clock::time_point{};
+        lastServoSendMs = 0;
+        needSend = false;
         render();
     };
 
@@ -1006,8 +1006,9 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
         }
 
         bool changed = false;
+        const int step = calibration.stepIndex();
         switch (step) {
-            case Step::Warning:
+            case 0:
                 if (key == "yes") {
                     warningContinue();
                     changed = true;
@@ -1018,9 +1019,9 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
                 }
                 break;
 
-            case Step::Legs:
-            case Step::Feet: {
-                const int lo = (step == Step::Legs) ? 0 : 2;
+            case 1:
+            case 2: {
+                const int lo = (step == 1) ? 0 : 2;
                 const int hi = lo + 1;
 
                 if (key == "select_left") {
@@ -1036,15 +1037,13 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
                     else if (key == "fine_up") delta = 1;
                     else if (key == "fine_down") delta = -1;
                     if (delta != 0) {
-                        const int newVal = clampTrim(trims[selection] + delta);
-                        if (newVal != trims[selection]) {
-                            trims[selection] = newVal;
+                        if (calibration.adjust(selection, delta)) {
                             changed = true;
                             trySendServos(false);  // live move: G 90+trim
                         }
                     } else if (key == "next") {
-                        step = (step == Step::Legs) ? Step::Feet : Step::Check;
-                        selection = (step == Step::Feet) ? 2 : 0;
+                        calibration.nextStep();
+                        selection = (calibration.stepIndex() == 2) ? 2 : 0;
                         changed = true;
                     } else if (key == "quit") {
                         finished = true;
@@ -1055,8 +1054,11 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
                 break;
             }
 
-            case Step::Check:
+            case 3:
                 if (key == "test" || key == "confirm") {
+                    const std::array<int, 4> trims{{
+                        calibration.trim(0), calibration.trim(1),
+                        calibration.trim(2), calibration.trim(3)}};
                     if (persistTrims(trims)) {
                         std::cout << "\nTrims saved to EEPROM.\n";
                     } else {
@@ -1066,7 +1068,7 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
                     if (key == "test") {
                         // Back to the live calibration pose so the user can
                         // keep adjusting.
-                        sendServos(trims);
+                        sendServos();
                         render();
                     } else {
                         finished = true;
@@ -1075,10 +1077,10 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
                     }
                 } else if (key == "restart") {
                     resetCalibration();
-                    trims = {{0, 0, 0, 0}};
+                    calibration.reset();
                     selection = 0;
-                    step = Step::Warning;
-                    lastServoSend = clock::time_point{};
+                    lastServoSendMs = 0;
+                    needSend = false;
                     render();
                 } else if (key == "quit") {
                     finished = true;

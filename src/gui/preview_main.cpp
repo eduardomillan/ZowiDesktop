@@ -12,6 +12,7 @@
 
 #include "controllers/ConfigController.h"
 #include "controllers/TranslatorController.h"
+#include "controllers/CalibrationSessionController.h"
 
 class PreviewSession final : public QObject
 {
@@ -227,6 +228,7 @@ int main(int argc, char *argv[])
     ConfigController config;
     PreviewSession session;
     PreviewBluetooth robot;
+    CalibrationSessionController calibration;
 
     if (options.connected) {
         session.saveActiveZowiDeviceAddress(options.deviceAddress);
@@ -234,11 +236,16 @@ int main(int argc, char *argv[])
         robot.setInitialConnection(options.deviceName, options.deviceAddress);
     }
 
+    // Let the calibration screen open on a specific step (0..3) from --step.
+    if (options.step >= 0)
+        calibration.jumpToStep(options.step);
+
     QQuickView view;
     view.rootContext()->setContextProperty(QStringLiteral("Translator"), &translator);
     view.rootContext()->setContextProperty(QStringLiteral("Config"), &config);
     view.rootContext()->setContextProperty(QStringLiteral("Session"), &session);
     view.rootContext()->setContextProperty(QStringLiteral("Robot"), &robot);
+    view.rootContext()->setContextProperty(QStringLiteral("Calibration"), &calibration);
     view.rootContext()->setContextProperty(QStringLiteral("AppVersion"), QString(ZOWI_VERSION));
     // Optional: let a screen open on an internal step (e.g. calibration steps
     // 0..3). Screens read it as `PreviewStep` and fall back to their own default.

@@ -15,3 +15,7 @@ add_test(NAME test_translation_engine COMMAND test_translation_engine)
 add_executable(test_robot_commands test_robot_commands.cpp)
 target_link_libraries(test_robot_commands PRIVATE Zowi::core)
 add_test(NAME test_robot_commands COMMAND test_robot_commands)
+
+add_executable(test_calibration_session test_calibration_session.cpp)
+target_link_libraries(test_calibration_session PRIVATE Zowi::core)
+add_test(NAME test_calibration_session COMMAND test_calibration_session)
