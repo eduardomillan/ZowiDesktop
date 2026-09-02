@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Servo calibration.** New `calibrate` CLI subcommand for interactive servo-trim
+  calibration (wizard with arrow keys) or direct mode (`--yl/--yr/--rl/--rr`).
+  New GUI `CalibrationScreen` with a 4-step wizard (WARNING → LEGS → FEET → CHECK)
+  accessible from Settings. Both share a Qt-free `CalibrationSession` core module
+  that owns the trim state, clamps (±60°), command generation and the one-G-in-flight
+  debounce policy.
+- **Extended robot commands.** `robot_commands.h` now exposes `MouthId` (31 mouth
+  patterns), `GestureId` (13 gestures) and `MelodyId` (19 melodies) enums, plus
+  `commandMouth()`, `commandMouthById()`, `commandGesture(GestureId)` and
+  `commandSing()` functions. A new `CommandsController` exposes all robot commands
+  to QML, replacing hardcoded protocol strings in `PadScreen`.
+
+### Changed
+- **PadScreen refactor.** All movement/action buttons now use `Commands.xxx()`
+  methods instead of hardcoded protocol strings (`"M 3 " + speed + "\r"` →
+  `Commands.turnLeft(speed)`), making the code type-safe and testable.
+- **Calibration button styling.** CalibrationScreen action buttons now use the
+  same pill style as Welcome/Wizard/WizardFound screens (200×56 in rows, 260×56
+  for solo buttons, 190×56 for the 3-button CHECK step), with consistent
+  `radius: 28` and `font.pixelSize: 16`.
+- **`dev_mode` default.** The `dev_mode` key in `config.json` is now `false` by
+  default (was `true`).
+- **Renamed `ZOWI_DEV` environment variable to `DEV_MODE`.** The env var
+  that enables dev mode and the dev overlay is now `DEV_MODE` (accepted
+  values: `1`, `true`, `on`, case-insensitive). The `dev_mode` key in
+  `config.json` is unchanged.
+
 ### Fixed
 - **Calibration entry caused an unwanted leg sweep.** Entering calibration
   (GUI or CLI) used to send `C 0 0 0 0` followed immediately by
@@ -17,12 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   inward from an arbitrary posture. The entry sequence now sends a single
   `S` (stop) command, which invokes the firmware's `home()` exactly once,
   settling the robot cleanly to rest without the redundant second move.
-
-### Changed
-- **Renamed `ZOWI_DEV` environment variable to `DEV_MODE`.** The env var
-  that enables dev mode and the dev overlay is now `DEV_MODE` (accepted
-  values: `1`, `true`, `on`, case-insensitive). The `dev_mode` key in
-  `config.json` is unchanged.
+- **Calibration state persisted between openings.** The global
+  `CalibrationSessionController` kept its step/trims state between screen
+  openings, so a previous calibration's step 3 would reappear on the next
+  open. `CalibrationScreen` now resets to step 0 with zeroed trims on
+  `Component.onCompleted` (respecting the preview's `PreviewStep` hook).
 
 ## [0.6.0] - 2026-09-01
 
