@@ -1099,4 +1099,281 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
     return result;
 }
 
+// ── Helper: list available options for move/gesture/mouth/sing ──────────────
+namespace {
+
+void listMovements() {
+    std::cout << "Available movements:\n";
+    std::cout << "  forward, backward, left, right, moonwalker-left, moonwalker-right\n";
+}
+
+void listGestures() {
+    std::cout << "Available gestures (1-13):\n";
+    std::cout << "  1: happy        2: super-happy   3: sad          4: sleeping\n";
+    std::cout << "  5: fart         6: confused      7: love         8: angry\n";
+    std::cout << "  9: fretful     10: magic        11: wave        12: victory\n";
+    std::cout << " 13: fail\n";
+}
+
+void listMouths() {
+    std::cout << "Available mouths (0-30):\n";
+    std::cout << "  0: zero         1: one           2: two          3: three\n";
+    std::cout << "  4: four         5: five          6: six          7: seven\n";
+    std::cout << "  8: eight        9: nine         10: smile       11: happy-open\n";
+    std::cout << " 12: happy-closed 13: heart       14: big-surprise 15: small-surprise\n";
+    std::cout << " 16: tongue-out  17: vamp1        18: vamp2       19: line\n";
+    std::cout << " 20: confused     21: diagonal    22: sad         23: sad-open\n";
+    std::cout << " 24: sad-closed   25: ok          26: x           27: interrogation\n";
+    std::cout << " 28: thunder      29: culito      30: angry\n";
+}
+
+void listMelodies() {
+    std::cout << "Available melodies (1-19):\n";
+    std::cout << "  1: connection    2: disconnection  3: surprise      4: oh-oh\n";
+    std::cout << "  5: oh-oh-2       6: cuddly         7: sleeping      8: happy\n";
+    std::cout << "  9: super-happy  10: happy-short   11: sad         12: confused\n";
+    std::cout << " 13: fart1        14: fart2         15: fart3       16: mode1\n";
+    std::cout << " 17: mode2        18: mode3         19: button-pushed\n";
+}
+
+// Parse a name-or-id argument into a 0-based enum value.
+// Returns -1 on error (unknown name or out-of-range id).
+int parseNameOrId(const std::string &arg, const std::vector<std::string> &names, int maxId) {
+    // Try numeric first
+    try {
+        int id = std::stoi(arg);
+        if (id >= 0 && id <= maxId) return id;
+        return -1;
+    } catch (...) {
+        // Not numeric, try name
+    }
+    // Try name (case-insensitive)
+    std::string argLower = arg;
+    std::transform(argLower.begin(), argLower.end(), argLower.begin(), ::tolower);
+    for (size_t i = 0; i < names.size(); ++i) {
+        if (names[i] == argLower) return static_cast<int>(i);
+    }
+    return -1;
+}
+
+// Connect to the robot and send a single command, then disconnect.
+// Returns 0 on success, 1 on error.
+int sendOneShotCommand(int argc, char **argv,
+                       const std::string &address, const std::string &tty,
+                       int baud, const std::string &backend, int timeout,
+                       const std::string &cmd, const std::string &cmdDesc) {
+    QCoreApplication qtApp(argc, argv);
+    resetRobotState();
+
+    zowi::SessionStore session("ZowiDesktop", "ZowiApp");
+
+    std::string be = backend;
+    if (be == "auto") {
+        be = session.getString("activeZowiTransport");
+        if (be == "bt") be = "bluetooth";
+        if (be.empty()) be = "bluetooth";
+    }
+
+    const std::string targetAddr = address.empty()
+                                       ? session.getString("activeZowiDeviceAddress")
+                                       : address;
+    if (targetAddr.empty()) {
+        std::cerr << "No paired device found. Run 'connect' first or pass --address." << std::endl;
+        return 1;
+    }
+
+    std::string target, boundTty;
+    auto bt = prepareFlashBackend(be, targetAddr, tty, baud, target, boundTty);
+    if (!bt) return 1;
+
+#ifdef ZOWI_HAVE_SERIAL
+    const bool isUsb = (dynamic_cast<SerialBackend *>(bt.get()) != nullptr);
+#else
+    const bool isUsb = false;
+#endif
+    const int effTimeout = isUsb ? std::max(timeout, 8) : timeout;
+
+#ifndef ZOWI_HAVE_NATIVE_BT
+    if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+        std::cout << "Discovering " << target << "..." << std::endl;
+        discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
+    }
+#endif
+
+    std::cout << "Connecting to " << target << "..." << std::endl;
+
+    bt->onDataReceived([](const std::string &data) { onDataReceived(data); });
+    bt->onConnectionChanged([&](bool connected) {
+        g_connected = connected;
+        if (connected) {
+            std::cout << "Connected." << std::endl;
+        } else {
+            std::cout << "Disconnected." << std::endl;
+        }
+    });
+    bt->onError([&](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
+
+    bt->connect(target);
+
+    if (!waitUntil(qtApp, effTimeout * 1000, []() {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            return g_connected;
+        })) {
+        std::cerr << "Could not connect to the robot within " << effTimeout << "s." << std::endl;
+        bt->disconnect();
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        return 1;
+    }
+
+    // Send the command and wait for final ack
+    {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        g_finalAck = false;
+    }
+    bt->send(cmd);
+    std::cout << "Sent: " << cmdDesc << std::endl;
+
+    // Wait briefly for the final ack
+    waitUntil(qtApp, 2000, []() {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        return g_finalAck;
+    });
+
+    bt->disconnect();
+    if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+    return 0;
+}
+
+} // namespace
+
+// ── move subcommand ─────────────────────────────────────────────────────────
+int runMove(int argc, char **argv, const MoveArgs &a) {
+    if (a.list) {
+        listMovements();
+        return 0;
+    }
+
+    if (a.direction.empty()) {
+        std::cerr << "Direction required. Use --list to see available movements." << std::endl;
+        return 1;
+    }
+
+    // Parse speed
+    zowi::MovementSpeed speed = zowi::MovementSpeed::Medium;
+    if (a.speed == "slow") speed = zowi::MovementSpeed::Slow;
+    else if (a.speed == "fast") speed = zowi::MovementSpeed::Fast;
+    else if (a.speed != "medium") {
+        std::cerr << "Unknown speed '" << a.speed << "'; using 'medium'.\n";
+    }
+
+    // Parse direction
+    std::string cmd;
+    std::string dirLower = a.direction;
+    std::transform(dirLower.begin(), dirLower.end(), dirLower.begin(), ::tolower);
+
+    if (dirLower == "forward") cmd = zowi::commandWalkForward(speed);
+    else if (dirLower == "backward") cmd = zowi::commandWalkBackward(speed);
+    else if (dirLower == "left" || dirLower == "turn-left") cmd = zowi::commandTurnLeft(speed);
+    else if (dirLower == "right" || dirLower == "turn-right") cmd = zowi::commandTurnRight(speed);
+    else if (dirLower == "moonwalker-left") cmd = zowi::commandMoonwalkerLeft(speed);
+    else if (dirLower == "moonwalker-right") cmd = zowi::commandMoonwalkerRight(speed);
+    else {
+        std::cerr << "Unknown direction '" << a.direction << "'. Use --list to see available movements." << std::endl;
+        return 1;
+    }
+
+    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, "move " + a.direction);
+}
+
+// ── gesture subcommand ──────────────────────────────────────────────────────
+int runGesture(int argc, char **argv, const GestureArgs &a) {
+    if (a.list) {
+        listGestures();
+        return 0;
+    }
+
+    if (a.gesture.empty()) {
+        std::cerr << "Gesture required. Use --list to see available gestures." << std::endl;
+        return 1;
+    }
+
+    // Gesture names (0-based index, protocol is 1-based)
+    static const std::vector<std::string> gestureNames = {
+        "happy", "super-happy", "sad", "sleeping", "fart", "confused",
+        "love", "angry", "fretful", "magic", "wave", "victory", "fail"
+    };
+
+    int id = parseNameOrId(a.gesture, gestureNames, 12);
+    if (id < 0) {
+        std::cerr << "Unknown gesture '" << a.gesture << "'. Use --list to see available gestures." << std::endl;
+        return 1;
+    }
+
+    // Protocol is 1-based, enum is 0-based
+    std::string cmd = zowi::commandGesture(id + 1);
+    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, "gesture " + a.gesture);
+}
+
+// ── mouth subcommand ────────────────────────────────────────────────────────
+int runMouth(int argc, char **argv, const MouthArgs &a) {
+    if (a.list) {
+        listMouths();
+        return 0;
+    }
+
+    if (a.mouth.empty()) {
+        std::cerr << "Mouth required. Use --list to see available mouths." << std::endl;
+        return 1;
+    }
+
+    // Mouth names (0-based index)
+    static const std::vector<std::string> mouthNames = {
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+        "smile", "happy-open", "happy-closed", "heart", "big-surprise", "small-surprise",
+        "tongue-out", "vamp1", "vamp2", "line", "confused", "diagonal",
+        "sad", "sad-open", "sad-closed", "ok", "x", "interrogation",
+        "thunder", "culito", "angry"
+    };
+
+    int id = parseNameOrId(a.mouth, mouthNames, 30);
+    if (id < 0) {
+        std::cerr << "Unknown mouth '" << a.mouth << "'. Use --list to see available mouths." << std::endl;
+        return 1;
+    }
+
+    std::string cmd = zowi::commandMouthById(static_cast<zowi::MouthId>(id));
+    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, "mouth " + a.mouth);
+}
+
+// ── sing subcommand ─────────────────────────────────────────────────────────
+int runSing(int argc, char **argv, const SingArgs &a) {
+    if (a.list) {
+        listMelodies();
+        return 0;
+    }
+
+    if (a.melody.empty()) {
+        std::cerr << "Melody required. Use --list to see available melodies." << std::endl;
+        return 1;
+    }
+
+    // Melody names (0-based index, protocol is 1-based)
+    static const std::vector<std::string> melodyNames = {
+        "connection", "disconnection", "surprise", "oh-oh", "oh-oh-2",
+        "cuddly", "sleeping", "happy", "super-happy", "happy-short",
+        "sad", "confused", "fart1", "fart2", "fart3",
+        "mode1", "mode2", "mode3", "button-pushed"
+    };
+
+    int id = parseNameOrId(a.melody, melodyNames, 18);
+    if (id < 0) {
+        std::cerr << "Unknown melody '" << a.melody << "'. Use --list to see available melodies." << std::endl;
+        return 1;
+    }
+
+    // Protocol is 1-based, enum is 0-based
+    std::string cmd = zowi::commandSing(static_cast<zowi::MelodyId>(id));
+    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, "sing " + a.melody);
+}
+
 } // namespace zowi_cli

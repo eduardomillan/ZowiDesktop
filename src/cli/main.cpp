@@ -153,6 +153,51 @@ int main(int argc, char **argv)
     calibCmd->add_option("--rl", calibArgs.rl, "Left foot trim (all four trims are required for direct mode)");
     calibCmd->add_option("--rr", calibArgs.rr, "Right foot trim (all four trims are required for direct mode)");
 
+    // ── move subcommand ────────────────────────────────────────
+    auto *moveCmd = app.add_subcommand("move", "Send a single movement command to the robot\nUse --list to see available directions.");
+    zowi_cli::MoveArgs moveArgs;
+    moveCmd->add_option("direction", moveArgs.direction, "Movement direction (forward, backward, left, right, moonwalker-left, moonwalker-right)");
+    moveCmd->add_option("--speed,-s", moveArgs.speed, "Movement speed: slow, medium, fast")->default_val("medium");
+    moveCmd->add_option("--address,-a", moveArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
+    moveCmd->add_option("--timeout,-t", moveArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    moveCmd->add_option("--backend", moveArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    moveCmd->add_option("--tty", moveArgs.tty, "Serial TTY to use for USB")->default_val("");
+    moveCmd->add_option("--baud", moveArgs.baud, "Serial baud rate")->default_val(115200);
+    moveCmd->add_flag("--list,-l", moveArgs.list, "List available movements and exit");
+
+    // ── gesture subcommand ─────────────────────────────────────
+    auto *gestureCmd = app.add_subcommand("gesture", "Send a gesture command to the robot\nUse --list to see available gestures.");
+    zowi_cli::GestureArgs gestureArgs;
+    gestureCmd->add_option("gesture", gestureArgs.gesture, "Gesture name or ID (1-13)");
+    gestureCmd->add_option("--address,-a", gestureArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
+    gestureCmd->add_option("--timeout,-t", gestureArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    gestureCmd->add_option("--backend", gestureArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    gestureCmd->add_option("--tty", gestureArgs.tty, "Serial TTY to use for USB")->default_val("");
+    gestureCmd->add_option("--baud", gestureArgs.baud, "Serial baud rate")->default_val(115200);
+    gestureCmd->add_flag("--list,-l", gestureArgs.list, "List available gestures and exit");
+
+    // ── mouth subcommand ───────────────────────────────────────
+    auto *mouthCmd = app.add_subcommand("mouth", "Send a mouth/LED pattern to the robot\nUse --list to see available mouths.");
+    zowi_cli::MouthArgs mouthArgs;
+    mouthCmd->add_option("mouth", mouthArgs.mouth, "Mouth name or ID (0-30)");
+    mouthCmd->add_option("--address,-a", mouthArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
+    mouthCmd->add_option("--timeout,-t", mouthArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    mouthCmd->add_option("--backend", mouthArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    mouthCmd->add_option("--tty", mouthArgs.tty, "Serial TTY to use for USB")->default_val("");
+    mouthCmd->add_option("--baud", mouthArgs.baud, "Serial baud rate")->default_val(115200);
+    mouthCmd->add_flag("--list,-l", mouthArgs.list, "List available mouths and exit");
+
+    // ── sing subcommand ────────────────────────────────────────
+    auto *singCmd = app.add_subcommand("sing", "Send a melody/sing command to the robot\nUse --list to see available melodies.");
+    zowi_cli::SingArgs singArgs;
+    singCmd->add_option("melody", singArgs.melody, "Melody name or ID (1-19)");
+    singCmd->add_option("--address,-a", singArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
+    singCmd->add_option("--timeout,-t", singArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    singCmd->add_option("--backend", singArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    singCmd->add_option("--tty", singArgs.tty, "Serial TTY to use for USB")->default_val("");
+    singCmd->add_option("--baud", singArgs.baud, "Serial baud rate")->default_val(115200);
+    singCmd->add_flag("--list,-l", singArgs.list, "List available melodies and exit");
+
     CLI11_PARSE(app, argc, argv);
 
     // Direct mode only when at least one trim option was explicitly given.
@@ -178,6 +223,10 @@ int main(int argc, char **argv)
     if (*statusCmd)     return zowi_cli::runStatus(argc, argv, statusArgs);
     if (*controlCmd)    return zowi_cli::runControl(argc, argv, controlArgs);
     if (*calibCmd)      return zowi_cli::runCalibrate(argc, argv, calibArgs);
+    if (*moveCmd)       return zowi_cli::runMove(argc, argv, moveArgs);
+    if (*gestureCmd)    return zowi_cli::runGesture(argc, argv, gestureArgs);
+    if (*mouthCmd)      return zowi_cli::runMouth(argc, argv, mouthArgs);
+    if (*singCmd)       return zowi_cli::runSing(argc, argv, singArgs);
 
     return 0;
 }

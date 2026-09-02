@@ -97,6 +97,51 @@ struct CalibrateArgs {
     int rr = 0;
 };
 
+// One-shot movement command (M protocol). Sends a single movement and exits.
+struct MoveArgs {
+    std::string direction;  // forward, backward, left, right, moonwalker-left, moonwalker-right
+    std::string speed = "medium";
+    std::string address;
+    std::string tty;
+    int baud = 115200;
+    std::string backend = "auto";
+    int timeout = 3;
+    bool list = false;
+};
+
+// One-shot gesture command (H protocol). Sends a gesture and exits.
+struct GestureArgs {
+    std::string gesture;  // name or numeric id (1-13)
+    std::string address;
+    std::string tty;
+    int baud = 115200;
+    std::string backend = "auto";
+    int timeout = 3;
+    bool list = false;
+};
+
+// One-shot mouth command (L protocol). Sends a mouth pattern and exits.
+struct MouthArgs {
+    std::string mouth;  // name or numeric id (0-30)
+    std::string address;
+    std::string tty;
+    int baud = 115200;
+    std::string backend = "auto";
+    int timeout = 3;
+    bool list = false;
+};
+
+// One-shot sing/melody command (K protocol). Sends a melody and exits.
+struct SingArgs {
+    std::string melody;  // name or numeric id (1-19)
+    std::string address;
+    std::string tty;
+    int baud = 115200;
+    std::string backend = "auto";
+    int timeout = 3;
+    bool list = false;
+};
+
 int runSession(const SessionArgs &a);
 int runTranslate(const TranslateArgs &a);
 int runConfig(const ConfigArgs &a);
@@ -109,6 +154,10 @@ int runDisconnect(int argc, char **argv);
 int runStatus(int argc, char **argv, const StatusArgs &a);
 int runControl(int argc, char **argv, const ControlArgs &a);
 int runCalibrate(int argc, char **argv, const CalibrateArgs &a);
+int runMove(int argc, char **argv, const MoveArgs &a);
+int runGesture(int argc, char **argv, const GestureArgs &a);
+int runMouth(int argc, char **argv, const MouthArgs &a);
+int runSing(int argc, char **argv, const SingArgs &a);
 
 } // namespace zowi_cli
 
