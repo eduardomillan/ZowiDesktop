@@ -20,6 +20,10 @@ The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionalit
 - [Disconnect](#disconnect)
 - [Status](#status)
 - [Control](#control)
+- [Move](#move)
+- [Gesture](#gesture)
+- [Mouth](#mouth)
+- [Sing](#sing)
 - [Calibrate](#calibrate)
 - [Test Scripts](#test-scripts)
 - [Examples](#examples)
@@ -46,6 +50,10 @@ zowi_cli <subcommand> [options]
 | `status` | Show current Zowi connection status |
 | `calibrate` | Calibrate the 4 servo trims (interactive wizard or direct) |
 | `control` | Interactive keyboard minigame to drive the robot |
+| `move` | Send a single movement command (forward, backward, turn, etc.) |
+| `gesture` | Play a gesture animation (happy, sad, victory, etc.) |
+| `mouth` | Display a mouth/LED pattern (smile, heart, etc.) |
+| `sing` | Play a melody/sound (happy, connection, fart, etc.) |
 | `alarm` | Install the Robot Alarm firmware |
 | `adivinawi` | Install the Adivinawi game firmware |
 
@@ -65,6 +73,10 @@ zowi_cli restore --help      # Restore help
 zowi_cli disconnect --help   # Disconnect help
 zowi_cli status --help      # Status help
 zowi_cli control --help      # Control (minigame) help
+zowi_cli move --help         # Move help
+zowi_cli gesture --help      # Gesture help
+zowi_cli mouth --help        # Mouth help
+zowi_cli sing --help         # Sing help
 zowi_cli alarm --help        # Alarm help
 zowi_cli adivinawi --help    # Adivinawi help
 ```
@@ -773,6 +785,309 @@ needed.
 - If the battery is below 50% a warning is printed (movement is still allowed).
 - If stdin is not a terminal, the minigame refuses to start (it needs the
   keyboard) and exits without driving the robot.
+
+## Move
+
+Send a single movement command to the robot and exit. Unlike `control` (which is
+interactive), `move` sends one command and disconnects — useful for scripting
+and automation.
+
+### Directions
+
+| Direction | Firmware command | Description |
+|-----------|------------------|-------------|
+| `forward` | `M 1 <T>` | Walk forward one gait cycle |
+| `backward` | `M 2 <T>` | Walk backward one gait cycle |
+| `left` | `M 3 <T>` | Turn left one gait cycle |
+| `right` | `M 4 <T>` | Turn right one gait cycle |
+| `moonwalker-left` | `M 6 <T> 30` | Moonwalker dance left |
+| `moonwalker-right` | `M 7 <T> 30` | Moonwalker dance right |
+
+### Speed
+
+The `--speed` option controls the gait period `T` in milliseconds (larger = slower):
+
+| Speed | Period (ms) |
+|-------|-------------|
+| `slow` | 2000 |
+| `medium` (default) | 1000 |
+| `fast` | 700 |
+
+### List available movements
+
+```bash
+zowi_cli move --list
+```
+
+Output:
+
+```
+Available movements:
+  forward, backward, left, right, moonwalker-left, moonwalker-right
+```
+
+### Basic usage
+
+```bash
+zowi_cli move forward
+zowi_cli move backward --speed fast
+zowi_cli move moonwalker-left --speed slow
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `direction` | Movement direction (positional argument) |
+| `-s, --speed` | Movement speed: `slow`, `medium` (default), `fast` |
+| `-a, --address` | Robot Bluetooth address (overrides paired device) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
+| `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
+| `--baud` | Serial baud rate (default `115200`) |
+| `-l, --list` | List available movements and exit |
+
+### Notes
+
+- Each invocation sends a single gait cycle. To keep moving, call `move`
+  repeatedly or use `control` for interactive driving.
+- The robot stops automatically after completing the movement (no explicit
+  stop command needed).
+- If the battery is below 50% a warning is printed (movement is still allowed).
+
+## Gesture
+
+Play a gesture animation on the robot. Gestures combine servo movements with
+mouth expressions and sounds to convey emotions.
+
+### Available gestures
+
+| ID | Name | Description |
+|----|------|-------------|
+| 1 | `happy` | Happy expression |
+| 2 | `super-happy` | Very happy expression |
+| 3 | `sad` | Sad expression |
+| 4 | `sleeping` | Sleeping expression |
+| 5 | `fart` | Fart joke |
+| 6 | `confused` | Confused expression |
+| 7 | `love` | Love/heart expression |
+| 8 | `angry` | Angry expression |
+| 9 | `fretful` | Fretful/nervous expression |
+| 10 | `magic` | Magic/wizard expression |
+| 11 | `wave` | Waving gesture |
+| 12 | `victory` | Victory/celebration |
+| 13 | `fail` | Failure/sad outcome |
+
+### List available gestures
+
+```bash
+zowi_cli gesture --list
+```
+
+Output:
+
+```
+Available gestures (1-13):
+  1: happy        2: super-happy   3: sad          4: sleeping
+  5: fart         6: confused      7: love         8: angry
+  9: fretful     10: magic        11: wave        12: victory
+ 13: fail
+```
+
+### Basic usage
+
+```bash
+zowi_cli gesture victory
+zowi_cli gesture happy
+zowi_cli gesture 12          # same as victory (by ID)
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `gesture` | Gesture name or ID (1-13) (positional argument) |
+| `-a, --address` | Robot Bluetooth address (overrides paired device) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
+| `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
+| `--baud` | Serial baud rate (default `115200`) |
+| `-l, --list` | List available gestures and exit |
+
+### Notes
+
+- Gestures are blocking: the robot performs the full animation before accepting
+  the next command.
+- You can specify the gesture by name (case-insensitive) or by numeric ID.
+- The firmware protocol uses 1-based IDs (1-13); the CLI accepts both names and
+  IDs.
+
+## Mouth
+
+Display a mouth/LED pattern on the robot's mouth matrix. The mouth is a 5x3 LED
+matrix that can display simple icons and expressions.
+
+### Available mouths
+
+| ID | Name | Description |
+|----|------|-------------|
+| 0 | `zero` | Number 0 |
+| 1 | `one` | Number 1 |
+| 2 | `two` | Number 2 |
+| 3 | `three` | Number 3 |
+| 4 | `four` | Number 4 |
+| 5 | `five` | Number 5 |
+| 6 | `six` | Number 6 |
+| 7 | `seven` | Number 7 |
+| 8 | `eight` | Number 8 |
+| 9 | `nine` | Number 9 |
+| 10 | `smile` | Smiling face |
+| 11 | `happy-open` | Happy face (mouth open) |
+| 12 | `happy-closed` | Happy face (mouth closed) |
+| 13 | `heart` | Heart shape |
+| 14 | `big-surprise` | Big surprise expression |
+| 15 | `small-surprise` | Small surprise expression |
+| 16 | `tongue-out` | Tongue sticking out |
+| 17 | `vamp1` | Vampire teeth variant 1 |
+| 18 | `vamp2` | Vampire teeth variant 2 |
+| 19 | `line` | Straight line |
+| 20 | `confused` | Confused expression |
+| 21 | `diagonal` | Diagonal line |
+| 22 | `sad` | Sad face |
+| 23 | `sad-open` | Sad face (mouth open) |
+| 24 | `sad-closed` | Sad face (mouth closed) |
+| 25 | `ok` | OK symbol |
+| 26 | `x` | X mark |
+| 27 | `interrogation` | Question mark |
+| 28 | `thunder` | Lightning bolt |
+| 29 | `culito` | Butt shape |
+| 30 | `angry` | Angry expression |
+
+### List available mouths
+
+```bash
+zowi_cli mouth --list
+```
+
+Output:
+
+```
+Available mouths (0-30):
+  0: zero         1: one           2: two          3: three
+  4: four         5: five          6: six          7: seven
+  8: eight        9: nine         10: smile       11: happy-open
+ 12: happy-closed 13: heart       14: big-surprise 15: small-surprise
+ 16: tongue-out  17: vamp1        18: vamp2       19: line
+ 20: confused     21: diagonal    22: sad         23: sad-open
+ 24: sad-closed   25: ok          26: x           27: interrogation
+ 28: thunder      29: culito      30: angry
+```
+
+### Basic usage
+
+```bash
+zowi_cli mouth smile
+zowi_cli mouth heart
+zowi_cli mouth 10          # same as smile (by ID)
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `mouth` | Mouth name or ID (0-30) (positional argument) |
+| `-a, --address` | Robot Bluetooth address (overrides paired device) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
+| `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
+| `--baud` | Serial baud rate (default `115200`) |
+| `-l, --list` | List available mouths and exit |
+
+### Notes
+
+- The mouth pattern stays displayed until changed by another `mouth` command or
+  a gesture (gestures temporarily override the mouth).
+- You can specify the mouth by name (case-insensitive, hyphens accepted) or by
+  numeric ID.
+- The firmware protocol uses 0-based IDs (0-30); the CLI accepts both names and
+  IDs.
+
+## Sing
+
+Play a melody/sound on the robot's buzzer. The robot has a small piezo buzzer
+that can play simple tones and melodies.
+
+### Available melodies
+
+| ID | Name | Description |
+|----|------|-------------|
+| 1 | `connection` | Connection sound |
+| 2 | `disconnection` | Disconnection sound |
+| 3 | `surprise` | Surprise sound |
+| 4 | `oh-oh` | "Oh oh" sound |
+| 5 | `oh-oh-2` | "Oh oh" variant 2 |
+| 6 | `cuddly` | Cuddly/affectionate sound |
+| 7 | `sleeping` | Sleeping/snoring sound |
+| 8 | `happy` | Happy sound |
+| 9 | `super-happy` | Very happy sound |
+| 10 | `happy-short` | Short happy sound |
+| 11 | `sad` | Sad sound |
+| 12 | `confused` | Confused sound |
+| 13 | `fart1` | Fart sound variant 1 |
+| 14 | `fart2` | Fart sound variant 2 |
+| 15 | `fart3` | Fart sound variant 3 |
+| 16 | `mode1` | Mode 1 sound |
+| 17 | `mode2` | Mode 2 sound |
+| 18 | `mode3` | Mode 3 sound |
+| 19 | `button-pushed` | Button pressed sound |
+
+### List available melodies
+
+```bash
+zowi_cli sing --list
+```
+
+Output:
+
+```
+Available melodies (1-19):
+  1: connection    2: disconnection  3: surprise      4: oh-oh
+  5: oh-oh-2       6: cuddly         7: sleeping      8: happy
+  9: super-happy  10: happy-short   11: sad         12: confused
+ 13: fart1        14: fart2         15: fart3       16: mode1
+ 17: mode2        18: mode3         19: button-pushed
+```
+
+### Basic usage
+
+```bash
+zowi_cli sing happy
+zowi_cli sing connection
+zowi_cli sing 8            # same as happy (by ID)
+```
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `melody` | Melody name or ID (1-19) (positional argument) |
+| `-a, --address` | Robot Bluetooth address (overrides paired device) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
+| `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
+| `--baud` | Serial baud rate (default `115200`) |
+| `-l, --list` | List available melodies and exit |
+
+### Notes
+
+- Melodies are blocking: the robot plays the full melody before accepting the
+  next command.
+- You can specify the melody by name (case-insensitive, hyphens accepted) or by
+  numeric ID.
+- The firmware protocol uses 1-based IDs (1-19); the CLI accepts both names and
+  IDs.
+- Some melodies (like `fart1`, `fart2`, `fart3`) are meant to be combined with
+  gestures for comedic effect.
 
 ## Calibrate
 
