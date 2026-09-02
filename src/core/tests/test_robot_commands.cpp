@@ -45,6 +45,30 @@ int main()
     check(commandServoAt(150, 30, 96, 78), "G 150 30 96 78\r", "servo mixed");
     check(commandGesture(12), "H 12\r", "gesture victory");
 
+    // Gesture enum (1-based protocol: enum 0 = protocol 1)
+    check(commandGesture(GestureId::Victory), "H 12\r", "gesture victory enum");
+    check(commandGesture(GestureId::Happy), "H 1\r", "gesture happy enum");
+    check(commandGesture(GestureId::Fail), "H 13\r", "gesture fail enum");
+
+    // Mouths: raw pattern
+    check(commandMouth(0b00000000100001010010001100000000),
+          "L 00000000100001010010001100000000\r", "mouth smile pattern");
+    check(commandMouth(0), "L 00000000000000000000000000000000\r", "mouth zero pattern");
+    check(commandMouth(0xFFFFFFFF), "L 11111111111111111111111111111111\r", "mouth all-on pattern");
+
+    // Mouths: by ID
+    check(commandMouthById(MouthId::Smile),
+          "L 00000000100001010010001100000000\r", "mouth smile by id");
+    check(commandMouthById(MouthId::Heart),
+          "L 00010010101101100001010010001100\r", "mouth heart by id");
+    check(commandMouthById(MouthId::Angry),
+          "L 00000000011110100001100001000000\r", "mouth angry by id");
+
+    // Melodies: 1-based protocol (enum 0 = protocol 1)
+    check(commandSing(MelodyId::Connection), "K 1\r", "sing connection");
+    check(commandSing(MelodyId::Happy), "K 8\r", "sing happy");
+    check(commandSing(MelodyId::ButtonPushed), "K 19\r", "sing button pushed");
+
     if (failures == 0) {
         std::cout << "All robot_commands tests passed.\n";
         return 0;

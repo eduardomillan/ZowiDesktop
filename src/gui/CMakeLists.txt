@@ -24,6 +24,7 @@ add_executable(ZowiDesktop WIN32
     controllers/RobotController.cpp
     controllers/ConfigController.cpp
     controllers/CalibrationSessionController.cpp
+    controllers/CommandsController.cpp
     ${GUI_RESOURCES}
 )
 
@@ -68,6 +69,7 @@ add_executable(zowi_screen_preview
     controllers/TranslatorController.cpp
     controllers/ConfigController.cpp
     controllers/CalibrationSessionController.cpp
+    controllers/CommandsController.cpp
     ${GUI_RESOURCES}
 )
 

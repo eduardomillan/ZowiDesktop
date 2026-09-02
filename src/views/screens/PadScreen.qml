@@ -57,7 +57,7 @@ ScreenTemplate {
 
     function sendStop() {
         if (Robot.connected) {
-            Robot.sendData("S\r")
+            Robot.sendData(Commands.stop())
         }
     }
 
@@ -102,7 +102,7 @@ ScreenTemplate {
                     anchors.fill: parent
                     onPressed: {
                         parent.source = "qrc:/images/android/pressed_pad_turn_left_button.png"
-                        startHold("M 3 " + currentSpeed + "\r", tr("turn_left"))
+                        startHold(Commands.turnLeft(currentSpeed), tr("turn_left"))
                     }
                     onReleased: {
                         parent.source = "qrc:/images/android/pad_turn_left_button.png"
@@ -124,7 +124,7 @@ ScreenTemplate {
                     anchors.fill: parent
                     onPressed: {
                         parent.source = "qrc:/images/android/pressed_pad_turn_right_button.png"
-                        startHold("M 4 " + currentSpeed + "\r", tr("turn_right"))
+                        startHold(Commands.turnRight(currentSpeed), tr("turn_right"))
                     }
                     onReleased: {
                         parent.source = "qrc:/images/android/pad_turn_right_button.png"
@@ -153,7 +153,7 @@ ScreenTemplate {
                     anchors.fill: parent
                     onPressed: {
                         parent.source = "qrc:/images/android/pressed_pad_walk_forward.png"
-                        startHold("M 1 " + currentSpeed + "\r", tr("walk_forward"))
+                        startHold(Commands.walkForward(currentSpeed), tr("walk_forward"))
                     }
                     onReleased: {
                         parent.source = "qrc:/images/android/pad_walk_forward.png"
@@ -180,7 +180,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_moonwalker_left.png"
-                            startHold("M 6 " + currentSpeed + " 30\r", tr("moonwalker_left"))
+                            startHold(Commands.moonwalkerLeft(currentSpeed, 30), tr("moonwalker_left"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_moonwalker_left.png"
@@ -203,7 +203,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_moonwalker_right.png"
-                            startHold("M 7 " + currentSpeed + " 30\r", tr("moonwalker_right"))
+                            startHold(Commands.moonwalkerRight(currentSpeed, 30), tr("moonwalker_right"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_moonwalker_right.png"
@@ -228,7 +228,7 @@ ScreenTemplate {
                     anchors.fill: parent
                     onPressed: {
                         parent.source = "qrc:/images/android/pressed_pad_walk_backward.png"
-                        startHold("M 2 " + currentSpeed + "\r", tr("walk_backward"))
+                        startHold(Commands.walkBackward(currentSpeed), tr("walk_backward"))
                     }
                     onReleased: {
                         parent.source = "qrc:/images/android/pad_walk_backward.png"
@@ -274,7 +274,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_bend_button.png"
-                            startHold("M 15 " + currentSpeed + "\r", tr("bend"))
+                            startHold(Commands.bendForward(currentSpeed), tr("bend"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_bend_button.png"
@@ -296,7 +296,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_shake_leg_button.png"
-                            startHold("M 17 " + currentSpeed + "\r", tr("shake_leg"))
+                            startHold(Commands.shakeLegLeft(currentSpeed), tr("shake_leg"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_shake_leg_button.png"
@@ -323,7 +323,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_updown_button.png"
-                            startHold("M 5 " + currentSpeed + " 15\r", tr("updown"))
+                            startHold(Commands.updown(currentSpeed, 15), tr("updown"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_updown_button.png"
@@ -345,7 +345,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_jitter_button.png"
-                            startHold("M 19 " + currentSpeed + " 15\r", tr("jitter"))
+                            startHold(Commands.jitter(currentSpeed, 15), tr("jitter"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_jitter_button.png"
@@ -367,7 +367,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_swing_button.png"
-                            startHold("M 8 " + currentSpeed + " 15\r", tr("swing"))
+                            startHold(Commands.swing(currentSpeed, 15), tr("swing"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_swing_button.png"
@@ -394,7 +394,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_flapping_button.png"
-                            startHold("M 12 " + currentSpeed + " 30\r", tr("flapping"))
+                            startHold(Commands.flappingLeft(currentSpeed, 30), tr("flapping"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_flapping_button.png"
@@ -416,7 +416,7 @@ ScreenTemplate {
                         anchors.fill: parent
                         onPressed: {
                             parent.source = "qrc:/images/android/pressed_pad_crusaito_button.png"
-                            startHold("M 9 " + currentSpeed + " 30\r", tr("crusaito"))
+                            startHold(Commands.crusaitoForward(currentSpeed, 30), tr("crusaito"))
                         }
                         onReleased: {
                             parent.source = "qrc:/images/android/pad_crusaito_button.png"

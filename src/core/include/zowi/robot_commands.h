@@ -65,6 +65,51 @@ std::string commandServoAt(int yl, int yr, int rl, int rr);
 // Gesture animation: H <id> (firmware gestos 1-13). 12 = VICTORY.
 std::string commandGesture(int gestureId);
 
+// ── Mouths / LED matrix ─────────────────────────────────────────────────────
+// The firmware's L command takes a 32-bit binary pattern (e.g. "L 00000000100001010010001100000000\r"
+// for a smile). The patterns are defined in zowiLibs/arduinolibs/Zowi/Zowi_mouths.h.
+// We expose both the raw pattern command and named mouth IDs.
+
+// Mouth IDs (0-30). The protocol is 0-based for mouths (unlike gestures/melodies).
+enum class MouthId : int {
+    Zero = 0, One, Two, Three, Four, Five, Six, Seven, Eight, Nine,
+    Smile = 10, HappyOpen, HappyClosed, Heart,
+    BigSurprise, SmallSurprise, TongueOut,
+    Vamp1, Vamp2, LineMouth, Confused, Diagonal,
+    Sad, SadOpen, SadClosed, Ok, X, Interrogation,
+    Thunder, Culito, Angry
+};
+
+// Build "L <binary>\r" — the mouth command takes the raw 32-bit pattern.
+std::string commandMouth(unsigned long matrix);
+
+// Build "L <binary>\r" for a named mouth ID (looks up the pattern).
+std::string commandMouthById(MouthId id);
+
+// ── Gestures (enum overload) ────────────────────────────────────────────────
+// Gesture IDs (protocol is 1-based: 1=Happy..13=Fail).
+// The enum values are 0-based; the command adds 1 for the protocol.
+enum class GestureId : int {
+    Happy = 0, SuperHappy, Sad, Sleeping, Fart, Confused,
+    Love, Angry, Fretful, Magic, Wave, Victory, Fail
+};
+
+// Overload: commandGesture(GestureId) → H <id+1>\r
+std::string commandGesture(GestureId id);
+
+// ── Melodies / Sing ─────────────────────────────────────────────────────────
+// Melody IDs (protocol is 1-based: 1=Connection..19=ButtonPushed).
+// The enum values are 0-based; the command adds 1 for the protocol.
+enum class MelodyId : int {
+    Connection = 0, Disconnection, Surprise, OhOoh, OhOoh2,
+    Cuddly, Sleeping, Happy, SuperHappy, HappyShort,
+    Sad, Confused, Fart1, Fart2, Fart3,
+    Mode1, Mode2, Mode3, ButtonPushed
+};
+
+// Build "K <id+1>\r" — the sing command (1-based protocol).
+std::string commandSing(MelodyId id);
+
 } // namespace zowi
 
 #endif // ZOWI_ROBOT_COMMANDS_H
