@@ -228,5 +228,6 @@ int main(int argc, char **argv)
     if (*mouthCmd)      return zowi_cli::runMouth(argc, argv, mouthArgs);
     if (*singCmd)       return zowi_cli::runSing(argc, argv, singArgs);
 
+    std::cout << app.help() << std::endl;
     return 0;
 }

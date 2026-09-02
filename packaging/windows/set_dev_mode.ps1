@@ -13,7 +13,11 @@ if (-not (Test-Path -LiteralPath $Path)) {
 $c = [IO.File]::ReadAllText($Path)
 $replaced = $c -replace '("dev_mode"\s*:\s*")[^"]*(")', ('${1}' + $Value + '${2}')
 if ($replaced -ceq $c) {
-    Write-Error "set_dev_mode.ps1: dev_mode key not found or already '$Value' in $Path"
+    if ($c -match '"dev_mode"') {
+        Write-Output "set_dev_mode.ps1: dev_mode already set to '$Value' in $Path"
+        exit 0
+    }
+    Write-Error "set_dev_mode.ps1: dev_mode key not found in $Path"
     exit 1
 }
 
