@@ -30,7 +30,7 @@
     "transport_timeout": "1500",
     "connect_timeout": "10000",
     "rename_lock_ms": "3000",
-    "dev_mode": "true",
+    "dev_mode": "false",
     "message_duration": 2000,
     "button_scan_visible": "false",
     "button_quit_visible": "false",
