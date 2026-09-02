@@ -19,6 +19,7 @@ Whether you already own a Zowi or you are just curious about robotics, Zowi Desk
 - **Bluetooth & USB connection** — pair and connect over Bluetooth (BlueZ SPP) or plug in over USB serial, without needing root.
 - **Wizard onboarding** — scan for nearby Zowis, pick one, and rename it from the first-run wizard.
 - **Movement control** — a full movement pad to walk, dance and turn; battery and firmware status shown live.
+- **Servo calibration** — fine-tune the servo trims from the GUI (interactive 4-step wizard) or the CLI (wizard or direct mode) to keep Zowi standing straight.
 - **Firmware flashing** — restore the factory firmware or install alternative firmwares (e.g. Alarm, Adivinawi) over Bluetooth or USB.
 - **Internationalized** — available in Spanish (`es_ES`), Catalan (`ca_ES`), English (`en_US`), French (`fr_FR`) and Bulgarian (`bg_BG`).
 - **Command-line companion** — the included `zowi_cli` tool exposes the same core over a scriptable interface for automation and debugging.
