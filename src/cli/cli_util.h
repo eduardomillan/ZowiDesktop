@@ -67,6 +67,21 @@ bool waitForRobotData(QCoreApplication &qtApp, int timeoutMs);
 // The robot only reports these on request, so call this right after connecting.
 void requestRobotData(zowi::BluetoothApi &bt);
 
+// Waits until the robot actually answers a request — i.e. it is past the
+// boot/reset window (bootloader + connection animation) in which commands
+// sent over the link are swallowed. Re-sends the identity request every
+// 500 ms while connected. Returns true as soon as any robot data arrives;
+// timeoutMs floors at 10 s because with the default 3 s connection timeout
+// the robot may still be rebooting when the link is already usable.
+bool waitForRobotReady(QCoreApplication &qtApp, zowi::BluetoothApi &bt,
+                       int timeoutMs);
+
+// Same polling approach as waitForRobotReady, but waits until the full
+// identity (name, app id and battery) has been received. Returns false if
+// the window closed early; whatever arrived stays in the shared state.
+bool waitForRobotIdentity(QCoreApplication &qtApp, zowi::BluetoothApi &bt,
+                          int timeoutMs);
+
 // Waits until a battery level has been received.
 bool waitForBatteryLevel(QCoreApplication &qtApp, int timeoutMs);
 

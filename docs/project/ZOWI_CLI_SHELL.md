@@ -183,13 +183,15 @@ unchanged.
 4. Connect and wait for `g_connected` (`waitUntil`), with the USB timeout
    raised to at least 8 s. On failure: disconnect, release any bound RFCOMM
    TTY, exit `1`.
-5. Identify the robot: `requestRobotData()` re-sent every 500 ms until name /
-   app ID / battery have all arrived or a window of at least 10 seconds
-   closes (one burst can be lost while the robot boots — the USB port bounces
-   on open and Bluetooth goes through the STATE-pin reset cycle; this is the
-   polling approach `waitForAppId()` uses). The identity is printed, with a
-   warning when the battery is below the low-battery threshold (same
-   threshold as `control`).
+5. Identify the robot: `waitForRobotIdentity()` polls the identity request
+   every 500 ms until name / app ID / battery have all arrived or its window
+   (floored at 10 s) closes — one burst can be lost while the robot boots
+   (the USB port bounces on open and Bluetooth goes through the STATE-pin
+   reset cycle). The same helper family (`waitForRobotIdentity` /
+   `waitForRobotReady`) gates `connect`, `status` and the one-shot commands,
+   which wait for the robot to answer before sending anything. The identity
+   is printed, with a warning when the battery is below the low-battery
+   threshold (same threshold as `control`).
 6. REPL loop (below).
 7. On exit: `commandStop()` if still connected, `disconnect()`, `rfcomm
    release 0` when a TTY was bound.

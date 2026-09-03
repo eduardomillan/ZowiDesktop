@@ -241,9 +241,10 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
     });
 
     bt->connect(target);
-    requestRobotData(*bt);
 
-    waitForRobotData(qtApp, (effTimeout + 2) * 1000);
+    // Poll until the robot reports its full identity (it reboots right after
+    // the link opens, so the first request is often swallowed).
+    waitForRobotIdentity(qtApp, *bt, (effTimeout + 2) * 1000);
 
     bt->disconnect();
     if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
@@ -539,8 +540,7 @@ int runStatus(int argc, char **argv, const StatusArgs &a)
 
             std::cout << "Connecting to " << target << "..." << std::endl;
             bt->connect(target);
-            requestRobotData(*bt);
-            if (waitForRobotData(qtApp, (effTimeout + 2) * 1000)) {
+            if (waitForRobotIdentity(qtApp, *bt, (effTimeout + 2) * 1000)) {
                 live = true;
                 if (!g_robotName.empty()) name = g_robotName;
                 if (!g_appId.empty()) appId = g_appId;
@@ -1301,6 +1301,16 @@ int sendOneShotCommand(int argc, char **argv,
         return 1;
     }
 
+    // The robot resets and plays its connection animation right after the
+    // link opens; commands sent during that window are swallowed. Wait until
+    // it answers a request before sending the actual command.
+    if (!waitForRobotReady(qtApp, *bt, (effTimeout + 2) * 1000)) {
+        std::cerr << "Robot not ready (still booting?). Command not sent." << std::endl;
+        bt->disconnect();
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        return 1;
+    }
+
     // Send the command and wait for final ack
     {
         std::lock_guard<std::mutex> lock(g_mtx);
@@ -1512,31 +1522,10 @@ int runShell(int argc, char **argv, const ShellArgs &a)
     }
 
     // Identify the robot so the session context is visible up front (and so
-    // the prompt can show its name). A single request can be lost while the
-    // robot is still booting (the USB port bounces on open, and Bluetooth
-    // goes through the STATE-pin reset cycle), so re-request periodically
-    // until the data arrives — the same polling approach as waitForAppId().
-    // The window floors at 10s: with the default 3s connection timeout the
-    // robot may still be rebooting when the link is already usable.
-    requestRobotData(*bt);
-    {
-        const auto deadline = std::chrono::steady_clock::now()
-                              + std::chrono::milliseconds(
-                                    std::max(effTimeout + 2, 10) * 1000);
-        auto nextPoll = std::chrono::steady_clock::now();
-        while (std::chrono::steady_clock::now() < deadline) {
-            qtApp.processEvents();
-            {
-                std::lock_guard<std::mutex> lock(g_mtx);
-                if (!g_robotName.empty() && !g_appId.empty() && g_battery >= 0) break;
-            }
-            if (shellConnected() && std::chrono::steady_clock::now() >= nextPoll) {
-                requestRobotData(*bt);
-                nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
-    }
+    // the prompt can show its name). waitForRobotIdentity re-requests every
+    // 500 ms until the full identity arrives or its window (floored at 10 s)
+    // closes — the first request is often lost to the boot cycle.
+    waitForRobotIdentity(qtApp, *bt, (effTimeout + 2) * 1000);
     printShellStatus();
     {
         std::lock_guard<std::mutex> lock(g_mtx);

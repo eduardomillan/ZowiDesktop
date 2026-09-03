@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <thread>
 #include <chrono>
 #ifdef _WIN32
@@ -352,6 +353,58 @@ void requestRobotData(zowi::BluetoothApi &bt)
         std::cout << "robot tx: B (GetBattery)" << std::endl;
     }
     bt.send(zowi::makeCommand(zowi::Command::GetBattery));
+}
+
+namespace {
+
+// Shared polling loop behind waitForRobotReady/waitForRobotIdentity. Sends
+// the identity request immediately and then every 500 ms (while connected)
+// until ready() turns true or the window closes; timeoutMs floors at 10 s.
+// A lost link does not abort the wait: on USB the port bounces while the
+// robot boots and on Bluetooth the STATE-pin reset reboots it — the backend
+// re-establishes the link and the loop keeps going.
+bool pollRobotState(QCoreApplication &qtApp, zowi::BluetoothApi &bt,
+                    int timeoutMs, const std::function<bool()> &ready)
+{
+    const auto deadline = std::chrono::steady_clock::now()
+                          + std::chrono::milliseconds(std::max(timeoutMs, 10000));
+    auto nextPoll = std::chrono::steady_clock::now();
+
+    while (std::chrono::steady_clock::now() < deadline) {
+        qtApp.processEvents();
+        if (ready()) return true;
+
+        bool connected = false;
+        {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            connected = g_connected;
+        }
+        if (connected && std::chrono::steady_clock::now() >= nextPoll) {
+            requestRobotData(bt);
+            nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+    return false;
+}
+
+} // namespace
+
+bool waitForRobotReady(QCoreApplication &qtApp, zowi::BluetoothApi &bt, int timeoutMs)
+{
+    return pollRobotState(qtApp, bt, timeoutMs, []() {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        return g_dataReceived;
+    });
+}
+
+bool waitForRobotIdentity(QCoreApplication &qtApp, zowi::BluetoothApi &bt, int timeoutMs)
+{
+    return pollRobotState(qtApp, bt, timeoutMs, []() {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        return !g_robotName.empty() && !g_appId.empty() && g_battery >= 0;
+    });
 }
 
 bool waitForAppId(QCoreApplication &qtApp, zowi::BluetoothApi &bt, int timeoutMs,

@@ -260,6 +260,10 @@ sudo usermod -aG bluetooth $USER
 
 Connect to a Zowi robot by Bluetooth address, receive its identification data (name, app ID, battery level), and save the pairing to session.
 
+The robot reboots and plays its connection animation right after the link
+opens, so the identification is requested repeatedly (every 500 ms) until the
+robot answers — a single request sent during startup would be swallowed.
+
 ### Basic usage
 
 ```bash
@@ -852,6 +856,10 @@ zowi_cli move moonwalker-left --speed slow
 
 ### Notes
 
+- The command is sent only once the robot has answered a request: it reboots
+  and plays its connection animation right after the link opens, and anything
+  sent during that window is swallowed. Expect ~6–12 s per invocation
+  (connect + boot); for several commands in a row, use `shell` instead.
 - Each invocation sends a single gait cycle. To keep moving, call `move`
   repeatedly or use `control` for interactive driving.
 - The robot stops automatically after completing the movement (no explicit
@@ -919,6 +927,10 @@ zowi_cli gesture 12          # same as victory (by ID)
 
 ### Notes
 
+- The command is sent only once the robot has answered a request (it reboots
+  and plays its connection animation right after the link opens, and anything
+  sent during that window is swallowed). Expect ~6–12 s per invocation; for
+  several commands in a row, use `shell` instead.
 - Gestures are blocking: the robot performs the full animation before accepting
   the next command.
 - You can specify the gesture by name (case-insensitive) or by numeric ID.
@@ -1008,6 +1020,10 @@ zowi_cli mouth 10          # same as smile (by ID)
 
 ### Notes
 
+- The command is sent only once the robot has answered a request (it reboots
+  and plays its connection animation right after the link opens, and anything
+  sent during that window is swallowed). Expect ~6–12 s per invocation; for
+  several commands in a row, use `shell` instead.
 - The mouth pattern stays displayed until changed by another `mouth` command or
   a gesture (gestures temporarily override the mouth).
 - You can specify the mouth by name (case-insensitive, hyphens accepted) or by
@@ -1083,6 +1099,10 @@ zowi_cli sing 8            # same as happy (by ID)
 
 ### Notes
 
+- The command is sent only once the robot has answered a request (it reboots
+  and plays its connection animation right after the link opens, and anything
+  sent during that window is swallowed). Expect ~6–12 s per invocation; for
+  several commands in a row, use `shell` instead.
 - Melodies are blocking: the robot plays the full melody before accepting the
   next command.
 - You can specify the melody by name (case-insensitive, hyphens accepted) or by
