@@ -161,10 +161,11 @@ int main(int argc, char **argv)
     calibCmd->add_option("--rr", calibArgs.rr, "Right foot trim (all four trims are required for direct mode)");
 
     // ── move subcommand ────────────────────────────────────────
-    auto *moveCmd = app.add_subcommand("move", "Send a single movement command to the robot\nUse --list to see available directions.");
+    auto *moveCmd = app.add_subcommand("move", "Move the robot for a number of gait cycles, then stop\nUse --list to see directions, speeds and syntax.");
     zowi_cli::MoveArgs moveArgs;
-    moveCmd->add_option("direction", moveArgs.direction, "Movement direction (forward, backward, left, right, moonwalker-left, moonwalker-right)");
-    moveCmd->add_option("--speed,-s", moveArgs.speed, "Movement speed: slow, medium, fast")->default_val("medium");
+    moveCmd->add_option("direction", moveArgs.direction, "Movement direction: forward/fw, backward/bk, left/lf, right/rg, moonwalker-left/ml, moonwalker-right/mr (case-insensitive)");
+    moveCmd->add_option("cycles", moveArgs.cycles, "Gait cycles to run (>= 1, default 1). The robot stops automatically afterwards")->default_val(1);
+    moveCmd->add_option("--speed,-s", moveArgs.speed, "Movement speed: slow/s, medium/m (default), fast/f")->default_val("medium");
     moveCmd->add_option("--address,-a", moveArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
     moveCmd->add_option("--timeout,-t", moveArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     moveCmd->add_option("--backend", moveArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
@@ -206,7 +207,7 @@ int main(int argc, char **argv)
     singCmd->add_flag("--list,-l", singArgs.list, "List available melodies and exit");
 
     // ── shell subcommand ──────────────────────────────────────
-    auto *shellCmd = app.add_subcommand("shell", "Persistent-connection command shell\nConnects once, then reads commands from stdin (REPL when interactive, batch when piped):\nmove <dir> [speed] | gesture <name|id> | mouth <name|id|0/1> | sing <name|id> | stop | status | help | quit.");
+    auto *shellCmd = app.add_subcommand("shell", "Persistent-connection command shell\nConnects once, then reads commands from stdin (REPL when interactive, batch when piped):\nmove <dir> [cycles] [speed] | gesture <name|id> | mouth <name|id|0/1> | sing <name|id> | stop | status | help | quit.");
     zowi_cli::ShellArgs shellArgs;
     shellCmd->add_option("--address,-a", shellArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
     shellCmd->add_option("--timeout,-t", shellArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);

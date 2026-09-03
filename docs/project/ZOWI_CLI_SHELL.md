@@ -80,14 +80,16 @@ Connected.
   App ID:  ZOWI_ALLOCATOR_V2
   Battery: 87%
 
-Commands: move <dir> [speed] | gesture <name|id> | mouth <name|id|0/1> |
-          sing <name|id> | stop | status | help | quit
+Commands: move <dir> [cycles] [speed] | gesture <name|id> |
+          mouth <name|id|0/1> | sing <name|id> | stop | status | help | quit
 ZOWI_CLI:Zowi> gesture happy
 Sent: gesture happy
 ZOWI_CLI:Zowi> mouth heart
 Sent: mouth heart
-ZOWI_CLI:Zowi> move forward fast
-Sent: move forward
+ZOWI_CLI:Zowi> move fw 3 f
+Cycle 1/3 completed.
+Cycle 2/3 completed.
+Cycle 3/3 completed.
 ZOWI_CLI:Zowi> stop
 Sent: stop
 ZOWI_CLI:Zowi> quit
@@ -122,7 +124,7 @@ abort the batch), `1` when the connection could not be established.
 
 | Command | Action | Protocol |
 |---------|--------|----------|
-| `move <dir> [speed]` | One movement; `dir` ∈ forward, backward, left, right, moonwalker-left, moonwalker-right; `speed` ∈ slow, medium, fast | M |
+| `move <dir> [cycles] [speed]` | Run `cycles` gait cycles (>= 1, default 1) and stop automatically; `dir` ∈ forward/fw, backward/bk, left/lf, right/rg, moonwalker-left/ml, moonwalker-right/mr; `speed` ∈ slow/s, medium/m, fast/f (default medium) | M |
 | `gesture <name\|id>` | Play a gesture (1–13, same names as `zowi_cli gesture --list`) | H |
 | `mouth <name\|id\|0/1>` | Show a mouth/LED pattern (0–30), or a raw binary pattern | L |
 | `sing <name\|id>` | Play a melody (1–19) | K |
@@ -275,7 +277,8 @@ only), so verification is:
 2. `ctest --test-dir build` — no core regressions.
 3. Manual, with a robot over Bluetooth:
    - `zowi_cli shell` → `gesture happy`, `mouth heart`, `sing 4`,
-     `move forward fast`, `stop`, `status`, `help`, `quit`.
+     `move fw 3 f` (3 fast cycles, then an automatic stop), `stop`, `status`,
+     `help`, `quit`.
    - Unknown command and `gesture nope` produce errors without dropping the
      connection.
    - `printf "gesture 3\nmouth 5\n" | zowi_cli shell` runs the batch and

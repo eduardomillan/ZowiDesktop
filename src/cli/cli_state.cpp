@@ -25,6 +25,8 @@ bool g_connectedOnce = false;
 bool g_dataReceived = false;
 bool g_ack = false;        // software ack (&&A)
 bool g_finalAck = false;   // final ack (&&F), after EEPROM write
+int g_finalAckCount = 0;   // &&F counter (one per completed gait cycle)
+std::chrono::steady_clock::time_point g_lastRx = std::chrono::steady_clock::now();
 bool g_uploadMode = false;
 std::string g_stkBuffer;
 std::atomic<bool> g_quit{false};
@@ -58,6 +60,7 @@ void resetRobotState()
     g_dataReceived = false;
     g_ack = false;
     g_finalAck = false;
+    g_finalAckCount = 0;
 }
 
 void loadLogLevel()
@@ -127,7 +130,10 @@ static void applyRobotMessageUnlocked(const zowi::RobotMessage &msg)
             g_dataReceived = true;
         } else if (msg.cmd == zowi::toChar(zowi::Command::FinalAck)) {
             // Final ack (&&F): command fully processed (EEPROM write done).
+            // While a movement runs the firmware also emits one &&F per
+            // completed gait cycle — the move command counts on that.
             g_finalAck = true;
+            ++g_finalAckCount;
             g_dataReceived = true;
         }
         return;
@@ -163,6 +169,8 @@ void onDataReceived(const std::string &data)
     }
 
     std::lock_guard<std::mutex> lock(g_mtx);
+
+    g_lastRx = std::chrono::steady_clock::now();
 
     if (g_debugLog) {
         std::string printable = trimRobotMessage(data);

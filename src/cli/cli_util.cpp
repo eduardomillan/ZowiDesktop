@@ -358,10 +358,13 @@ void requestRobotData(zowi::BluetoothApi &bt)
 namespace {
 
 // Shared polling loop behind waitForRobotReady/waitForRobotIdentity. Sends
-// the identity request immediately and then every 500 ms (while connected)
+// the identity request immediately and then every 1200 ms (while connected)
 // until ready() turns true or the window closes; timeoutMs floors at 10 s.
-// A lost link does not abort the wait: on USB the port bounces while the
-// robot boots and on Bluetooth the STATE-pin reset reboots it — the backend
+// The cadence is deliberately slow: every queued request makes the robot
+// run zowi.home() (~500 ms) when drained, so a burst of polls delays and
+// interrupts anything the robot is asked to do right after. A lost link
+// does not abort the wait: on USB the port bounces while the robot boots
+// and on Bluetooth the STATE-pin reset reboots it — the backend
 // re-establishes the link and the loop keeps going.
 bool pollRobotState(QCoreApplication &qtApp, zowi::BluetoothApi &bt,
                     int timeoutMs, const std::function<bool()> &ready)
@@ -381,7 +384,7 @@ bool pollRobotState(QCoreApplication &qtApp, zowi::BluetoothApi &bt,
         }
         if (connected && std::chrono::steady_clock::now() >= nextPoll) {
             requestRobotData(bt);
-            nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+            nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(1200);
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));

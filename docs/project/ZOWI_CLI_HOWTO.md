@@ -836,24 +836,32 @@ zowi_cli move --list
 Output:
 
 ```
-Available movements:
-  forward, backward, left, right, moonwalker-left, moonwalker-right
+Available movements (case-insensitive, abbreviations allowed):
+  forward (fw), backward (bk), left (lf), right (rg),
+  moonwalker-left (ml), moonwalker-right (mr)
+Usage: move <dir> [cycles] [speed]
+  cycles: gait cycles to run (>= 1, default 1)
+  speed:  slow (s), medium (m, default), fast (f)
+The robot stops automatically after the requested cycles.
 ```
 
 ### Basic usage
 
 ```bash
-zowi_cli move forward
-zowi_cli move backward --speed fast
-zowi_cli move moonwalker-left --speed slow
+zowi_cli move forward              # 1 cycle (default), then stops
+zowi_cli move fw 5                 # 5 cycles (abbreviation)
+zowi_cli move backward 3 --speed fast
+zowi_cli move bk 3 f               # abbreviated speed
+zowi_cli move moonwalker-left 2 --speed slow
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `direction` | Movement direction (positional argument) |
-| `-s, --speed` | Movement speed: `slow`, `medium` (default), `fast` |
+| `direction` | Movement direction: `forward`/`fw`, `backward`/`bk`, `left`/`lf`, `right`/`rg`, `moonwalker-left`/`ml`, `moonwalker-right`/`mr` (positional argument) |
+| `cycles` | Number of gait cycles to run, >= 1 (positional argument, default `1`) |
+| `-s, --speed` | Movement speed: `slow`/`s`, `medium`/`m` (default), `fast`/`f` |
 | `-a, --address` | Robot Bluetooth address (overrides paired device) |
 | `-t, --timeout` | Timeout waiting for connection (seconds, default `5`) |
 | `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
@@ -867,10 +875,12 @@ zowi_cli move moonwalker-left --speed slow
   and plays its connection animation right after the link opens, and anything
   sent during that window is swallowed. Expect ~6–12 s per invocation
   (connect + boot); for several commands in a row, use `shell` instead.
-- Each invocation sends a single gait cycle. To keep moving, call `move`
-  repeatedly or use `control` for interactive driving.
-- The robot stops automatically after completing the movement (no explicit
-  stop command needed).
+- The robot runs the requested number of gait cycles and then stops
+  automatically at home position (`S` is sent after the last cycle, and the
+  CLI tracks each cycle through the firmware's per-cycle final acks, printing
+  `Cycle k/N`). Without an explicit cycle count exactly one cycle runs.
+- `control` remains the interactive driving option (one movement per key
+  press, no automatic stop).
 - If the battery is below 50% a warning is printed (movement is still allowed).
 
 ## Gesture

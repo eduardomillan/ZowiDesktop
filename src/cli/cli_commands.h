@@ -97,10 +97,12 @@ struct CalibrateArgs {
     int rr = 0;
 };
 
-// One-shot movement command (M protocol). Sends a single movement and exits.
+// One-shot movement command (M protocol). Runs the requested number of gait
+// cycles and stops the robot afterwards.
 struct MoveArgs {
-    std::string direction;  // forward, backward, left, right, moonwalker-left, moonwalker-right
-    std::string speed = "medium";
+    std::string direction;  // forward/fw, backward/bk, left/lf, right/rg, moonwalker-left/ml, moonwalker-right/mr
+    int cycles = 1;         // gait cycles (>= 1); the robot stops automatically afterwards
+    std::string speed = "medium";  // slow/s, medium/m, fast/f
     std::string address;
     std::string tty;
     int baud = 115200;

@@ -54,6 +54,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `zowi_cli mouth smile`, `zowi_cli sing happy`.
 
 ### Changed
+- **`move` runs a bounded number of cycles and stops the robot.** One-shot
+  and shell `move` now take an optional cycle count (`move <dir> [cycles]
+  [speed]`, default 1): the CLI sends the movement once, tracks each
+  completed gait cycle through the firmware's per-cycle final acks (printing
+  `Cycle k/N`), and sends `S` (home + rest) after the last one — the robot
+  no longer keeps walking after the command. The movement's software ack
+  (`&&A`) is used as the start marker so the cycle count is immune to the
+  command backlog queued by the connect-time identity polling, whose cadence
+  was also slowed (500 ms → 1200 ms) to reduce that backlog.
+- **Direction/speed abbreviations in `move`.** Case-insensitive short forms:
+  `fw`/`bk`/`lf`/`rg`/`ml`/`mr` for the six directions and `s`/`m`/`f` for
+  the speeds, in both the one-shot subcommand and the shell; `--list` and
+  the shell help document the new syntax.
 - **CLI default `--timeout` raised from 3 s to 5 s.** All robot-facing
   subcommands (`connect`, `rename`, `status`, `control`, `calibrate`, `move`,
   `gesture`, `mouth`, `sing`, `shell`) now default to 5 s via a shared

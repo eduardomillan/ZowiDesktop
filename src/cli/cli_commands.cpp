@@ -1131,8 +1131,13 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
 namespace {
 
 void listMovements() {
-    std::cout << "Available movements:\n";
-    std::cout << "  forward, backward, left, right, moonwalker-left, moonwalker-right\n";
+    std::cout << "Available movements (case-insensitive, abbreviations allowed):\n";
+    std::cout << "  forward (fw), backward (bk), left (lf), right (rg),\n";
+    std::cout << "  moonwalker-left (ml), moonwalker-right (mr)\n";
+    std::cout << "Usage: move <dir> [cycles] [speed]\n";
+    std::cout << "  cycles: gait cycles to run (>= 1, default 1)\n";
+    std::cout << "  speed:  slow (s), medium (m, default), fast (f)\n";
+    std::cout << "The robot stops automatically after the requested cycles.\n";
 }
 
 void listGestures() {
@@ -1212,17 +1217,35 @@ const std::vector<std::string> kMelodyNames = {
 // false when the token is unknown; on success cmd holds the protocol string
 // and desc a human-readable description for the "Sent: ..." line.
 
+// Resolves the speed token (case-insensitive): slow/s, medium/m, fast/f.
+bool resolveMovementSpeed(const std::string &token, zowi::MovementSpeed &spd) {
+    std::string t = token;
+    std::transform(t.begin(), t.end(), t.begin(), ::tolower);
+    if (t == "slow" || t == "s") { spd = zowi::MovementSpeed::Slow; return true; }
+    if (t == "fast" || t == "f") { spd = zowi::MovementSpeed::Fast; return true; }
+    if (t == "medium" || t == "m") { spd = zowi::MovementSpeed::Medium; return true; }
+    return false;
+}
+
 bool buildMoveCommand(const std::string &direction, const std::string &speed,
-                      std::string &cmd) {
+                      std::string &cmd, zowi::MovementSpeed *resolvedSpeed = nullptr) {
     zowi::MovementSpeed spd = zowi::MovementSpeed::Medium;
-    if (speed == "slow") spd = zowi::MovementSpeed::Slow;
-    else if (speed == "fast") spd = zowi::MovementSpeed::Fast;
-    else if (speed != "medium") {
+    if (!resolveMovementSpeed(speed, spd)) {
         std::cerr << "Unknown speed '" << speed << "'; using 'medium'.\n";
+        spd = zowi::MovementSpeed::Medium;
     }
+    if (resolvedSpeed) *resolvedSpeed = spd;
 
     std::string dirLower = direction;
     std::transform(dirLower.begin(), dirLower.end(), dirLower.begin(), ::tolower);
+
+    // Abbreviations: fw, bk, lf, rg, ml, mr (case-insensitive like full names).
+    if (dirLower == "fw") dirLower = "forward";
+    else if (dirLower == "bk") dirLower = "backward";
+    else if (dirLower == "lf") dirLower = "left";
+    else if (dirLower == "rg") dirLower = "right";
+    else if (dirLower == "ml") dirLower = "moonwalker-left";
+    else if (dirLower == "mr") dirLower = "moonwalker-right";
 
     if (dirLower == "forward") cmd = zowi::commandWalkForward(spd);
     else if (dirLower == "backward") cmd = zowi::commandWalkBackward(spd);
@@ -1285,13 +1308,82 @@ bool buildSingCommand(const std::string &token, std::string &cmd, std::string &d
     return true;
 }
 
+// ── Movement cycles helpers ─────────────────────────────────────────────────
+// Sends one `M` movement command and waits for `cycles` final acks — the
+// firmware's MODE-4 loop emits one &&F per completed gait cycle — then sends
+// `S` (home + rest) so the robot always ends up stopped. Returns false if a
+// cycle ack stalled (the stop is sent regardless).
+//
+// Synchronisation: the connect-time identity polling queues several E/I/B
+// requests on the robot, which drains its RX queue one command per loop
+// iteration (~500 ms each, every one running zowi.home()); the movement's
+// &&A (software ack) only fires once the M itself is processed. So the &&A
+// is the true start of cycle 1: wait for it with a generous window instead
+// of guessing queue depth, then count &&F cadence from there.
+bool runMovementCycles(zowi::BluetoothApi &bt, QCoreApplication &qtApp,
+                       const std::string &moveCmd, int cycles, zowi::MovementSpeed speed) {
+    const int cycleTimeoutMs = static_cast<int>(speed) + 1500;
+
+    {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        g_finalAck = false;
+        g_ack = false;
+    }
+    bt.send(moveCmd);
+
+    // Wait for the movement to actually start (M processed by the robot).
+    if (!waitUntil(qtApp, 20000, []() {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            return g_ack;
+        })) {
+        std::cerr << "Movement command not acknowledged by the robot; aborting.\n";
+        bt.send(zowi::commandStop());
+        waitUntil(qtApp, 2000, []() {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            return g_finalAck;
+        });
+        return false;
+    }
+
+    for (int k = 1; k <= cycles; ++k) {
+        if (!waitUntil(qtApp, cycleTimeoutMs, [k]() {
+                std::lock_guard<std::mutex> lock(g_mtx);
+                return g_finalAckCount >= k;
+            })) {
+            std::cerr << "Cycle " << k << "/" << cycles << " ack stalled; stopping the robot.\n";
+            bt.send(zowi::commandStop());
+            waitUntil(qtApp, 2000, []() {
+                std::lock_guard<std::mutex> lock(g_mtx);
+                return g_finalAck;
+            });
+            return false;
+        }
+        std::cout << "Cycle " << k << "/" << cycles << " completed." << std::endl;
+    }
+
+    bt.send(zowi::commandStop());
+    waitUntil(qtApp, 2000, []() {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        return g_finalAck;
+    });
+    return true;
+}
+
 // Connect to the robot and send a single command, then disconnect.
 // Returns 0 on success, 1 on error.
-int sendOneShotCommand(int argc, char **argv,
-                       const std::string &address, const std::string &tty,
-                       int baud, const std::string &backend, int timeout,
-                       const std::string &cmd, const std::string &cmdDesc) {
-    QCoreApplication qtApp(argc, argv);
+// Connection prelude shared by sendOneShotCommand() and runMove(): resolves
+// the backend/target from the session, connects and waits for the robot to
+// be ready. Returns a null bt on failure (the error is already printed);
+// a non-empty boundTty requires the caller to run 'rfcomm release 0'.
+struct OneShotLink {
+    std::unique_ptr<zowi::BluetoothApi> bt;
+    std::string boundTty;
+};
+
+OneShotLink connectOneShot(QCoreApplication &qtApp,
+                           const std::string &address, const std::string &tty,
+                           int baud, const std::string &backend, int timeout) {
+    OneShotLink link;
     resetRobotState();
 
     zowi::SessionStore session("ZowiDesktop", "ZowiApp");
@@ -1308,22 +1400,22 @@ int sendOneShotCommand(int argc, char **argv,
                                        : address;
     if (targetAddr.empty()) {
         std::cerr << "No paired device found. Run 'connect' first or pass --address." << std::endl;
-        return 1;
+        return link;
     }
 
-    std::string target, boundTty;
-    auto bt = prepareFlashBackend(be, targetAddr, tty, baud, target, boundTty);
-    if (!bt) return 1;
+    std::string target;
+    link.bt = prepareFlashBackend(be, targetAddr, tty, baud, target, link.boundTty);
+    if (!link.bt) return link;
 
 #ifdef ZOWI_HAVE_SERIAL
-    const bool isUsb = (dynamic_cast<SerialBackend *>(bt.get()) != nullptr);
+    const bool isUsb = (dynamic_cast<SerialBackend *>(link.bt.get()) != nullptr);
 #else
     const bool isUsb = false;
 #endif
     const int effTimeout = isUsb ? std::max(timeout, 8) : timeout;
 
 #ifndef ZOWI_HAVE_NATIVE_BT
-    if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+    if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(link.bt.get())) {
         std::cout << "Discovering " << target << "..." << std::endl;
         discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
     }
@@ -1331,8 +1423,8 @@ int sendOneShotCommand(int argc, char **argv,
 
     std::cout << "Connecting to " << target << "..." << std::endl;
 
-    bt->onDataReceived([](const std::string &data) { onDataReceived(data); });
-    bt->onConnectionChanged([&](bool connected) {
+    link.bt->onDataReceived([](const std::string &data) { onDataReceived(data); });
+    link.bt->onConnectionChanged([](bool connected) {
         g_connected = connected;
         if (connected) {
             std::cout << "Connected." << std::endl;
@@ -1340,36 +1432,49 @@ int sendOneShotCommand(int argc, char **argv,
             std::cout << "Disconnected." << std::endl;
         }
     });
-    bt->onError([&](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
+    link.bt->onError([](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
 
-    bt->connect(target);
+    link.bt->connect(target);
 
     if (!waitUntil(qtApp, effTimeout * 1000, []() {
             std::lock_guard<std::mutex> lock(g_mtx);
             return g_connected;
         })) {
         std::cerr << "Could not connect to the robot within " << effTimeout << "s." << std::endl;
-        bt->disconnect();
-        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
-        return 1;
+        link.bt->disconnect();
+        if (!link.boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        link.bt = nullptr;
+        return link;
     }
 
     // The robot resets and plays its connection animation right after the
     // link opens; commands sent during that window are swallowed. Wait until
     // it answers a request before sending the actual command.
-    if (!waitForRobotReady(qtApp, *bt, (effTimeout + 2) * 1000)) {
+    if (!waitForRobotReady(qtApp, *link.bt, (effTimeout + 2) * 1000)) {
         std::cerr << "Robot not ready (still booting?). Command not sent." << std::endl;
-        bt->disconnect();
-        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
-        return 1;
+        link.bt->disconnect();
+        if (!link.boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        link.bt = nullptr;
+        return link;
     }
+
+    return link;
+}
+
+int sendOneShotCommand(int argc, char **argv,
+                       const std::string &address, const std::string &tty,
+                       int baud, const std::string &backend, int timeout,
+                       const std::string &cmd, const std::string &cmdDesc) {
+    QCoreApplication qtApp(argc, argv);
+    OneShotLink link = connectOneShot(qtApp, address, tty, baud, backend, timeout);
+    if (!link.bt) return 1;
 
     // Send the command and wait for final ack
     {
         std::lock_guard<std::mutex> lock(g_mtx);
         g_finalAck = false;
     }
-    bt->send(cmd);
+    link.bt->send(cmd);
     std::cout << "Sent: " << cmdDesc << std::endl;
 
     // Wait briefly for the final ack
@@ -1378,8 +1483,8 @@ int sendOneShotCommand(int argc, char **argv,
         return g_finalAck;
     });
 
-    bt->disconnect();
-    if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+    link.bt->disconnect();
+    if (!link.boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
     return 0;
 }
 
@@ -1393,18 +1498,32 @@ int runMove(int argc, char **argv, const MoveArgs &a) {
     }
 
     if (a.direction.empty()) {
-        std::cerr << "Direction required. Use --list to see available movements." << std::endl;
+        std::cerr << "Direction required. Use --list to see directions, speeds and syntax." << std::endl;
         return 1;
     }
 
-    // Parse direction (and speed, with the shared unknown-speed warning)
+    if (a.cycles < 1) {
+        std::cerr << "Cycles must be >= 1." << std::endl;
+        return 1;
+    }
+
     std::string cmd;
-    if (!buildMoveCommand(a.direction, a.speed, cmd)) {
+    zowi::MovementSpeed spd;
+    if (!buildMoveCommand(a.direction, a.speed, cmd, &spd)) {
         std::cerr << "Unknown direction '" << a.direction << "'. Use --list to see available movements." << std::endl;
         return 1;
     }
 
-    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, "move " + a.direction);
+    QCoreApplication qtApp(argc, argv);
+    OneShotLink link = connectOneShot(qtApp, a.address, a.tty, a.baud, a.backend, a.timeout);
+    if (!link.bt) return 1;
+
+    std::cout << "Sent: move " << a.direction << " " << a.cycles << std::endl;
+    const bool ok = runMovementCycles(*link.bt, qtApp, cmd, a.cycles, spd);
+
+    link.bt->disconnect();
+    if (!link.boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+    return ok ? 0 : 1;
 }
 
 // ── gesture subcommand ──────────────────────────────────────────────────────
@@ -1497,9 +1616,12 @@ bool shellConnected() {
 
 void printShellHelp() {
     std::cout << "Commands:\n"
-                 "  move <dir> [speed]   forward, backward, left, right,\n"
-                 "                       moonwalker-left, moonwalker-right\n"
-                 "                       (speed: slow, medium, fast)\n"
+                 "  move <dir> [cycles] [speed]\n"
+                 "                       dir: forward/fw, backward/bk, left/lf, right/rg,\n"
+                 "                       moonwalker-left/ml, moonwalker-right/mr\n"
+                 "                       cycles: >= 1, default 1; speed: slow/s, medium/m,\n"
+                 "                       fast/f (default medium). The robot stops after the\n"
+                 "                       requested cycles.\n"
                  "  gesture <name|id>    e.g. gesture happy, gesture 1\n"
                  "  mouth <name|id|0/1>  e.g. mouth heart, mouth 13,\n"
                  "                       mouth 001001001001001001001001001001 (raw,\n"
@@ -1650,17 +1772,41 @@ int runShell(int argc, char **argv, const ShellArgs &a)
 
         std::string cmd, desc;
         if (verb == "move") {
+            // move <dir> [cycles] [speed] — cycles default 1; the robot stops
+            // automatically after the requested gait cycles.
             const std::string dir = tokens.size() > 1 ? tokens[1] : "";
-            const std::string speed = tokens.size() > 2 ? tokens[2] : "medium";
             if (dir.empty()) {
-                std::cerr << "Usage: move <dir> [speed]. 'help' lists the directions." << std::endl;
+                std::cerr << "Usage: move <dir> [cycles] [speed]. 'help' lists the directions." << std::endl;
                 continue;
             }
-            if (!buildMoveCommand(dir, speed, cmd)) {
+            const size_t extra = tokens.size() - 2;
+            const auto isPositiveInt = [](const std::string &t) {
+                return !t.empty() && t.find_first_not_of("0123456789") == std::string::npos;
+            };
+            int cycles = 1;
+            std::string speed = "medium";
+            bool ok = extra <= 2;
+            if (ok && extra >= 1) {
+                if (isPositiveInt(tokens[2])) cycles = std::stoi(tokens[2]);
+                else if (extra == 1) speed = tokens[2];
+                else ok = false;
+            }
+            if (ok && extra == 2) {
+                if (!isPositiveInt(tokens[2]) || isPositiveInt(tokens[3])) ok = false;
+                else { cycles = std::stoi(tokens[2]); speed = tokens[3]; }
+            }
+            if (!ok || cycles < 1) {
+                std::cerr << "Usage: move <dir> [cycles] [speed] (cycles >= 1). 'help' lists the directions." << std::endl;
+                continue;
+            }
+            zowi::MovementSpeed spd;
+            if (!buildMoveCommand(dir, speed, cmd, &spd)) {
                 std::cerr << "Unknown direction '" << dir << "'. 'help' lists the directions." << std::endl;
                 continue;
             }
-            desc = "move " + dir;
+            std::cout << "Sent: move " << dir << " " << cycles << std::endl;
+            runMovementCycles(*bt, qtApp, cmd, cycles, spd);
+            continue;
         } else if (verb == "gesture") {
             if (tokens.size() < 2 || !buildGestureCommand(tokens[1], cmd, desc)) {
                 std::cerr << "Unknown gesture. Use 'zowi_cli gesture --list' for the names." << std::endl;
