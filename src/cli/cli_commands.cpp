@@ -334,13 +334,11 @@ int runRename(int argc, char **argv, const RenameArgs &a)
 
     std::cout << "Connecting to " << target << "..." << std::endl;
 
-    std::atomic<bool> renameSent{false};
-
-    bt->onConnectionChanged([&](bool connected) {
+    bt->onConnectionChanged([](bool connected) {
         g_connected = connected;
     });
 
-    bt->onDataReceived([&](const std::string &data) {
+    bt->onDataReceived([](const std::string &data) {
         onDataReceived(data);
     });
 
@@ -349,27 +347,47 @@ int runRename(int argc, char **argv, const RenameArgs &a)
     });
 
     bt->connect(target);
-    requestRobotData(*bt);
 
-    bool renamed = false;
-    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(effTimeout + 2);
-    while (std::chrono::steady_clock::now() < deadline) {
-        qtApp.processEvents();
-        {
+    if (!waitUntil(qtApp, effTimeout * 1000, []() {
             std::lock_guard<std::mutex> lock(g_mtx);
-            if (g_connected && g_dataReceived && !renameSent) {
-                std::cout << "Connected. Sending rename command..." << std::endl;
-                const std::string cmd = zowi::makeCommand(zowi::Command::SetName, a.name);
-                if (g_debugLog) {
-                    std::cout << "robot tx: R " << a.name << std::endl;
-                }
-                bt->send(cmd);
-                renameSent = true;
-            }
-            if (renameSent && g_finalAck) { renamed = true; break; }
-        }
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            return g_connected;
+        })) {
+        std::cerr << "Could not connect to the robot within " << effTimeout << "s." << std::endl;
+        bt->disconnect();
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        return 1;
     }
+
+    // The robot resets and plays its connection animation right after the
+    // link opens; a rename sent during that window is swallowed. Wait until
+    // it answers a request before sending (same readiness gate as
+    // connect/status/the one-shot commands).
+    if (!waitForRobotReady(qtApp, *bt, (effTimeout + 2) * 1000)) {
+        std::cerr << "Robot not ready (still booting?). Rename not sent." << std::endl;
+        bt->disconnect();
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        return 1;
+    }
+
+    std::cout << "Connected. Sending rename command..." << std::endl;
+    {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        g_finalAck = false;
+    }
+    const std::string cmd = zowi::makeCommand(zowi::Command::SetName, a.name);
+    if (g_debugLog) {
+        std::cout << "robot tx: R " << a.name << std::endl;
+    }
+    bt->send(cmd);
+
+    // Over USB the robot often does not ACK the rename (no &&F), so the ack
+    // wait is best-effort; the warning below covers the silent case. The
+    // window keeps the command's original effTimeout + 2 budget (the EEPROM
+    // write makes the firmware slow to answer).
+    const bool renamed = waitUntil(qtApp, (effTimeout + 2) * 1000, []() {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        return g_finalAck;
+    });
 
     if (!renamed) {
         std::cerr << "Warning: the robot did not acknowledge the rename; the new name may not have been saved." << std::endl;

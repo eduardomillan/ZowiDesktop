@@ -311,6 +311,13 @@ zowi_cli connect B4:9D:0B:32:41:0E
 
 Rename a paired Zowi robot. Connects to the saved device, sends the rename command, and updates the session with the new name.
 
+The robot reboots and plays its connection animation right after the link
+opens, so the rename is sent only once the robot has answered a request (the
+same readiness gate as `connect`/`status`). If the robot is unreachable or
+never becomes ready, the command fails cleanly with a non-zero exit code and
+the session is left untouched. Over USB the robot often does not acknowledge
+the rename (no `&&F`); the command then warns but still counts as sent.
+
 ### Basic usage
 
 ```bash
