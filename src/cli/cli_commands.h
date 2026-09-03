@@ -142,6 +142,17 @@ struct SingArgs {
     bool list = false;
 };
 
+// Persistent-connection command shell. Connects once, then reads command
+// lines from stdin (REPL when interactive, batch when piped) and executes
+// each against the open connection. See docs/project/ZOWI_CLI_SHELL.md.
+struct ShellArgs {
+    std::string address;
+    std::string tty;
+    int baud = 115200;
+    std::string backend = "auto";
+    int timeout = 3;
+};
+
 int runSession(const SessionArgs &a);
 int runTranslate(const TranslateArgs &a);
 int runConfig(const ConfigArgs &a);
@@ -158,6 +169,7 @@ int runMove(int argc, char **argv, const MoveArgs &a);
 int runGesture(int argc, char **argv, const GestureArgs &a);
 int runMouth(int argc, char **argv, const MouthArgs &a);
 int runSing(int argc, char **argv, const SingArgs &a);
+int runShell(int argc, char **argv, const ShellArgs &a);
 
 } // namespace zowi_cli
 

@@ -198,6 +198,15 @@ int main(int argc, char **argv)
     singCmd->add_option("--baud", singArgs.baud, "Serial baud rate")->default_val(115200);
     singCmd->add_flag("--list,-l", singArgs.list, "List available melodies and exit");
 
+    // ── shell subcommand ──────────────────────────────────────
+    auto *shellCmd = app.add_subcommand("shell", "Persistent-connection command shell\nConnects once, then reads commands from stdin (REPL when interactive, batch when piped):\nmove <dir> [speed] | gesture <name|id> | mouth <name|id> | sing <name|id> | stop | status | help | quit.");
+    zowi_cli::ShellArgs shellArgs;
+    shellCmd->add_option("--address,-a", shellArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
+    shellCmd->add_option("--timeout,-t", shellArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    shellCmd->add_option("--backend", shellArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
+    shellCmd->add_option("--tty", shellArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
+    shellCmd->add_option("--baud", shellArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
+
     CLI11_PARSE(app, argc, argv);
 
     // Direct mode only when at least one trim option was explicitly given.
@@ -227,6 +236,7 @@ int main(int argc, char **argv)
     if (*gestureCmd)    return zowi_cli::runGesture(argc, argv, gestureArgs);
     if (*mouthCmd)      return zowi_cli::runMouth(argc, argv, mouthArgs);
     if (*singCmd)       return zowi_cli::runSing(argc, argv, singArgs);
+    if (*shellCmd)      return zowi_cli::runShell(argc, argv, shellArgs);
 
     std::cout << app.help() << std::endl;
     return 0;

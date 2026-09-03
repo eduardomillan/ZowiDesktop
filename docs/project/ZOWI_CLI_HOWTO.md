@@ -25,6 +25,7 @@ The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionalit
 - [Mouth](#mouth)
 - [Sing](#sing)
 - [Calibrate](#calibrate)
+- [Shell](#shell)
 - [Test Scripts](#test-scripts)
 - [Examples](#examples)
 - [Building](#building)
@@ -49,6 +50,7 @@ zowi_cli <subcommand> [options]
 | `disconnect` | Disconnect and clear pairing data |
 | `status` | Show current Zowi connection status |
 | `calibrate` | Calibrate the 4 servo trims (interactive wizard or direct) |
+| `shell` | Persistent-connection command shell (interactive REPL or batch over one connection) |
 | `control` | Interactive keyboard minigame to drive the robot |
 | `move` | Send a single movement command (forward, backward, turn, etc.) |
 | `gesture` | Play a gesture animation (happy, sad, victory, etc.) |
@@ -77,6 +79,7 @@ zowi_cli move --help         # Move help
 zowi_cli gesture --help      # Gesture help
 zowi_cli mouth --help        # Mouth help
 zowi_cli sing --help         # Sing help
+zowi_cli shell --help        # Shell help
 zowi_cli alarm --help        # Alarm help
 zowi_cli adivinawi --help    # Adivinawi help
 ```
@@ -1188,6 +1191,98 @@ With an empty session it fails cleanly:
 ```
 No paired device found. Run 'connect' first or pass --address.
 ```
+
+## Shell
+
+Keep a single connection open while sending several commands in sequence.
+Unlike the one-shot subcommands — `move`, `gesture`, `mouth`, `sing` connect,
+send one command and disconnect per invocation — `shell` pays the connection
+cost once, so commands run back-to-back with no reconnect (and no robot reset
+cycle) between them. The full design is documented in
+[ZOWI_CLI_SHELL.md](ZOWI_CLI_SHELL.md).
+
+`shell` reads command lines from stdin:
+
+- **Interactive** (stdin is a terminal) — a `ZOWI_CLI:<name>` prompt showing
+  the robot's name (e.g. `ZOWI_CLI:Rebecowi>`); type commands and `quit` to
+  leave.
+- **Batch** (stdin is a pipe or file) — reads until EOF; one connection for
+  the whole sequence, ideal for scripts.
+
+### Shell commands
+
+| Command | Action |
+|---------|--------|
+| `move <dir> [speed]` | One movement: `forward`, `backward`, `left`, `right`, `moonwalker-left`, `moonwalker-right`; speed `slow`/`medium`/`fast` |
+| `gesture <name\|id>` | Play a gesture (same names as `zowi_cli gesture --list`) |
+| `mouth <name\|id>` | Show a mouth/LED pattern (same names as `zowi_cli mouth --list`) |
+| `sing <name\|id>` | Play a melody (same names as `zowi_cli sing --list`) |
+| `stop` | Stop the current movement |
+| `status` | Show the cached robot identity (name, app ID, battery) |
+| `help` | Print the command summary |
+| `quit` (`exit`, `q`) | Disconnect and leave |
+
+Name-or-id parsing is identical to the one-shot subcommands. Lines starting
+with `#` are comments (handy in scripts); empty lines are ignored. After each
+command the shell waits up to 2 s for the firmware's final ack (`&&F`), so the
+robot is never flooded. Unknown commands are reported without dropping the
+connection.
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `-a, --address` | Robot Bluetooth address to override the paired device (or a USB TTY path) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
+| `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
+| `--baud` | Serial baud rate (control firmware uses `115200`) |
+
+### Interactive session
+
+```bash
+zowi_cli shell
+```
+
+```
+Connecting to B4:9D:0B:32:41:0E...
+Connected.
+  Name:    Rebecowi
+  App ID:  ZOWI_BASE_v2
+  Battery: 87%
+Type 'help' for the command list, 'quit' to disconnect.
+ZOWI_CLI:Rebecowi> gesture happy
+Sent: gesture happy
+ZOWI_CLI:Rebecowi> mouth heart
+Sent: mouth heart
+ZOWI_CLI:Rebecowi> quit
+
+Disconnected. Bye!
+```
+
+### Batch mode (scripts)
+
+```bash
+printf "gesture 3\nmouth 5\nsing 4\n" | zowi_cli shell
+zowi_cli shell < sequence.txt
+```
+
+Connects once, executes every line, disconnects at EOF. The exit code is `0`
+when the session ran (individual unknown commands are reported but do not
+abort the batch) and `1` when the connection could not be established.
+
+### Notes
+
+- While the shell holds the connection, the GUI and other CLI commands cannot
+  open the robot — only one client can use the channel at a time.
+- On connect the shell identifies the robot (name, app ID, battery) and warns
+  when the battery is low. Identification is re-requested every 500 ms until
+  the robot answers, since a request can be lost while it boots (most visible
+  over USB, where the port bounces on open).
+- Disconnects while idling at the prompt are noticed on the next command; the
+  protocol is request/response, so nothing is expected between commands.
+- `status` shows the values cached at connect time; it does not re-poll the
+  robot.
 
 ## Test Scripts
 

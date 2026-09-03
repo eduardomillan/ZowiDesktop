@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <vector>
 #include <algorithm>
 #include <array>
 #include <csignal>
@@ -1156,6 +1158,80 @@ int parseNameOrId(const std::string &arg, const std::vector<std::string> &names,
     return -1;
 }
 
+// Name tables shared by the one-shot subcommands and the shell, so both
+// parse names and ids identically (see docs/project/ZOWI_CLI_SHELL.md).
+const std::vector<std::string> kGestureNames = {
+    "happy", "super-happy", "sad", "sleeping", "fart", "confused",
+    "love", "angry", "fretful", "magic", "wave", "victory", "fail"
+};
+
+const std::vector<std::string> kMouthNames = {
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    "smile", "happy-open", "happy-closed", "heart", "big-surprise", "small-surprise",
+    "tongue-out", "vamp1", "vamp2", "line", "confused", "diagonal",
+    "sad", "sad-open", "sad-closed", "ok", "x", "interrogation",
+    "thunder", "culito", "angry"
+};
+
+const std::vector<std::string> kMelodyNames = {
+    "connection", "disconnection", "surprise", "oh-oh", "oh-oh-2",
+    "cuddly", "sleeping", "happy", "super-happy", "happy-short",
+    "sad", "confused", "fart1", "fart2", "fart3",
+    "mode1", "mode2", "mode3", "button-pushed"
+};
+
+// Builders shared by the one-shot subcommands and the shell. Each returns
+// false when the token is unknown; on success cmd holds the protocol string
+// and desc a human-readable description for the "Sent: ..." line.
+
+bool buildMoveCommand(const std::string &direction, const std::string &speed,
+                      std::string &cmd) {
+    zowi::MovementSpeed spd = zowi::MovementSpeed::Medium;
+    if (speed == "slow") spd = zowi::MovementSpeed::Slow;
+    else if (speed == "fast") spd = zowi::MovementSpeed::Fast;
+    else if (speed != "medium") {
+        std::cerr << "Unknown speed '" << speed << "'; using 'medium'.\n";
+    }
+
+    std::string dirLower = direction;
+    std::transform(dirLower.begin(), dirLower.end(), dirLower.begin(), ::tolower);
+
+    if (dirLower == "forward") cmd = zowi::commandWalkForward(spd);
+    else if (dirLower == "backward") cmd = zowi::commandWalkBackward(spd);
+    else if (dirLower == "left" || dirLower == "turn-left") cmd = zowi::commandTurnLeft(spd);
+    else if (dirLower == "right" || dirLower == "turn-right") cmd = zowi::commandTurnRight(spd);
+    else if (dirLower == "moonwalker-left") cmd = zowi::commandMoonwalkerLeft(spd);
+    else if (dirLower == "moonwalker-right") cmd = zowi::commandMoonwalkerRight(spd);
+    else return false;
+    return true;
+}
+
+bool buildGestureCommand(const std::string &token, std::string &cmd, std::string &desc) {
+    // Gesture names are 0-based; the protocol is 1-based.
+    int id = parseNameOrId(token, kGestureNames, 12);
+    if (id < 0) return false;
+    cmd = zowi::commandGesture(id + 1);
+    desc = "gesture " + token;
+    return true;
+}
+
+bool buildMouthCommand(const std::string &token, std::string &cmd, std::string &desc) {
+    int id = parseNameOrId(token, kMouthNames, 30);
+    if (id < 0) return false;
+    cmd = zowi::commandMouthById(static_cast<zowi::MouthId>(id));
+    desc = "mouth " + token;
+    return true;
+}
+
+bool buildSingCommand(const std::string &token, std::string &cmd, std::string &desc) {
+    // Melody names are 0-based; the enum value maps to the 1-based protocol id.
+    int id = parseNameOrId(token, kMelodyNames, 18);
+    if (id < 0) return false;
+    cmd = zowi::commandSing(static_cast<zowi::MelodyId>(id));
+    desc = "sing " + token;
+    return true;
+}
+
 // Connect to the robot and send a single command, then disconnect.
 // Returns 0 on success, 1 on error.
 int sendOneShotCommand(int argc, char **argv,
@@ -1258,26 +1334,9 @@ int runMove(int argc, char **argv, const MoveArgs &a) {
         return 1;
     }
 
-    // Parse speed
-    zowi::MovementSpeed speed = zowi::MovementSpeed::Medium;
-    if (a.speed == "slow") speed = zowi::MovementSpeed::Slow;
-    else if (a.speed == "fast") speed = zowi::MovementSpeed::Fast;
-    else if (a.speed != "medium") {
-        std::cerr << "Unknown speed '" << a.speed << "'; using 'medium'.\n";
-    }
-
-    // Parse direction
+    // Parse direction (and speed, with the shared unknown-speed warning)
     std::string cmd;
-    std::string dirLower = a.direction;
-    std::transform(dirLower.begin(), dirLower.end(), dirLower.begin(), ::tolower);
-
-    if (dirLower == "forward") cmd = zowi::commandWalkForward(speed);
-    else if (dirLower == "backward") cmd = zowi::commandWalkBackward(speed);
-    else if (dirLower == "left" || dirLower == "turn-left") cmd = zowi::commandTurnLeft(speed);
-    else if (dirLower == "right" || dirLower == "turn-right") cmd = zowi::commandTurnRight(speed);
-    else if (dirLower == "moonwalker-left") cmd = zowi::commandMoonwalkerLeft(speed);
-    else if (dirLower == "moonwalker-right") cmd = zowi::commandMoonwalkerRight(speed);
-    else {
+    if (!buildMoveCommand(a.direction, a.speed, cmd)) {
         std::cerr << "Unknown direction '" << a.direction << "'. Use --list to see available movements." << std::endl;
         return 1;
     }
@@ -1297,21 +1356,13 @@ int runGesture(int argc, char **argv, const GestureArgs &a) {
         return 1;
     }
 
-    // Gesture names (0-based index, protocol is 1-based)
-    static const std::vector<std::string> gestureNames = {
-        "happy", "super-happy", "sad", "sleeping", "fart", "confused",
-        "love", "angry", "fretful", "magic", "wave", "victory", "fail"
-    };
-
-    int id = parseNameOrId(a.gesture, gestureNames, 12);
-    if (id < 0) {
+    std::string cmd, desc;
+    if (!buildGestureCommand(a.gesture, cmd, desc)) {
         std::cerr << "Unknown gesture '" << a.gesture << "'. Use --list to see available gestures." << std::endl;
         return 1;
     }
 
-    // Protocol is 1-based, enum is 0-based
-    std::string cmd = zowi::commandGesture(id + 1);
-    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, "gesture " + a.gesture);
+    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, desc);
 }
 
 // ── mouth subcommand ────────────────────────────────────────────────────────
@@ -1326,23 +1377,13 @@ int runMouth(int argc, char **argv, const MouthArgs &a) {
         return 1;
     }
 
-    // Mouth names (0-based index)
-    static const std::vector<std::string> mouthNames = {
-        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-        "smile", "happy-open", "happy-closed", "heart", "big-surprise", "small-surprise",
-        "tongue-out", "vamp1", "vamp2", "line", "confused", "diagonal",
-        "sad", "sad-open", "sad-closed", "ok", "x", "interrogation",
-        "thunder", "culito", "angry"
-    };
-
-    int id = parseNameOrId(a.mouth, mouthNames, 30);
-    if (id < 0) {
+    std::string cmd, desc;
+    if (!buildMouthCommand(a.mouth, cmd, desc)) {
         std::cerr << "Unknown mouth '" << a.mouth << "'. Use --list to see available mouths." << std::endl;
         return 1;
     }
 
-    std::string cmd = zowi::commandMouthById(static_cast<zowi::MouthId>(id));
-    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, "mouth " + a.mouth);
+    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, desc);
 }
 
 // ── sing subcommand ─────────────────────────────────────────────────────────
@@ -1357,23 +1398,266 @@ int runSing(int argc, char **argv, const SingArgs &a) {
         return 1;
     }
 
-    // Melody names (0-based index, protocol is 1-based)
-    static const std::vector<std::string> melodyNames = {
-        "connection", "disconnection", "surprise", "oh-oh", "oh-oh-2",
-        "cuddly", "sleeping", "happy", "super-happy", "happy-short",
-        "sad", "confused", "fart1", "fart2", "fart3",
-        "mode1", "mode2", "mode3", "button-pushed"
-    };
-
-    int id = parseNameOrId(a.melody, melodyNames, 18);
-    if (id < 0) {
+    std::string cmd, desc;
+    if (!buildSingCommand(a.melody, cmd, desc)) {
         std::cerr << "Unknown melody '" << a.melody << "'. Use --list to see available melodies." << std::endl;
         return 1;
     }
 
-    // Protocol is 1-based, enum is 0-based
-    std::string cmd = zowi::commandSing(static_cast<zowi::MelodyId>(id));
-    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, "sing " + a.melody);
+    return sendOneShotCommand(argc, argv, a.address, a.tty, a.baud, a.backend, a.timeout, cmd, desc);
+}
+
+// ── shell subcommand ────────────────────────────────────────────────────────
+// Connect once, then read command lines from stdin and execute each against
+// the open connection. Interactive (TTY) or batch (piped) via the same loop.
+// See docs/project/ZOWI_CLI_SHELL.md for the design.
+namespace {
+
+void printShellStatus() {
+    std::lock_guard<std::mutex> lock(g_mtx);
+    if (!g_robotName.empty()) std::cout << "  Name:    " << g_robotName << std::endl;
+    else std::cout << "  Name:    (not received)" << std::endl;
+    if (!g_appId.empty()) std::cout << "  App ID:  " << g_appId << std::endl;
+    else std::cout << "  App ID:  (not received)" << std::endl;
+    if (g_battery >= 0) std::cout << "  Battery: " << g_battery << "%" << std::endl;
+    else std::cout << "  Battery: (not received)" << std::endl;
+}
+
+bool shellConnected() {
+    std::lock_guard<std::mutex> lock(g_mtx);
+    return g_connected;
+}
+
+void printShellHelp() {
+    std::cout << "Commands:\n"
+                 "  move <dir> [speed]   forward, backward, left, right,\n"
+                 "                       moonwalker-left, moonwalker-right\n"
+                 "                       (speed: slow, medium, fast)\n"
+                 "  gesture <name|id>    e.g. gesture happy, gesture 1\n"
+                 "  mouth <name|id>      e.g. mouth heart, mouth 13\n"
+                 "  sing <name|id>       e.g. sing connection, sing 1\n"
+                 "  stop                 stop the current movement\n"
+                 "  status               show cached robot identity\n"
+                 "  help                 this summary\n"
+                 "  quit (exit, q)       disconnect and leave\n"
+                 "Lines starting with # are comments.\n";
+}
+
+} // namespace
+
+int runShell(int argc, char **argv, const ShellArgs &a)
+{
+    QCoreApplication qtApp(argc, argv);
+    resetRobotState();
+
+    zowi::SessionStore session("ZowiDesktop", "ZowiApp");
+
+    // Pick the backend: explicit --backend, else the transport used at
+    // connect time, else Bluetooth by default.
+    std::string be = a.backend;
+    if (be == "auto") {
+        be = session.getString("activeZowiTransport");
+        if (be == "bt") be = "bluetooth";
+        if (be.empty()) be = "bluetooth";
+    }
+
+    const std::string targetAddr = a.address.empty()
+                                       ? session.getString("activeZowiDeviceAddress")
+                                       : a.address;
+    if (targetAddr.empty()) {
+        std::cerr << "No paired device found. Run 'connect' first or pass --address." << std::endl;
+        return 1;
+    }
+
+    std::string target, boundTty;
+    auto bt = prepareFlashBackend(be, targetAddr, a.tty, a.baud, target, boundTty);
+    if (!bt) return 1;
+
+    // Over USB the robot takes a while to boot and start emitting data, so give
+    // it a longer default timeout (8s) unless the user asked for more.
+#ifdef ZOWI_HAVE_SERIAL
+    const bool isUsb = (dynamic_cast<SerialBackend *>(bt.get()) != nullptr);
+#else
+    const bool isUsb = false;
+#endif
+    const int effTimeout = isUsb ? std::max(a.timeout, 8) : a.timeout;
+
+#ifndef ZOWI_HAVE_NATIVE_BT
+    if (auto *qtBt = dynamic_cast<zowi::QtBluetoothBackend *>(bt.get())) {
+        std::cout << "Discovering " << target << "..." << std::endl;
+        discoverDevice(qtApp, *qtBt, target, kDiscoveryTimeoutMs);
+    }
+#endif
+
+    std::cout << "Connecting to " << target << "..." << std::endl;
+
+    bt->onDataReceived([](const std::string &data) { onDataReceived(data); });
+    bt->onConnectionChanged([](bool connected) {
+        g_connected = connected;
+        if (connected) {
+            std::cout << "Connected." << std::endl;
+        } else {
+            std::cout << "\nDisconnected." << std::endl;
+        }
+    });
+    bt->onError([&](const std::string &msg) { std::cerr << "Error: " << msg << std::endl; });
+
+    bt->connect(target);
+
+    if (!waitUntil(qtApp, effTimeout * 1000, []() { return shellConnected(); })) {
+        std::cerr << "Could not connect to the robot within " << effTimeout << "s." << std::endl;
+        bt->disconnect();
+        if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+        return 1;
+    }
+
+    // Identify the robot so the session context is visible up front (and so
+    // the prompt can show its name). A single request can be lost while the
+    // robot is still booting (the USB port bounces on open, and Bluetooth
+    // goes through the STATE-pin reset cycle), so re-request periodically
+    // until the data arrives — the same polling approach as waitForAppId().
+    // The window floors at 10s: with the default 3s connection timeout the
+    // robot may still be rebooting when the link is already usable.
+    requestRobotData(*bt);
+    {
+        const auto deadline = std::chrono::steady_clock::now()
+                              + std::chrono::milliseconds(
+                                    std::max(effTimeout + 2, 10) * 1000);
+        auto nextPoll = std::chrono::steady_clock::now();
+        while (std::chrono::steady_clock::now() < deadline) {
+            qtApp.processEvents();
+            {
+                std::lock_guard<std::mutex> lock(g_mtx);
+                if (!g_robotName.empty() && !g_appId.empty() && g_battery >= 0) break;
+            }
+            if (shellConnected() && std::chrono::steady_clock::now() >= nextPoll) {
+                requestRobotData(*bt);
+                nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+    printShellStatus();
+    {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        if (g_battery >= 0 && g_battery < kLowBatteryThreshold) {
+            std::cout << "Warning: battery is low (" << g_battery << "%). Consider recharging.\n";
+        }
+    }
+
+    const bool interactive = isatty(g_stdinFd) != 0;
+
+    // Prompt shows which robot this session talks to; fall back to the
+    // generic name when identification never completed.
+    std::string prompt = "ZOWI_CLI:";
+    {
+        std::lock_guard<std::mutex> lock(g_mtx);
+        prompt += g_robotName.empty() ? std::string("Zowi") : g_robotName;
+    }
+    prompt += "> ";
+
+    if (interactive) {
+        std::cout << "Type 'help' for the command list, 'quit' to disconnect.\n";
+    }
+
+    while (true) {
+        if (interactive) {
+            std::cout << prompt << std::flush;
+        }
+        std::string line;
+        if (!std::getline(std::cin, line)) break;  // EOF
+
+        // Trim; skip empty lines and '#' comments.
+        const auto first = line.find_first_not_of(" \t\r\n");
+        if (first == std::string::npos) continue;
+        line.erase(0, first);
+        if (line[0] == '#') continue;
+
+        if (!shellConnected()) {
+            std::cout << "Connection lost." << std::endl;
+            break;
+        }
+
+        // Split into verb + whitespace-separated arguments.
+        std::vector<std::string> tokens;
+        {
+            std::istringstream iss(line);
+            std::string tok;
+            while (iss >> tok) tokens.push_back(tok);
+        }
+        std::string verb = tokens[0];
+        std::transform(verb.begin(), verb.end(), verb.begin(), ::tolower);
+
+        if (verb == "quit" || verb == "exit" || verb == "q") break;
+
+        if (verb == "help") {
+            printShellHelp();
+            continue;
+        }
+
+        if (verb == "status") {
+            printShellStatus();
+            continue;
+        }
+
+        std::string cmd, desc;
+        if (verb == "move") {
+            const std::string dir = tokens.size() > 1 ? tokens[1] : "";
+            const std::string speed = tokens.size() > 2 ? tokens[2] : "medium";
+            if (dir.empty()) {
+                std::cerr << "Usage: move <dir> [speed]. 'help' lists the directions." << std::endl;
+                continue;
+            }
+            if (!buildMoveCommand(dir, speed, cmd)) {
+                std::cerr << "Unknown direction '" << dir << "'. 'help' lists the directions." << std::endl;
+                continue;
+            }
+            desc = "move " + dir;
+        } else if (verb == "gesture") {
+            if (tokens.size() < 2 || !buildGestureCommand(tokens[1], cmd, desc)) {
+                std::cerr << "Unknown gesture. Use 'zowi_cli gesture --list' for the names." << std::endl;
+                continue;
+            }
+        } else if (verb == "mouth") {
+            if (tokens.size() < 2 || !buildMouthCommand(tokens[1], cmd, desc)) {
+                std::cerr << "Unknown mouth. Use 'zowi_cli mouth --list' for the names." << std::endl;
+                continue;
+            }
+        } else if (verb == "sing") {
+            if (tokens.size() < 2 || !buildSingCommand(tokens[1], cmd, desc)) {
+                std::cerr << "Unknown melody. Use 'zowi_cli sing --list' for the names." << std::endl;
+                continue;
+            }
+        } else if (verb == "stop") {
+            cmd = zowi::commandStop();
+            desc = "stop";
+        } else {
+            std::cerr << "Unknown command '" << verb << "'. Type 'help' for the command list." << std::endl;
+            continue;
+        }
+
+        // Send and wait briefly for the final ack so the robot is not flooded.
+        {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            g_finalAck = false;
+        }
+        bt->send(cmd);
+        std::cout << "Sent: " << desc << std::endl;
+        waitUntil(qtApp, 2000, []() {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            return g_finalAck;
+        });
+        qtApp.processEvents();
+    }
+
+    if (bt->isConnected()) {
+        bt->send(zowi::commandStop());
+        std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    }
+    bt->disconnect();
+    if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
+    std::cout << "\nDisconnected. Bye!" << std::endl;
+    return 0;
 }
 
 } // namespace zowi_cli
