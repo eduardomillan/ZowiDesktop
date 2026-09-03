@@ -58,11 +58,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and shell `move` now take an optional cycle count (`move <dir> [cycles]
   [speed]`, default 1): the CLI sends the movement once, tracks each
   completed gait cycle through the firmware's per-cycle final acks (printing
-  `Cycle k/N`), and sends `S` (home + rest) after the last one — the robot
-  no longer keeps walking after the command. The movement's software ack
-  (`&&A`) is used as the start marker so the cycle count is immune to the
-  command backlog queued by the connect-time identity polling, whose cadence
-  was also slowed (500 ms → 1200 ms) to reduce that backlog.
+  `Cycle k/N`), and queues `S` (home + rest) mid-last-cycle so the robot
+  runs exactly N cycles — the robot only reads serial between cycles, so a
+  stop sent after the last ack lets one extra cycle slip in (observed on
+  hardware). The movement's software ack (`&&A`) is used as the start
+  marker, the cycle counter is reset per movement, and the stop's own acks
+  are drained before returning, so consecutive movements count cleanly.
+  The connect-time identity polling cadence was also slowed (500 ms →
+  1200 ms) to reduce the command backlog that delays movements.
 - **Direction/speed abbreviations in `move`.** Case-insensitive short forms:
   `fw`/`bk`/`lf`/`rg`/`ml`/`mr` for the six directions and `s`/`m`/`f` for
   the speeds, in both the one-shot subcommand and the shell; `--list` and
