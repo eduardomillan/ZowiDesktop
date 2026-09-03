@@ -19,3 +19,7 @@ add_test(NAME test_robot_commands COMMAND test_robot_commands)
 add_executable(test_calibration_session test_calibration_session.cpp)
 target_link_libraries(test_calibration_session PRIVATE Zowi::core)
 add_test(NAME test_calibration_session COMMAND test_calibration_session)
+
+add_executable(test_message_parser test_message_parser.cpp)
+target_link_libraries(test_message_parser PRIVATE Zowi::core)
+add_test(NAME test_message_parser COMMAND test_message_parser)

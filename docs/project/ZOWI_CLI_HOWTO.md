@@ -855,7 +855,7 @@ zowi_cli move moonwalker-left --speed slow
 | `direction` | Movement direction (positional argument) |
 | `-s, --speed` | Movement speed: `slow`, `medium` (default), `fast` |
 | `-a, --address` | Robot Bluetooth address (overrides paired device) |
-| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `5`) |
 | `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
 | `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
 | `--baud` | Serial baud rate (default `115200`) |
@@ -926,7 +926,7 @@ zowi_cli gesture 12          # same as victory (by ID)
 |--------|-------------|
 | `gesture` | Gesture name or ID (1-13) (positional argument) |
 | `-a, --address` | Robot Bluetooth address (overrides paired device) |
-| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `5`) |
 | `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
 | `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
 | `--baud` | Serial baud rate (default `115200`) |
@@ -1019,7 +1019,7 @@ zowi_cli mouth 10          # same as smile (by ID)
 |--------|-------------|
 | `mouth` | Mouth name or ID (0-30) (positional argument) |
 | `-a, --address` | Robot Bluetooth address (overrides paired device) |
-| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `5`) |
 | `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
 | `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
 | `--baud` | Serial baud rate (default `115200`) |
@@ -1098,7 +1098,7 @@ zowi_cli sing 8            # same as happy (by ID)
 |--------|-------------|
 | `melody` | Melody name or ID (1-19) (positional argument) |
 | `-a, --address` | Robot Bluetooth address (overrides paired device) |
-| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `5`) |
 | `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
 | `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
 | `--baud` | Serial baud rate (default `115200`) |
@@ -1149,7 +1149,7 @@ A **VICTORY** animation is played after saving, unless skipped with
 | Option | Description |
 |--------|-------------|
 | `-a, --address` | Robot Bluetooth address to override the paired device (or a USB TTY path) |
-| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `5`) |
 | `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
 | `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
 | `--baud` | Serial baud rate (control firmware uses `115200`) |
@@ -1260,7 +1260,7 @@ connection.
 | Option | Description |
 |--------|-------------|
 | `-a, --address` | Robot Bluetooth address to override the paired device (or a USB TTY path) |
-| `-t, --timeout` | Timeout waiting for connection (seconds, default `3`) |
+| `-t, --timeout` | Timeout waiting for connection (seconds, default `5`) |
 | `--backend` | `auto` (registered transport), `bluetooth`, or `usb` |
 | `--tty` | Serial TTY for USB (e.g. `/dev/ttyUSB0`) |
 | `--baud` | Serial baud rate (control firmware uses `115200`) |

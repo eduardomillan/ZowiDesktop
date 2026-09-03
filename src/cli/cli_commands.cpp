@@ -1242,6 +1242,15 @@ bool buildGestureCommand(const std::string &token, std::string &cmd, std::string
 }
 
 bool buildMouthCommand(const std::string &token, std::string &cmd, std::string &desc) {
+    // Raw pattern: the firmware's L command accepts any 32-bit binary pattern
+    // (receiveLED → zowi.putMouth(matrix, false)), so a 32-character 0/1
+    // token is sent as-is. Useful for hardware debugging of the 5x6 matrix
+    // (see docs/project/ZOWILIBS.md, LedMatrix bit layout).
+    if (token.size() == 32 && token.find_first_not_of("01") == std::string::npos) {
+        cmd = zowi::makeCommand(zowi::Command::LED, token);
+        desc = "mouth raw " + token;
+        return true;
+    }
     int id = parseNameOrId(token, kMouthNames, 30);
     if (id < 0) return false;
     cmd = zowi::commandMouthById(static_cast<zowi::MouthId>(id));

@@ -7,6 +7,13 @@
 #include "cli_util.h"
 #include "cli_commands.h"
 
+// Default for the robot-facing --timeout options (bounds the Bluetooth SPP
+// connect phase and the robot-data wait). The HC-05 on the robot can take
+// longer than 3 s to establish SPP, so the floor is 5 s; per-command -t
+// overrides it. Not used by `scan` (scan duration) or the firmware commands
+// (10 s confirmation waits).
+constexpr int kDefaultRobotTimeout = 5;
+
 int main(int argc, char **argv)
 {
     CLI::App app{"Zowi Desktop CLI"};
@@ -59,7 +66,7 @@ int main(int argc, char **argv)
     auto *connectCmd = app.add_subcommand("connect", "Connect to a Zowi robot by Bluetooth address (or USB serial)\nReceives robot name, app ID, and battery level.\nUses BlueZ D-Bus by default (no root needed); add --backend usb --tty /dev/ttyUSB0 for USB.");
     zowi_cli::ConnectArgs connectArgs;
     connectCmd->add_option("address", connectArgs.address, "Bluetooth MAC address (e.g. B4:9D:0B:32:41:0E) or USB TTY path (e.g. /dev/ttyUSB0)")->required();
-    connectCmd->add_option("--timeout,-t", connectArgs.timeout, "Timeout waiting for robot data (seconds)")->default_val(3);
+    connectCmd->add_option("--timeout,-t", connectArgs.timeout, "Timeout waiting for robot data (seconds)")->default_val(kDefaultRobotTimeout);
     connectCmd->add_option("--backend", connectArgs.backend, "Backend: 'auto' (default), 'bluetooth' (BlueZ SPP, no root), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
     connectCmd->add_option("--tty", connectArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
     connectCmd->add_option("--baud", connectArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
@@ -68,7 +75,7 @@ int main(int argc, char **argv)
     auto *renameCmd = app.add_subcommand("rename", "Rename the connected Zowi robot\nConnects to the saved device, sends the rename command, and saves the new name.");
     zowi_cli::RenameArgs renameArgs;
     renameCmd->add_option("name", renameArgs.name, "New name for the robot")->required();
-    renameCmd->add_option("--timeout,-t", renameArgs.timeout, "Timeout waiting for robot response (seconds)")->default_val(3);
+    renameCmd->add_option("--timeout,-t", renameArgs.timeout, "Timeout waiting for robot response (seconds)")->default_val(kDefaultRobotTimeout);
     renameCmd->add_option("--backend", renameArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     renameCmd->add_option("--tty", renameArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
     renameCmd->add_option("--baud", renameArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
@@ -79,7 +86,7 @@ int main(int argc, char **argv)
     // ── status subcommand ─────────────────────────────────────
     auto *statusCmd = app.add_subcommand("status", "Show current Zowi connection status\nUses the registered transport (USB or Bluetooth); override with --backend/--tty.");
     zowi_cli::StatusArgs statusArgs;
-    statusCmd->add_option("--timeout,-t", statusArgs.timeout, "Timeout waiting for robot data (seconds)")->default_val(3);
+    statusCmd->add_option("--timeout,-t", statusArgs.timeout, "Timeout waiting for robot data (seconds)")->default_val(kDefaultRobotTimeout);
     statusCmd->add_option("--backend", statusArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     statusCmd->add_option("--tty", statusArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
     statusCmd->add_option("--baud", statusArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
@@ -134,7 +141,7 @@ int main(int argc, char **argv)
     zowi_cli::ControlArgs controlArgs;
     controlCmd->add_option("--address,-a", controlArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path (e.g. /dev/ttyUSB0)")->default_val("");
     controlCmd->add_option("--speed", controlArgs.speed, "Movement speed: slow, medium, fast")->default_val("medium");
-    controlCmd->add_option("--timeout,-t", controlArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    controlCmd->add_option("--timeout,-t", controlArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     controlCmd->add_option("--backend", controlArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     controlCmd->add_option("--tty", controlArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
     controlCmd->add_option("--baud", controlArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
@@ -143,7 +150,7 @@ int main(int argc, char **argv)
     auto *calibCmd = app.add_subcommand("calibrate", "Calibrate Zowi servo trims (C/G protocol)\nInteractive wizard by default; pass all four trims to apply them non-interactively.\nTrims are clamped to +/-60 degrees.");
     zowi_cli::CalibrateArgs calibArgs;
     calibCmd->add_option("--address,-a", calibArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path (e.g. /dev/ttyUSB0)")->default_val("");
-    calibCmd->add_option("--timeout,-t", calibArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    calibCmd->add_option("--timeout,-t", calibArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     calibCmd->add_option("--backend", calibArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     calibCmd->add_option("--tty", calibArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
     calibCmd->add_option("--baud", calibArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);
@@ -159,7 +166,7 @@ int main(int argc, char **argv)
     moveCmd->add_option("direction", moveArgs.direction, "Movement direction (forward, backward, left, right, moonwalker-left, moonwalker-right)");
     moveCmd->add_option("--speed,-s", moveArgs.speed, "Movement speed: slow, medium, fast")->default_val("medium");
     moveCmd->add_option("--address,-a", moveArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
-    moveCmd->add_option("--timeout,-t", moveArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    moveCmd->add_option("--timeout,-t", moveArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     moveCmd->add_option("--backend", moveArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     moveCmd->add_option("--tty", moveArgs.tty, "Serial TTY to use for USB")->default_val("");
     moveCmd->add_option("--baud", moveArgs.baud, "Serial baud rate")->default_val(115200);
@@ -170,7 +177,7 @@ int main(int argc, char **argv)
     zowi_cli::GestureArgs gestureArgs;
     gestureCmd->add_option("gesture", gestureArgs.gesture, "Gesture name or ID (1-13)");
     gestureCmd->add_option("--address,-a", gestureArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
-    gestureCmd->add_option("--timeout,-t", gestureArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    gestureCmd->add_option("--timeout,-t", gestureArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     gestureCmd->add_option("--backend", gestureArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     gestureCmd->add_option("--tty", gestureArgs.tty, "Serial TTY to use for USB")->default_val("");
     gestureCmd->add_option("--baud", gestureArgs.baud, "Serial baud rate")->default_val(115200);
@@ -181,7 +188,7 @@ int main(int argc, char **argv)
     zowi_cli::MouthArgs mouthArgs;
     mouthCmd->add_option("mouth", mouthArgs.mouth, "Mouth name or ID (0-30)");
     mouthCmd->add_option("--address,-a", mouthArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
-    mouthCmd->add_option("--timeout,-t", mouthArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    mouthCmd->add_option("--timeout,-t", mouthArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     mouthCmd->add_option("--backend", mouthArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     mouthCmd->add_option("--tty", mouthArgs.tty, "Serial TTY to use for USB")->default_val("");
     mouthCmd->add_option("--baud", mouthArgs.baud, "Serial baud rate")->default_val(115200);
@@ -192,7 +199,7 @@ int main(int argc, char **argv)
     zowi_cli::SingArgs singArgs;
     singCmd->add_option("melody", singArgs.melody, "Melody name or ID (1-19)");
     singCmd->add_option("--address,-a", singArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
-    singCmd->add_option("--timeout,-t", singArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    singCmd->add_option("--timeout,-t", singArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     singCmd->add_option("--backend", singArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     singCmd->add_option("--tty", singArgs.tty, "Serial TTY to use for USB")->default_val("");
     singCmd->add_option("--baud", singArgs.baud, "Serial baud rate")->default_val(115200);
@@ -202,7 +209,7 @@ int main(int argc, char **argv)
     auto *shellCmd = app.add_subcommand("shell", "Persistent-connection command shell\nConnects once, then reads commands from stdin (REPL when interactive, batch when piped):\nmove <dir> [speed] | gesture <name|id> | mouth <name|id> | sing <name|id> | stop | status | help | quit.");
     zowi_cli::ShellArgs shellArgs;
     shellCmd->add_option("--address,-a", shellArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
-    shellCmd->add_option("--timeout,-t", shellArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(3);
+    shellCmd->add_option("--timeout,-t", shellArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     shellCmd->add_option("--backend", shellArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     shellCmd->add_option("--tty", shellArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");
     shellCmd->add_option("--baud", shellArgs.baud, "Serial baud rate (control firmware uses 115200; 57600 is only for the USB bootloader/flashing)")->default_val(115200);

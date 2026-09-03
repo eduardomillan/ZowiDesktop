@@ -51,6 +51,10 @@ std::string commandAscendingTurn(MovementSpeed speed = MovementSpeed::Medium, in
 // Stop / home: moves all servos to 90 degrees and detaches them.
 std::string commandStop();
 
+// Buzzer tone: T <freqHz> <durationMs>\r. The firmware's recieveBuzzer()
+// atoi()s both arguments and calls zowi._tone(freq, duration, 1).
+std::string commandTone(int frequencyHz, int durationMs);
+
 // Calibration. The firmware keeps no range enforcement of its own: the only
 // hard limit is the servo's physical span (0-180°), so a trim of +60 produces
 // 90+60=150°. Callers are responsible for keeping values inside +/-60.
@@ -99,6 +103,14 @@ std::string commandGesture(GestureId id);
 
 // ── Melodies / Sing ─────────────────────────────────────────────────────────
 // Melody IDs (protocol is 1-based: 1=Connection..19=ButtonPushed).
+//
+// NOTE: the enum follows the order of the firmware's receiveSing() switch in
+// ZOWI_BASE_v2.ino (K 1 → S_connection ... K 19 → S_buttonPushed), which is
+// NOT the raw order of the S_* defines in zowiLibs/arduinolibs/Zowi/
+// Zowi_sounds.h (connection, disconnection, buttonPushed, mode1-3, surprise,
+// ...). The wire order is what matters; scripts/verify_arduino_mirrors.sh
+// checks this mapping stays in sync.
+//
 // The enum values are 0-based; the command adds 1 for the protocol.
 enum class MelodyId : int {
     Connection = 0, Disconnection, Surprise, OhOoh, OhOoh2,

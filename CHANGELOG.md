@@ -8,6 +8,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Shared robot message parser.** New Qt-free `zowi::MessageParser`
+  (`src/core/include/zowi/message_parser.h`), the host-side inverse of the
+  firmware's `ZowiSerialCommand`: incremental `feed()`/`drain()` API covering
+  `&&<cmd>[ <value>]%%` frames (including bare `&&A%%`/`&&F%%` acks), the
+  legacy `N`/`U`/`B` line forms, frames split across transport chunks, and a
+  4 KB resync valve against broken streams. Unit-tested in
+  `src/core/tests/test_message_parser.cpp`. Both consumers now use it: the
+  CLI (`cli_state.cpp`) and the GUI (`RobotController::parseIncoming`, which
+  previously only understood battery/name/appId and now also sees acks,
+  distance and noise).
+- **Buzzer command builder.** `commandTone(frequencyHz, durationMs)` builds
+  `T <freq> <ms>\r` (the previously unused `Command::Buzzer` enum value).
+- **Raw mouth patterns in the CLI.** `zowi_cli mouth` (one-shot and shell)
+  accepts a 32-character `0/1` binary token and sends it as-is via the
+  firmware's `L` command (which accepts arbitrary patterns), enabling
+  on-hardware debugging of the 5x6 LED matrix. Used to hardware-verify the
+  canonical okMouth pattern (see `docs/project/ZOWILIBS.md`).
+- **Arduino mirror verification script.** New
+  `scripts/verify_arduino_mirrors.sh` diffs ZowiDesktop's hand-mirrored
+  protocol constants and data catalogs (mouth patterns, gestures, melody wire
+  order, command letters) against `zowiLibs/arduinolibs` and the
+  `ZOWI_BASE_v2.ino` firmware sources; non-zero exit on drift. Catalog
+  counterpart of `sync_firmware_from_zowiLibs.sh`.
 - **Servo calibration.** New `calibrate` CLI subcommand for interactive servo-trim
   calibration (wizard with arrow keys) or direct mode (`--yl/--yr/--rl/--rr`).
   New GUI `CalibrationScreen` with a 4-step wizard (WARNING → LEGS → FEET → CHECK)
@@ -26,6 +49,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `zowi_cli mouth smile`, `zowi_cli sing happy`.
 
 ### Changed
+- **CLI default `--timeout` raised from 3 s to 5 s.** All robot-facing
+  subcommands (`connect`, `rename`, `status`, `control`, `calibrate`, `move`,
+  `gesture`, `mouth`, `sing`, `shell`) now default to 5 s via a shared
+  `kDefaultRobotTimeout` constant. The HC-05 on the robot can take longer
+  than 3 s to establish the SPP connection, which made one-shot commands fail
+  with "Could not connect to the robot within 3s" (observed on hardware).
+  Per-command `-t` still overrides it; `scan` (5 s scan duration) and the
+  firmware commands (10 s confirmation waits) keep their own defaults.
+- **Canonical okMouth pattern restored.** `kMouthPatterns[25]` (MouthId::Ok)
+  went back to the original `Zowi_mouths.h` bit pattern
+  (`0b00000001000010010100001000000000`), reverting an unexplained deviation
+  introduced while centralizing the mouth table. Verified against the local
+  Arduino library, the `bq/zowiLibs` upstream, the Bobwi fork and a render of
+  the `LedMatrix` 5x6 bit layout (details in `docs/project/ZOWILIBS.md`);
+  locked by `test_robot_commands`.
 - **PadScreen refactor.** All movement/action buttons now use `Commands.xxx()`
   methods instead of hardcoded protocol strings (`"M 3 " + speed + "\r"` →
   `Commands.turnLeft(speed)`), making the code type-safe and testable.

@@ -123,6 +123,13 @@ std::string commandStop()
     return makeCommand(Command::Stop);
 }
 
+// Buzzer: T <freq> <ms>\r (firmware recieveBuzzer → zowi._tone(freq, ms, 1)).
+std::string commandTone(int frequencyHz, int durationMs)
+{
+    return makeCommand(Command::Buzzer,
+                       std::to_string(frequencyHz) + ' ' + std::to_string(durationMs));
+}
+
 // Calibration: C <YL> <YR> <RL> <RR>\r — persists the trims to EEPROM.
 std::string commandSetTrims(int yl, int yr, int rl, int rr)
 {
@@ -192,7 +199,8 @@ constexpr unsigned long kMouthPatterns[] = {
     0b00000000001100010010100001000000, // 22: sad
     0b00000000001100010010111111000000, // 23: sadOpen
     0b00000000001100011110110011000000, // 24: sadClosed
-    0b00000000010000100101000010000000, // 25: okMouth (corrected from 0b00000001000010010100001000000000)
+    0b00000001000010010100001000000000, // 25: okMouth (canonical Zowi_mouths.h
+                                        //     pattern — see docs/project/ZOWILIBS.md)
     0b00100001010010001100010010100001, // 26: xMouth
     0b00001100010010000100000100000100, // 27: interrogation
     0b00000100001000011100001000010000, // 28: thunder

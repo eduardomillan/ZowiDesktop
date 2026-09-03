@@ -159,6 +159,11 @@ void RobotController::wireBackend()
 {
     if (!m_backend) return;
 
+    // A freshly built backend starts with clean protocol framing state: any
+    // partial frame left over from the previous transport must not leak into
+    // the new connection's stream.
+    m_parser.reset();
+
     m_backend->onDeviceFound([this](const zowi::DeviceInfo &info) {
         auto name  = QString::fromStdString(info.name);
         auto addr  = QString::fromStdString(info.address);
@@ -248,7 +253,7 @@ void RobotController::wireBackend()
                 }
             }
             if (!m_uploadMode) {
-                m_rxBuffer += data;
+                m_parser.feed(data);
                 parseIncoming();
             }
             qDebug() << "robot rx:" << qdata.trimmed();
@@ -298,110 +303,64 @@ void RobotController::setActiveTransport(Transport t)
 
 void RobotController::parseIncoming()
 {
-    // The robot frames responses as &&<token><payload>%% (e.g. &&B 85.0%%) and
-    // can also send line-based messages (e.g. "B 85.0"). We only need the
-    // battery level here; mirror the CLI parser in src/cli/main.cpp.
+    // The robot frames responses as &&<cmd>[ <value>]%% (e.g. &&B 85.0%%) and
+    // can also send legacy line-based messages (e.g. "B 85.0"). Frame
+    // reassembly lives in the shared zowi::MessageParser; this only applies
+    // the parsed messages (mirrors the CLI parser in src/cli/cli_state.cpp).
     bool updated = false;
-    std::string &buf = m_rxBuffer;
 
-    // &&B <value>%% form.
-    auto amp = buf.find("&&B ");
-    while (amp != std::string::npos) {
-        auto end = buf.find("%%", amp);
-        if (end == std::string::npos) break; // incomplete frame, wait for more
-        std::string value = buf.substr(amp + 4, end - (amp + 4));
-        try {
-            float b = std::stof(value);
-            if (b != m_battery) { m_battery = b; updated = true; }
-        } catch (...) {}
-        buf.erase(amp, end + 2 - amp);
-        amp = buf.find("&&B ");
-    }
-
-    // &&E <name>%% form.
-    auto ampE = buf.find("&&E ");
-    while (ampE != std::string::npos) {
-        auto end = buf.find("%%", ampE);
-        if (end == std::string::npos) break; // incomplete frame, wait for more
-        std::string value = buf.substr(ampE + 4, end - (ampE + 4));
-        if (value != m_deviceName.toStdString()) {
-            m_deviceName = QString::fromStdString(value);
+    auto applyName = [this](const QString &name) {
+        if (name != m_deviceName) {
+            m_deviceName = name;
             emit deviceChanged();
         }
-        buf.erase(ampE, end + 2 - ampE);
-        if (m_verifyPending) {
-            m_verifyPending = false;
-            if (m_deviceName == m_verifyExpectedName) {
-                if (m_session)
-                    m_session->saveActiveZowiDeviceAddress(m_deviceAddress);
-                persistRegistrationTransport(Usb);
-            } else {
-                m_verifyExpectedName.clear();
-                if (m_backend)
-                    m_backend->disconnect();
-                emit usbIdentityMismatch();
-            }
-            m_verifyExpectedName.clear();
-            return;
-        }
-        ampE = buf.find("&&E ");
-    }
-
-    // &&I <appId>%% form: firmware / program id reported by the robot.
-    auto ampI = buf.find("&&I ");
-    while (ampI != std::string::npos) {
-        auto end = buf.find("%%", ampI);
-        if (end == std::string::npos) break; // incomplete frame, wait for more
-        std::string value = buf.substr(ampI + 4, end - (ampI + 4));
-        if (QString::fromStdString(value) != m_appId) {
-            m_appId = QString::fromStdString(value);
-            emit appIdChanged();
-            // Persist the firmware id so the app remembers which firmware this
-            // Zowi is running (used later to surface it in the UI).
+        if (!m_verifyPending) return false;
+        m_verifyPending = false;
+        if (m_deviceName == m_verifyExpectedName) {
             if (m_session)
-                m_session->saveActiveZowiAppId(m_appId);
+                m_session->saveActiveZowiDeviceAddress(m_deviceAddress);
+            persistRegistrationTransport(Usb);
+        } else {
+            m_verifyExpectedName.clear();
+            if (m_backend)
+                m_backend->disconnect();
+            emit usbIdentityMismatch();
         }
-        buf.erase(ampI, end + 2 - ampI);
-        ampI = buf.find("&&I ");
-    }
+        m_verifyExpectedName.clear();
+        return true; // stop processing further messages, as before
+    };
 
-    // Line-based "B <value>" / "N <name>" forms (value until newline).
-    auto nl = buf.find('\n');
-    while (nl != std::string::npos) {
-        std::string line = buf.substr(0, nl);
-        buf.erase(0, nl + 1);
-        if (line.size() > 2 && line[0] == 'B' && line[1] == ' ') {
+    for (const auto &msg : m_parser.drain()) {
+        if (msg.legacy) {
+            // Legacy line forms (old firmware): "B <battery>" / "N <name>".
+            if (msg.cmd == zowi::toChar(zowi::Command::LegacyBattery) && msg.hasValue) {
+                try {
+                    float b = std::stof(msg.value);
+                    if (b != m_battery) { m_battery = b; updated = true; }
+                } catch (...) {}
+            } else if (msg.cmd == zowi::toChar(zowi::Command::LegacyName) && msg.hasValue) {
+                if (applyName(QString::fromStdString(msg.value))) break;
+            }
+        } else if (msg.cmd == zowi::toChar(zowi::Command::GetBattery) && msg.hasValue) {
             try {
-                float b = std::stof(line.substr(2));
+                float b = std::stof(msg.value);
                 if (b != m_battery) { m_battery = b; updated = true; }
             } catch (...) {}
-        } else if (line.size() > 2 && line[0] == 'N' && line[1] == ' ') {
-            std::string value = line.substr(2);
-            if (value != m_deviceName.toStdString()) {
-                m_deviceName = QString::fromStdString(value);
-                emit deviceChanged();
-            }
-            if (m_verifyPending) {
-                m_verifyPending = false;
-                if (m_deviceName == m_verifyExpectedName) {
-                    if (m_session)
-                        m_session->saveActiveZowiDeviceAddress(m_deviceAddress);
-                    persistRegistrationTransport(Usb);
-                } else {
-                    m_verifyExpectedName.clear();
-                    if (m_backend)
-                        m_backend->disconnect();
-                    emit usbIdentityMismatch();
-                }
-                m_verifyExpectedName.clear();
-                return;
+        } else if (msg.cmd == zowi::toChar(zowi::Command::GetName) && msg.hasValue) {
+            if (applyName(QString::fromStdString(msg.value))) break;
+        } else if (msg.cmd == zowi::toChar(zowi::Command::GetProgramId) && msg.hasValue) {
+            QString value = QString::fromStdString(msg.value);
+            if (value != m_appId) {
+                m_appId = value;
+                emit appIdChanged();
+                // Persist the firmware id so the app remembers which firmware
+                // this Zowi is running (used later to surface it in the UI).
+                if (m_session)
+                    m_session->saveActiveZowiAppId(m_appId);
             }
         }
-        nl = buf.find('\n');
+        // &&A / &&F / &&D / &&N / ... : no GUI consumer yet.
     }
-
-    // Keep the buffer from growing unbounded.
-    if (buf.size() > 512) buf.erase(0, buf.size() - 512);
 
     if (updated) emit batteryChanged();
 }

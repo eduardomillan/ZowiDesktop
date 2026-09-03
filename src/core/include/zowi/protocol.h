@@ -11,7 +11,7 @@ constexpr char kMessagePrefix[]   = "&&";
 constexpr char kMessageTerminator[] = "%%";
 
 // Command identifiers matching the firmware's ZowiSerialCommand handlers
-// (defined in zowiLibs/arduino libraries/ZowiSerialCommand/).
+// (defined in zowiLibs/arduinolibs/ZowiSerialCommand/).
 // See docs/project/ZOWILIBS.md for the full protocol table.
 enum class Command : char {
     // ── Outgoing commands (desktop → robot) ─────────────────

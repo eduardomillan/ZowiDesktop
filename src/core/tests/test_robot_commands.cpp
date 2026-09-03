@@ -50,6 +50,11 @@ int main()
 
     check(commandStop(), "S\r", "stop");
 
+    // Buzzer tone (T <freq> <ms>)
+    check(commandTone(1000, 200), "T 1000 200\r", "tone nominal");
+    check(commandTone(880, 8), "T 880 8\r", "tone bend-like");
+    check(commandTone(0, 0), "T 0 0\r", "tone zeros");
+
     check(commandSetTrims(0, 0, 0, 0), "C 0 0 0 0\r", "trims all zero");
     check(commandSetTrims(20, 0, -8, 3), "C 20 0 -8 3\r", "trims mixed");
     check(commandSetTrims(-60, 60, -30, 30), "C -60 60 -30 30\r", "trims extremes");
@@ -75,6 +80,12 @@ int main()
           "L 00010010101101100001010010001100\r", "mouth heart by id");
     check(commandMouthById(MouthId::Angry),
           "L 00000000011110100001100001000000\r", "mouth angry by id");
+    // okMouth must be the canonical Zowi_mouths.h pattern (verified against
+    // the local library, bq/zowiLibs upstream and the Bobwi fork — see
+    // docs/project/ZOWILIBS.md). Locked so the "corrected" variant cannot
+    // come back unnoticed.
+    check(commandMouthById(MouthId::Ok),
+          "L 00000001000010010100001000000000\r", "mouth ok by id (canonical)");
 
     // Melodies: 1-based protocol (enum 0 = protocol 1)
     check(commandSing(MelodyId::Connection), "K 1\r", "sing connection");

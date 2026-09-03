@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <thread>
 #include <zowi/bluetooth_api.h>
+#include <zowi/message_parser.h>
 #include <zowi/stk500v1.h>
 
 class SessionController;
@@ -234,7 +235,7 @@ private:
     QString m_appId;
     QString m_usbPort;
     float m_battery = -1.0f;
-    std::string m_rxBuffer;
+    zowi::MessageParser m_parser;  // robot → host frame reassembly (see docs/project/ZOWILIBS.md)
 
     QStringList m_knownUsbPorts;   // ports currently present
     QStringList m_probedUsbPorts;  // ports already handshake-probed this session
