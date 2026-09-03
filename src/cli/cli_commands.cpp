@@ -287,6 +287,14 @@ int runConnect(int argc, char **argv, const ConnectArgs &a)
 
 int runRename(int argc, char **argv, const RenameArgs &a)
 {
+    // The firmware command is space-delimited and the name ends up in EEPROM:
+    // only letters are accepted (no digits, spaces or symbols).
+    if (!zowi::isValidRobotName(a.name)) {
+        std::cerr << "Invalid name '" << a.name
+                  << "': use letters only (no digits, spaces or symbols)." << std::endl;
+        return 1;
+    }
+
     QCoreApplication qtApp(argc, argv);
     resetRobotState();
 

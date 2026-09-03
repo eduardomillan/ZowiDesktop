@@ -36,6 +36,15 @@ ScreenTemplate {
 
     function tr(source) { return Translator.translate("WizardRenameScreen.qml", source) }
 
+    // The firmware rename command is space-delimited and the name ends up in
+    // EEPROM: letters only (ASCII plus Latin-1 accented letters, excluding the
+    // × and ÷ signs). Mirrors zowi::isValidRobotName() in the core, which is
+    // the source of truth; this mirror only keeps the field clean while
+    // typing (a RegExpValidator would need different type names on Qt 5/6).
+    function isValidName(name) {
+        return /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]+$/.test(name)
+    }
+
     Column {
         anchors.centerIn: parent
         spacing: 25
@@ -58,6 +67,15 @@ ScreenTemplate {
             horizontalAlignment: Text.AlignHCenter
             selectByMouse: true
             enabled: Robot.connected && !wizardRename.renaming && !wizardRename.locked
+            // Strip anything that is not a letter while typing/pasting.
+            onTextChanged: {
+                var cleaned = text.replace(/[^A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]/g, "")
+                if (cleaned !== text) {
+                    var pos = cursorPosition
+                    text = cleaned
+                    cursorPosition = Math.min(pos, cleaned.length)
+                }
+            }
             onAccepted: renameButton.clicked()
         }
 
@@ -68,7 +86,8 @@ ScreenTemplate {
             height: 56
             text: wizardRename.renaming ? tr("renaming")
                   : (Robot.connected ? tr("rename") : tr("wait_pairing"))
-            enabled: Robot.connected && !wizardRename.renaming && !wizardRename.locked && nameField.text.trim() !== ""
+            enabled: Robot.connected && !wizardRename.renaming && !wizardRename.locked
+                     && wizardRename.isValidName(nameField.text.trim())
 
             contentItem: Text {
                 text: parent.text
@@ -86,7 +105,10 @@ ScreenTemplate {
 
             onClicked: {
                 var name = nameField.text.trim()
-                if (name === "" || !Robot.connected)
+                // Belt-and-braces: the field validator already blocks invalid
+                // characters, but programmatic text (the current robot name)
+                // bypasses it, so re-check here.
+                if (name === "" || !wizardRename.isValidName(name) || !Robot.connected)
                     return
                 // Skip rename if the robot already has the requested name.
                 if (Robot.deviceName && Robot.deviceName.toLowerCase() === name.toLowerCase()) {

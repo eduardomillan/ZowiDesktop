@@ -73,6 +73,36 @@ inline char prefixedCommandChar(const std::string &token)
     return '\0';
 }
 
+// True when the name is safe to send as a SetName (R) argument: letters only —
+// ASCII plus the Latin-1 accented letters (á é í ó ú ü ñ ç ...) as UTF-8 —
+// with no digits, spaces, symbols or other scripts. The firmware command is
+// space-delimited, so anything beyond a plain name (spaces included) risks
+// being truncated or mangled by the ZowiSerialCommand parser.
+//   isValidRobotName("Rebecowi") → true
+//   isValidRobotName("Árbol-2")  → false (digit and symbol)
+inline bool isValidRobotName(const std::string &name)
+{
+    if (name.empty()) return false;
+    for (size_t i = 0; i < name.size();) {
+        const unsigned char c = static_cast<unsigned char>(name[i]);
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+            ++i;
+            continue;
+        }
+        // UTF-8 two-byte sequence for the Latin-1 letter range U+00C0..U+00FF,
+        // excluding × (U+00D7) and ÷ (U+00F7) which are signs, not letters.
+        if (c == 0xC3 && i + 1 < name.size()) {
+            const unsigned char c2 = static_cast<unsigned char>(name[i + 1]);
+            if (c2 >= 0x80 && c2 <= 0xBF && c2 != 0x97 && c2 != 0xB7) {
+                i += 2;
+                continue;
+            }
+        }
+        return false;
+    }
+    return true;
+}
+
 // Returns the value portion of a &&-prefixed message, i.e. everything after
 // "&&X " (where X = command char). Returns empty string on mismatch.
 //   prefixedCommandValue("&&E Zowi")  → "Zowi"

@@ -1,4 +1,5 @@
 #include "zowi/robot_commands.h"
+#include "zowi/protocol.h"
 
 #include <cassert>
 #include <iostream>
@@ -13,6 +14,17 @@ static void check(const std::string &actual, const std::string &expected, const 
     if (actual != expected) {
         std::cerr << "FAIL [" << label << "]: got '" << actual
                   << "' expected '" << expected << "'\n";
+        ++failures;
+    } else {
+        std::cout << "ok   [" << label << "]\n";
+    }
+}
+
+static void checkBool(bool actual, bool expected, const char *label)
+{
+    if (actual != expected) {
+        std::cerr << "FAIL [" << label << "]: got " << (actual ? "true" : "false")
+                  << " expected " << (expected ? "true" : "false") << "\n";
         ++failures;
     } else {
         std::cout << "ok   [" << label << "]\n";
@@ -68,6 +80,22 @@ int main()
     check(commandSing(MelodyId::Connection), "K 1\r", "sing connection");
     check(commandSing(MelodyId::Happy), "K 8\r", "sing happy");
     check(commandSing(MelodyId::ButtonPushed), "K 19\r", "sing button pushed");
+
+    // Robot name validation (SetName argument): letters only
+    checkBool(isValidRobotName("Rebecowi"), true, "name plain ascii");
+    checkBool(isValidRobotName("zowi"), true, "name lowercase");
+    checkBool(isValidRobotName("\xC3\x81\x72\x62\x6F\x6C"), true, "name accented (Árbol)");
+    checkBool(isValidRobotName("Pe\xC3\xB1\xC3\xB3n"), true, "name ñ and ó");
+    checkBool(isValidRobotName("\xC3\x87" "eca"), true, "name ç");
+    checkBool(isValidRobotName(""), false, "name empty");
+    checkBool(isValidRobotName("Zowi 2"), false, "name with space");
+    checkBool(isValidRobotName("Zowi2"), false, "name with digit");
+    checkBool(isValidRobotName("Zowi!"), false, "name with symbol");
+    checkBool(isValidRobotName("Zowi\t"), false, "name with tab");
+    checkBool(isValidRobotName("Zowi\xC3\x97"), false, "name with multiplication sign");
+    checkBool(isValidRobotName("Zowi\xC3\xB7"), false, "name with division sign");
+    checkBool(isValidRobotName("\xE6\x97\xA5"), false, "name non-latin utf8");
+    checkBool(isValidRobotName("Zowi\xC3"), false, "name truncated utf8");
 
     if (failures == 0) {
         std::cout << "All robot_commands tests passed.\n";
