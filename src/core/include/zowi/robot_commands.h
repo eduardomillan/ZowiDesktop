@@ -90,6 +90,14 @@ std::string commandMouth(unsigned long matrix);
 // Build "L <binary>\r" for a named mouth ID (looks up the pattern).
 std::string commandMouthById(MouthId id);
 
+// Build "L <binary>\r" from a raw binary token ("0101..."). The token is
+// interpreted as a binary VALUE — leading zeros are optional and missing
+// digits are implicitly zeros, exactly like the firmware's
+// strtoul(arg, nullptr, 2) in receiveLED() — and the canonical 32-character
+// form is emitted. Returns false when `bits` is not a valid pattern
+// (empty, non-0/1 characters, or more than 32 digits).
+bool commandMouthFromBinary(const std::string &bits, std::string &cmd);
+
 // ── Gestures (enum overload) ────────────────────────────────────────────────
 // Gesture IDs (protocol is 1-based: 1=Happy..13=Fail).
 // The enum values are 0-based; the command adds 1 for the protocol.

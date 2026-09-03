@@ -80,7 +80,7 @@ Connected.
   App ID:  ZOWI_ALLOCATOR_V2
   Battery: 87%
 
-Commands: move <dir> [speed] | gesture <name|id> | mouth <name|id> |
+Commands: move <dir> [speed] | gesture <name|id> | mouth <name|id|0/1> |
           sing <name|id> | stop | status | help | quit
 ZOWI_CLI:Zowi> gesture happy
 Sent: gesture happy
@@ -124,7 +124,7 @@ abort the batch), `1` when the connection could not be established.
 |---------|--------|----------|
 | `move <dir> [speed]` | One movement; `dir` ∈ forward, backward, left, right, moonwalker-left, moonwalker-right; `speed` ∈ slow, medium, fast | M |
 | `gesture <name\|id>` | Play a gesture (1–13, same names as `zowi_cli gesture --list`) | H |
-| `mouth <name\|id>` | Show a mouth/LED pattern (0–30) | L |
+| `mouth <name\|id\|0/1>` | Show a mouth/LED pattern (0–30), or a raw binary pattern | L |
 | `sing <name\|id>` | Play a melody (1–19) | K |
 | `stop` | Stop movement | M |
 | `status` | Print the cached robot identity (name, app ID, battery) without sending anything | — |
@@ -134,6 +134,25 @@ abort the batch), `1` when the connection could not be established.
 Name-to-id parsing uses exactly the same tables and mapping as the one-shot
 subcommands (`parseNameOrId` + the shared name tables), so `gesture happy`,
 `gesture 1`, `mouth heart` and `mouth 13` behave identically in both places.
+
+### Raw mouth patterns
+
+Besides names and ids, `mouth` accepts a raw binary pattern (`0`/`1` digits,
+max 32), mirroring the firmware's `L` command, which parses any binary value
+(`receiveLED` → `strtoul(arg, nullptr, 2)`). The token is read as a **binary
+value**: missing digits are leading zeros, so the 30 bits of the 5×6 matrix
+can be written without the 2 unused top bits. Layout (hardware-verified, see
+`docs/project/ZOWILIBS.md`): bit 29 = top-left, bit 0 = bottom-right.
+
+```text
+ZOWI:Zowi> mouth 001001001001001001001001001001
+Sent: mouth raw 001001001001001001001001001001    # two vertical bars (columns 3 and 6)
+ZOWI:Zowi> mouth 00000001000010010100001000000000
+Sent: mouth raw 00000001000010010100001000000000  # the okMouth check mark
+```
+
+Tokens whose binary value fits 0–30 stay catalog ids (`mouth 25` is the
+`ok` mouth, not a pattern); a `0/1` token of 25+ digits is always raw.
 
 
 ## Technical design

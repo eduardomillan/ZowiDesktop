@@ -21,10 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Buzzer command builder.** `commandTone(frequencyHz, durationMs)` builds
   `T <freq> <ms>\r` (the previously unused `Command::Buzzer` enum value).
 - **Raw mouth patterns in the CLI.** `zowi_cli mouth` (one-shot and shell)
-  accepts a 32-character `0/1` binary token and sends it as-is via the
-  firmware's `L` command (which accepts arbitrary patterns), enabling
-  on-hardware debugging of the 5x6 LED matrix. Used to hardware-verify the
-  canonical okMouth pattern (see `docs/project/ZOWILIBS.md`).
+  accepts a `0/1` binary token of up to 32 digits and sends it via the
+  firmware's `L` command, mirroring `receiveLED`'s `strtoul` parse: the token
+  is read as a binary value, so missing digits are leading zeros and the
+  30-bit matrix patterns can be written without the 2 unused top bits.
+  Tokens whose value fits 0-30 stay catalog ids; a `0/1` token of 25+ digits
+  is always raw. Includes a specific error for over-long patterns and a
+  friendlier `--list`/shell help. Used to hardware-verify the canonical
+  okMouth pattern (see `docs/project/ZOWILIBS.md`); new core helper
+  `commandMouthFromBinary()` is unit-tested.
 - **Arduino mirror verification script.** New
   `scripts/verify_arduino_mirrors.sh` diffs ZowiDesktop's hand-mirrored
   protocol constants and data catalogs (mouth patterns, gestures, melody wire

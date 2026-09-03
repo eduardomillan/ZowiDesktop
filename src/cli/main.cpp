@@ -186,7 +186,7 @@ int main(int argc, char **argv)
     // ── mouth subcommand ───────────────────────────────────────
     auto *mouthCmd = app.add_subcommand("mouth", "Send a mouth/LED pattern to the robot\nUse --list to see available mouths.");
     zowi_cli::MouthArgs mouthArgs;
-    mouthCmd->add_option("mouth", mouthArgs.mouth, "Mouth name or ID (0-30)");
+    mouthCmd->add_option("mouth", mouthArgs.mouth, "Mouth name, ID (0-30), or raw 0/1 binary pattern (value semantics: missing digits are leading zeros, max 32 digits)");
     mouthCmd->add_option("--address,-a", mouthArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
     mouthCmd->add_option("--timeout,-t", mouthArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);
     mouthCmd->add_option("--backend", mouthArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
     singCmd->add_flag("--list,-l", singArgs.list, "List available melodies and exit");
 
     // ── shell subcommand ──────────────────────────────────────
-    auto *shellCmd = app.add_subcommand("shell", "Persistent-connection command shell\nConnects once, then reads commands from stdin (REPL when interactive, batch when piped):\nmove <dir> [speed] | gesture <name|id> | mouth <name|id> | sing <name|id> | stop | status | help | quit.");
+    auto *shellCmd = app.add_subcommand("shell", "Persistent-connection command shell\nConnects once, then reads commands from stdin (REPL when interactive, batch when piped):\nmove <dir> [speed] | gesture <name|id> | mouth <name|id|0/1> | sing <name|id> | stop | status | help | quit.");
     zowi_cli::ShellArgs shellArgs;
     shellCmd->add_option("--address,-a", shellArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path")->default_val("");
     shellCmd->add_option("--timeout,-t", shellArgs.timeout, "Timeout waiting for connection (seconds)")->default_val(kDefaultRobotTimeout);

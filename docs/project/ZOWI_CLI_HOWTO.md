@@ -1242,7 +1242,7 @@ cycle) between them. The full design is documented in
 |---------|--------|
 | `move <dir> [speed]` | One movement: `forward`, `backward`, `left`, `right`, `moonwalker-left`, `moonwalker-right`; speed `slow`/`medium`/`fast` |
 | `gesture <name\|id>` | Play a gesture (same names as `zowi_cli gesture --list`) |
-| `mouth <name\|id>` | Show a mouth/LED pattern (same names as `zowi_cli mouth --list`) |
+| `mouth <name\|id\|0/1>` | Show a mouth/LED pattern (same names as `zowi_cli mouth --list`), or a raw binary pattern |
 | `sing <name\|id>` | Play a melody (same names as `zowi_cli sing --list`) |
 | `stop` | Stop the current movement |
 | `status` | Show the cached robot identity (name, app ID, battery) |

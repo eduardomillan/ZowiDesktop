@@ -1153,6 +1153,8 @@ void listMouths() {
     std::cout << " 20: confused     21: diagonal    22: sad         23: sad-open\n";
     std::cout << " 24: sad-closed   25: ok          26: x           27: interrogation\n";
     std::cout << " 28: thunder      29: culito      30: angry\n";
+    std::cout << "A raw 0/1 binary pattern is also accepted (e.g. 001001001001001001001001001001):\n";
+    std::cout << "it is read as a binary value, so missing digits are leading zeros (max 32).\n";
 }
 
 void listMelodies() {
@@ -1241,21 +1243,37 @@ bool buildGestureCommand(const std::string &token, std::string &cmd, std::string
     return true;
 }
 
-bool buildMouthCommand(const std::string &token, std::string &cmd, std::string &desc) {
-    // Raw pattern: the firmware's L command accepts any 32-bit binary pattern
-    // (receiveLED → zowi.putMouth(matrix, false)), so a 32-character 0/1
-    // token is sent as-is. Useful for hardware debugging of the 5x6 matrix
-    // (see docs/project/ZOWILIBS.md, LedMatrix bit layout).
-    if (token.size() == 32 && token.find_first_not_of("01") == std::string::npos) {
-        cmd = zowi::makeCommand(zowi::Command::LED, token);
-        desc = "mouth raw " + token;
-        return true;
+bool buildMouthCommand(const std::string &token, std::string &cmd, std::string &desc,
+                       std::string *error = nullptr) {
+    // Catalog id/name first (a 0/1 token whose value fits 0-30 stays an id,
+    // e.g. "mouth 25"), except when the token is long enough to only make
+    // sense as a raw pattern (25+ digits is no plausible id spelling).
+    const bool binaryish = token.find_first_not_of("01") == std::string::npos;
+    if (!binaryish || token.size() < 25) {
+        int id = parseNameOrId(token, kMouthNames, 30);
+        if (id >= 0) {
+            cmd = zowi::commandMouthById(static_cast<zowi::MouthId>(id));
+            desc = "mouth " + token;
+            return true;
+        }
     }
-    int id = parseNameOrId(token, kMouthNames, 30);
-    if (id < 0) return false;
-    cmd = zowi::commandMouthById(static_cast<zowi::MouthId>(id));
-    desc = "mouth " + token;
-    return true;
+    // Raw pattern: the firmware's L command parses any binary value
+    // (receiveLED → strtoul(arg, 2) → zowi.putMouth(matrix, false)). Missing
+    // digits are leading zeros (value semantics), so the 30-bit matrix
+    // patterns can be written without the 2 unused top bits.
+    if (binaryish) {
+        std::string raw;
+        if (zowi::commandMouthFromBinary(token, raw)) {
+            cmd = raw;
+            desc = "mouth raw " + token;
+            return true;
+        }
+        if (error)
+            *error = "Binary pattern '" + token + "' has " + std::to_string(token.size()) +
+                     " digits; the LED matrix accepts at most 32 (5x6 matrix + 2 unused top bits).";
+        return false;
+    }
+    return false;
 }
 
 bool buildSingCommand(const std::string &token, std::string &cmd, std::string &desc) {
@@ -1423,8 +1441,12 @@ int runMouth(int argc, char **argv, const MouthArgs &a) {
     }
 
     std::string cmd, desc;
-    if (!buildMouthCommand(a.mouth, cmd, desc)) {
-        std::cerr << "Unknown mouth '" << a.mouth << "'. Use --list to see available mouths." << std::endl;
+    std::string mouthError;
+    if (!buildMouthCommand(a.mouth, cmd, desc, &mouthError)) {
+        if (!mouthError.empty())
+            std::cerr << mouthError << std::endl;
+        else
+            std::cerr << "Unknown mouth '" << a.mouth << "'. Use --list to see available mouths." << std::endl;
         return 1;
     }
 
@@ -1479,7 +1501,9 @@ void printShellHelp() {
                  "                       moonwalker-left, moonwalker-right\n"
                  "                       (speed: slow, medium, fast)\n"
                  "  gesture <name|id>    e.g. gesture happy, gesture 1\n"
-                 "  mouth <name|id>      e.g. mouth heart, mouth 13\n"
+                 "  mouth <name|id|0/1>  e.g. mouth heart, mouth 13,\n"
+                 "                       mouth 001001001001001001001001001001 (raw,\n"
+                 "                       missing digits are leading zeros)\n"
                  "  sing <name|id>       e.g. sing connection, sing 1\n"
                  "  stop                 stop the current movement\n"
                  "  status               show cached robot identity\n"
@@ -1643,8 +1667,12 @@ int runShell(int argc, char **argv, const ShellArgs &a)
                 continue;
             }
         } else if (verb == "mouth") {
-            if (tokens.size() < 2 || !buildMouthCommand(tokens[1], cmd, desc)) {
-                std::cerr << "Unknown mouth. Use 'zowi_cli mouth --list' for the names." << std::endl;
+            std::string mouthError;
+            if (tokens.size() < 2 || !buildMouthCommand(tokens[1], cmd, desc, &mouthError)) {
+                if (!mouthError.empty())
+                    std::cerr << mouthError << std::endl;
+                else
+                    std::cerr << "Unknown mouth. Use 'zowi_cli mouth --list' for the names." << std::endl;
                 continue;
             }
         } else if (verb == "sing") {

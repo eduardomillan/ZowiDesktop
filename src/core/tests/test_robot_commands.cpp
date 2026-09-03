@@ -87,6 +87,24 @@ int main()
     check(commandMouthById(MouthId::Ok),
           "L 00000001000010010100001000000000\r", "mouth ok by id (canonical)");
 
+    // Raw binary tokens: value semantics (leading zeros optional, like the
+    // firmware's strtoul(arg, nullptr, 2)); canonical 32-char form is emitted.
+    std::string raw;
+    checkBool(commandMouthFromBinary("00000001000010010100001000000000", raw), true, "raw 32-bit okMouth");
+    check(raw, "L 00000001000010010100001000000000\r", "raw 32-bit okMouth canonical");
+    checkBool(commandMouthFromBinary("101", raw), true, "raw short token");
+    check(raw, "L 00000000000000000000000000000101\r", "raw 101 = value 5");
+    checkBool(commandMouthFromBinary("001001001001001001001001001001", raw), true, "raw 30-digit token");
+    check(raw, "L 00001001001001001001001001001001\r", "raw 30-digit zero-extended");
+    checkBool(commandMouthFromBinary("1", raw), true, "raw single bit");
+    check(raw, "L 00000000000000000000000000000001\r", "raw single bit canonical");
+    checkBool(commandMouthFromBinary("0", raw), true, "raw zero value");
+    check(raw, "L 00000000000000000000000000000000\r", "raw zero value canonical");
+    checkBool(commandMouthFromBinary("", raw), false, "raw empty rejected");
+    checkBool(commandMouthFromBinary("0102", raw), false, "raw non-01 rejected");
+    checkBool(commandMouthFromBinary("10 1", raw), false, "raw with space rejected");
+    checkBool(commandMouthFromBinary(std::string(33, '1'), raw), false, "raw 33 digits rejected");
+
     // Melodies: 1-based protocol (enum 0 = protocol 1)
     check(commandSing(MelodyId::Connection), "K 1\r", "sing connection");
     check(commandSing(MelodyId::Happy), "K 8\r", "sing happy");

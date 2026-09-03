@@ -218,6 +218,16 @@ std::string commandMouthById(MouthId id)
     return commandMouth(kMouthPatterns[idx]);
 }
 
+// Raw binary token → canonical "L <32 bits>\r". Value semantics: missing
+// digits are leading zeros, matching the firmware's strtoul(..., 2) parse.
+bool commandMouthFromBinary(const std::string &bits, std::string &cmd)
+{
+    if (bits.empty() || bits.size() > 32) return false;
+    if (bits.find_first_not_of("01") != std::string::npos) return false;
+    cmd = commandMouth(std::stoul(bits, nullptr, 2));
+    return true;
+}
+
 // ── Melodies / Sing ─────────────────────────────────────────────────────────
 // Build "K <id+1>\r" — the sing command (1-based protocol, 0-based enum).
 std::string commandSing(MelodyId id)
