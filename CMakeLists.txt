@@ -3,6 +3,7 @@ project(ZowiDesktop VERSION 0.6.9 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
+#set(FETCHLIBRARIES CACHE BOOL HELP "fetch libraries from external repos if not present in system")
 
 # ── Qt version selection ──────────────────────────────────────────
 set(ZOWI_QT_VERSION 6 CACHE STRING "Qt version to build against (5 or 6)")
@@ -30,28 +31,45 @@ option(BUILD_TESTS      "Build unit tests"                           ON)
 # ── Third-party ─────────────────────────────────────────────────
 # Prefer system packages (required for offline Debian packaging);
 # fall back to FetchContent when they are not available (local dev builds).
+message(STATUS "Looking for nlohmann_json library...")
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
-    include(FetchContent)
-    FetchContent_Declare(
-        json
-        GIT_REPOSITORY https://github.com/nlohmann/json
-        GIT_TAG        v3.11.3
-        GIT_SHALLOW    TRUE
-    )
-    FetchContent_MakeAvailable(json)
+    if(NOT FETCHLIBRARIES)
+        message(FATAL_ERROR "nlohmann_json not found! Install it or execute again with -DFETCHLIBRARIES:BOOL=TRUE option")
+    else()
+        message(STATUS "NOT FOUND")
+        message(STATUS "fetching nlohmann_json from: https://github.com/nlohmann/json...")
+        include(FetchContent)
+        FetchContent_Declare(
+            json
+            GIT_REPOSITORY https://github.com/nlohmann/json
+            GIT_TAG        v3.11.3
+            GIT_SHALLOW    TRUE
+        )
+        FetchContent_MakeAvailable(json)
+    endif()
+else()
+    message(STATUS "FOUND!")
 endif()
-
+message(STATUS "Looking for CLI11 library...")
 find_package(CLI11 QUIET)
 if(NOT CLI11_FOUND)
-    include(FetchContent)
-    FetchContent_Declare(
-        cli11
-        GIT_REPOSITORY https://github.com/CLIUtils/CLI11
-        GIT_TAG        v2.4.2
-        GIT_SHALLOW    TRUE
-    )
-    FetchContent_MakeAvailable(cli11)
+    if(NOT FETCHLIBRARIES)
+        message(FATAL_ERROR "CLI11 not found! Install it or execute again with -DFETCHLIBRARIES:BOOL=TRUE option")
+    else()
+        message(STATUS "NOT FOUND")
+        message(STATUS "fetching CLI11 from: https://github.com/CLIUtils/CLI11...")
+        include(FetchContent)
+        FetchContent_Declare(
+            cli11
+            GIT_REPOSITORY https://github.com/CLIUtils/CLI11
+            GIT_TAG        v2.4.2
+            GIT_SHALLOW    TRUE
+        )
+        FetchContent_MakeAvailable(cli11)
+    endif()
+else()
+    message(STATUS "FOUND!")
 endif()
 
 # ── Qt Core (needed by core's TranslationEngine, which loads the
