@@ -6,6 +6,8 @@ add_library(zowi_core STATIC
     src/robot_commands.cpp
     src/calibration_session.cpp
     src/message_parser.cpp
+    src/movement_sequencer.cpp
+    src/robot_state.cpp
 )
 
 target_include_directories(zowi_core

@@ -23,3 +23,11 @@ add_test(NAME test_calibration_session COMMAND test_calibration_session)
 add_executable(test_message_parser test_message_parser.cpp)
 target_link_libraries(test_message_parser PRIVATE Zowi::core)
 add_test(NAME test_message_parser COMMAND test_message_parser)
+
+add_executable(test_movement_sequencer test_movement_sequencer.cpp)
+target_link_libraries(test_movement_sequencer PRIVATE Zowi::core)
+add_test(NAME test_movement_sequencer COMMAND test_movement_sequencer)
+
+add_executable(test_robot_state test_robot_state.cpp)
+target_link_libraries(test_robot_state PRIVATE Zowi::core)
+add_test(NAME test_robot_state COMMAND test_robot_state)

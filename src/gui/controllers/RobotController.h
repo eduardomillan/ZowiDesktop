@@ -11,6 +11,7 @@
 #include <thread>
 #include <zowi/bluetooth_api.h>
 #include <zowi/message_parser.h>
+#include <zowi/robot_state.h>
 #include <zowi/stk500v1.h>
 
 class SessionController;
@@ -236,6 +237,7 @@ private:
     QString m_usbPort;
     float m_battery = -1.0f;
     zowi::MessageParser m_parser;  // robot → host frame reassembly (see docs/project/ZOWILIBS.md)
+    zowi::RobotState m_robotState; // mirror of the robot's name/appId/battery
 
     QStringList m_knownUsbPorts;   // ports currently present
     QStringList m_probedUsbPorts;  // ports already handshake-probed this session

@@ -109,7 +109,7 @@ RobotController::RobotController(QObject *parent)
 
     // Periodically ask the robot for its name, firmware id and battery. The
     // firmware only reports these on request, so keep polling while connected.
-    m_dataPollTimer.setInterval(1000);
+    m_dataPollTimer.setInterval(zowi::kIdentityPollMs);
     connect(&m_dataPollTimer, &QTimer::timeout, this, &RobotController::requestRobotData);
 
     // Connection-attempt watchdog: every setConnecting(true) arms it; if the
@@ -305,8 +305,9 @@ void RobotController::parseIncoming()
 {
     // The robot frames responses as &&<cmd>[ <value>]%% (e.g. &&B 85.0%%) and
     // can also send legacy line-based messages (e.g. "B 85.0"). Frame
-    // reassembly lives in the shared zowi::MessageParser; this only applies
-    // the parsed messages (mirrors the CLI parser in src/cli/cli_state.cpp).
+    // reassembly lives in the shared zowi::MessageParser and the identity
+    // value rules in zowi::RobotState; this only maps the parsed updates to
+    // Qt properties/signals (mirrors the CLI in src/cli/cli_state.cpp).
     bool updated = false;
 
     auto applyName = [this](const QString &name) {
@@ -331,25 +332,18 @@ void RobotController::parseIncoming()
     };
 
     for (const auto &msg : m_parser.drain()) {
-        if (msg.legacy) {
-            // Legacy line forms (old firmware): "B <battery>" / "N <name>".
-            if (msg.cmd == zowi::toChar(zowi::Command::LegacyBattery) && msg.hasValue) {
-                try {
-                    float b = std::stof(msg.value);
-                    if (b != m_battery) { m_battery = b; updated = true; }
-                } catch (...) {}
-            } else if (msg.cmd == zowi::toChar(zowi::Command::LegacyName) && msg.hasValue) {
-                if (applyName(QString::fromStdString(msg.value))) break;
+        const auto upd = m_robotState.apply(msg);
+        if (upd.battery) {
+            if (m_robotState.battery != m_battery) {
+                m_battery = m_robotState.battery;
+                updated = true;
             }
-        } else if (msg.cmd == zowi::toChar(zowi::Command::GetBattery) && msg.hasValue) {
-            try {
-                float b = std::stof(msg.value);
-                if (b != m_battery) { m_battery = b; updated = true; }
-            } catch (...) {}
-        } else if (msg.cmd == zowi::toChar(zowi::Command::GetName) && msg.hasValue) {
-            if (applyName(QString::fromStdString(msg.value))) break;
-        } else if (msg.cmd == zowi::toChar(zowi::Command::GetProgramId) && msg.hasValue) {
-            QString value = QString::fromStdString(msg.value);
+        }
+        if (upd.name) {
+            if (applyName(QString::fromStdString(m_robotState.name))) break;
+        }
+        if (upd.appId) {
+            QString value = QString::fromStdString(m_robotState.appId);
             if (value != m_appId) {
                 m_appId = value;
                 emit appIdChanged();
@@ -369,16 +363,14 @@ void RobotController::requestRobotData()
 {
     if (!m_connected || m_uploadMode) return;
     if (!m_backend) return;
-    m_backend->send(zowi::makeCommand(zowi::Command::GetName));
-    m_backend->send(zowi::makeCommand(zowi::Command::GetProgramId));
-    m_backend->send(zowi::makeCommand(zowi::Command::GetBattery));
+    zowi::sendIdentityQueries(*m_backend);
 }
 
 void RobotController::setDataPollingEnabled(bool enabled)
 {
     if (enabled) {
         if (m_connected && !m_uploadMode)
-            m_dataPollTimer.start(1000);
+            m_dataPollTimer.start(zowi::kIdentityPollMs);
     } else {
         m_dataPollTimer.stop();
     }

@@ -20,6 +20,7 @@
 #endif
 
 #include <zowi/stk500v1.h>
+#include <zowi/transport_constants.h>
 #include <zowi/robot_commands.h>
 #include <zowi/protocol.h>
 #ifdef ZOWI_HAVE_SERIAL
@@ -342,27 +343,19 @@ bool waitForBatteryLevel(QCoreApplication &qtApp, int timeoutMs)
 void requestRobotData(zowi::BluetoothApi &bt)
 {
     if (g_debugLog) {
-        std::cout << "robot tx: E (GetName)" << std::endl;
+        std::cout << "robot tx: E/I/B (identity queries)" << std::endl;
     }
-    bt.send(zowi::makeCommand(zowi::Command::GetName));
-    if (g_debugLog) {
-        std::cout << "robot tx: I (GetProgramId)" << std::endl;
-    }
-    bt.send(zowi::makeCommand(zowi::Command::GetProgramId));
-    if (g_debugLog) {
-        std::cout << "robot tx: B (GetBattery)" << std::endl;
-    }
-    bt.send(zowi::makeCommand(zowi::Command::GetBattery));
+    zowi::sendIdentityQueries(bt);
 }
 
 namespace {
 
 // Shared polling loop behind waitForRobotReady/waitForRobotIdentity. Sends
-// the identity request immediately and then every 1200 ms (while connected)
-// until ready() turns true or the window closes; timeoutMs floors at 10 s.
-// The cadence is deliberately slow: every queued request makes the robot
-// run zowi.home() (~500 ms) when drained, so a burst of polls delays and
-// interrupts anything the robot is asked to do right after. A lost link
+// the identity request immediately and then every kIdentityPollMs (while
+// connected) until ready() turns true or the window closes; timeoutMs floors
+// at 10 s. The cadence is deliberately slow: every queued request makes the
+// robot run zowi.home() (~500 ms) when drained, so a burst of polls delays
+// and interrupts anything the robot is asked to do right after. A lost link
 // does not abort the wait: on USB the port bounces while the robot boots
 // and on Bluetooth the STATE-pin reset reboots it — the backend
 // re-establishes the link and the loop keeps going.
@@ -384,7 +377,7 @@ bool pollRobotState(QCoreApplication &qtApp, zowi::BluetoothApi &bt,
         }
         if (connected && std::chrono::steady_clock::now() >= nextPoll) {
             requestRobotData(bt);
-            nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(1200);
+            nextPoll = std::chrono::steady_clock::now() + std::chrono::milliseconds(zowi::kIdentityPollMs);
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));

@@ -5,8 +5,9 @@
 #include <mutex>
 #include <condition_variable>
 #include <atomic>
-#include <chrono>
 #include <zowi/message_parser.h>
+#include <zowi/movement_sequencer.h>
+#include <zowi/robot_state.h>
 
 namespace zowi_cli {
 
@@ -24,13 +25,9 @@ extern bool g_connectedOnce;
 extern bool g_dataReceived;
 extern bool g_ack;        // software ack (&&A)
 extern bool g_finalAck;   // final ack (&&F), after EEPROM write
-// Counts every &&F received since the last reset. The firmware emits one
-// final ack per completed gait cycle while a movement is running, so the
-// move command uses this to count cycles before sending the stop.
-extern int g_finalAckCount;
-// Timestamp of the last received byte pair; syncRobotQueue() waits for a
-// quiet RX window to know the robot has drained its command queue.
-extern std::chrono::steady_clock::time_point g_lastRx;
+// Movement orchestration state machine (&&A gating, per-cycle &&F counting,
+// mid-last-cycle stop). Fed from onDataReceived, driven by runMove/shell.
+extern zowi::MovementSequencer g_moveSequencer;
 // When true, incoming bytes are raw bootloader traffic, not the &&/N-U-B protocol.
 extern bool g_uploadMode;
 extern std::string g_stkBuffer;

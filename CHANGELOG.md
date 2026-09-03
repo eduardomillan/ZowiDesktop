@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Shared movement sequencer.** New Qt-free `zowi::MovementSequencer`
+  (`src/core/include/zowi/movement_sequencer.h`): a pure state machine that
+  owns the move-N-cycles sequencing (&&A start marker, per-cycle &&F
+  counting, stop queued mid-last-cycle) as event callbacks plus polled
+  queries (`started()`, `completedCycles()`, `shouldQueueStop()`) and the
+  timing guidance (`startTimeoutMs`, `cycleTimeoutMs`). The CLI's
+  `runMovementCycles` now drives it; a GUI consumer can feed it from the
+  message pump event-driven. Unit-tested with MessageParser round-trips.
+- **Shared robot identity state.** New `zowi::RobotState` +
+  `sendIdentityQueries()` (`src/core/include/zowi/robot_state.h`): the
+  value-application rules for name/appId/battery (prefixed &&E/&&I/&&B and
+  legacy N/U/B forms) and the E/I/B request burst now live once and serve
+  both the CLI (`applyRobotMessageUnlocked`) and the GUI
+  (`RobotController::parseIncoming`). Shared poll cadence
+  `zowi::kIdentityPollMs` (1200 ms) replaces the divergent hardcodes (CLI
+  1200, GUI 1000).
+- **Pad pauses the identity poll while driving.** `PadScreen` now stops the
+  E/I/B polling while a pad button is held and resumes it on release (the
+  same `setDataPollingEnabled` hook CalibrationScreen already used) — the
+  poll made the robot run `zowi.home()` mid-movement, stuttering the pad.
 - **Shared robot message parser.** New Qt-free `zowi::MessageParser`
   (`src/core/include/zowi/message_parser.h`), the host-side inverse of the
   firmware's `ZowiSerialCommand`: incremental `feed()`/`drain()` API covering

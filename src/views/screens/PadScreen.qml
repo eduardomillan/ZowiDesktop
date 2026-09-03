@@ -11,6 +11,12 @@ ScreenTemplate {
     subtitle: tr("subtitle")
     showBackButton: true
 
+    // The identity poll (E/I/B burst) makes the robot run zowi.home() when
+    // it drains its queue, interrupting any movement — pause it while a pad
+    // button is held (same as CalibrationScreen does while servoing).
+    Component.onCompleted: Robot.setDataPollingEnabled(true)
+    Component.onDestruction: Robot.setDataPollingEnabled(true)
+
     function tr(source) { return Translator.translate("PadScreen.qml", source) }
 
     property int currentSpeed: 1000
@@ -35,6 +41,7 @@ ScreenTemplate {
     function startHold(cmd, actionName) {
         currentCommand = cmd
         currentAction = actionName
+        Robot.setDataPollingEnabled(false)
         sendCommand(cmd, actionName)
         repeatTimer.start()
     }
@@ -43,6 +50,7 @@ ScreenTemplate {
         repeatTimer.stop()
         currentCommand = ""
         currentAction = ""
+        Robot.setDataPollingEnabled(true)
         sendStop()
     }
 

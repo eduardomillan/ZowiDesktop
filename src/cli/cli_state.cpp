@@ -25,8 +25,11 @@ bool g_connectedOnce = false;
 bool g_dataReceived = false;
 bool g_ack = false;        // software ack (&&A)
 bool g_finalAck = false;   // final ack (&&F), after EEPROM write
-int g_finalAckCount = 0;   // &&F counter (one per completed gait cycle)
-std::chrono::steady_clock::time_point g_lastRx = std::chrono::steady_clock::now();
+zowi::MovementSequencer g_moveSequencer;
+
+// Canonical identity/battery state; applyRobotMessageUnlocked mirrors its
+// fields into the globals below.
+static zowi::RobotState s_robotState;
 bool g_uploadMode = false;
 std::string g_stkBuffer;
 std::atomic<bool> g_quit{false};
@@ -52,6 +55,8 @@ void resetRobotState()
     loadLogLevel();
     std::lock_guard<std::mutex> lock(g_mtx);
     s_parser.reset();
+    s_robotState.clear();
+    g_moveSequencer.reset();
     g_robotName.clear();
     g_appId.clear();
     g_battery = -1.0f;
@@ -60,7 +65,6 @@ void resetRobotState()
     g_dataReceived = false;
     g_ack = false;
     g_finalAck = false;
-    g_finalAckCount = 0;
 }
 
 void loadLogLevel()
@@ -107,48 +111,34 @@ std::string trimRobotMessage(const std::string &msg)
 }
 static void applyRobotMessageUnlocked(const zowi::RobotMessage &msg)
 {
+    // Identity/battery value rules live once in zowi::RobotState; here they
+    // are mirrored into the CLI globals.
+    const auto upd = s_robotState.apply(msg);
+    if (upd.name) {
+        g_robotName = s_robotState.name;
+        g_dataReceived = true;
+    }
+    if (upd.appId) {
+        g_appId = s_robotState.appId;
+        g_dataReceived = true;
+    }
+    if (upd.battery) {
+        g_battery = s_robotState.battery;
+        g_dataReceived = true;
+    }
+
     if (!msg.legacy) {
-        // &&-prefixed form (current firmware).
-        if (msg.cmd == zowi::toChar(zowi::Command::GetName)) {
-            if (msg.hasValue) {
-                g_robotName = msg.value;
-                g_dataReceived = true;
-            }
-        } else if (msg.cmd == zowi::toChar(zowi::Command::GetProgramId)) {
-            if (msg.hasValue) {
-                g_appId = msg.value;
-                g_dataReceived = true;
-            }
-        } else if (msg.cmd == zowi::toChar(zowi::Command::GetBattery)) {
-            if (msg.hasValue) {
-                try { g_battery = std::stof(msg.value); } catch (...) {}
-                g_dataReceived = true;
-            }
-        } else if (msg.cmd == zowi::toChar(zowi::Command::Ack)) {
+        if (msg.cmd == zowi::toChar(zowi::Command::Ack)) {
             // Software ack (&&A): command received but not yet processed.
             g_ack = true;
             g_dataReceived = true;
         } else if (msg.cmd == zowi::toChar(zowi::Command::FinalAck)) {
-            // Final ack (&&F): command fully processed (EEPROM write done).
-            // While a movement runs the firmware also emits one &&F per
-            // completed gait cycle — the move command counts on that.
+            // Final ack (&&F): command fully processed. While a movement
+            // runs the firmware also emits one &&F per completed gait
+            // cycle — g_moveSequencer counts on that.
             g_finalAck = true;
-            ++g_finalAckCount;
             g_dataReceived = true;
         }
-        return;
-    }
-
-    // Legacy line-based messages (old firmware, still parsed for compatibility).
-    if (msg.cmd == zowi::toChar(zowi::Command::LegacyName)) {
-        g_robotName = msg.value;
-        g_dataReceived = true;
-    } else if (msg.cmd == zowi::toChar(zowi::Command::LegacyProgramId)) {
-        g_appId = msg.value;
-        g_dataReceived = true;
-    } else if (msg.cmd == zowi::toChar(zowi::Command::LegacyBattery)) {
-        try { g_battery = std::stof(msg.value); } catch (...) {}
-        g_dataReceived = true;
     }
 }
 
@@ -170,8 +160,6 @@ void onDataReceived(const std::string &data)
 
     std::lock_guard<std::mutex> lock(g_mtx);
 
-    g_lastRx = std::chrono::steady_clock::now();
-
     if (g_debugLog) {
         std::string printable = trimRobotMessage(data);
         std::cout << "robot rx: " << printable << std::endl;
@@ -180,8 +168,10 @@ void onDataReceived(const std::string &data)
     // Frame reassembly lives in the shared zowi::MessageParser; this only
     // applies the parsed messages to the global state.
     s_parser.feed(data);
-    for (const auto &msg : s_parser.drain())
+    for (const auto &msg : s_parser.drain()) {
         applyRobotMessageUnlocked(msg);
+        g_moveSequencer.onMessage(msg);
+    }
 }
 
 } // namespace zowi_cli

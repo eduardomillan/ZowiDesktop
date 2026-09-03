@@ -57,6 +57,8 @@ section); what gets mirrored is the observable protocol and its data catalogs.
 | `L <binary>` / `getMouthShape()`: 31 mouths (`Zowi_mouths.h`) | `kMouthPatterns` table + `MouthId` | ✅ (okMouth reverted to the canonical pattern, see below) |
 | `T <freq> <ms>` buzzer | `commandTone(freq, ms)` | ✅ |
 | Host-side response parser | `zowi::MessageParser` (`message_parser.h`), shared by CLI and GUI | ✅ Single parser, unit-tested |
+| Movement orchestration (cycle counting, mid-cycle stop) | `zowi::MovementSequencer` (`movement_sequencer.h`), state machine fed with parsed messages; the CLI drives it blocking, the GUI can consume it event-driven | ✅ Shared, unit-tested |
+| Identity state (name/appId/battery rules) + identity request burst | `zowi::RobotState` + `sendIdentityQueries` (`robot_state.h`), shared by CLI and GUI; poll cadence `kIdentityPollMs` (`transport_constants.h`) | ✅ Shared, unit-tested |
 | `putAnimationMouth()` (littleUuh, dreamMouth, adivinawi, wave) | — | ✅ Correctly omitted: not reachable over serial in `ZOWI_BASE_v2` (internal to games) |
 
 ### Known divergences and notes

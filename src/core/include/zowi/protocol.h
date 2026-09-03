@@ -44,7 +44,7 @@ enum class Command : char {
     LegacyBattery    = 'B',
 };
 
-inline char toChar(Command cmd) { return static_cast<char>(cmd); }
+inline constexpr char toChar(Command cmd) { return static_cast<char>(cmd); }
 
 // Build a firmware command string: "<cmd> [args]\r".
 // The firmware's ZowiSerialCommand parses up to '\r' or '\n'.

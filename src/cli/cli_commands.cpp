@@ -1329,52 +1329,56 @@ void stopRobot(QCoreApplication &qtApp, zowi::BluetoothApi &bt) {
     awaitStopAck(qtApp, bt);
 }
 
-// Sends one `M` movement command and waits for `cycles` final acks — the
-// firmware's MODE-4 loop emits one &&F per completed gait cycle — so the
-// robot runs exactly `cycles` cycles and ends stopped. Returns false if a
-// cycle ack stalled (the stop is sent regardless).
-//
-// Synchronisation: the movement's &&A (software ack) only fires once the
-// robot has processed the M itself (the connect-time identity polling may
-// still be draining its RX queue), so it marks the true start of cycle 1.
-//
-// Stopping: the robot reads serial only between cycles (each move() blocks
-// for a full period T), so the S must be queued DURING the last cycle — it
-// is sent right after ack N-1 and lands a few tens of ms into cycle N; the
-// robot homes immediately after the Nth &&F. Sending the S any later (e.g.
-// after ack N) races with the loop turnaround and lets an extra cycle slip
-// in, whose ack then poisons the next movement's cycle count (observed on
-// hardware).
+// Runs one `M` movement through the shared zowi::MovementSequencer (fed from
+// onDataReceived): waits for the &&A start marker, counts the per-cycle &&F
+// acks, queues the stop mid-last-cycle (sequencer's shouldQueueStop()) and
+// drains the stop's own acks. The robot runs exactly `cycles` cycles and
+// ends stopped. Returns false if an ack stalled (the stop is sent anyway).
 bool runMovementCycles(zowi::BluetoothApi &bt, QCoreApplication &qtApp,
                        const std::string &moveCmd, int cycles, zowi::MovementSpeed speed) {
-    const int cycleTimeoutMs = static_cast<int>(speed) + 1500;
-
     {
         std::lock_guard<std::mutex> lock(g_mtx);
         g_finalAck = false;
-        g_ack = false;
-        // &&F is cumulative across the whole connection (the final stop of a
-        // previous movement, gestures, melodies... all emit one), so the
-        // cycle counter must start from zero for this movement.
-        g_finalAckCount = 0;
+        g_moveSequencer.start(cycles, speed);
     }
     bt.send(moveCmd);
 
     // Wait for the movement to actually start (M processed by the robot).
-    if (!waitUntil(qtApp, 20000, []() {
+    if (!waitUntil(qtApp, g_moveSequencer.startTimeoutMs(), []() {
             std::lock_guard<std::mutex> lock(g_mtx);
-            return g_ack;
+            return g_moveSequencer.started();
         })) {
         std::cerr << "Movement command not acknowledged by the robot; aborting.\n";
         stopRobot(qtApp, bt);
         return false;
     }
 
+    // Queue the stop as soon as the sequencer asks for it (after ack N-1, or
+    // right after started() for a single cycle) so it lands mid-last-cycle.
+    bool stopSent = false;
+    auto queueStopWhenDue = [&]() {
+        if (stopSent) return;
+        bool due = false;
+        {
+            std::lock_guard<std::mutex> lock(g_mtx);
+            due = g_moveSequencer.shouldQueueStop();
+        }
+        if (due) {
+            {
+                std::lock_guard<std::mutex> lock(g_mtx);
+                g_finalAck = false;
+            }
+            bt.send(zowi::commandStop());
+            stopSent = true;
+        }
+    };
+
     // Count the first cycles-1 per-cycle acks.
     for (int k = 1; k < cycles; ++k) {
-        if (!waitUntil(qtApp, cycleTimeoutMs, [k]() {
+        queueStopWhenDue();
+        if (!waitUntil(qtApp, g_moveSequencer.cycleTimeoutMs(), [k]() {
                 std::lock_guard<std::mutex> lock(g_mtx);
-                return g_finalAckCount >= k;
+                return g_moveSequencer.completedCycles() >= k;
             })) {
             std::cerr << "Cycle " << k << "/" << cycles << " ack stalled; stopping the robot.\n";
             stopRobot(qtApp, bt);
@@ -1382,25 +1386,20 @@ bool runMovementCycles(zowi::BluetoothApi &bt, QCoreApplication &qtApp,
         }
         std::cout << "Cycle " << k << "/" << cycles << " completed." << std::endl;
     }
+    queueStopWhenDue();
 
-    // Queue the stop mid-last-cycle, then confirm the last cycle.
-    {
-        std::lock_guard<std::mutex> lock(g_mtx);
-        g_finalAck = false;
-    }
-    bt.send(zowi::commandStop());
-
-    if (!waitUntil(qtApp, cycleTimeoutMs, [cycles]() {
+    // Confirm the last cycle.
+    if (!waitUntil(qtApp, g_moveSequencer.cycleTimeoutMs(), [cycles]() {
             std::lock_guard<std::mutex> lock(g_mtx);
-            return g_finalAckCount >= cycles;
+            return g_moveSequencer.completedCycles() >= cycles;
         })) {
         std::cerr << "Cycle " << cycles << "/" << cycles << " ack stalled.\n";
         return false;  // the stop is already queued and takes effect
     }
     std::cout << "Cycle " << cycles << "/" << cycles << " completed." << std::endl;
 
-    // The stop was already queued mid-last-cycle: let its own &&A/&&F pass so
-    // nothing leaks into the next movement's counters.
+    // Let the stop's own &&A/&&F pass so nothing leaks into the next
+    // movement's counters.
     {
         std::lock_guard<std::mutex> lock(g_mtx);
         g_finalAck = false;
