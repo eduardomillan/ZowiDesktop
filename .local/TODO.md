@@ -29,8 +29,14 @@
 - [ ] Revisar que, en el comando de 'rename', el máximo de caracteres es de 10, según se ha comprobado en zowiLibs.
 
 
+## Cambios
+- [X] Sustituir la flecha "atrás" por el botón "back" (imagen de flecha izquierda) que se utiliza en la app Android original
+
+
 ## Pruebas automatizadas
 - [ ] Smoke test de la GUI headless (arranque/cierre con `QT_QPA_PLATFORM=offscreen`), fuera del alcance de la fase inicial de pruebas de caja negra del CLI.
+
+
 
 ## Windows
 - [X] Implementar la conexión por USB y probar todo el flujo de la aplicación

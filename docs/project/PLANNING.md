@@ -89,17 +89,33 @@ src/
 - [x] Compile the bt library for Windows
 - [x] Test the Windows version and fix bugs
 
-### M7 - Calibration and mouth/gestures in gamepad 🚧
-- [ ] Zowi calibration (servo trims)
-- [ ] Gamepad mouth control
-- [ ] Gamepad gestures control
+### M7 - Calibration and mouth/gestures in gamepad + editor 🏗️
+- [x] Zowi calibration (servo trims)
+- [x] Gamepad mouth control
+- [x] Gamepad gestures control
+- [ ] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
+
+### M8 - Basic projects
+- [ ] Move objects
+- [ ] The shape of Zowi and biped robots
+- [ ] Zowi eyes and ultrasounds
+- [ ] The Zowi legs and servos
+- [ ] The gravity and calibration
+
+### M9 - Advanced projects
+- [ ] Robot dancing and choreography (sequence programming in home screen)
+- [ ] The alarm robot
+- [ ] Fortune-telling robot
+- [ ] Bitbloq I: Hello World
+- [ ] Bitbloq II: Sensors
 
 ### Future milestones
-- [ ] Face/mouth editor
-- [ ] Pre-programmed modes (demo, guardian, dancing, sound)
-- [ ] Visual block editor
-- [ ] Projects & tutorials section
-- [ ] Polish & i18n (keyboard shortcuts, responsive layout)
+- [ ] Game: Visual block editor
+- [ ] Game: Memory
+- [ ] Game: Draw the mouth
+- [ ] Achievements layer
+- [ ] Testing, validating and improving
+- [ ] Adapt the software to other robots (Otto with Arduino or ESP32)
 
 ## Testing
 
