@@ -14,6 +14,8 @@ FocusScope {
     signal goWelcome()
 
     property string screenName: "HomeScreen"
+    property real cellSpacing: 60
+    property real iconSize: Math.min(home.width * 0.55, 90)
 
     function tr(source) { return Translator.translate("HomeScreen.qml", source) }
 
@@ -23,6 +25,19 @@ FocusScope {
         property bool robotReady: Robot.connected && Robot.appId !== "" && Robot.battery >= 0
 
         color: Config.get("color_bg_app") || "#f4f9f4"
+
+        property var projectsData: [
+            { name: tr("move_objects"),    icon: "qrc:/images/android/move_button.png",        enabled: false },
+            { name: tr("choreography"),    icon: "qrc:/images/android/choreography_button.png", enabled: false },
+            { name: tr("robot_form"),      icon: "qrc:/images/android/robot_form_button.png",   enabled: false },
+            { name: tr("robot_eyes"),      icon: "qrc:/images/android/eyes_button.png",         enabled: false },
+            { name: tr("robot_feet"),      icon: "qrc:/images/android/feet_button.png",         enabled: false },
+            { name: tr("robot_alarm"),     icon: "qrc:/images/android/alarm_button.png",        enabled: false },
+            { name: tr("adivinawi"),       icon: "qrc:/images/android/adivinawi_button.png",    enabled: false },
+            { name: tr("gravity"),         icon: "qrc:/images/android/gravity_button.png",      enabled: false },
+            { name: tr("hello_world"),     icon: "qrc:/images/android/bitbloq_button.png",      enabled: false },
+            { name: tr("bitbloq_sensors"), icon: "qrc:/images/android/bitbloq2_button.png",     enabled: false }
+        ]
 
     // Top bar with Settings and Achievements
     Row {
@@ -177,16 +192,22 @@ FocusScope {
                         width: (appsRow.width - appsRow.spacing * (appsModel.count - 1)) / appsModel.count
 
                         readonly property real btnSize: Math.min(width * 0.55, 90)
+                        // Grey-shade buttons that are not yet implemented.
+                        readonly property bool isDisabled: !model.enabled
 
                         Rectangle {
                             width: btnSize
                             height: btnSize
                             radius: Math.min(btnSize * 0.2, 16)
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: appMouse.containsMouse && home.robotReady ? Config.get("color_bg_hover") || "#e0f0e0" : "#ffffff"
-                            border.color: Config.get("color_accent") || "#21a69b"
+                            color: isDisabled
+                                   ? (Config.get("color_bg_disabled") || "#e6e6e6")
+                                   : (appMouse.containsMouse && home.robotReady ? Config.get("color_bg_hover") || "#e0f0e0" : "#ffffff")
+                            border.color: isDisabled
+                                          ? (Config.get("color_border_disabled") || "#c8c8c8")
+                                          : (Config.get("color_accent") || "#21a69b")
                             border.width: 1
-                            opacity: home.robotReady ? 1.0 : 0.4
+                            opacity: (!home.robotReady || isDisabled) ? 0.4 : 1.0
 
                             Image {
                                 anchors.centerIn: parent
@@ -194,14 +215,15 @@ FocusScope {
                                 sourceSize.width: Math.min(btnSize * 0.6, 50)
                                 sourceSize.height: Math.min(btnSize * 0.6, 50)
                                 fillMode: Image.PreserveAspectFit
+                                opacity: isDisabled ? 0.5 : 1.0
                             }
 
                             MouseArea {
                                 id: appMouse
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                cursorShape: home.robotReady ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                enabled: home.robotReady
+                                cursorShape: (!home.robotReady || isDisabled) ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+                                enabled: home.robotReady && !isDisabled
                                 onClicked: {
                                     if (name === tr("gamepad")) {
                                         homeScope.gamepadClicked()
@@ -215,10 +237,13 @@ FocusScope {
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: name
-                            color: Config.get("color_primary") || "#2d5a2d"
+                            color: isDisabled
+                                   ? (Config.get("color_fg_disabled") || "#9e9e9e")
+                                   : (Config.get("color_primary") || "#2d5a2d")
                             font.pixelSize: Math.min(parent.width * 0.1, 12)
                             font.bold: true
                             horizontalAlignment: Text.AlignHCenter
+                            opacity: !home.robotReady ? 0.6 : 1.0
                         }
                     }
                 }
@@ -226,66 +251,71 @@ FocusScope {
         }
 
         // Page 1: Projects
-        GridView {
-            id: projectsGrid
-            cellWidth: Math.floor(width / 3)
-            cellHeight: Math.floor(Math.min(cellWidth,
-                (swipeView.height - 40) / Math.max(Math.ceil(count / 3), 1)))
-            bottomMargin: 40
-            boundsBehavior: Flickable.StopAtBounds
+        Item {
 
-            ScrollBar.vertical: ScrollBar {
-                policy: ScrollBar.AsNeeded
-            }
+            Item {
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    verticalCenter: parent.verticalCenter
+                }
+                width: parent.width * 0.8
+                height: parent.height
+                clip: true
 
-            model: ListModel {
-                id: projectsModel
-            }
-
-            delegate: Item {
-                width: projectsGrid.cellWidth
-                height: projectsGrid.cellHeight
-                readonly property real cellBox: Math.min(projectsGrid.cellWidth * 0.55, 80)
-
-                Column {
+                Flow {
                     anchors.centerIn: parent
-                    spacing: 6
+                    width: parent.width
+                    spacing: homeScope.cellSpacing
 
-                    Rectangle {
-                        width: cellBox
-                        height: cellBox
-                        radius: Math.min(cellBox * 0.2, 16)
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        color: projMouse.containsMouse && home.robotReady ? Config.get("color_bg_hover") || "#e0f0e0" : "#ffffff"
-                        border.color: Config.get("color_accent") || "#21a69b"
-                        border.width: 1
-                        opacity: home.robotReady ? 1.0 : 0.4
+                    Repeater {
+                        model: home.projectsData
 
-                        Image {
-                            anchors.centerIn: parent
-                            source: icon
-                            sourceSize.width: Math.min(cellBox * 0.65, 50)
-                            sourceSize.height: Math.min(cellBox * 0.65, 50)
-                            fillMode: Image.PreserveAspectFit
+                        Rectangle {
+                            width: homeScope.iconSize + 8
+                            height: homeScope.iconSize + 24
+                            color: "transparent"
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.ForbiddenCursor
+                            }
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 4
+
+                                Rectangle {
+                                    width: homeScope.iconSize
+                                    height: homeScope.iconSize
+                                    radius: Math.min(homeScope.iconSize * 0.2, 16)
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    color: Config.get("color_bg_disabled") || "#e6e6e6"
+                                    border.color: Config.get("color_border_disabled") || "#c8c8c8"
+                                    border.width: 1
+                                    opacity: 0.4
+
+                                    Image {
+                                        anchors.centerIn: parent
+                                        width: homeScope.iconSize * 0.65
+                                        height: homeScope.iconSize * 0.65
+                                        source: modelData.icon
+                                        sourceSize: Qt.size(homeScope.iconSize * 2, homeScope.iconSize * 2)
+                                        fillMode: Image.PreserveAspectFit
+                                        opacity: 0.5
+                                    }
+                                }
+
+                                Text {
+                                    text: modelData.name
+                                    color: Config.get("color_fg_disabled") || "#9e9e9e"
+                                    font.pixelSize: Math.max(9, homeScope.iconSize * 0.16)
+                                    horizontalAlignment: Text.AlignHCenter
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    wrapMode: Text.WordWrap
+                                }
+                            }
                         }
-
-                        MouseArea {
-                            id: projMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: home.robotReady ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                            enabled: home.robotReady
-                            onClicked: console.log("Home: tapped project", name)
-                        }
-                    }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: name
-                        color: Config.get("color_primary") || "#2d5a2d"
-                        font.pixelSize: Math.min(projectsGrid.cellWidth * 0.1, 12)
-                        font.bold: true
-                        horizontalAlignment: Text.AlignHCenter
                     }
                 }
             }
@@ -369,6 +399,8 @@ FocusScope {
         }
     }
 
+    } // Rectangle
+
     Component.onCompleted: {
         // Auto-connect on launch (mirrors ZowiAppReborn's onResume ->
         // manageConnection). Prefer USB when the auto-detector selected it and
@@ -382,30 +414,15 @@ FocusScope {
         }
 
         var apps = [
-            { name: tr("gamepad"), icon: "qrc:/images/android/pad_button.png" },
-            { name: tr("timeline"), icon: "qrc:/images/android/timeline_button.png" },
-            { name: tr("zowi_says"), icon: "qrc:/images/android/simon_game_button.png" },
-            { name: tr("mouths"), icon: "qrc:/images/android/mouths_game_button.png" },
-            { name: tr("mouths_editor"), icon: "qrc:/images/android/mouths_editor_game_button.png" }
+            { name: tr("gamepad"), icon: "qrc:/images/android/pad_button.png", enabled: true },
+            { name: tr("timeline"), icon: "qrc:/images/android/timeline_button.png", enabled: false },
+            { name: tr("zowi_says"), icon: "qrc:/images/android/simon_game_button.png", enabled: false },
+            { name: tr("mouths"), icon: "qrc:/images/android/mouths_game_button.png", enabled: false },
+            { name: tr("mouths_editor"), icon: "qrc:/images/android/mouths_editor_game_button.png", enabled: false }
         ]
         for (var i = 0; i < apps.length; i++)
             appsModel.append(apps[i])
 
-        var projects = [
-            { name: tr("move"), icon: "qrc:/images/android/project_move_image.png" },
-            { name: tr("choreography"), icon: "qrc:/images/android/project_choreography_image.png" },
-            { name: tr("form"), icon: "qrc:/images/android/project_form_image.png" },
-            { name: tr("paint"), icon: "qrc:/images/android/project_bio3_image.png" },
-            { name: tr("guess"), icon: "qrc:/images/android/project_adivinawi_image.png" },
-            { name: tr("gravity"), icon: "qrc:/images/android/project_gravity_image.png" },
-            { name: tr("hello_world"), icon: "qrc:/images/android/project_helloworld_image.png" },
-            { name: tr("bitbloq"), icon: "qrc:/images/android/project_bitbloq2_image.png" },
-            { name: tr("alarm"), icon: "qrc:/images/android/project_alarm_image.png" }
-        ]
-        for (var i = 0; i < projects.length; i++)
-            projectsModel.append(projects[i])
+        homeScope.forceActiveFocus()
     }
-    }
-
-    Component.onCompleted: homeScope.forceActiveFocus()
 }
