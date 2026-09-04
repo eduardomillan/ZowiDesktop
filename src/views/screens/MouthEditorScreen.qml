@@ -97,8 +97,11 @@ ScreenTemplate {
             if (gridModel.get(i).on)
                 matrix |= (1 << (29 - i)) // celda i → bit (29-i) del patrón de 32
         }
-        if (Robot.connected)
-            Robot.sendData(Commands.mouth(matrix))
+        if (Robot.connected) {
+            var cmd = Commands.mouth(matrix)
+            Robot.sendData(cmd)
+            console.log("[MouthEditorScreen] sent: " + cmd.trim())
+        }
     }
 
     function clearAll() {
