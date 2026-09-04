@@ -42,28 +42,24 @@ Rectangle {
     Button {
         id: backBtn
         visible: root.showBackButton
-        width: 40
-        height: 40
+        width: 88
+        height: 88
         anchors {
             top: statusBar.bottom
             left: parent.left
             margins: 12
         }
 
-        contentItem: Text {
-            text: "\u2190"
-            font.pixelSize: 22
-            color: Config.get("color_primary") || "#2d5a2d"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+        contentItem: Image {
+            source: "qrc:/images/android/back_button.png"
+            sourceSize.width: 56
+            sourceSize.height: 56
+            fillMode: Image.PreserveAspectFit
         }
 
         background: Rectangle {
-            radius: 20
+            radius: 44
             color: backBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
-            border.color: Config.get("color_primary") || "#2d5a2d"
-            border.width: 1
-            opacity: 0.4
         }
 
         onClicked: root.backClicked()
