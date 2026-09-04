@@ -72,6 +72,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   either a name or numeric ID, and supports `--list` to show available options.
   Examples: `zowi_cli move forward --speed fast`, `zowi_cli gesture victory`,
   `zowi_cli mouth smile`, `zowi_cli sing happy`.
+- **Mouth and gesture screens in the gamepad.** The Mouths and Gestures/Animations
+  buttons on `PadScreen` now open dedicated `ScreenTemplate`-based screens
+  (`MouthScreen`, `GestureScreen`) with a back button, replacing the earlier
+  dialog-overlay approach — the same navigation pattern as Settings →
+  CalibrationScreen. Each screen shows a centred, responsive grid (80% width,
+  reflowing into rows/columns on window resize, like a webpage) of mouth
+  expressions / body gestures, and sends the firmware `L` / `H` command on tap.
+  A local `iconSize` parameter (default 64) scales the icon grid up or down for
+  future editor work. The screens pause the identity poll while open and are
+  translated across all five locales.
 
 ### Changed
 - **`move` runs a bounded number of cycles and stops the robot.** One-shot

@@ -19,6 +19,7 @@ Whether you already own a Zowi or you are just curious about robotics, Zowi Desk
 - **Bluetooth & USB connection** — pair and connect over Bluetooth (BlueZ SPP) or plug in over USB serial, without needing root.
 - **Wizard onboarding** — scan for nearby Zowis, pick one, and rename it from the first-run wizard.
 - **Movement control** — a full movement pad to walk, dance and turn; battery and firmware status shown live.
+- **Mouth & gesture picker** — open dedicated screens from the gamepad to pick any LED-matrix mouth expression or body gesture (responsive grid, sends `L`/`H` commands) with just a tap.
 - **Servo calibration** — fine-tune the servo trims from the GUI (interactive 4-step wizard) or the CLI (wizard or direct mode) to keep Zowi standing straight.
 - **Firmware flashing** — restore the factory firmware or install alternative firmwares (e.g. Alarm, Adivinawi) over Bluetooth or USB.
 - **Internationalized** — available in Spanish (`es_ES`), Catalan (`ca_ES`), English (`en_US`), French (`fr_FR`) and Bulgarian (`bg_BG`).
