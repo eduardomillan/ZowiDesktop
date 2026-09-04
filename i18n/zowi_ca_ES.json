@@ -209,6 +209,12 @@
   "MouthScreen.qml": {
     "mouths_title": "Boques"
   },
+  "MouthEditorScreen.qml": {
+    "title": "Editor de boques",
+    "subtitle": "Dibuixa la boca d'en Zowi sobre la reixeta. S'actualitza en temps real.",
+    "clear_all": "Esborrar-ho tot",
+    "select_all": "Seleccionar-ho tot"
+  },
   "GestureScreen.qml": {
     "gestures_title": "Gestos"
   }

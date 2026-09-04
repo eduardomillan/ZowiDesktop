@@ -35,6 +35,10 @@ Window {
                 gesture.backClicked.connect(function() { stack.pop() })
             })
         })
+        home.mouthEditorClicked.connect(function() {
+            var editor = stack.push("qrc:/src/views/screens/MouthEditorScreen.qml")
+            editor.backClicked.connect(function() { stack.pop() })
+        })
         // DEV: temporary navigation
         home.goSplash.connect(function() {
             Session.saveWizardDismissed(false)

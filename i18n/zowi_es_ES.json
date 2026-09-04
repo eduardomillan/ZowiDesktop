@@ -200,6 +200,12 @@
   "MouthScreen.qml": {
     "mouths_title": "Bocas"
   },
+  "MouthEditorScreen.qml": {
+    "title": "Editor de bocas",
+    "subtitle": "Dibuja la boca de Zowi sobre la rejilla. Se actualiza en tiempo real.",
+    "clear_all": "Borrar todo",
+    "select_all": "Seleccionar todo"
+  },
   "GestureScreen.qml": {
     "gestures_title": "Gestos"
   }

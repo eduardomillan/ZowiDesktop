@@ -112,6 +112,7 @@ The preview executable loads the QML screen in isolation, providing mock context
 | `preview-home.sh` | HomeScreen | `--connected` |
 | `preview-pad.sh` | PadScreen | `--connected` |
 | `preview-calibration.sh` | CalibrationScreen | `--connected` |
+| `preview-moutheditor.sh` | MouthEditorScreen | `--connected` |
 
 ## Adding a New Preview Script
 

@@ -17,6 +17,7 @@ Rectangle {
     property bool showBackButton: false
     property bool showDisconnectButton: false
     property bool showStatusBar: true
+    property real footerHeight: 0
 
     signal backClicked()
     signal disconnectClicked()
@@ -142,6 +143,6 @@ Rectangle {
             right: parent.right
             bottom: parent.bottom
         }
-        height: 0
+        height: root.footerHeight
     }
 }

@@ -209,6 +209,12 @@
   "MouthScreen.qml": {
     "mouths_title": "Усти"
   },
+  "MouthEditorScreen.qml": {
+    "title": "Редактор на усти",
+    "subtitle": "Нарисувайте устата на Zowi върху решетката. Актуализира се в реално време.",
+    "clear_all": "Изчисти всичко",
+    "select_all": "Избери всичко"
+  },
   "GestureScreen.qml": {
     "gestures_title": "Жестове"
   }

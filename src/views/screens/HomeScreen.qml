@@ -10,6 +10,7 @@ FocusScope {
     signal settingsClicked()
     signal achievementsClicked()
     signal gamepadClicked()
+    signal mouthEditorClicked()
     signal goSplash()
     signal goWelcome()
 
@@ -227,6 +228,8 @@ FocusScope {
                                 onClicked: {
                                     if (name === tr("gamepad")) {
                                         homeScope.gamepadClicked()
+                                    } else if (name === tr("mouths_editor")) {
+                                        homeScope.mouthEditorClicked()
                                     } else {
                                         console.log("Home: tapped", name)
                                     }
@@ -418,7 +421,7 @@ FocusScope {
             { name: tr("timeline"), icon: "qrc:/images/android/timeline_button.png", enabled: false },
             { name: tr("zowi_says"), icon: "qrc:/images/android/simon_game_button.png", enabled: false },
             { name: tr("mouths"), icon: "qrc:/images/android/mouths_game_button.png", enabled: false },
-            { name: tr("mouths_editor"), icon: "qrc:/images/android/mouths_editor_game_button.png", enabled: false }
+            { name: tr("mouths_editor"), icon: "qrc:/images/android/mouths_editor_game_button.png", enabled: true }
         ]
         for (var i = 0; i < apps.length; i++)
             appsModel.append(apps[i])
