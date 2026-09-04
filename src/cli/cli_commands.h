@@ -100,7 +100,7 @@ struct CalibrateArgs {
 // One-shot movement command (M protocol). Runs the requested number of gait
 // cycles and stops the robot afterwards.
 struct MoveArgs {
-    std::string direction;  // forward/fw, backward/bk, left/lf, right/rg, moonwalker-left/ml, moonwalker-right/mr
+    std::string direction;  // movement name, 2-letter alias or firmware MoveID 1-20 (see listMovements)
     int cycles = 1;         // gait cycles (>= 1); the robot stops automatically afterwards
     std::string speed = "medium";  // slow/s, medium/m, fast/f
     std::string address;

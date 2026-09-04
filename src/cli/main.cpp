@@ -137,7 +137,7 @@ int main(int argc, char **argv)
     adivinawiCmd->add_option("--backend", adivinawiArgs.backend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
 
     // ── control subcommand ───────────────────────────────────
-    auto *controlCmd = app.add_subcommand("control", "Interactive keyboard minigame to drive the Zowi robot\nUse the arrow keys or WASD to move; Q/E to turn; press ESC or Ctrl+C to quit.\nConnects to the paired device (or --address). Add --backend usb --tty /dev/ttyUSB0 for USB.");
+    auto *controlCmd = app.add_subcommand("control", "Interactive keyboard minigame to drive the Zowi robot\nUse the arrow keys/WASD to move, Q/E to turn, and the mnemonic action keys\n(j=Jump, u=UpDown, v=Swing, t=TiptoeSwing, f/r=Flapping, b/g=Bend,\nk/o=ShakeLeg, 1/2/3=Crusaito/AscendingTurn); press ESC or Ctrl+C to quit.\nConnects to the paired device (or --address). Add --backend usb --tty /dev/ttyUSB0 for USB.");
     zowi_cli::ControlArgs controlArgs;
     controlCmd->add_option("--address,-a", controlArgs.address, "Robot Bluetooth address (overrides the paired device from the session) or USB TTY path (e.g. /dev/ttyUSB0)")->default_val("");
     controlCmd->add_option("--speed", controlArgs.speed, "Movement speed: slow, medium, fast")->default_val("medium");

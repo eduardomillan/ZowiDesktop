@@ -719,6 +719,9 @@ regardless of `--backend`.
 
 ### Controls
 
+All keys are **hold-repeating** (kept held, the command is re-sent every ~200 ms
+and the robot stops 1 s after you release). Letter keys are case-insensitive.
+
 | Key            | Action              | Firmware command           |
 |----------------|---------------------|----------------------------|
 | `↑` / `W`      | Walk forward        | `M 1 <T>`                  |
@@ -727,18 +730,32 @@ regardless of `--backend`.
 | `→` / `D`      | Moonwalker right    | `M 7 <T> 30`               |
 | `Q`            | Turn left           | `M 3 <T>`                  |
 | `E`            | Turn right          | `M 4 <T>`                  |
+| `J`            | Jump                | `M 11 <T>`                 |
+| `U`            | Up/down             | `M 5 <T> 15`               |
+| `V`            | Swing               | `M 8 <T> 15`               |
+| `T`            | Tiptoe swing        | `M 14 <T> 15`              |
+| `F`            | Flapping left       | `M 12 <T> 30`              |
+| `R`            | Flapping right      | `M 13 <T> 30`              |
+| `B`            | Bend forward        | `M 15 <T>`                 |
+| `G`            | Bend backward       | `M 16 <T>`                 |
+| `K`            | Shake leg left      | `M 17 <T>`                 |
+| `O`            | Shake leg right     | `M 18 <T>`                 |
+| `1`            | Crusaito forward    | `M 9 <T> 30`               |
+| `2`            | Crusaito backward   | `M 10 <T> 30`              |
+| `3`            | Ascending turn      | `M 20 <T> 15`              |
 | `+`            | Increase speed      | (changes `T` for next move)|
 | `-`            | Decrease speed      | (changes `T` for next move)|
 | `ESC` / `Ctrl-C` | Quit              | `S` (stop) on exit         |
 
-Both the cursor keys and the WASD/Q/E letter keys are supported. The terminal is
+Both the cursor keys and the letter/digit keys are supported. The terminal is
 switched to raw mode while the minigame runs, so keys are delivered immediately
 (no Enter needed) and are not echoed. The original terminal settings are
 restored on exit (including on `Ctrl-C`).
 
-When a movement key is pressed, the terminal displays the uppercase key token
-and the action, e.g. `[UP] forward` or `[LEFT] moonwalker left`. When the speed
-is changed, `[SPEED: SLOW]` / `[SPEED: MEDIUM]` / `[SPEED: FAST]` is shown.
+When a movement key is pressed, the terminal displays the key token and the
+action — `[UP] forward`, `[LEFT] moonwalker left`, and `[M11] jump` or
+`[M3] ascend turn` for the mnemonic action keys. When the speed is changed,
+`[SPEED: SLOW]` / `[SPEED: MEDIUM]` / `[SPEED: FAST]` is shown.
 
 After 1 second of inactivity, the robot stops and the terminal shows:
 `Status: idle. Speed: MEDIUM. Last key: UP (forward)`.
@@ -808,14 +825,35 @@ and automation.
 
 ### Directions
 
-| Direction | Firmware command | Description |
-|-----------|------------------|-------------|
-| `forward` | `M 1 <T>` | Walk forward one gait cycle |
-| `backward` | `M 2 <T>` | Walk backward one gait cycle |
-| `left` | `M 3 <T>` | Turn left one gait cycle |
-| `right` | `M 4 <T>` | Turn right one gait cycle |
-| `moonwalker-left` | `M 6 <T> 30` | Moonwalker dance left |
-| `moonwalker-right` | `M 7 <T> 30` | Moonwalker dance right |
+All 20 firmware movements are accepted. `dir` can be the movement name, a
+2-letter alias, or the raw firmware MoveID (e.g. `11` = jump). Sizes use each
+builder's default, matching the GUI pad.
+
+| Direction | Alias | MoveID | Firmware command | Description |
+|-----------|-------|--------|------------------|-------------|
+| `forward` | `fw` | 1 | `M 1 <T>` | Walk forward one gait cycle |
+| `backward` | `bk` | 2 | `M 2 <T>` | Walk backward one gait cycle |
+| `left` | `lf` | 3 | `M 3 <T>` | Turn left one gait cycle |
+| `right` | `rg` | 4 | `M 4 <T>` | Turn right one gait cycle |
+| `updown` | `ud` | 5 | `M 5 <T> 15` | Body up/down |
+| `moonwalker-left` | `ml` | 6 | `M 6 <T> 30` | Moonwalker dance left |
+| `moonwalker-right` | `mr` | 7 | `M 7 <T> 30` | Moonwalker dance right |
+| `swing` | `sw` | 8 | `M 8 <T> 15` | Swing |
+| `crusaito-forward` | `cf` | 9 | `M 9 <T> 30` | Crusaito forward |
+| `crusaito-backward` | `cb` | 10 | `M 10 <T> 30` | Crusaito backward |
+| `jump` | `jp` | 11 | `M 11 <T>` | Jump |
+| `flapping-left` | `fl` | 12 | `M 12 <T> 30` | Flapping left |
+| `flapping-right` | `fr` | 13 | `M 13 <T> 30` | Flapping right |
+| `tiptoe-swing` | `ts` | 14 | `M 14 <T> 15` | Tiptoe swing |
+| `bend-forward` | `bf` | 15 | `M 15 <T>` | Bend forward |
+| `bend-backward` | `bb` | 16 | `M 16 <T>` | Bend backward |
+| `shake-leg-left` | `sl` | 17 | `M 17 <T>` | Shake left leg |
+| `shake-leg-right` | `sr` | 18 | `M 18 <T>` | Shake right leg |
+| `jitter` | `jt` | 19 | `M 19 <T> 15` | Jitter |
+| `ascending-turn` | `at` | 20 | `M 20 <T> 15` | Ascending turn |
+
+`left`/`right` also accept `turn-left`/`turn-right`. MoveID `0` is the home
+pose; use the `stop` command instead.
 
 ### Speed
 
@@ -836,13 +874,26 @@ zowi_cli move --list
 Output:
 
 ```
-Available movements (case-insensitive, abbreviations allowed):
-  forward (fw), backward (bk), left (lf), right (rg),
-  moonwalker-left (ml), moonwalker-right (mr)
+Available movements (case-insensitive: name, 2-letter alias or MoveID):
+  Directional:
+    1: forward (fw)            2: backward (bk)
+    3: left/turn-left (lf)     4: right/turn-right (rg)
+  Dances & gaits:
+    6: moonwalker-left (ml)    7: moonwalker-right (mr)
+    9: crusaito-forward (cf)  10: crusaito-backward (cb)
+   12: flapping-left (fl)     13: flapping-right (fr)
+   20: ascending-turn (at)
+  Amplitude & actions:
+    5: updown (ud)             8: swing (sw)
+   11: jump (jp)              14: tiptoe-swing (ts)
+   15: bend-forward (bf)      16: bend-backward (bb)
+   17: shake-leg-left (sl)    18: shake-leg-right (sr)
+   19: jitter (jt)
 Usage: move <dir> [cycles] [speed]
   cycles: gait cycles to run (>= 1, default 1)
   speed:  slow (s), medium (m, default), fast (f)
 The robot stops automatically after the requested cycles.
+MoveID 0 is the home pose; use the stop command instead.
 ```
 
 ### Basic usage
@@ -853,13 +904,16 @@ zowi_cli move fw 5                 # 5 cycles (abbreviation)
 zowi_cli move backward 3 --speed fast
 zowi_cli move bk 3 f               # abbreviated speed
 zowi_cli move moonwalker-left 2 --speed slow
+zowi_cli move jump                 # full name (MoveID 11)
+zowi_cli move 11                   # raw MoveID, same as jump
+zowi_cli move jt 2 f               # alias: jitter, 2 fast cycles
 ```
 
 ### Options
 
 | Option | Description |
 |--------|-------------|
-| `direction` | Movement direction: `forward`/`fw`, `backward`/`bk`, `left`/`lf`, `right`/`rg`, `moonwalker-left`/`ml`, `moonwalker-right`/`mr` (positional argument) |
+| `direction` | Movement name, 2-letter alias or firmware MoveID 1-20 (see Directions above) (positional argument) |
 | `cycles` | Number of gait cycles to run, >= 1 (positional argument, default `1`) |
 | `-s, --speed` | Movement speed: `slow`/`s`, `medium`/`m` (default), `fast`/`f` |
 | `-a, --address` | Robot Bluetooth address (overrides paired device) |
@@ -1250,7 +1304,7 @@ cycle) between them. The full design is documented in
 
 | Command | Action |
 |---------|--------|
-| `move <dir> [speed]` | One movement: `forward`, `backward`, `left`, `right`, `moonwalker-left`, `moonwalker-right`; speed `slow`/`medium`/`fast` |
+| `move <dir> [cycles] [speed]` | Run `cycles` gait cycles (>= 1, default 1) and stop automatically: any of the 20 firmware movements by name, 2-letter alias or MoveID 1-20 (same catalog as `zowi_cli move --list`); speed `slow`/`medium`/`fast` |
 | `gesture <name\|id>` | Play a gesture (same names as `zowi_cli gesture --list`) |
 | `mouth <name\|id\|0/1>` | Show a mouth/LED pattern (same names as `zowi_cli mouth --list`), or a raw binary pattern |
 | `sing <name\|id>` | Play a melody (same names as `zowi_cli sing --list`) |

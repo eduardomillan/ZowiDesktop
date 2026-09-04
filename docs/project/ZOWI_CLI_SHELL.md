@@ -124,7 +124,7 @@ abort the batch), `1` when the connection could not be established.
 
 | Command | Action | Protocol |
 |---------|--------|----------|
-| `move <dir> [cycles] [speed]` | Run `cycles` gait cycles (>= 1, default 1) and stop automatically; `dir` ∈ forward/fw, backward/bk, left/lf, right/rg, moonwalker-left/ml, moonwalker-right/mr; `speed` ∈ slow/s, medium/m, fast/f (default medium) | M |
+| `move <dir> [cycles] [speed]` | Run `cycles` gait cycles (>= 1, default 1) and stop automatically; `dir` is a movement name, 2-letter alias or firmware MoveID 1-20 from `zowi_cli move --list` (all 20 firmware movements: forward/fw, backward/bk, left/lf, right/rg, updown/ud, moonwalker-left/ml, moonwalker-right/mr, swing/sw, crusaito-forward/cf, crusaito-backward/cb, jump/jp, flapping-left/fl, flapping-right/fr, tiptoe-swing/ts, bend-forward/bf, bend-backward/bb, shake-leg-left/sl, shake-leg-right/sr, jitter/jt, ascending-turn/at); `speed` ∈ slow/s, medium/m, fast/f (default medium) | M |
 | `gesture <name\|id>` | Play a gesture (1–13, same names as `zowi_cli gesture --list`) | H |
 | `mouth <name\|id\|0/1>` | Show a mouth/LED pattern (0–30), or a raw binary pattern | L |
 | `sing <name\|id>` | Play a melody (1–19) | K |
@@ -134,8 +134,10 @@ abort the batch), `1` when the connection could not be established.
 | `quit`, `exit`, `q` | Disconnect and leave | — |
 
 Name-to-id parsing uses exactly the same tables and mapping as the one-shot
-subcommands (`parseNameOrId` + the shared name tables), so `gesture happy`,
-`gesture 1`, `mouth heart` and `mouth 13` behave identically in both places.
+subcommands (`parseNameOrId` + the shared name tables, and the shared
+`buildMoveCommand` for movements), so `gesture happy`, `gesture 1`,
+`mouth heart`, `mouth 13`, `move jump` and `move 11` behave identically in
+both places.
 
 ### Raw mouth patterns
 

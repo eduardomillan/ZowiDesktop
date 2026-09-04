@@ -240,6 +240,22 @@ std::string readKey()
         if (c == 'e' || c == 'E') return "turn_right";
         if (c == '+') return "speed_up";
         if (c == '-') return "speed_down";
+        // Mnemonic action keys (case-insensitive).
+        if (c == 'j' || c == 'J') return "move_11";  // jump
+        if (c == 'u' || c == 'U') return "move_5";   // updown
+        if (c == 'v' || c == 'V') return "move_8";   // swing
+        if (c == 'f' || c == 'F') return "move_12";  // flapping-left
+        if (c == 'r' || c == 'R') return "move_13";  // flapping-right
+        if (c == 't' || c == 'T') return "move_14";  // tiptoe-swing
+        if (c == 'b' || c == 'B') return "move_15";  // bend-forward
+        if (c == 'g' || c == 'G') return "move_16";  // bend-backward
+        if (c == 'k' || c == 'K') return "move_17";  // shake-leg-left
+        if (c == 'o' || c == 'O') return "move_18";  // shake-leg-right
+        // Numeric MoveID keys: 1=crusaito-forward(9), 2=crusaito-backward(10),
+        // 3=ascending-turn(20) — the three actions without a mnemonic letter.
+        if (c == '1') return "move_9";
+        if (c == '2') return "move_10";
+        if (c == '3') return "move_20";
         return "";
     }
 

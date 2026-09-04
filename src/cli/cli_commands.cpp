@@ -596,6 +596,35 @@ int runStatus(int argc, char **argv, const StatusArgs &a)
     return 0;
 }
 
+// Builds the protocol string for a firmware MoveID (1-20) at the given speed.
+// Shared by the move one-shot and the control keybindings; sizes use each
+// builder's default, matching the GUI pad.
+bool buildMoveIdCommand(int id, zowi::MovementSpeed spd, std::string &cmd) {
+    switch (id) {
+        case 1:  cmd = zowi::commandWalkForward(spd); return true;
+        case 2:  cmd = zowi::commandWalkBackward(spd); return true;
+        case 3:  cmd = zowi::commandTurnLeft(spd); return true;
+        case 4:  cmd = zowi::commandTurnRight(spd); return true;
+        case 5:  cmd = zowi::commandUpDown(spd); return true;
+        case 6:  cmd = zowi::commandMoonwalkerLeft(spd); return true;
+        case 7:  cmd = zowi::commandMoonwalkerRight(spd); return true;
+        case 8:  cmd = zowi::commandSwing(spd); return true;
+        case 9:  cmd = zowi::commandCrusaitoForward(spd); return true;
+        case 10: cmd = zowi::commandCrusaitoBackward(spd); return true;
+        case 11: cmd = zowi::commandJump(spd); return true;
+        case 12: cmd = zowi::commandFlappingLeft(spd); return true;
+        case 13: cmd = zowi::commandFlappingRight(spd); return true;
+        case 14: cmd = zowi::commandTiptoeSwing(spd); return true;
+        case 15: cmd = zowi::commandBendForward(spd); return true;
+        case 16: cmd = zowi::commandBendBackward(spd); return true;
+        case 17: cmd = zowi::commandShakeLegLeft(spd); return true;
+        case 18: cmd = zowi::commandShakeLegRight(spd); return true;
+        case 19: cmd = zowi::commandJitter(spd); return true;
+        case 20: cmd = zowi::commandAscendingTurn(spd); return true;
+        default: return false;
+    }
+}
+
 int runControl(int argc, char **argv, const ControlArgs &a)
 {
     QCoreApplication qtApp(argc, argv);
@@ -704,7 +733,14 @@ int runControl(int argc, char **argv, const ControlArgs &a)
         return 0;
     }
 
-    std::cout << "Controls:  UP/W = forward   DOWN/S = backward   LEFT/A = moonwalker left   RIGHT/D = moonwalker right   Q = turn left   E = turn right   +/- = speed   (ESC/Ctrl+C=quit)\n";
+    std::cout << "Controls:\n"
+                 "  Drive (hold): UP/W forward   DOWN/S backward   LEFT/A moonwalker-L\n"
+                 "                RIGHT/D moonwalker-R   Q turn-L   E turn-R\n"
+                 "  Actions (hold): j jump  u updown  v swing  t tiptoe-swing\n"
+                 "                f flapping-L  r flapping-R  b bend-F  g bend-B\n"
+                 "                k shake-leg-L  o shake-leg-R  1 crusaito-F  2 crusaito-B\n"
+                 "                3 ascending-turn\n"
+                 "  +/- speed   ESC/Ctrl+C quit\n";
 
     using clock = std::chrono::steady_clock;
     auto lastMove = clock::time_point{};  // epoch: no movement yet
@@ -742,15 +778,38 @@ int runControl(int argc, char **argv, const ControlArgs &a)
             else if (key == "right") { cmd = zowi::commandMoonwalkerRight(speed); action = "moonwalker right"; }
             else if (key == "turn_left") { cmd = zowi::commandTurnLeft(speed); action = "turn left"; }
             else if (key == "turn_right") { cmd = zowi::commandTurnRight(speed); action = "turn right"; }
+            else if (key.compare(0, 5, "move_") == 0) {
+                // Mnemonic/numeric action keys map straight to a firmware
+                // MoveID via the shared builder used by the move one-shot.
+                const int id = std::atoi(key.c_str() + 5);
+                if (buildMoveIdCommand(id, speed, cmd)) {
+                    static const char *kMoveActionNames[21] = {
+                        "", "forward", "backward", "turn left", "turn right",
+                        "updown", "moonwalker left", "moonwalker right", "swing",
+                        "crusaito forward", "crusaito backward", "jump",
+                        "flapping left", "flapping right", "tiptoe-swing",
+                        "bend forward", "bend backward", "shake leg left",
+                        "shake leg right", "jitter", "ascending turn"
+                    };
+                    action = (id >= 1 && id <= 20) ? kMoveActionNames[id] : "";
+                }
+            }
 
             if (!cmd.empty()) {
                 bt->send(cmd);
                 lastMove = clock::now();
-                std::string keyUpper = key;
-                std::transform(keyUpper.begin(), keyUpper.end(), keyUpper.begin(), ::toupper);
-                lastKeyDisplay = keyUpper;
+                std::string keyDisplay;
+                const bool isMoveKey = key.compare(0, 5, "move_") == 0;
+                if (isMoveKey) {
+                    keyDisplay = "M" + std::to_string(std::atoi(key.c_str() + 5));
+                } else {
+                    keyDisplay = key;
+                    std::transform(keyDisplay.begin(), keyDisplay.end(),
+                                   keyDisplay.begin(), ::toupper);
+                }
+                lastKeyDisplay = keyDisplay;
                 lastAction = action;
-                std::cout << "\x1b[2K\r[" << keyUpper << "] " << action << std::flush;
+                std::cout << "\x1b[2K\r[" << keyDisplay << "] " << action << std::flush;
             }
         } else if (lastMove.time_since_epoch().count() != 0
                    && clock::now() - lastMove >= moveDuration) {
@@ -1131,13 +1190,26 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
 namespace {
 
 void listMovements() {
-    std::cout << "Available movements (case-insensitive, abbreviations allowed):\n";
-    std::cout << "  forward (fw), backward (bk), left (lf), right (rg),\n";
-    std::cout << "  moonwalker-left (ml), moonwalker-right (mr)\n";
+    std::cout << "Available movements (case-insensitive: name, 2-letter alias or MoveID):\n";
+    std::cout << "  Directional:\n";
+    std::cout << "    1: forward (fw)            2: backward (bk)\n";
+    std::cout << "    3: left/turn-left (lf)     4: right/turn-right (rg)\n";
+    std::cout << "  Dances & gaits:\n";
+    std::cout << "    6: moonwalker-left (ml)    7: moonwalker-right (mr)\n";
+    std::cout << "    9: crusaito-forward (cf)  10: crusaito-backward (cb)\n";
+    std::cout << "   12: flapping-left (fl)     13: flapping-right (fr)\n";
+    std::cout << "   20: ascending-turn (at)\n";
+    std::cout << "  Amplitude & actions:\n";
+    std::cout << "    5: updown (ud)             8: swing (sw)\n";
+    std::cout << "   11: jump (jp)              14: tiptoe-swing (ts)\n";
+    std::cout << "   15: bend-forward (bf)      16: bend-backward (bb)\n";
+    std::cout << "   17: shake-leg-left (sl)    18: shake-leg-right (sr)\n";
+    std::cout << "   19: jitter (jt)\n";
     std::cout << "Usage: move <dir> [cycles] [speed]\n";
     std::cout << "  cycles: gait cycles to run (>= 1, default 1)\n";
     std::cout << "  speed:  slow (s), medium (m, default), fast (f)\n";
     std::cout << "The robot stops automatically after the requested cycles.\n";
+    std::cout << "MoveID 0 is the home pose; use the stop command instead.\n";
 }
 
 void listGestures() {
@@ -1227,6 +1299,33 @@ bool resolveMovementSpeed(const std::string &token, zowi::MovementSpeed &spd) {
     return false;
 }
 
+// Maps a movement name/alias to its firmware MoveID (1-20); 0 = unknown.
+// All 20 firmware movements are exposed (see docs/firmware/PROTOCOL.md);
+// sizes use each builder's default, matching the GUI pad.
+int movementNameToId(const std::string &name) {
+    if (name == "forward" || name == "fw") return 1;
+    if (name == "backward" || name == "bk") return 2;
+    if (name == "left" || name == "lf" || name == "turn-left") return 3;
+    if (name == "right" || name == "rg" || name == "turn-right") return 4;
+    if (name == "updown" || name == "ud") return 5;
+    if (name == "moonwalker-left" || name == "ml") return 6;
+    if (name == "moonwalker-right" || name == "mr") return 7;
+    if (name == "swing" || name == "sw") return 8;
+    if (name == "crusaito-forward" || name == "cf") return 9;
+    if (name == "crusaito-backward" || name == "cb") return 10;
+    if (name == "jump" || name == "jp") return 11;
+    if (name == "flapping-left" || name == "fl") return 12;
+    if (name == "flapping-right" || name == "fr") return 13;
+    if (name == "tiptoe-swing" || name == "ts") return 14;
+    if (name == "bend-forward" || name == "bf") return 15;
+    if (name == "bend-backward" || name == "bb") return 16;
+    if (name == "shake-leg-left" || name == "sl") return 17;
+    if (name == "shake-leg-right" || name == "sr") return 18;
+    if (name == "jitter" || name == "jt") return 19;
+    if (name == "ascending-turn" || name == "at") return 20;
+    return 0;
+}
+
 bool buildMoveCommand(const std::string &direction, const std::string &speed,
                       std::string &cmd, zowi::MovementSpeed *resolvedSpeed = nullptr) {
     zowi::MovementSpeed spd = zowi::MovementSpeed::Medium;
@@ -1239,22 +1338,30 @@ bool buildMoveCommand(const std::string &direction, const std::string &speed,
     std::string dirLower = direction;
     std::transform(dirLower.begin(), dirLower.end(), dirLower.begin(), ::tolower);
 
-    // Abbreviations: fw, bk, lf, rg, ml, mr (case-insensitive like full names).
-    if (dirLower == "fw") dirLower = "forward";
-    else if (dirLower == "bk") dirLower = "backward";
-    else if (dirLower == "lf") dirLower = "left";
-    else if (dirLower == "rg") dirLower = "right";
-    else if (dirLower == "ml") dirLower = "moonwalker-left";
-    else if (dirLower == "mr") dirLower = "moonwalker-right";
+    // A raw firmware MoveID is accepted too (e.g. "move 11" == jump), like
+    // gesture/mouth/sing accept ids. MoveID 0 is the home pose; the S command
+    // (stop) already covers it, so cycling through it makes no sense.
+    if (dirLower.find_first_not_of("0123456789") == std::string::npos) {
+        try {
+            const int id = std::stoi(dirLower);
+            if (id == 0) {
+                std::cerr << "MoveID 0 is the home pose; use 'stop' instead.\n";
+                return false;
+            }
+            if (id > 20) {
+                std::cerr << "MoveID " << id << " is out of range (1-20).\n";
+                return false;
+            }
+            return buildMoveIdCommand(id, spd, cmd);
+        } catch (...) {
+            std::cerr << "MoveID out of range (1-20).\n";
+            return false;
+        }
+    }
 
-    if (dirLower == "forward") cmd = zowi::commandWalkForward(spd);
-    else if (dirLower == "backward") cmd = zowi::commandWalkBackward(spd);
-    else if (dirLower == "left" || dirLower == "turn-left") cmd = zowi::commandTurnLeft(spd);
-    else if (dirLower == "right" || dirLower == "turn-right") cmd = zowi::commandTurnRight(spd);
-    else if (dirLower == "moonwalker-left") cmd = zowi::commandMoonwalkerLeft(spd);
-    else if (dirLower == "moonwalker-right") cmd = zowi::commandMoonwalkerRight(spd);
-    else return false;
-    return true;
+    const int id = movementNameToId(dirLower);
+    if (id == 0) return false;
+    return buildMoveIdCommand(id, spd, cmd);
 }
 
 bool buildGestureCommand(const std::string &token, std::string &cmd, std::string &desc) {
@@ -1656,8 +1763,15 @@ bool shellConnected() {
 void printShellHelp() {
     std::cout << "Commands:\n"
                  "  move <dir> [cycles] [speed]\n"
-                 "                       dir: forward/fw, backward/bk, left/lf, right/rg,\n"
-                 "                       moonwalker-left/ml, moonwalker-right/mr\n"
+                 "                       dir: movement name, 2-letter alias or MoveID\n"
+                 "                       1-20 — same catalog as 'zowi_cli move --list':\n"
+                 "                       forward/fw, backward/bk, left/lf, right/rg,\n"
+                 "                       updown/ud, moonwalker-left/ml, moonwalker-right/mr,\n"
+                 "                       swing/sw, crusaito-forward/cf, crusaito-backward/cb,\n"
+                 "                       jump/jp, flapping-left/fl, flapping-right/fr,\n"
+                 "                       tiptoe-swing/ts, bend-forward/bf, bend-backward/bb,\n"
+                 "                       shake-leg-left/sl, shake-leg-right/sr, jitter/jt,\n"
+                 "                       ascending-turn/at\n"
                  "                       cycles: >= 1, default 1; speed: slow/s, medium/m,\n"
                  "                       fast/f (default medium). The robot stops after the\n"
                  "                       requested cycles.\n"
