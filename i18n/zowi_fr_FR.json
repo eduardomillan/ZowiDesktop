@@ -204,5 +204,11 @@
     "test_movement": "Tester",
     "restart": "Recommencer",
     "confirm": "Confirmer"
+  },
+  "MouthScreen.qml": {
+    "mouths_title": "Bouches"
+  },
+  "GestureScreen.qml": {
+    "gestures_title": "Gestes"
   }
 }

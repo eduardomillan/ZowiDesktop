@@ -204,5 +204,11 @@
     "test_movement": "Изпробвай",
     "restart": "Рестартирай",
     "confirm": "Потвърди"
+  },
+  "MouthScreen.qml": {
+    "mouths_title": "Усти"
+  },
+  "GestureScreen.qml": {
+    "gestures_title": "Жестове"
   }
 }

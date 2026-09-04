@@ -26,6 +26,14 @@ Window {
         home.gamepadClicked.connect(function() {
             var pad = stack.push("qrc:/src/views/screens/PadScreen.qml")
             pad.backClicked.connect(function() { stack.pop() })
+            pad.mouthScreenRequested.connect(function() {
+                var mouth = stack.push("qrc:/src/views/screens/MouthScreen.qml")
+                mouth.backClicked.connect(function() { stack.pop() })
+            })
+            pad.gestureScreenRequested.connect(function() {
+                var gesture = stack.push("qrc:/src/views/screens/GestureScreen.qml")
+                gesture.backClicked.connect(function() { stack.pop() })
+            })
         })
         // DEV: temporary navigation
         home.goSplash.connect(function() {

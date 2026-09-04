@@ -13,6 +13,8 @@
         <file>src/views/screens/PadScreen.qml</file>
         <file>src/views/screens/ScreenTemplate.qml</file>
         <file>src/views/screens/CalibrationScreen.qml</file>
+        <file>src/views/screens/MouthScreen.qml</file>
+        <file>src/views/screens/GestureScreen.qml</file>
         <!-- Components -->
         <file>src/views/components/AnimatedZowi.qml</file>
         <file>src/views/components/StatusBar.qml</file>

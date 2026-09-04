@@ -27,6 +27,9 @@ ScreenTemplate {
     property int buttonPadSize: 110
     property int buttonExtraSize: 80
 
+    signal mouthScreenRequested()
+    signal gestureScreenRequested()
+
     Timer {
         id: repeatTimer
         interval: 200
@@ -463,9 +466,7 @@ ScreenTemplate {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        console.log("[PadScreen] Mouths button clicked (not yet implemented)")
-                    }
+                    onClicked: pad.mouthScreenRequested()
                 }
             }
 
@@ -480,9 +481,7 @@ ScreenTemplate {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        console.log("[PadScreen] Animations button clicked (not yet implemented)")
-                    }
+                    onClicked: pad.gestureScreenRequested()
                 }
             }
 
@@ -547,5 +546,4 @@ ScreenTemplate {
             }
         }
     }
-
 }
