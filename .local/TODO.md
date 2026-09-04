@@ -4,7 +4,7 @@
 
 - [X] Al iniciar ZowiDesktop, se queda todo el rato en "Conectando..." la statusbar. Debería intentar la conexión según el transport que tenga configurado, durante un tiempo limitado por timeout. Si no es posible la conexión (auto, usb o bluetooth) debería indicarlo en dicha statusbar.
 - [X] En docs/tests hay un ZOWILIB_HOWTO, debería referenciarse con TEST_ al inicio.
-- [ ] Si el robot tiene el firmware modificado (por bitbloq, por ejemplo), el proceso de renombrado falla
+- [X] Si el robot tiene el firmware modificado (por bitbloq, por ejemplo), el proceso de renombrado falla
 - [X] Si se intenta 'renombrar' a Zowi con el mismo nombre que ya tiene, el proceso de renombrado falla
 - [X] Al iniciar la aplicación con robot registrado, no muestra el porcentaje de batería
 - [X] En Zowi CLI, comando 'control', se mapean las teclas con las teclas de cursor y también con las teclas A,W,S,D,Q,E de la siguiente forma:
@@ -25,6 +25,7 @@
 - [X] Al conectar con un Zowi nuevo, es posible que tenga almacenado un nombre distinto al default, por una conexión anterior. En ese caso, el wizard no pedirá renombrarlo y saltará a la homescreen directamente.
 - [X] Añadir un comando en `zowi_cli session` llamado `clear` que borre todos los valores de sesión almacenados.
 - [X] La ventana DEV se puede mostrar/ocultar con Ctrl+D en cualquier screen. Es un panel contenido dentro de la ventana principal, movible y redimensionable en 4 lados/esquinas, con geometría persistente (se centraliza en main.qml, no por pantalla).
+- [ ] Añadir dos funciones de renombrado, según las zowiLibs, que permita indicar el nombre de fábrica ($) o robot sin bautizar (#). Probar si funciona.
 
 
 ## Pruebas automatizadas
