@@ -3,7 +3,7 @@ project(ZowiDesktop VERSION 0.6.10 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
-#set(FETCHLIBRARIES CACHE BOOL HELP "fetch libraries from external repos if not present in system")
+set(FETCHLIBRARIES CACHE BOOL HELP "fetch libraries from external repos if not present in system")
 
 # ── Qt version selection ──────────────────────────────────────────
 set(ZOWI_QT_VERSION 6 CACHE STRING "Qt version to build against (5 or 6)")
