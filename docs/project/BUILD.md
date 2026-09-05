@@ -210,9 +210,9 @@ cmake --build build
 | Platform | Output | How to build |
 |---|---|---|
 | **Linux (native)** | `build/src/gui/ZowiDesktop` | `./build.sh` |
-| **Linux (AppImage)** | `build/ZowiDesktop-<version>-x86_64.AppImage` | `./packaging/linux/create-appimage.sh` |
-| **Linux (.deb)** | `build/zowi-desktop_<version>-1+<distro>_amd64.deb` | `./packaging/linux/create-deb.sh` |
-| **Windows (zip + installer)** | `build-windows/dist/` | Windows machine (`build.bat`, `build-installer.bat`) or GitHub Actions (`windows.yml`) |
+| **Linux (AppImage)** | `dist/ZowiDesktop-<version>-x86_64.AppImage` | `./packaging/linux/create-appimage.sh` |
+| **Linux (.deb)** | `dist/zowi-desktop_<version>-1+<distro>_amd64.deb` | `./packaging/linux/create-deb.sh` |
+| **Windows (zip + installer)** | `dist/` | Windows machine (`build.bat`, `build-installer.bat`) or GitHub Actions (`windows.yml`) |
 
 ## Linux AppImage
 
@@ -242,7 +242,7 @@ DISTRO_SUFFIX=jammy ./packaging/linux/create-deb.sh
 DISTRO_SUFFIX=noble ./packaging/linux/create-deb.sh
 ```
 
-The resulting `.deb` files are placed in `build/`.
+The resulting `.deb` files are placed in `dist/`.
 
 ## GitHub Releases
 
@@ -264,7 +264,7 @@ The script:
 - Reads the version from `CMakeLists.txt`
 - Verifies the required artifacts exist (AppImage + .deb jammy + .deb noble)
 - Attaches the Windows portable zip and installer too, if found in
-  `build-windows/dist/`
+  `dist/`
 - Extracts changelog entries from `debian/changelog`
 - Creates a git tag `v<version>` and pushes it
 - Creates a GitHub Release with the artifacts attached
@@ -302,14 +302,14 @@ From the same MSVC prompt, with Inno Setup 6 installed:
 packaging\windows\installer\build-installer.bat
 ```
 
-Produces `build-windows\dist\ZowiDesktop-<version>-setup-x64.exe` from
+Produces `dist\ZowiDesktop-<version>-setup-x64.exe` from
 everything in `dist\`.
 
 ### Windows portable .zip (MSVC)
 
 `packaging/windows/build-portable.bat` builds `ZowiDesktop.exe` and
 `zowi_cli.exe` and packs them (with Qt DLLs/QML via `windeployqt`) into
-`build-windows\dist\ZowiDesktop-<version>-windows-x86_64.zip`.
+`dist\ZowiDesktop-<version>-windows-x86_64.zip`.
 
 > The old `create-portable-zip.sh` MinGW cross-compile script has been removed:
 > the WinRT `bt_native` backend requires the Windows SDK and does not build with
@@ -328,7 +328,7 @@ artifacts on a `windows-latest` runner using the MSVC 2022 toolchain and Qt 6.8:
 
 To run it: **Actions → Windows CI → Run workflow**. When it finishes, download
 the two artifacts. To attach them to a manual GitHub Release, place them in
-`build-windows/dist/`, then run:
+`dist/`, then run:
 
 ```bash
 ./packaging/create-gh-release.sh --with-apt

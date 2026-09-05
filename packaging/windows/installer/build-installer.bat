@@ -16,8 +16,9 @@ REM --- Resolve absolute paths (avoids issues when launched from PowerShell) ---
 set SCRIPT_DIR=%~dp0
 for %%i in ("%SCRIPT_DIR%..\..\..") do set PROJECT_ROOT=%%~fi
 set BUILD_DIR=%PROJECT_ROOT%\build-win-installer
+set STAGE_DIR=%PROJECT_ROOT%\build-windows\stage
 set DIST_DIR=%PROJECT_ROOT%\dist
-set DIST_INST=%PROJECT_ROOT%\build-windows\dist
+set DIST_INST=%PROJECT_ROOT%\dist
 
 REM --- Locate tools ---
 if not defined QT_PATH     set QT_PATH=C:\Qt\6.11.1\msvc2022_64
@@ -55,15 +56,15 @@ if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 REM --- Step 3: Collect DLLs ---
 echo.
 echo === Step 3: Collect DLLs with windeployqt ===
-if not exist "%DIST_DIR%" mkdir "%DIST_DIR%"
-"%QT_PATH%\bin\windeployqt.exe" --qmldir "%PROJECT_ROOT%\src\views" --dir "%DIST_DIR%" "%BUILD_DIR%\src\gui\Release\%APP_NAME%.exe"
+if not exist "%STAGE_DIR%" mkdir "%STAGE_DIR%"
+"%QT_PATH%\bin\windeployqt.exe" --qmldir "%PROJECT_ROOT%\src\views" --dir "%STAGE_DIR%" "%BUILD_DIR%\src\gui\Release\%APP_NAME%.exe"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 REM --- Step 4: Copy executables ---
 echo.
 echo === Step 4: Copy executables ===
-copy "%BUILD_DIR%\src\gui\Release\%APP_NAME%.exe" "%DIST_DIR%\" >nul
-copy "%BUILD_DIR%\src\cli\Release\zowi_cli.exe" "%DIST_DIR%\" >nul 2>nul
+copy "%BUILD_DIR%\src\gui\Release\%APP_NAME%.exe" "%STAGE_DIR%\" >nul
+copy "%BUILD_DIR%\src\cli\Release\zowi_cli.exe" "%STAGE_DIR%\" >nul 2>nul
 
 REM --- Step 5: Build installer ---
 echo.

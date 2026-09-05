@@ -3,6 +3,7 @@ set -e
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
+DIST_DIR="$PROJECT_ROOT/dist"
 WIN_BUILD_DIR="$PROJECT_ROOT/build-windows"
 WIN_DIST_DIR="$WIN_BUILD_DIR/dist"
 
@@ -36,27 +37,27 @@ echo "=== Checking artifacts ==="
 MISSING=0
 RELEASE_FILES=()
 
-APPIMAGE=$(ls "$BUILD_DIR"/ZowiDesktop-*.AppImage 2>/dev/null | head -n1)
+APPIMAGE=$(ls "$DIST_DIR"/ZowiDesktop-*.AppImage 2>/dev/null | head -n1)
 if [ -z "$APPIMAGE" ]; then
-    echo "  MISSING (build/): ZowiDesktop-*.AppImage" >&2
+    echo "  MISSING (dist/): ZowiDesktop-*.AppImage" >&2
     MISSING=1
 else
     echo "  OK: $(basename "$APPIMAGE")"
     RELEASE_FILES+=("$APPIMAGE")
 fi
 
-DEB_JAMMY=$(ls "$BUILD_DIR"/zowi-desktop_"${VERSION}"-1+jammy_amd64.deb 2>/dev/null | head -n1)
+DEB_JAMMY=$(ls "$DIST_DIR"/zowi-desktop_"${VERSION}"-1+jammy_amd64.deb 2>/dev/null | head -n1)
 if [ -z "$DEB_JAMMY" ]; then
-    echo "  MISSING (build/): zowi-desktop_${VERSION}-1+jammy_amd64.deb" >&2
+    echo "  MISSING (dist/): zowi-desktop_${VERSION}-1+jammy_amd64.deb" >&2
     MISSING=1
 else
     echo "  OK: $(basename "$DEB_JAMMY")"
     RELEASE_FILES+=("$DEB_JAMMY")
 fi
 
-DEB_NOBLE=$(ls "$BUILD_DIR"/zowi-desktop_"${VERSION}"-1+noble_amd64.deb 2>/dev/null | head -n1)
+DEB_NOBLE=$(ls "$DIST_DIR"/zowi-desktop_"${VERSION}"-1+noble_amd64.deb 2>/dev/null | head -n1)
 if [ -z "$DEB_NOBLE" ]; then
-    echo "  MISSING (build/): zowi-desktop_${VERSION}-1+noble_amd64.deb" >&2
+    echo "  MISSING (dist/): zowi-desktop_${VERSION}-1+noble_amd64.deb" >&2
     MISSING=1
 else
     echo "  OK: $(basename "$DEB_NOBLE")"
@@ -155,7 +156,7 @@ gh -C "$PROJECT_ROOT" release create "$TAG" \
 
 REPO="$PROJECT_ROOT"
 if [ "$PUBLISH_APT" -eq 1 ]; then
-    bash "$PROJECT_ROOT/packaging/publish-apt-repo.sh" "$VERSION" "$BUILD_DIR"
+    bash "$PROJECT_ROOT/packaging/publish-apt-repo.sh" "$VERSION" "$DIST_DIR"
 fi
 
 echo ""

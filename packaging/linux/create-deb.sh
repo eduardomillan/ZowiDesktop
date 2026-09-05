@@ -4,6 +4,7 @@ set -e
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
 VERSION=$(grep -oP 'project\(ZowiDesktop\s+VERSION\s+\K\S+(?=\s+LANGUAGES)' "$PROJECT_ROOT/CMakeLists.txt")
+DIST_DIR="$PROJECT_ROOT/dist"
 
 echo "=== Generating debian/changelog from CHANGELOG.md ==="
 cd "$PROJECT_ROOT"
@@ -116,18 +117,19 @@ echo "=== Building .deb ==="
 # via the DEV_MODE environment variable.
 sed -i -E 's/("dev_mode"\s*:\s*")[^"]*(")/\1false\2/' "$PROJECT_ROOT/src/config.json"
 mkdir -p "$BUILD_DIR"
+mkdir -p "$DIST_DIR"
 dpkg-buildpackage -b -us -uc
 
 echo ""
 echo "=== Moving artifacts to $BUILD_DIR ==="
-mv -f "$PROJECT_ROOT"/../zowi-desktop_*.deb       "$BUILD_DIR/" 2>/dev/null || true
-mv -f "$PROJECT_ROOT"/../zowi-desktop-dbgsym_*.ddeb "$BUILD_DIR/" 2>/dev/null || true
-mv -f "$PROJECT_ROOT"/../zowi-desktop_*.buildinfo  "$BUILD_DIR/" 2>/dev/null || true
-mv -f "$PROJECT_ROOT"/../zowi-desktop_*.changes    "$BUILD_DIR/" 2>/dev/null || true
+mv -f "$PROJECT_ROOT"/../zowi-desktop_*.deb       "$DIST_DIR/" 2>/dev/null || true
+mv -f "$PROJECT_ROOT"/../zowi-desktop-dbgsym_*.ddeb "$DIST_DIR/" 2>/dev/null || true
+mv -f "$PROJECT_ROOT"/../zowi-desktop_*.buildinfo  "$DIST_DIR/" 2>/dev/null || true
+mv -f "$PROJECT_ROOT"/../zowi-desktop_*.changes    "$DIST_DIR/" 2>/dev/null || true
 
 # Restore dev mode for the development tree so it is not left OFF after packaging
 git checkout -- src/config.json debian/changelog 2>/dev/null || true
 
 echo ""
 echo "=== Done ==="
-ls -lh "$BUILD_DIR"/zowi-desktop_*.deb 2>/dev/null
+ls -lh "$DIST_DIR"/zowi-desktop_*.deb 2>/dev/null

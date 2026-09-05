@@ -189,12 +189,13 @@ fi
 echo "   OK: QtQml.Base and QtQml.WorkerScript present."
 
 echo ""
-echo "=== Moving AppImage to build directory ==="
-mv "$PROJECT_ROOT/$APPIMAGE_NAME" "$PROJECT_ROOT/build/" 2>/dev/null || true
+echo "=== Moving AppImage to dist directory ==="
+mkdir -p "$PROJECT_ROOT/dist"
+mv "$PROJECT_ROOT/$APPIMAGE_NAME" "$PROJECT_ROOT/dist/" 2>/dev/null || true
 
 echo ""
 # Restore dev mode for the development tree so it is not left OFF after packaging
 git checkout -- src/config.json 2>/dev/null || true
 
 echo "=== Done ==="
-ls -lh "$BUILD_DIR/$APPIMAGE_NAME"
+ls -lh "$PROJECT_ROOT/dist/$APPIMAGE_NAME"

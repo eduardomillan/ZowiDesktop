@@ -20,7 +20,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Extract version
         id: ver
@@ -73,19 +73,20 @@ jobs:
 
       - name: Collect DLLs with windeployqt
         run: |
-          New-Item -ItemType Directory -Path dist -Force
-          windeployqt --qmldir src\views --dir dist build-win\src\gui\Release\ZowiDesktop.exe
+          New-Item -ItemType Directory -Path build-windows\stage -Force
+          windeployqt --qmldir src\views --dir build-windows\stage build-win\src\gui\Release\ZowiDesktop.exe
 
       - name: Copy executables
         run: |
-          Copy-Item build-win\src\gui\Release\ZowiDesktop.exe dist\
-          Copy-Item build-win\src\cli\Release\zowi_cli.exe dist\ -ErrorAction SilentlyContinue
+          Copy-Item build-win\src\gui\Release\ZowiDesktop.exe build-windows\stage\
+          Copy-Item build-win\src\cli\Release\zowi_cli.exe build-windows\stage\ -ErrorAction SilentlyContinue
 
       - name: Create portable zip
         shell: bash
         run: |
-          cd dist
-          7z a "../ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip" .
+          New-Item -ItemType Directory -Path dist -Force
+          cd build-windows\stage
+          7z a "../../dist/ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip" .
 
       - name: Build installer
         run: |
@@ -93,13 +94,13 @@ jobs:
           & $iscc /DVERSION=${{ steps.ver.outputs.version }} packaging\windows\installer\zowi-desktop.iss
 
       - name: Upload portable zip
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: windows-portable
-          path: ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip
+          path: dist/ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip
 
       - name: Upload installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: windows-installer
-          path: build-windows/dist/ZowiDesktop-${{ steps.ver.outputs.version }}-setup-x64.exe
+          path: dist/ZowiDesktop-${{ steps.ver.outputs.version }}-setup-x64.exe

@@ -9,8 +9,12 @@ setlocal
 
 set APP_NAME=ZowiDesktop
 set BUILD_DIR=build-win-portable
+
+REM --- Ruta absoluta al directorio raíz del proyecto ---
+for %%i in ("%~dp0..\..") do set PROJECT_ROOT=%%~fi
+
 set DIST_DIR=dist
-set WIN_DIST_DIR=build-windows\dist
+set DIST_OUT=%PROJECT_ROOT%\dist
 
 REM --- Locate tools (adjust if paths differ) ---
 if not defined QT_PATH     set QT_PATH=C:\Qt\6.11.1\msvc2022_64
@@ -55,17 +59,17 @@ copy src\cli\Release\zowi_cli.exe %DIST_DIR%\ >nul
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
 echo.
-echo === Step 5: Create portable zip in %WIN_DIST_DIR% ===
-if not exist "..\%WIN_DIST_DIR%" mkdir "..\%WIN_DIST_DIR%"
+echo === Step 5: Create portable zip in %DIST_OUT% ===
+mkdir %DIST_OUT% 2>nul
 set ZIPNAME=%APP_NAME%-%VERSION%-windows-x86_64.zip
-powershell -NoProfile -Command "Compress-Archive -Path '%CD%\dist\*' -DestinationPath '..\%WIN_DIST_DIR%\%ZIPNAME%' -Force"
+powershell -NoProfile -Command "Compress-Archive -Path '%CD%\dist\*' -DestinationPath '%DIST_OUT%\%ZIPNAME%' -Force"
 if %ERRORLEVEL% neq 0 (
     echo.
     echo WARNING: Could not create zip. Manually zip the contents of:
     echo   %CD%\dist
 ) else (
     echo.
-    echo === Done: %WIN_DIST_DIR%\%ZIPNAME% ===
+    echo === Done: %DIST_OUT%\%ZIPNAME% ===
 )
 
 REM --- Restore dev mode for the development tree ---

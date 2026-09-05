@@ -24,7 +24,7 @@ AppSupportURL={#APP_URL}
 DefaultDirName={autopf}\{#APP_NAME}
 DefaultGroupName={#APP_NAME}
 LicenseFile=..\..\..\LICENSE
-OutputDir=..\..\..\build-windows\dist
+OutputDir=..\..\..\dist
 OutputBaseFilename=ZowiDesktop-{#VERSION}-setup-x64
 SetupIconFile=..\..\..\images\app_icon.ico
 UninstallDisplayIcon={app}\{#APP_EXE}
@@ -43,7 +43,7 @@ Name: "french";  MessagesFile: "compiler:Languages\French.isl"
 
 [Files]
 ; The portable dist/ directory — everything windeployqt collected
-Source: "..\..\..\dist\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
+Source: "..\..\..\build-windows\stage\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#APP_NAME}";        Filename: "{app}\{#APP_EXE}"

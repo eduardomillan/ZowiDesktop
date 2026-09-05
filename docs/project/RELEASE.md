@@ -12,11 +12,11 @@ This document is the end-to-end guide. For low-level build details (toolchains,
 
 | Platform | Artifact | Produced by |
 |---|---|---|
-| Linux | `build/ZowiDesktop-<version>-x86_64.AppImage` | `packaging/linux/create-appimage.sh` |
-| Linux | `build/zowi-desktop_<version>-1+jammy_amd64.deb` | `packaging/linux/create-deb.sh` (Ubuntu 22.04) |
-| Linux | `build/zowi-desktop_<version>-1+noble_amd64.deb` | `packaging/linux/create-deb.sh` (Ubuntu 24.04) |
-| Windows | `build-windows/dist/ZowiDesktop-<version>-windows-x86_64.zip` | CI (`windows.yml`) or local `build-portable.bat` |
-| Windows | `build-windows/dist/ZowiDesktop-<version>-setup-x64.exe` | CI (`windows.yml`) or local `build-installer.bat` |
+| Linux | `dist/ZowiDesktop-<version>-x86_64.AppImage` | `packaging/linux/create-appimage.sh` |
+| Linux | `dist/zowi-desktop_<version>-1+jammy_amd64.deb` | `packaging/linux/create-deb.sh` (Ubuntu 22.04) |
+| Linux | `dist/zowi-desktop_<version>-1+noble_amd64.deb` | `packaging/linux/create-deb.sh` (Ubuntu 24.04) |
+| Windows | `dist/ZowiDesktop-<version>-windows-x86_64.zip` | CI (`windows.yml`) or local `build-portable.bat` |
+| Windows | `dist/ZowiDesktop-<version>-setup-x64.exe` | CI (`windows.yml`) or local `build-installer.bat` |
 
 The AppImage and both `.deb` files are **mandatory** for a release; the Windows
 artifacts are attached automatically when present.
@@ -79,7 +79,7 @@ QT_ROOT_DIR=/path/to/qt6 bash packaging/linux/create-appimage.sh
   bundles Qt platform plugins (xcb + wayland) and essential QML modules
   (`QtQml.Base`, `QtQml.WorkerScript`), and verifies them before producing the
   image.
-- Output: `build/ZowiDesktop-<version>-x86_64.AppImage`.
+- Output: `dist/ZowiDesktop-<version>-x86_64.AppImage`.
 
 ### Debian packages
 
@@ -95,7 +95,7 @@ DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04
 - Regenerates `debian/changelog` from `CHANGELOG.md` (top entry uses the
   `CMakeLists.txt` version).
 - Builds with `dpkg-buildpackage -b -us -uc`.
-- Output: `build/zowi-desktop_<version>-1+<suffix>_amd64.deb`.
+- Output: `dist/zowi-desktop_<version>-1+<suffix>_amd64.deb`.
 
 > **Note:** packaging scripts disable `dev_mode` in `src/config.json` and
 > restore it afterwards (the Windows scripts back the file up first, the Linux
@@ -111,7 +111,7 @@ DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04
 2. When it finishes, download the two artifacts:
    - `ZowiDesktop-<version>-windows-x86_64.zip` (portable, **GUI + CLI**)
    - `ZowiDesktop-<version>-setup-x64.exe` (Inno Setup installer)
-3. Place them in `build-windows/dist/` — where the release script looks for
+3. Place them in `dist/` — where the release script looks for
    both Windows artifacts.
 
 ### Option B — Local Windows machine
@@ -125,10 +125,10 @@ packaging\windows\build-portable.bat               :: portable zip
 ```
 
 - Both scripts read the version from `CMakeLists.txt` and write directly to
-  `build-windows\dist\`:
-  - `build-installer.bat` → `build-windows\dist\ZowiDesktop-<version>-setup-x64.exe`
-    (packed from the windeployqt staging dir `dist\`)
-  - `build-portable.bat` → `build-windows\dist\ZowiDesktop-<version>-windows-x86_64.zip`
+  `dist/`:
+  - `build-installer.bat` → `dist\ZowiDesktop-<version>-setup-x64.exe`
+    (packed from the windeployqt staging dir `build-windows\stage\`)
+  - `build-portable.bat` → `dist\ZowiDesktop-<version>-windows-x86_64.zip`
 - The local portable zip includes the **GUI + CLI** (`ZOWI_BUILD_CLI=ON`), just
   like the CI zip.
 - Packaged builds ship with `dev_mode=false` in the compiled config (re-enable
@@ -139,8 +139,8 @@ packaging\windows\build-portable.bat               :: portable zip
 ### Prerequisites
 
 - `gh` CLI installed and authenticated: `gh auth login`.
-- All mandatory Linux artifacts in `build/` (AppImage + jammy + noble `.deb`).
-- Optional Windows artifacts (portable zip + installer) in `build-windows/dist/`.
+- All mandatory Linux artifacts in `dist/` (AppImage + jammy + noble `.deb`).
+- Optional Windows artifacts (portable zip + installer) in `dist/`.
 
 ### Release notes
 
@@ -193,7 +193,7 @@ Only run this from a machine holding the repo's **GPG signing key**:
 - Import the GPG signing key into your local keyring and unlock it by setting
   `GPG_PASSPHRASE` (or `APTLY_GPG_PASSPHRASE`).
 
-`packaging/publish-apt-repo.sh <version> build/`:
+`packaging/publish-apt-repo.sh <version> dist/`:
 
 1. Recreates the `zowi-jammy` and `zowi-noble` aptly repos with the new `.deb`s
    and re-publishes them (publish output goes to `~/.aptly/public`).
