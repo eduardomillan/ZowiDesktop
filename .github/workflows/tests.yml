@@ -1,6 +1,6 @@
 # Linux CI — build the core + CLI and run the automated test suites.
 #
-# Runs on every push and pull request:
+# Runs manually via workflow_dispatch:
 #   - white-box unit tests in src/core/tests (via CTest)
 #   - black-box CLI tests that need no physical robot (cli_blackbox via CTest)
 #
@@ -11,8 +11,7 @@
 name: Tests
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read

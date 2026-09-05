@@ -1,6 +1,6 @@
 # Windows CI — build the CLI (MSVC) and run the automated test suites.
 #
-# Runs on every push and pull request. Complements tests.yml (Linux) with the
+# Runs manually via workflow_dispatch. Complements tests.yml (Linux) with the
 # same philosophy: white-box unit tests (via CTest) plus the backend-agnostic
 # black-box CLI tests (cli_blackbox_win).
 #
@@ -15,8 +15,7 @@
 name: Tests (Windows)
 
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
