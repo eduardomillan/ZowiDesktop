@@ -9,6 +9,7 @@ DIST_DIR="$PROJECT_ROOT/dist"
 echo "=== Generating debian/changelog from CHANGELOG.md ==="
 cd "$PROJECT_ROOT"
 : "${DISTRO_SUFFIX:=unstable}"
+rm -rf "$BUILD_DIR"
 python3 - "$PROJECT_ROOT/CHANGELOG.md" "$PROJECT_ROOT/debian/changelog" "$DISTRO_SUFFIX" "$VERSION" <<'PYEOF'
 import sys, re
 from datetime import datetime
