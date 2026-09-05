@@ -71,22 +71,25 @@ jobs:
       - name: Build
         run: cmake --build build-win --config Release
 
+
       - name: Collect DLLs with windeployqt
+        shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path build-windows\stage -Force
+          New-Item -ItemType Directory -Path build-windows\stage -Force | Out-Null
           windeployqt --qmldir src\views --dir build-windows\stage build-win\src\gui\Release\ZowiDesktop.exe
+     
 
       - name: Copy executables
         run: |
           Copy-Item build-win\src\gui\Release\ZowiDesktop.exe build-windows\stage\
           Copy-Item build-win\src\cli\Release\zowi_cli.exe build-windows\stage\ -ErrorAction SilentlyContinue
 
-      - name: Create portable zip
-        shell: bash
+       - name: Create portable zip
+        shell: pwsh
         run: |
-          New-Item -ItemType Directory -Path dist -Force
-          cd build-windows\stage
-          7z a "../../dist/ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip" .
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Set-Location build-windows\stage
+          & 7z a "../../dist/ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip" .
 
       - name: Build installer
         run: |
