@@ -33,6 +33,9 @@ ScreenTemplate {
         "Interrogation": Commands.MouthInterrogation, "Thunder": Commands.MouthThunder,
         "Culito": Commands.MouthCulito, "Angry": Commands.MouthAngry
     })
+    // Reverse diagonal: no firmware mouth id — mirrored raw pattern of the
+    // canonical "diagonal" (bits 24/19/14/9/2 <=> "00000001000010000100000100000100").
+    readonly property int reverseDiagonalMatrix: 17318148
 
     readonly property var mouthOptions: [
         { name: "Smile",         normal: "qrc:/images/android/smile_button.png",         pressed: "qrc:/images/android/pressed_smile_button.png" },
@@ -45,7 +48,8 @@ ScreenTemplate {
         { name: "Vamp2",         normal: "qrc:/images/android/vamp2_button.png",          pressed: "qrc:/images/android/pressed_vamp2_button.png" },
         { name: "LineMouth",     normal: "qrc:/images/android/line_mouth_button.png",     pressed: "qrc:/images/android/pressed_line_mouth_button.png" },
         { name: "Confused",      normal: "qrc:/images/android/confused_button.png",       pressed: "qrc:/images/android/pressed_confused_button.png" },
-        { name: "Diagonal",      normal: "qrc:/images/android/diagonal_button.png",       pressed: "qrc:/images/android/pressed_diagonal_button.png" },
+        { name: "Diagonal",      normal: "qrc:/images/android/diagonal_reverse_button.png", pressed: "qrc:/images/android/pressed_diagonal_reverse_button.png" },
+        { name: "DiagonalRev",   normal: "qrc:/images/android/diagonal_button.png",       pressed: "qrc:/images/android/pressed_diagonal_button.png" },
         { name: "Sad",           normal: "qrc:/images/android/sad_button.png",            pressed: "qrc:/images/android/pressed_sad_button.png" },
         { name: "SadOpen",       normal: "qrc:/images/android/sad_open_button.png",       pressed: "qrc:/images/android/pressed_sad_open_button.png" },
         { name: "SadClosed",     normal: "qrc:/images/android/sad_closed_button.png",     pressed: "qrc:/images/android/pressed_sad_closed_button.png" },
@@ -58,10 +62,16 @@ ScreenTemplate {
     ]
 
     function selectMouth(name) {
-        var id = mouthIdByName[name]
-        if (id === undefined) return
+        var cmd
+        if (name === "DiagonalRev") {
+            cmd = Commands.mouth(root.reverseDiagonalMatrix)
+        } else {
+            var id = mouthIdByName[name]
+            if (id === undefined) return
+            cmd = Commands.mouthById(id)
+        }
         selectedMouth = name
-        send(Commands.mouthById(id))
+        send(cmd)
         console.log("[MouthScreen] " + name + " -> L command sent")
     }
 

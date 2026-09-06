@@ -136,6 +136,7 @@
         <file>images/android/delete_button.png</file>
         <file>images/android/diagonal_button.png</file>
         <file>images/android/diagonal_icon.png</file>
+        <file>images/android/diagonal_reverse_button.png</file>
         <file>images/android/diagram.png</file>
         <file>images/android/diagram_splash.png</file>
         <file>images/android/direction_back_button.png</file>
@@ -254,6 +255,7 @@
         <file>images/android/pressed_delete_achievements_button.png</file>
         <file>images/android/pressed_delete_button.png</file>
         <file>images/android/pressed_diagonal_button.png</file>
+        <file>images/android/pressed_diagonal_reverse_button.png</file>
         <file>images/android/pressed_direction_back_button.png</file>
         <file>images/android/pressed_direction_front_button.png</file>
         <file>images/android/pressed_direction_left_button.png</file>
