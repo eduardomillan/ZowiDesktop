@@ -1,30 +1,25 @@
 #include <zowi/translation_engine.h>
-#include <QFile>
-#include <QTextStream>
-#include <QDebug>
 #include <nlohmann/json.hpp>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 
 namespace zowi {
 
-TranslationEngine::TranslationEngine() = default;
+TranslationEngine::TranslationEngine()
+    : m_log([](LogLevel, const std::string &) {})
+{
+    m_loader = [this](const std::string &locale) { return defaultLoader(locale); };
+}
 
 namespace {
 std::unordered_map<std::string, std::unordered_map<std::string, std::string>>
-readJson(const std::string &path) {
+parseJson(const std::string &content) {
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> map;
-    QFile file(QString::fromStdString(path));
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "[i18n] Failed to open" << QString::fromStdString(path)
-                    << "- error:" << file.errorString();
-        return map;
-    }
-
     nlohmann::json j;
     try {
-        j = nlohmann::json::parse(file.readAll().toStdString());
-    } catch (const std::exception &e) {
-        qWarning() << "[i18n] Failed to parse" << QString::fromStdString(path)
-                    << "- exception:" << e.what();
+        j = nlohmann::json::parse(content);
+    } catch (const std::exception &) {
         return map;
     }
 
@@ -43,38 +38,44 @@ readJson(const std::string &path) {
     return map;
 }
 
-// Resolve the location of a locale's JSON. Prefer a filesystem copy so
-// development edits / hot-reload keep working without rebuilding the qrc,
-// and fall back to the compiled-in Qt resource for packaged builds where
-// the i18n/ directory is not present alongside the binary.
-QString resolvePath(const std::string &basePath, const std::string &locale) {
-    const QString name = QString::fromLatin1("zowi_%1.json").arg(QString::fromStdString(locale));
-    const QString fs = basePath.empty()
-        ? (QStringLiteral("i18n/") + name)
-        : (QString::fromStdString(basePath) + QStringLiteral("/i18n/") + name);
-    if (QFile::exists(fs))
-        return fs;
-    return QStringLiteral(":/i18n/") + name;
+std::string readFile(const std::string &path) {
+    std::ifstream file(path);
+    if (!file.is_open())
+        return {};
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    return ss.str();
 }
 } // namespace
+
+// Default translation loader: reads "i18n/zowi_<locale>.json" from the
+// filesystem under the resource base path (or the current working directory
+// when no base path is set). The Qt resource fallback (":/i18n/") lives in the
+// host adapters' overrides (GUI/CLI), not here, so core stays framework-free.
+std::string TranslationEngine::defaultLoader(const std::string &locale) const {
+    const std::string name = "zowi_" + locale + ".json";
+    const std::string fs = m_resourceBasePath.empty()
+        ? ("i18n/" + name)
+        : (m_resourceBasePath + "/i18n/" + name);
+    return readFile(fs);
+}
 
 void TranslationEngine::load(const std::string &locale) {
     m_translations.clear();
     m_fallback.clear();
     m_currentLocale = locale;
 
-    const QString localePath = resolvePath(m_resourceBasePath, locale);
-    m_translations = readJson(localePath.toStdString());
+    m_translations = parseJson(m_loader(locale));
 
     // Always keep English as a fallback so missing translations degrade
     // gracefully instead of showing the raw key.
     if (locale != "en_US") {
-        m_fallback = readJson(resolvePath(m_resourceBasePath, "en_US").toStdString());
+        m_fallback = parseJson(m_loader("en_US"));
     }
 
-    qInfo() << "[i18n] Loaded" << m_translations.size() << "contexts for"
-            << QString::fromStdString(locale)
-            << (m_translations.empty() ? "(EMPTY!)" : "OK");
+    m_log(LogLevel::Info, "[i18n] Loaded " + std::to_string(m_translations.size())
+        + " contexts for " + locale
+        + (m_translations.empty() ? " (EMPTY!)" : " (OK)"));
 
     if (m_onChanged) m_onChanged();
 }

@@ -21,6 +21,8 @@
 #include <QCoreApplication>
 #include <QEventLoop>
 #include <QTimer>
+#include <QFile>
+#include <QString>
 
 #include <zowi/session_store.h>
 #include <zowi/transport_constants.h>
@@ -83,7 +85,24 @@ int runSession(const SessionArgs &a)
 int runTranslate(const TranslateArgs &a)
 {
     zowi::TranslationEngine engine;
-    engine.setResourceBasePath(".");
+
+    // Qt-aware loader: filesystem first, then the compiled-in Qt resource
+    // (CLI_I18N_RC) for packaged builds with no i18n/ beside the binary.
+    engine.setTranslationLoader([](const std::string &locale) {
+        const QString name = QString::fromLatin1("zowi_%1.json").arg(QString::fromStdString(locale));
+        const QString fs = QStringLiteral("i18n/") + name;
+        QString path;
+        if (QFile::exists(fs))
+            path = fs;
+        else
+            path = QStringLiteral(":/i18n/") + name;
+
+        QFile file(path);
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+            return std::string();
+        return file.readAll().toStdString();
+    });
+
     engine.load(a.locale);
     std::string result = engine.translate(a.context, a.source);
     std::cout << result << std::endl;

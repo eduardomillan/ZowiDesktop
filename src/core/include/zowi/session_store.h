@@ -9,8 +9,12 @@ namespace zowi {
 
 class SessionStore {
 public:
+    // `configDir` optionally pins the configuration directory (platform default
+    // resolution is used when empty). Android/Flutter hosts pass their app data
+    // directory here so the store stays framework-free.
     explicit SessionStore(const std::string &organization = "ZowiDesktop",
-                          const std::string &application = "ZowiApp");
+                          const std::string &application = "ZowiApp",
+                          const std::string &configDir = "");
 
     std::string getString(const std::string &key, const std::string &defaultValue = "") const;
     bool getBool(const std::string &key, bool defaultValue = false) const;
@@ -36,7 +40,8 @@ private:
 
     void load();
     void save();
-    static std::string resolveConfigPath(const std::string &org, const std::string &app);
+    static std::string resolveConfigPath(const std::string &org, const std::string &app,
+                                         const std::string &configDir);
 };
 
 } // namespace zowi

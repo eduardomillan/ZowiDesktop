@@ -5,8 +5,9 @@
 
 namespace zowi {
 
-SessionStore::SessionStore(const std::string &organization, const std::string &application)
-    : m_filePath(resolveConfigPath(organization, application))
+SessionStore::SessionStore(const std::string &organization, const std::string &application,
+                           const std::string &configDir)
+    : m_filePath(resolveConfigPath(organization, application, configDir))
 {
     load();
 }
@@ -99,25 +100,33 @@ void SessionStore::save() {
     }
 }
 
-std::string SessionStore::resolveConfigPath(const std::string &org, const std::string &app) {
+std::string SessionStore::resolveConfigPath(const std::string &org, const std::string &app,
+                                            const std::string &configDir) {
     std::filesystem::path dir;
 
+    if (!configDir.empty()) {
+        // Explicit app-data directory supplied by the host (e.g. Android
+        // getDataDir(), Flutter path_provider). Keeps core free of platform
+        // APIs; create_directories is a no-op when it already exists.
+        dir = configDir;
+    } else {
 #ifdef _WIN32
-    const char *appdata = std::getenv("APPDATA");
-    dir = appdata ? std::filesystem::path(appdata) : std::filesystem::path(".");
-    dir /= org;
+        const char *appdata = std::getenv("APPDATA");
+        dir = appdata ? std::filesystem::path(appdata) : std::filesystem::path(".");
+        dir /= org;
 #elif __APPLE__
-    const char *home = std::getenv("HOME");
-    dir = home ? std::filesystem::path(home) / "Library/Application Support"
-               : std::filesystem::path(".");
-    dir /= org;
+        const char *home = std::getenv("HOME");
+        dir = home ? std::filesystem::path(home) / "Library/Application Support"
+                   : std::filesystem::path(".");
+        dir /= org;
 #else
-    const char *xdg = std::getenv("XDG_CONFIG_HOME");
-    const char *home = std::getenv("HOME");
-    dir = xdg ? std::filesystem::path(xdg)
-              : std::filesystem::path(home ? home : ".") / ".config";
-    dir /= org;
+        const char *xdg = std::getenv("XDG_CONFIG_HOME");
+        const char *home = std::getenv("HOME");
+        dir = xdg ? std::filesystem::path(xdg)
+                  : std::filesystem::path(home ? home : ".") / ".config";
+        dir /= org;
 #endif
+    }
 
     std::filesystem::create_directories(dir);
     return (dir / (app + ".json")).string();

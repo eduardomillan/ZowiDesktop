@@ -72,9 +72,13 @@ else()
     message(STATUS "FOUND!")
 endif()
 
-# ── Qt Core (needed by core's TranslationEngine, which loads the
-#    compiled-in i18n resources via QFile) ───────────────────────
-find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Core)
+# ── Qt Core (GUI/CLI consumers; src/core itself is framework-free) ──────
+# The CLI's core-only transactions (config, translate filesystem loader) and
+# the backends relay on Qt::Core, so it is only required when a consumer is
+# built. A core/tests-only build stays Qt-free.
+if(ZOWI_BUILD_GUI OR ZOWI_BUILD_CLI)
+    find_package(Qt${ZOWI_QT_VERSION} REQUIRED COMPONENTS Core)
+endif()
 
 # ── Core library ───────────────────────────────────────────────
 add_subdirectory(src/core)

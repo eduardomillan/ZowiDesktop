@@ -19,8 +19,8 @@ target_include_directories(zowi_core
 target_compile_features(zowi_core PUBLIC cxx_std_20)
 target_link_libraries(zowi_core
     PUBLIC nlohmann_json::nlohmann_json
-    PRIVATE Qt${ZOWI_QT_VERSION}::Core
 )
-set_target_properties(zowi_core PROPERTIES AUTOMOC OFF)
 
+# Core is framework-free (no Qt): used by the CLI, the GUI and, potentially,
+# Android/Flutter hosts via FFI/JNI.
 add_library(Zowi::core ALIAS zowi_core)
