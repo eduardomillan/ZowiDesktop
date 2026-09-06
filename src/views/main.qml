@@ -82,11 +82,14 @@ Window {
 
     function connectSplash(splash) {
         splash.splashFinished.connect(function() {
+            console.log("main.qml: splashFinished, hasDismissedWizard:", Session.hasDismissedWizard(), "deviceAddress:", Session.loadActiveZowiDeviceAddress())
             if (Session.hasDismissedWizard() || Session.loadActiveZowiDeviceAddress() !== "") {
+                console.log("main.qml: going to HomeScreen")
                 var home = stack.replace("qrc:/src/views/screens/HomeScreen.qml")
                 connectHome(home)
                 return
             }
+            console.log("main.qml: going to WelcomeScreen")
             var welcome = stack.replace("qrc:/src/views/screens/WelcomeScreen.qml")
             connectWelcome(welcome)
         })
