@@ -3,6 +3,7 @@
 #include "SessionController.h"
 #include <QVariant>
 #include <QDateTime>
+#include <QFile>
 #include <zowi/project_model.h>
 
 ProjectsController::ProjectsController(TranslatorController *translator, SessionController *session, QObject *parent)
@@ -18,8 +19,15 @@ ProjectsController::ProjectsController(TranslatorController *translator, Session
 
     m_prefsStore.onChanged([this]() { emit projectsChanged(); });
 
-    // Resource base path for Qt resource system (:/projects/...)
-    m_projectsStore.setResourceBasePath(":/projects");
+    m_projectsStore.setProjectsLoader([]() {
+        QFile qrc(":/projects/move.json");
+        if (qrc.open(QIODevice::ReadOnly))
+            return QString::fromUtf8(qrc.readAll()).toStdString();
+        QFile disk("projects/move.json");
+        if (disk.open(QIODevice::ReadOnly))
+            return QString::fromUtf8(disk.readAll()).toStdString();
+        return std::string();
+    });
     m_projectsStore.loadAll();
 }
 
@@ -93,6 +101,22 @@ void ProjectsController::setCompleted(const QString &id, bool completed) {
     std::string key = id.toStdString() + "_project_completeness";
     m_session->saveString(QString::fromStdString(key), completed ? "true" : "");
     emit projectsChanged();
+}
+
+QString ProjectsController::loadHtml(const QString &id, const QString &locale) const {
+    auto read = [](const QString &path) -> QString {
+        QFile f(path);
+        if (!f.open(QIODevice::ReadOnly))
+            return {};
+        return QString::fromUtf8(f.readAll());
+    };
+    const QString rel = QStringLiteral("%1/%2.html").arg(id, locale);
+    QString html = read(QStringLiteral("projects/") + rel);
+    if (html.isEmpty())
+        html = read(QStringLiteral(":/projects/") + rel);
+    if (html.isEmpty() && locale != QLatin1String("en_US"))
+        return loadHtml(id, QStringLiteral("en_US"));
+    return html;
 }
 
 int ProjectsController::getBlockadeDurationMs() const {

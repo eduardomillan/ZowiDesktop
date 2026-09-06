@@ -28,6 +28,7 @@ ScreenTemplate {
     readonly property var project: Projects.getProject("move")
     property bool completed: false
     property bool quizStarted: false
+    property string contentHtml: ""
     footerHeight: 88
 
     property string doneIconSource: completed
@@ -36,15 +37,25 @@ ScreenTemplate {
 
     function refreshCompleted() { completed = Projects.isCompleted("move") }
 
-    Component.onCompleted: refreshCompleted()
+    function loadContentHtml() {
+        contentHtml = Projects.loadHtml("move", Translator.currentLocale())
+    }
+
+    Component.onCompleted: {
+        refreshCompleted()
+        loadContentHtml()
+    }
     Connections {
         target: Projects
         function onProjectsChanged() { moveScreen.refreshCompleted() }
     }
+    Connections {
+        target: Translator
+        function onLanguageChanged() { moveScreen.loadContentHtml() }
+    }
 
-    // External link handler
     function openLink() {
-        Qt.openUrlExternally(project.url)
+        Qt.openUrlExternally(tr("url"))
     }
 
     // Quiz finished handler
@@ -64,65 +75,55 @@ ScreenTemplate {
         msgBar.show(tr("quiz_blocked").arg(formatCountdown(remainingMs)), Config.get("color_warning") || "#e67e22")
     }
 
-// Content area
-    Column {
-        id: contentColumn
+    Item {
+        id: contentPanel
         anchors.fill: parent
-        anchors.margins: 30
-        spacing: 20
         visible: !moveScreen.quizStarted
 
-        // Project image
-        Rectangle {
-            id: debugImage
-            visible: moveScreen.debugBorders
-            anchors.fill: projectImage
-            border.color: "lightgray"
-            border.width: 1
-            color: "transparent"
-            radius: 4
-            z: 1000
-        }
-        Image {
-            id: projectImage
-            source: "qrc:/images/android/project_move_image.png"
-            sourceSize.width: 300
-            sourceSize.height: 300
-            fillMode: Image.PreserveAspectFit
-            anchors.horizontalCenter: parent.horizontalCenter
-        }
+        Flickable {
+            id: articleFlick
+            width: parent.width * 0.9
+            height: parent.height * 0.9
+            anchors.centerIn: parent
+            clip: true
+            contentWidth: width
+            contentHeight: articleCol.height
+            boundsBehavior: Flickable.StopAtBounds
 
+            Rectangle {
+                visible: moveScreen.debugBorders
+                anchors.fill: articleCol
+                border.color: "lightgray"
+                border.width: 1
+                color: "transparent"
+                radius: 4
+                z: 1000
+            }
 
-        Text {
-            id: rowTitle
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("title")
-            font.pixelSize: 24
-            font.bold: true
-            color: Config.get("color_primary") || "#2d5a2d"
-            horizontalAlignment: Text.AlignHCenter
-            width: moveScreen.width * 0.8
-        }
+            Column {
+                id: articleCol
+                width: articleFlick.width
+                spacing: 16
 
-        // Learning description
-        Rectangle {
-            id: debugDesc
-            visible: moveScreen.debugBorders
-            anchors.fill: learningDesc
-            border.color: "lightgray"
-            border.width: 1
-            color: "transparent"
-            radius: 4
-            z: 1000
-        }
-        Text {
-            id: learningDesc
-            text: tr("learning_description")
-            font.pixelSize: 16
-            color: Config.get("color_primary") || "#2d5a2d"
-            wrapMode: Text.WordWrap
-            horizontalAlignment: Text.AlignHCenter
-            width: moveScreen.width * 0.8
+                Image {
+                    id: projectThumb
+                    source: "qrc:/images/projects/move_thumb.png"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    fillMode: Image.PreserveAspectFit
+                }
+
+                Text {
+                    id: articleText
+                    width: parent.width
+                    text: moveScreen.contentHtml
+                    textFormat: Text.RichText
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    color: Config.get("color_primary") || "#2d5a2d"
+                    font.pixelSize: 16
+                    onLinkActivated: Qt.openUrlExternally(link)
+                }
+            }
         }
     }
 

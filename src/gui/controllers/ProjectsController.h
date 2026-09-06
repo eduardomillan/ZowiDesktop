@@ -22,6 +22,7 @@ public:
     Q_INVOKABLE int getBlockadeRemainingMs(const QString &id) const;
     Q_INVOKABLE void blockQuiz(const QString &id, int durationMs);
     Q_INVOKABLE void setCompleted(const QString &id, bool completed = true);
+    Q_INVOKABLE QString loadHtml(const QString &id, const QString &locale) const;
 
     // Preferences
     Q_INVOKABLE int getBlockadeDurationMs() const;

@@ -1,5 +1,10 @@
 <RCC>
     <qresource prefix="/projects">
         <file alias="move.json">projects/move.json</file>
+        <file alias="move/es_ES.html">projects/move/es_ES.html</file>
+        <file alias="move/en_US.html">projects/move/en_US.html</file>
+        <file alias="move/ca_ES.html">projects/move/ca_ES.html</file>
+        <file alias="move/fr_FR.html">projects/move/fr_FR.html</file>
+        <file alias="move/bg_BG.html">projects/move/bg_BG.html</file>
     </qresource>
 </RCC>

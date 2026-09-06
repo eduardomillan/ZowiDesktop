@@ -222,7 +222,7 @@
   "ProjectMoveScreen.qml": {
     "title": "Moure",
     "learning_description": "Aprèn a guiar Zowi amb precisió i entén com es mou un robot de dues potes. Descobreix els fonaments de la locomotió robòtica i practica controlant els moviments de Zowi.",
-    "url": "http://zowi.bq.com/projects/move-objects/",
+    "url": "https://eduardomillan.github.io/ZowiDesktop/docs/projects/move/ca/",
     "learn_more": "Saber-ne més",
     "test": "Test",
     "run_test": "Executar prova",

@@ -222,7 +222,7 @@
   "ProjectMoveScreen.qml": {
     "title": "Преместване",
     "learning_description": "Научете да управлявате Zowi точно и разберете как се движи робот с две крака. Открийте основите на роботичната локомоция и упражнете управлението на движенията на Zowi.",
-    "url": "http://zowi.bq.com/projects/move-objects/",
+    "url": "https://eduardomillan.github.io/ZowiDesktop/docs/projects/move/bg/",
     "learn_more": "Научете повече",
     "test": "Test",
     "run_test": "Стартирай теста",

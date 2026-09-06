@@ -4,6 +4,7 @@ set(GUI_QRC_FILES
     ${CMAKE_SOURCE_DIR}/app.qrc
     ${CMAKE_SOURCE_DIR}/images.qrc
     ${CMAKE_SOURCE_DIR}/i18n.qrc
+    ${CMAKE_SOURCE_DIR}/projects.qrc
 )
 if(ZOWI_QT_VERSION EQUAL 6)
     qt6_add_resources(GUI_RESOURCES ${GUI_QRC_FILES} OPTIONS --no-zstd)
@@ -71,6 +72,8 @@ add_executable(zowi_screen_preview
     controllers/ConfigController.cpp
     controllers/CalibrationSessionController.cpp
     controllers/CommandsController.cpp
+    controllers/ProjectsController.cpp
+    controllers/SessionController.cpp
     ${GUI_RESOURCES}
 )
 

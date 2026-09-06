@@ -213,7 +213,7 @@
   "ProjectMoveScreen.qml": {
     "title": "Mover",
     "learning_description": "Aprende a guiar a Zowi con precisión y comprende cómo se mueve un robot de dos patas. Descubre los fundamentos de la locomoción robótica y practica controlando los movimientos de Zowi.",
-    "url": "http://zowi.bq.com/projects/move-objects/",
+    "url": "https://eduardomillan.github.io/ZowiDesktop/docs/projects/move/es/",
     "learn_more": "Saber más",
     "test": "Test",
     "run_test": "Ejecutar prueba",

@@ -102,6 +102,7 @@ QString openLogFile()
 #include "controllers/ConfigController.h"
 #include "controllers/CalibrationSessionController.h"
 #include "controllers/CommandsController.h"
+#include "controllers/ProjectsController.h"
 
 static QQmlApplicationEngine *s_engine = nullptr;
 static QString s_qmlPath;
@@ -163,6 +164,7 @@ int main(int argc, char *argv[])
     ConfigController config;
     CalibrationSessionController calibration;
     CommandsController commands;
+    ProjectsController projects(&translator, &session);
     g_logLevel = logLevelFromName(config.get("log_level"));
     robot.setSessionController(&session);
 
@@ -188,6 +190,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Config", &config);
     engine.rootContext()->setContextProperty("Calibration", &calibration);
     engine.rootContext()->setContextProperty("Commands", &commands);
+    engine.rootContext()->setContextProperty("Projects", &projects);
     engine.rootContext()->setContextProperty("AppVersion", QString(ZOWI_VERSION));
 
     // Live G commands from the calibration screen go through the same write path
