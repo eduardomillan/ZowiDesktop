@@ -19,8 +19,15 @@
   - [Future milestones](#future-milestones)
 - [Testing](#testing)
 - [Technical notes](#technical-notes)
+- [Repository strategy (monorepo vs. multiple repos)](#repository-strategy-monorepo-vs-multiple-repos)
 
 ## Release Plan
+
+Status: 
+- ✅ Done 
+- 🚧 Under development
+- 🕒 Planned
+
 
 | Version | Milestone | Description | Status |
 |---------|-----------|-------------|--------|
@@ -32,7 +39,9 @@
 | **0.5.0** | M5 | Firmware restore GUI (BT+USB), low-battery confirmation, `adivinawi` CLI, transport selection in GUI | ✅ |
 | **0.6.0** | M6 | Transport situation state machine, automatic transport, persistent preference, DEV overlay, restore feedback | ✅ |
 | **0.7.0** | M7 | Zowi calibration (servo trims via `C`/`G` protocol commands) | ✅ |
-| **0.8.0** | M7 | Face/mouth editor (pintabocas) | ✅ |
+| **0.8.0** | M8 | Basic projects | 🚧 |
+| **0.9.0** | M8 | Advanced projects | 🕒 |
+| **0.10.0** | M8 | Design improvements | 🕒 |
 
 ## Architecture
 
@@ -164,3 +173,50 @@ src/
 - All robot images and UI assets come from the original Android project (`drawable-xxxhdpi`).
 - GUI debug builds load QML from disk with hot-reload; release builds use `resources.qrc`.
 - Runtime logs: `qDebug`/`qWarning` mirrored to stderr + per-day log file at `AppDataLocation`.
+
+## Repository strategy (monorepo vs. multiple repos)
+
+**Recommendation: keep a single monorepo with clean module boundaries; consider
+splitting only if/when real Android/Web consumers appear.**
+
+The repository is already a monorepo with decoupled modules: `zowi_core` is a
+Qt-free static library, and the GUI (`-DZOWI_BUILD_GUI=OFF`) and CLI
+(`-DZOWI_BUILD_CLI=OFF`) build independently. The Qt-free refactor
+(`TranslationEngine`/`SessionStore` injection) makes a future split *possible*,
+not *necessary* today.
+
+Why a full split hurts more than it helps for a single maintainer:
+
+- **Versioning and releases**: `core` would need its own semver/tags/CI
+  publishing, and every change would force version bumps and release
+  coordination across cli/gui/android/web. The release flow (AppImage, `.deb`,
+  apt repo, gh-pages) is coupled to this repo.
+- **Shared non-core code**: the GUI and CLI share `src/backends/` (`bt_qt`,
+  `bt_serial`, `bt_serial_win`, `bt_native`) and `src/firmware/`. Splitting
+  cli/gui into separate repos would either duplicate that code or require a
+  fifth "backends" repo. Android and Web do not use the backends (they bring
+  their own native Bluetooth/wasm), so `core` is the only genuinely shared
+  piece.
+- **Cross-repo coordination**: PRs touching several repos, submodules/
+  FetchContent between them, more workflows. For a single developer the
+  monorepo wins on simplicity; a split pays off with distinct teams or release
+  cadences.
+
+The one split that makes sense (deferred): extract **`zowi_core` alone**
+(optionally with `protocol.h`/firmware) into its own repo consumable via
+`FetchContent`/submodule. It is clean because core depends on nothing. Do this
+only once a real Android/Web consumer exists — today all consumers are in-repo,
+so a separate repo would be pure overhead.
+
+Suggested split, if it ever happens:
+
+| Repo | Content | Consumed by |
+|---|---|---|
+| `zowi-core` | `src/core/` (API, protocol) | cli, gui, android, web |
+| `ZowiDesktop` | GUI + CLI + backends + packaging | — |
+| `ZowiAndroid` | Java/Kotlin app + JNI wrapper (core as submodule) | — |
+| (web) | wasm/JS wrapper over core (core as submodule) | — |
+
+Decision trigger: concrete Android/Web port plans, additional maintainers/teams,
+or a problem the monorepo cannot solve (slower builds, permissions, history,
+releases).
