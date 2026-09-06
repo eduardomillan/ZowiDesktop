@@ -1,5 +1,14 @@
 # MVC vs MVP vs MVVM
 
+## Table of contents
+
+- [MVC (Model-View-Controller)](#mvc-model-view-controller)
+- [MVP (Model-View-Presenter)](#mvp-model-view-presenter)
+- [MVVM (Model-View-ViewModel)](#mvvm-model-view-viewmodel)
+  - [Why MVVM fits Qt/QML naturally](#why-mvvm-fits-qtqml-naturally)
+  - [Comparison table](#comparison-table)
+- [Restaurant analogy](#restaurant-analogy)
+
 ## MVC (Model-View-Controller)
 
 The **Controller** is the "boss" that receives user commands (clicks, keystrokes). It interprets the command, tells the **Model** to do the work, and once done, **tells the View to update** by displaying the new data.

@@ -1,20 +1,58 @@
 # Releasing Zowi Desktop
 
-Releases are **manual by design**: there is no automated release workflow. A
-release bundles artifacts built on two platforms — **Linux** (AppImage + Debian
-packages) and **Windows** (portable zip + Inno Setup installer) — and uploads
-them to a GitHub Release, optionally publishing a signed apt repository.
+Releases are **manual by design**: there is no automated release workflow, but
+the artifact-building **CI workflows run manually on request** — `linux.yml`
+("Linux CI") produces the Linux artifacts on GitHub runners and `windows.yml`
+("Windows CI") produces the Windows artifacts. Both can be run from
+**Actions → <workflow> → Run workflow** and their outputs are downloaded into
+`dist/` before creating the release.
+
+A release bundles artifacts built on two platforms — **Linux** (AppImage +
+Debian packages) and **Windows** (portable zip + Inno Setup installer) — and
+uploads them to a GitHub Release, optionally publishing a signed apt repository.
 
 This document is the end-to-end guide. For low-level build details (toolchains,
 `bt_native`, QML deployment) see [docs/project/BUILD.md](BUILD.md).
+
+## Table of contents
+
+- [Workflows at a glance](#workflows-at-a-glance)
+- [Artifacts](#artifacts)
+- [Release version](#release-version)
+- [Release checklist](#release-checklist)
+- [Linux artifacts](#linux-artifacts)
+  - [Option A — GitHub Actions (recommended)](#option-a--github-actions-recommended)
+  - [Option B — Local machine](#option-b--local-machine)
+  - [Prerequisites](#prerequisites)
+  - [AppImage](#appimage)
+  - [Debian packages](#debian-packages)
+- [Windows artifacts](#windows-artifacts)
+  - [Option A — GitHub Actions (recommended)](#option-a--github-actions-recommended-1)
+  - [Option B — Local Windows machine](#option-b--local-windows-machine)
+- [Publish the GitHub Release](#publish-the-github-release)
+  - [Prerequisites](#prerequisites-1)
+  - [Release notes](#release-notes)
+  - [Create the release](#create-the-release)
+- [Publish the signed apt repository (`--with-apt`)](#publish-the-signed-apt-repository--with-apt)
+- [Verify the release](#verify-the-release)
+
+## Workflows at a glance
+
+Both build workflows are **manual (`workflow_dispatch`)** — running them never
+creates a tag or a GitHub Release; they only produce build artifacts:
+
+| Workflow | File | Trigger | Artifacts |
+|----------|------|---------|-----------|
+| Linux CI | `.github/workflows/linux.yml` | **Actions → Linux CI → Run workflow** | AppImage (ubuntu-latest) + jammy `.deb` (ubuntu-22.04) + noble `.deb` (ubuntu-24.04) |
+| Windows CI | `.github/workflows/windows.yml` | **Actions → Windows CI → Run workflow** | portable zip (+ installer via Inno Setup), MSVC 2022 + Qt 6.8 |
 
 ## Artifacts
 
 | Platform | Artifact | Produced by |
 |---|---|---|
-| Linux | `dist/ZowiDesktop-<version>-x86_64.AppImage` | `packaging/linux/create-appimage.sh` |
-| Linux | `dist/zowi-desktop_<version>-1+jammy_amd64.deb` | `packaging/linux/create-deb.sh` (Ubuntu 22.04) |
-| Linux | `dist/zowi-desktop_<version>-1+noble_amd64.deb` | `packaging/linux/create-deb.sh` (Ubuntu 24.04) |
+| Linux | `dist/ZowiDesktop-<version>-x86_64.AppImage` | `packaging/linux/create-appimage.sh` or CI (`linux.yml`) |
+| Linux | `dist/zowi-desktop_<version>-1+jammy_amd64.deb` | `packaging/linux/create-deb.sh` (Ubuntu 22.04) or CI (`linux.yml`) |
+| Linux | `dist/zowi-desktop_<version>-1+noble_amd64.deb` | `packaging/linux/create-deb.sh` (Ubuntu 24.04) or CI (`linux.yml`) |
 | Windows | `dist/ZowiDesktop-<version>-windows-x86_64.zip` | CI (`windows.yml`) or local `build-portable.bat` |
 | Windows | `dist/ZowiDesktop-<version>-setup-x64.exe` | CI (`windows.yml`) or local `build-installer.bat` |
 
@@ -26,7 +64,7 @@ artifacts are attached automatically when present.
 The version lives in a single source of truth, the top of `CMakeLists.txt`:
 
 ```cmake
-project(ZowiDesktop VERSION 0.6.0 LANGUAGES CXX)
+project(ZowiDesktop VERSION 0.6.10 LANGUAGES CXX)
 ```
 
 All release scripts parse the `project()` line with a regex (`VERSION\s+(\S+)`)
@@ -53,12 +91,23 @@ and derive the git tag as `v<version>`. To cut a new release:
 ## Release checklist
 
 1. Bump `CMakeLists.txt` and update `CHANGELOG.md`.
-2. Build the **Linux** artifacts (AppImage + jammy/noble `.deb`).
-3. Build or download the **Windows** artifacts (zip + installer).
+2. Build the **Linux** artifacts (AppImage + jammy/noble `.deb`) — locally or via the **Linux CI** workflow.
+3. Build or download the **Windows** artifacts (zip + installer) — via the **Windows CI** workflow, or locally.
 4. `gh auth login` and commit the regenerated `debian/changelog`.
 5. Run `packaging/create-gh-release.sh` (or with `--with-apt`).
 
 ## Linux artifacts
+
+### Option A — GitHub Actions (recommended)
+
+1. Go to **Actions → Linux CI → Run workflow**. The workflow builds three
+   jobs on `ubuntu-latest` / `ubuntu-22.04` / `ubuntu-24.04` with Qt 6.8:
+   AppImage, jammy `.deb` and noble `.deb`.
+2. When it finishes, download the three artifacts
+   (`linux-appimage`, `linux-deb-jammy`, `linux-deb-noble`) into `dist/`,
+   where the release script looks for them.
+
+### Option B — Local machine
 
 ### Prerequisites
 
@@ -107,7 +156,7 @@ DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04
 ### Option A — GitHub Actions (recommended)
 
 1. Go to **Actions → Windows CI → Run workflow** (manual `workflow_dispatch`).
-   The workflow builds on `windows-latest` with MSVC 2022 and Qt 6.8.
+   The workflow builds on `windows-2022` with MSVC 2022 and Qt 6.8.
 2. When it finishes, download the two artifacts:
    - `ZowiDesktop-<version>-windows-x86_64.zip` (portable, **GUI + CLI**)
    - `ZowiDesktop-<version>-setup-x64.exe` (Inno Setup installer)

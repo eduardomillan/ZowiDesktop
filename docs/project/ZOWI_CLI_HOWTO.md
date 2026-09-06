@@ -10,6 +10,7 @@ The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionalit
 - [Help](#help)
 - [Session](#session)
 - [Config](#config)
+- [Ports](#ports)
 - [Translate](#translate)
 - [Scan](#scan)
 - [Connect](#connect)
@@ -42,6 +43,7 @@ zowi_cli <subcommand> [options]
 | `--version` | Print CLI version and exit |
 | `session` | Manage session data (persistent key-value store) |
 | `config` | Read app configuration values |
+| `ports` | List available USB serial ports (`/dev/ttyUSB*`, `/dev/ttyACM*`) |
 | `translate` | Translate strings using the i18n engine |
 | `scan` | Scan for nearby Zowi robots via Bluetooth |
 | `connect` | Connect to a Zowi and receive identification data |
@@ -67,6 +69,7 @@ zowi_cli <subcommand> [options]
 zowi_cli --help              # General help
 zowi_cli session --help      # Session subcommand help
 zowi_cli config --help       # Config subcommand help
+zowi_cli ports --help        # Ports subcommand help
 zowi_cli translate --help    # Translate help
 zowi_cli scan --help         # Scan help
 zowi_cli connect --help      # Connect help
@@ -95,7 +98,7 @@ zowi_cli --version
 Output:
 
 ```
-0.6.0
+0.6.10
 ```
 
 
@@ -198,9 +201,27 @@ Output:
 https://eduardomillan.github.io/ZowiDesktop
 ```
 
+## Ports
+
+List the USB serial ports the CLI can talk to (`/dev/ttyUSB*`, `/dev/ttyACM*`).
+Use one of them with `restore`/`alarm`/`adivinawi`/`control` via
+`--backend usb --tty <port>`.
+
+```bash
+zowi_cli ports
+```
+
+Output:
+
+```
+Available USB serial ports:
+  /dev/ttyUSB0
+  /dev/ttyACM0
+```
+
 ## Translate
 
-Translate source text using the custom XML-based i18n engine.
+Translate source text using the custom JSON-based i18n engine.
 
 ### Default locale (es_ES)
 
@@ -221,7 +242,7 @@ zowi_cli translate -l ca_ES -s "Hola mundo"
 zowi_cli translate -c "WelcomeScreen.qml" -s "Start"
 ```
 
-Available locales: `es_ES`, `ca_ES`, `en_US`.
+Available locales: `es_ES`, `ca_ES`, `en_US`, `fr_FR`, `bg_BG`.
 
 ## Scan
 
@@ -1010,7 +1031,7 @@ zowi_cli gesture 12          # same as victory (by ID)
 
 ## Mouth
 
-Display a mouth/LED pattern on the robot's mouth matrix. The mouth is a 5x3 LED
+Display a mouth/LED pattern on the robot's mouth matrix. The mouth is a 5x6 LED
 matrix that can display simple icons and expressions.
 
 ### Available mouths

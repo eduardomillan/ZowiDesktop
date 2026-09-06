@@ -1,5 +1,26 @@
 # Architecture
 
+## Table of contents
+
+- [Overview](#overview)
+- [Layer Responsibilities](#layer-responsibilities)
+  - [zowi_core (pure C++)](#zowi_core-pure-c)
+  - [zowi_bt_qt (Qt Bluetooth backend)](#zowi_bt_qt-qt-bluetooth-backend)
+  - [src/gui/ (Qt 6 / QML frontend)](#srcgui-qt-6--qml-frontend)
+  - [src/cli/ (terminal tool)](#srccli-terminal-tool)
+- [Directory Layout](#directory-layout)
+- [Build Targets](#build-targets)
+  - [CMake options](#cmake-options)
+- [Data Flow](#data-flow)
+  - [GUI path](#gui-path)
+  - [CLI path](#cli-path)
+- [Third-party Dependencies](#third-party-dependencies)
+- [Screen Navigation](#screen-navigation)
+- [View Mapping (Android → Desktop)](#view-mapping-android--desktop)
+- [QML Hot-Reload](#qml-hot-reload)
+- [Testing](#testing)
+- [Architecture evolution (MVVM → API + CLI + Frontend)](#architecture-evolution-mvvm--api--cli--frontend)
+
 ## Overview
 
 Zowi Desktop follows an **API + CLI + Frontend** architecture. Business logic lives in a pure C++ core library with no Qt dependency. Two consumers use this core independently:
@@ -216,3 +237,40 @@ ctest --test-dir build
 ```
 
 3 tests: `test_session_store`, `test_config_store`, `test_translation_engine`.
+
+## Architecture evolution (MVVM → API + CLI + Frontend)
+
+The project originally used a monolithic **MVVM** pattern tightly coupled to Qt:
+business logic lived in `QObject` subclasses (`SessionService`,
+`BluetoothService`, `TranslationEngine`), every service required Qt, testing
+needed the full Qt stack (QTest + QML context), there was no CLI, and the
+Bluetooth logic was coupled to QML, making it hard to swap backends (e.g. a
+native Win32 backend).
+
+The migration to the current **API + CLI + Frontend** layout replaced the Qt
+services with a pure C++ core (`src/core/`, no Qt dependency) exposed through
+the abstract `BluetoothApi`, added a pluggable backend layer
+(`src/backends/`), a CLI consumer (`zowi_cli`) for scripting/debugging, and Qt
+adapters (`src/gui/controllers/`) that merely expose core classes to QML.
+
+| Was (MVVM) | Now (API + CLI + Frontend) |
+|---|---|
+| `src/services/*` (Qt `QObject` services) | `src/core/` — pure C++; single CLI entry |
+| `src/controllers/*` (ViewModel layer) | `src/gui/controllers/` — thin Qt adapters |
+| `src/main.cpp` (single entry point) | `src/gui/main.cpp` + `src/cli/main.cpp` |
+| `src/BtTest.cpp` | `zowi_cli scan` |
+| `src/tests/*` (QTest, Qt-coupled) | `src/core/tests/` — run without Qt |
+| `zowi_*_legacy` CMake targets | removed |
+
+Benefits:
+
+- **Testable without Qt** — core tests compile and run without Qt installed.
+- **CLI for debugging** — `zowi_cli` covers session, config, translate, scan,
+  and robot commands without launching the GUI.
+- **Pluggable backends** — `BluetoothApi` is transport-agnostic; `bt_qt`,
+  `bt_native`, `bt_serial` and `bt_serial_win` can be swapped without touching
+  core code, and a mock can be used in tests.
+- **Fast iteration** — core changes recompile only `zowi_core`; CLI changes
+  recompile only `zowi_cli`; QML changes hot-reload with no C++ rebuild.
+- **Independent consumers** — CLI and GUI build separately
+  (`-DZOWI_BUILD_GUI=OFF` / `-DZOWI_BUILD_CLI=OFF`).

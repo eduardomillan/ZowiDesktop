@@ -13,6 +13,7 @@
 - [Platform builds](#platform-builds)
 - [Linux AppImage](#linux-appimage)
 - [Linux Debian packages](#linux-debian-packages)
+- [Linux CI (GitHub Actions)](#linux-ci-github-actions)
 - [GitHub Releases](#github-releases)
 - [Windows builds](#windows-builds)
   - [On a Windows machine (MSVC)](#on-a-windows-machine-msvc)
@@ -213,6 +214,7 @@ cmake --build build
 | **Linux (AppImage)** | `dist/ZowiDesktop-<version>-x86_64.AppImage` | `./packaging/linux/create-appimage.sh` |
 | **Linux (.deb)** | `dist/zowi-desktop_<version>-1+<distro>_amd64.deb` | `./packaging/linux/create-deb.sh` |
 | **Windows (zip + installer)** | `dist/` | Windows machine (`build.bat`, `build-installer.bat`) or GitHub Actions (`windows.yml`) |
+| **Linux (AppImage + .deb, CI)** | `dist/` (workflow artifacts) | GitHub Actions — [Linux CI](#linux-ci-github-actions) (`linux.yml`) |
 
 ## Linux AppImage
 
@@ -244,9 +246,27 @@ DISTRO_SUFFIX=noble ./packaging/linux/create-deb.sh
 
 The resulting `.deb` files are placed in `dist/`.
 
+## Linux CI (GitHub Actions)
+
+The repository ships `.github/workflows/linux.yml` which builds the **Linux
+release artifacts** on GitHub-hosted runners with Qt 6.8:
+
+- **Trigger**: manual (`workflow_dispatch`) — consistent with the manual-
+  release philosophy (no automatic releases).
+- **Jobs**:
+  - `appimage` → `ubuntu-latest`: `packaging/linux/create-appimage.sh`
+  - `deb-jammy` → `ubuntu-22.04`: `DISTRO_SUFFIX=jammy packaging/linux/create-deb.sh`
+  - `deb-noble` → `ubuntu-24.04`: `DISTRO_SUFFIX=noble packaging/linux/create-deb.sh`
+- **Produced artifacts**: the AppImage and the jammy/noble `.deb`s.
+
+To run it: **Actions → Linux CI → Run workflow**. When it finishes, download the
+three artifacts into `dist/` and they are picked up automatically by
+`packaging/create-gh-release.sh` (which expects the Linux artifacts in `dist/`).
+
 ## GitHub Releases
 
-Releases are created **manually** (no CI workflow). To create a GitHub release
+Releases are created **manually** (there is no automatic release workflow, but
+the artifact-building workflows are also manual). To create a GitHub release
 attached with the AppImage and Debian packages:
 
 > The complete end-to-end release guide (version bumps, all platform artifacts,
@@ -318,7 +338,7 @@ everything in `dist\`.
 ## Windows CI (GitHub Actions + MSVC)
 
 The repository ships `.github/workflows/windows.yml` which compiles Windows
-artifacts on a `windows-latest` runner using the MSVC 2022 toolchain and Qt 6.8:
+artifacts on a `windows-2022` runner using the MSVC 2022 toolchain and Qt 6.8:
 
 - **Trigger**: manual (`workflow_dispatch`) — consistent with the manual-
   release philosophy (no automatic releases).

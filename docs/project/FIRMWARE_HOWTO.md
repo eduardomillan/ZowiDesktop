@@ -1,5 +1,17 @@
 # Programming the Zowi Board (Firmware Upload)
 
+## Table of contents
+
+- [Overview](#overview)
+- [Firmware Format](#firmware-format)
+- [Upload Protocol](#upload-protocol)
+- [Transport](#transport)
+- [Upload Modes](#upload-modes)
+- [Summary](#summary)
+- [Working Over USB (Machines Without Bluetooth)](#working-over-usb-machines-without-bluetooth)
+  - [What is needed for full USB support](#what-is-needed-for-full-usb-support)
+  - [USB Summary](#usb-summary)
+
 ## Overview
 
 ZowiDesktop **does not use PlatformIO** or an external `avrdude`. It is a
@@ -97,7 +109,7 @@ architecture already makes this straightforward for the following reasons:
 - **GUI exposure.** `RobotController` always creates a `QtBluetoothBackend`;
   the GUI needs a way to select the serial/USB backend and list available ports.
 
-### Summary
+### USB Summary
 
 No protocol or communication code needs to be rewritten — the backend
 architecture already supports it. The work is mainly (1) making the baud rate

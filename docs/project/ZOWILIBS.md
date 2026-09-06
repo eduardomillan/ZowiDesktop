@@ -67,7 +67,9 @@ section); what gets mirrored is the observable protocol and its data catalogs.
 (`0b00000000010000100101000010000000`) that deviates from the Arduino source.
 Verification (2026-09): the original `0b00000001000010010100001000000000` is
 identical in the local library, the canonical `bq/zowiLibs` upstream and the
-Bobwi fork; the author's own design notes (`.local/PADSCREEN_IMPLEMENTING.md`)
+Bobwi fork; the author's own design notes (previously
+`.local/PADSCREEN_IMPLEMENTING.md`, now moved to
+`docs/project/screens/SCREEN_MOUTH.md`)
 also listed the original; and rendering through the calibrated `LedMatrix` bit
 layout (see below) shows the original draws a coherent check-mark shape while
 the "corrected" one produces an asymmetric blob. **Resolved and

@@ -2,6 +2,24 @@
 
 > This is a living document. Edit it to reflect the actual roadmap and priorities.
 
+## Table of contents
+
+- [Release Plan](#release-plan)
+- [Architecture](#architecture)
+- [Milestones](#milestones)
+  - [M1 — Initial release ✅](#m1--initial-release-)
+  - [M2 — Debian packaging + Wayland ✅](#m2--debian-packaging--wayland-)
+  - [M3 — Automated releases + multi-distro ✅](#m3--automated-releases--multi-distro-)
+  - [M4 — USB support ✅](#m4--usb-support-)
+  - [M5 — Firmware restore GUI + transport selection ✅](#m5--firmware-restore-gui--transport-selection-)
+  - [M6 — Transport intelligence + gamepad ✅](#m6--transport-intelligence--gamepad-)
+  - [M7 - Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
+  - [M8 - Basic projects](#m8--basic-projects)
+  - [M9 - Advanced projects](#m9--advanced-projects)
+  - [Future milestones](#future-milestones)
+- [Testing](#testing)
+- [Technical notes](#technical-notes)
+
 ## Release Plan
 
 | Version | Milestone | Description | Status |
@@ -12,9 +30,9 @@
 | **0.3.2** | M3 | Multi-distro .deb (jammy + noble), AppImage on older base | ✅ |
 | **0.4.0** | M4 | USB firmware flashing, `ports` subcommand, CLI tests by transport, splash no-BT banner | ✅ |
 | **0.5.0** | M5 | Firmware restore GUI (BT+USB), low-battery confirmation, `adivinawi` CLI, transport selection in GUI | ✅ |
-| **0.6.0** | M6 | Transport situation state machine, automatic transport, persistent preference, DEV overlay, restore feedback | 🚧 |
-| **0.7.0** | M7 | Zowi calibration (servo trims via `C`/`G` protocol commands) | |
-| **0.8.0** | M7 | Face/mouth editor | |
+| **0.6.0** | M6 | Transport situation state machine, automatic transport, persistent preference, DEV overlay, restore feedback | ✅ |
+| **0.7.0** | M7 | Zowi calibration (servo trims via `C`/`G` protocol commands) | ✅ |
+| **0.8.0** | M7 | Face/mouth editor (pintabocas) | ✅ |
 
 ## Architecture
 
@@ -30,12 +48,14 @@ src/
 │   ├── device_info         # Device struct (name, address, rssi)
 │   └── transport_constants # usb/bt transport identifiers
 ├── backends/
-│   ├── bt_qt/     # Bluetooth SPP via Qt + BlueZ D-Bus
-│   └── bt_serial/ # USB/serial TTY backend
+│   ├── bt_qt/       # Bluetooth SPP via Qt + BlueZ D-Bus (POSIX)
+│   ├── bt_native/   # WinRT Bluetooth backend (Windows only)
+│   ├── bt_serial/   # USB/serial TTY backend (POSIX)
+│   └── bt_serial_win/ # Win32 USB/serial backend (Windows only)
 ├── firmware/      # STK500v1 protocol + bundled .hex files
-├── cli/           # CLI consumer (zowi_cli) — 13 subcommands
-├── gui/           # Qt/QML GUI consumer — 4 controllers
-└── views/         # QML screens (10) + components (5)
+├── cli/           # CLI consumer (zowi_cli) — 19 subcommands
+├── gui/           # Qt/QML GUI consumer — 6 controllers
+└── views/         # QML screens (13) + template + components (6)
 ```
 
 - `zowi::core` is intentionally Qt-free (except `translation_engine` which uses `QFile`).
@@ -89,11 +109,11 @@ src/
 - [x] Compile the bt library for Windows
 - [x] Test the Windows version and fix bugs
 
-### M7 - Calibration and mouth/gestures in gamepad + editor 🏗️
+### M7 - Calibration and mouth/gestures in gamepad + editor ✅
 - [x] Zowi calibration (servo trims)
 - [x] Gamepad mouth control
 - [x] Gamepad gestures control
-- [ ] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
+- [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
 ### M8 - Basic projects
 - [ ] Move objects
@@ -119,7 +139,10 @@ src/
 
 ## Testing
 
-- **Core unit tests** (`src/core/tests/`): `test_session_store`, `test_config_store`, `test_translation_engine`, `test_robot_commands` — link only `zowi::core`, no Qt dependency.
+- **Core unit tests** (`src/core/tests/`): `test_session_store`, `test_config_store`,
+  `test_translation_engine`, `test_robot_commands`, `test_calibration_session`,
+  `test_movement_sequencer`, `test_message_parser`, `test_robot_state` — link only
+  `zowi::core`, no Qt dependency.
 - **CLI integration tests** (`src/cli/tests/`): Bluetooth (6 scripts) and USB (8 scripts) — require real hardware.
 - **QML preview scripts** (`src/views/tests/`): Shell scripts to launch individual screens.
 - Run tests: `ctest --test-dir build --output-on-failure`
