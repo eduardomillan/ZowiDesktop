@@ -77,3 +77,8 @@ See [docs/project/ZOWI_CLI_HOWTO.md](docs/project/ZOWI_CLI_HOWTO.md) for the ful
 Built with Qt and QML (C++ core, Qt-free business logic).
 
 Open source — contributions welcome.
+
+## Project documentation
+
+- [Project index](docs/project/INDEX.md)
+- [Screens index](docs/project/screens/INDEX.md)
