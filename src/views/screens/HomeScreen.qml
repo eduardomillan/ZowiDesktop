@@ -13,6 +13,7 @@ FocusScope {
     signal mouthEditorClicked()
     signal goSplash()
     signal goWelcome()
+    signal projectMoveClicked()
 
     property string screenName: "HomeScreen"
     property real cellSpacing: 60
@@ -28,7 +29,7 @@ FocusScope {
         color: Config.get("color_bg_app") || "#f4f9f4"
 
         property var projectsData: [
-            { name: tr("move_objects"),    icon: "qrc:/images/android/move_button.png",        enabled: false },
+            { name: tr("move_objects"),    icon: "qrc:/images/android/move_button.png",        enabled: true },
             { name: tr("choreography"),    icon: "qrc:/images/android/choreography_button.png", enabled: false },
             { name: tr("robot_form"),      icon: "qrc:/images/android/robot_form_button.png",   enabled: false },
             { name: tr("robot_eyes"),      icon: "qrc:/images/android/eyes_button.png",         enabled: false },
@@ -281,7 +282,13 @@ FocusScope {
                             MouseArea {
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                cursorShape: Qt.ForbiddenCursor
+                                cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                enabled: modelData.enabled
+                                onClicked: {
+                                    if (modelData.name === tr("move_objects")) {
+                                        homeScope.projectMoveClicked()
+                                    }
+                                }
                             }
 
                             Column {
@@ -293,10 +300,14 @@ FocusScope {
                                     height: homeScope.iconSize
                                     radius: Math.min(homeScope.iconSize * 0.2, 16)
                                     anchors.horizontalCenter: parent.horizontalCenter
-                                    color: Config.get("color_bg_disabled") || "#e6e6e6"
-                                    border.color: Config.get("color_border_disabled") || "#c8c8c8"
+                                    color: modelData.enabled
+                                           ? (projectMouse.containsMouse ? Config.get("color_bg_hover") || "#e0f0e0" : "#ffffff")
+                                           : (Config.get("color_bg_disabled") || "#e6e6e6")
+                                    border.color: modelData.enabled
+                                                  ? (Config.get("color_accent") || "#21a69b")
+                                                  : (Config.get("color_border_disabled") || "#c8c8c8")
                                     border.width: 1
-                                    opacity: 0.4
+                                    opacity: modelData.enabled ? 1.0 : 0.4
 
                                     Image {
                                         anchors.centerIn: parent
@@ -305,13 +316,21 @@ FocusScope {
                                         source: modelData.icon
                                         sourceSize: Qt.size(homeScope.iconSize * 2, homeScope.iconSize * 2)
                                         fillMode: Image.PreserveAspectFit
-                                        opacity: 0.5
+                                        opacity: modelData.enabled ? 1.0 : 0.5
+                                    }
+
+                                    MouseArea {
+                                        id: projectMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
                                     }
                                 }
 
                                 Text {
                                     text: modelData.name
-                                    color: Config.get("color_fg_disabled") || "#9e9e9e"
+                                    color: modelData.enabled
+                                           ? (Config.get("color_primary") || "#2d5a2d")
+                                           : (Config.get("color_fg_disabled") || "#9e9e9e")
                                     font.pixelSize: Math.max(9, homeScope.iconSize * 0.16)
                                     horizontalAlignment: Text.AlignHCenter
                                     anchors.horizontalCenter: parent.horizontalCenter

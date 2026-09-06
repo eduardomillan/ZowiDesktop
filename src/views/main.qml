@@ -39,6 +39,10 @@ Window {
             var editor = stack.push("qrc:/src/views/screens/MouthEditorScreen.qml")
             editor.backClicked.connect(function() { stack.pop() })
         })
+        home.projectMoveClicked.connect(function() {
+            var move = stack.push("qrc:/src/views/screens/ProjectMoveScreen.qml")
+            move.backClicked.connect(function() { stack.pop() })
+        })
         // DEV: temporary navigation
         home.goSplash.connect(function() {
             Session.saveWizardDismissed(false)
