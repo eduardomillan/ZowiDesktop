@@ -4,8 +4,9 @@ set -e
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
 DIST_DIR="$PROJECT_ROOT/dist"
-WIN_BUILD_DIR="$PROJECT_ROOT/build-windows"
-WIN_DIST_DIR="$WIN_BUILD_DIR/dist"
+# Windows artifacts (portable zip + installer) are downloaded/built into the
+# same dist/ directory as the Linux artifacts (see RELEASE.md).
+WIN_DIST_DIR="$DIST_DIR"
 
 # Global release flag. When --with-apt is given, the script also builds and
 # publishes the signed apt repo (jammy + noble) to the gh-pages branch.
@@ -65,7 +66,7 @@ else
 fi
 
 # Windows artifacts (portable zip + installer) are optional but attached when
-# present; both live under build-windows/dist/ (see RELEASE.md).
+# present; both live under dist/ (see RELEASE.md).
 WIN_ZIP=$(ls "$WIN_DIST_DIR"/ZowiDesktop-${VERSION}-windows-x86_64.zip 2>/dev/null | head -n1)
 if [ -n "$WIN_ZIP" ]; then
     echo "  OK: $(basename "$WIN_ZIP")"
@@ -133,10 +134,14 @@ done
 if [ "$PUBLISH_APT" -eq 1 ]; then
     echo "  (+ signed apt repo jammy+noble published to gh-pages/docs)"
 fi
-read -rp "Continue? [y/N] " confirm
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "Aborted."
-    exit 0
+if [ -t 0 ]; then
+    read -rp "Continue? [y/N] " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo "Aborted."
+        exit 0
+    fi
+else
+    echo "Non-interactive shell detected (e.g. CI); proceeding automatically."
 fi
 
 echo ""

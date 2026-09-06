@@ -3,11 +3,15 @@
 # Manual trigger, matching the project's manual release philosophy. The
 # resulting artifacts can be downloaded from the workflow and attached to a
 # GitHub Release with packaging/create-gh-release.sh.
+#
+# Also callable as a reusable workflow (workflow_call) so release.yml can run
+# it as part of the one-button release flow.
 
 name: Linux CI
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

@@ -1,0 +1,97 @@
+# Release — one-button, manually triggered end-to-end release.
+#
+# Keeps the project's manual-release philosophy (no automatic release on
+# push/tag) while collapsing the multi-step process documented in
+# docs/project/RELEASE.md into a single `workflow_dispatch` run:
+#
+#   1. Build the Linux artifacts (reuses linux.yml as a reusable workflow).
+#   2. Build the Windows artifacts (reuses windows.yml as a reusable workflow).
+#   3. Download all artifacts into dist/ and run the existing
+#      packaging/create-gh-release.sh, which reads the version from
+#      CMakeLists.txt, extracts notes from debian/changelog, tags, and
+#      creates the GitHub Release with all available assets attached.
+#
+# Windows artifacts are optional (same as when running the release script
+# locally): if the Windows build fails or is skipped, the release still goes
+# ahead with the mandatory Linux artifacts (AppImage + jammy/noble .deb).
+#
+# Publishing the signed apt repository (--with-apt) is opt-in via the
+# `publish_apt` input and requires the `APT_GPG_PRIVATE_KEY` and
+# `APT_GPG_PASSPHRASE` secrets to be configured on the repository — see
+# docs/project/RELEASE.md for details. Leave it disabled to only create the
+# GitHub Release.
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_apt:
+        description: 'Also publish the signed apt repo (jammy+noble) to gh-pages'
+        type: boolean
+        default: false
+      skip_windows:
+        description: 'Skip the Windows build (release with Linux artifacts only)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    uses: ./.github/workflows/linux.yml
+
+  build-windows:
+    if: ${{ !inputs.skip_windows }}
+    uses: ./.github/workflows/windows.yml
+
+  release:
+    name: Create GitHub Release
+    needs: [build-linux, build-windows]
+    if: ${{ always() && needs.build-linux.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v5
+        with:
+          pattern: linux-*
+          path: dist
+          merge-multiple: true
+
+      - name: Download Windows artifacts
+        if: needs.build-windows.result == 'success'
+        uses: actions/download-artifact@v5
+        with:
+          pattern: windows-*
+          path: dist
+          merge-multiple: true
+
+      - name: Import apt signing key
+        if: ${{ inputs.publish_apt }}
+        env:
+          APT_GPG_PRIVATE_KEY: ${{ secrets.APT_GPG_PRIVATE_KEY }}
+        run: |
+          if [ -z "$APT_GPG_PRIVATE_KEY" ]; then
+            echo "ERROR: publish_apt was requested but APT_GPG_PRIVATE_KEY secret is not set." >&2
+            exit 1
+          fi
+          sudo apt-get update
+          sudo apt-get install -y aptly gnupg
+          echo "$APT_GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
+        run: |
+          ARGS=()
+          if [ "${{ inputs.publish_apt }}" = "true" ]; then
+            ARGS+=(--with-apt)
+          fi
+          bash packaging/create-gh-release.sh "${ARGS[@]}"

@@ -16,6 +16,7 @@ This document is the end-to-end guide. For low-level build details (toolchains,
 
 ## Table of contents
 
+- [One-button release (recommended)](#one-button-release-recommended)
 - [Workflows at a glance](#workflows-at-a-glance)
 - [Artifacts](#artifacts)
 - [Release version](#release-version)
@@ -36,10 +37,41 @@ This document is the end-to-end guide. For low-level build details (toolchains,
 - [Publish the signed apt repository (`--with-apt`)](#publish-the-signed-apt-repository--with-apt)
 - [Verify the release](#verify-the-release)
 
+## One-button release (recommended)
+
+`.github/workflows/release.yml` ("Release") is a single **manual
+(`workflow_dispatch`)** workflow that runs the whole process end to end:
+
+1. Runs `linux.yml` and `windows.yml` as reusable workflows to (re)build the
+   AppImage, both `.deb` packages, the portable zip and the installer.
+2. Downloads every produced artifact into `dist/`.
+3. Runs `packaging/create-gh-release.sh` non-interactively, which reads the
+   version from `CMakeLists.txt`, extracts notes from `debian/changelog`,
+   tags `v<version>`, and creates the GitHub Release with all available
+   assets attached.
+
+Go to **Actions → Release → Run workflow** to start it. Inputs:
+
+- `skip_windows` — skip the Windows build and release with the Linux
+  artifacts only (useful if you don't need Windows artifacts this time).
+- `publish_apt` — also publish the signed apt repository (jammy + noble) to
+  `gh-pages`, equivalent to `create-gh-release.sh --with-apt`. This requires
+  the `APT_GPG_PRIVATE_KEY` (base64-encoded exported private key) and
+  `APT_GPG_PASSPHRASE` repository secrets to be configured beforehand; leave
+  this input off to only create the GitHub Release.
+
+This does **not** turn releases into an automatic-on-tag process — it still
+requires a human to click "Run workflow" — it just collapses the manual
+multi-step checklist below into a single run. The rest of this document
+explains what that workflow does under the hood and how to run each step
+manually if you need finer control (e.g. building on a local machine).
+
 ## Workflows at a glance
 
-Both build workflows are **manual (`workflow_dispatch`)** — running them never
-creates a tag or a GitHub Release; they only produce build artifacts:
+Both build workflows are **manual (`workflow_dispatch`)**, and are also
+**reusable (`workflow_call`)** so `release.yml` can run them — running them
+directly never creates a tag or a GitHub Release; they only produce build
+artifacts:
 
 | Workflow | File | Trigger | Artifacts |
 |----------|------|---------|-----------|
@@ -91,10 +123,15 @@ and derive the git tag as `v<version>`. To cut a new release:
 ## Release checklist
 
 1. Bump `CMakeLists.txt` and update `CHANGELOG.md`.
-2. Build the **Linux** artifacts (AppImage + jammy/noble `.deb`) — locally or via the **Linux CI** workflow.
-3. Build or download the **Windows** artifacts (zip + installer) — via the **Windows CI** workflow, or locally.
-4. `gh auth login` and commit the regenerated `debian/changelog`.
-5. Run `packaging/create-gh-release.sh` (or with `--with-apt`).
+2. Commit those changes.
+3. Either:
+   - **One button**: go to **Actions → Release → Run workflow** (see
+     [One-button release](#one-button-release-recommended)); or
+   - **Manual**, step by step:
+     1. Build the **Linux** artifacts (AppImage + jammy/noble `.deb`) — locally or via the **Linux CI** workflow.
+     2. Build or download the **Windows** artifacts (zip + installer) — via the **Windows CI** workflow, or locally.
+     3. `gh auth login` and commit the regenerated `debian/changelog`.
+     4. Run `packaging/create-gh-release.sh` (or with `--with-apt`).
 
 ## Linux artifacts
 
@@ -241,6 +278,18 @@ Only run this from a machine holding the repo's **GPG signing key**:
 - Install `aptly` and `gnupg`: `sudo apt-get install aptly gnupg`.
 - Import the GPG signing key into your local keyring and unlock it by setting
   `GPG_PASSPHRASE` (or `APTLY_GPG_PASSPHRASE`).
+
+To run it from the **Release** workflow instead (`publish_apt: true`), first
+configure two repository secrets (**Settings → Secrets and variables →
+Actions**):
+
+- `APT_GPG_PRIVATE_KEY` — the exported private signing key, armored and then
+  base64-encoded (`gpg --export-secret-keys --armor <key-id> | base64 -w0`).
+- `APT_GPG_PASSPHRASE` — the passphrase that unlocks it.
+
+The workflow imports the key into the runner's ephemeral keyring before
+calling `create-gh-release.sh --with-apt`; nothing is persisted once the job
+finishes. Treat these secrets with the same care as the local key file.
 
 `packaging/publish-apt-repo.sh <version> dist/`:
 

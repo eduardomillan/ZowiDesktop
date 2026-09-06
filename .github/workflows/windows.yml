@@ -6,11 +6,15 @@
 #
 # The MSVC toolchain + Windows SDK are required because the native WinRT
 # (bt_native) and Win32 serial (bt_serial_win) backends do not build with MinGW.
+#
+# Also callable as a reusable workflow (workflow_call) so release.yml can run
+# it as part of the one-button release flow.
 
 name: Windows CI
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
