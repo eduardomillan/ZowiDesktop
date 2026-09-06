@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/projects">
+        <file alias="move.json">projects/move.json</file>
+    </qresource>
+</RCC>

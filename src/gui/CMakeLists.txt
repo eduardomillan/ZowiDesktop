@@ -25,6 +25,7 @@ add_executable(ZowiDesktop WIN32
     controllers/ConfigController.cpp
     controllers/CalibrationSessionController.cpp
     controllers/CommandsController.cpp
+    controllers/ProjectsController.cpp
     ${GUI_RESOURCES}
 )
 
