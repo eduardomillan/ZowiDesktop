@@ -1,5 +1,19 @@
 # Upgrading to Qt 6
 
+## Table of contents
+
+- [Scope](#scope)
+- [Dependencies](#dependencies)
+- [CMake changes](#cmake-changes)
+  - [Root CMakeLists.txt](#root-cmakeliststxt)
+  - [src/backends/bt_qt/CMakeLists.txt](#srcbackendsbt_qtcmakeliststxt)
+  - [src/gui/CMakeLists.txt](#srcguicmakeliststxt)
+- [QML import versions](#qml-import-versions)
+- [C++ API changes](#c-api-changes)
+  - [Bluetooth signals renamed](#bluetooth-signals-renamed)
+- [Unchanged (compatible API)](#unchanged-compatible-api)
+- [Architecture impact](#architecture-impact)
+
 This document documents the migration from Qt 5.15 to Qt 6.5.2, including changes required by the current API + CLI + Frontend architecture.
 
 ## Scope

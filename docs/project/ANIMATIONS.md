@@ -1,5 +1,12 @@
 # Animation formats supported in QML
 
+## Table of contents
+
+- [Supported formats](#supported-formats)
+- [Recommended approaches for SplashScreen](#recommended-approaches-for-splashscreen)
+
+## Supported formats
+
 | Type | Format | How to use |
 |------|--------|------------|
 | **Animated GIF** | `.gif` | `AnimatedImage { source: "file.gif" }` — plays automatically |

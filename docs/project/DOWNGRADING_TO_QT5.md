@@ -1,5 +1,20 @@
 # Downgrading to Qt 5
 
+## Table of contents
+
+- [Scope](#scope)
+- [Dependencies](#dependencies)
+- [CMake changes](#cmake-changes)
+  - [Root CMakeLists.txt](#root-cmakeliststxt)
+  - [src/backends/bt_qt/CMakeLists.txt](#srcbackendsbt_qtcmakeliststxt)
+  - [src/gui/CMakeLists.txt](#srcguicmakeliststxt)
+  - [src/cli/CMakeLists.txt](#srcclicmakeliststxt)
+- [C++ API changes](#c-api-changes)
+  - [Bluetooth signals](#bluetooth-signals)
+- [QML import versions](#qml-import-versions)
+- [Unchanged (compatible API)](#unchanged-compatible-api)
+- [Summary of changes](#summary-of-changes)
+
 This document describes the changes needed to build Zowi Desktop with Qt 5.15 instead of Qt 6.5.
 
 ## Scope

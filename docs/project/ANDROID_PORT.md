@@ -1,5 +1,20 @@
 # ANDROID_PORT.md — Porting the `zowi_core` logic to Android / Flutter
 
+## Table of contents
+
+- [Goal](#goal)
+- [What `src/core` is (and is not)](#what-srccore-is-and-is-not)
+- [What is NOT in core (stays host-specific)](#what-is-not-in-core-stays-host-specific)
+- [The refactor (merged) — making core Qt-free](#the-refactor-merged--making-core-qt-free)
+  - [1. `translation_engine` — injectable loader + log sink](#1-translation_engine--injectable-loader--log-sink)
+  - [2. `session_store` — injectable config directory](#2-session_store--injectable-config-directory)
+  - [3. Removed orphan `DeviceInfo.h`](#3-removed-orphan-deviceinfoh)
+  - [4. `src/core/CMakeLists.txt` — no Qt](#4-srccorecmakeliststxt--no-qt)
+- [Verification after the refactor](#verification-after-the-refactor)
+- [Integration routes (future)](#integration-routes-future)
+- [Scope notes / decisions](#scope-notes--decisions)
+- [See also](#see-also)
+
 > This document records the analysis of reusing ZowiDesktop's `src/core/`
 > business logic in a mobile app (native Android or Flutter), and the refactor
 > that was applied to `src/core` to make it 100 % platform-independent and
