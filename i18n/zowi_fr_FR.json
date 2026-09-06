@@ -217,5 +217,31 @@
   },
   "GestureScreen.qml": {
     "gestures_title": "Gestes"
+  },
+  "ProjectMoveScreen.qml": {
+    "title": "Déplacer",
+    "learning_description": "Apprenez à guider Zowi avec précision et comprenez comment un robot à deux jambes se déplace. Découvrez les bases de la locomotion robotique et pratiquez le contrôle des mouvements de Zowi.",
+    "url": "http://zowi.bq.com/projects/move-objects/",
+    "project_link": "Page du projet",
+    "run_test": "Lancer le test",
+    "quiz_passed": "Félicitations ! Vous avez terminé le projet Déplacer.",
+    "quiz_failed": "Mauvaise réponse. Réessayez dans %1.",
+    "quiz_blocked": "Test bloqué. Réessayez dans %1.",
+    "correct": "Correct !",
+    "incorrect": "Incorrect.",
+    "question_1": "Les mouvements de Zowi lui permettent de…",
+    "question_1_answer_1": "…tourner en rond.",
+    "question_1_answer_2": "…marcher en avant et en diagonale.",
+    "question_1_answer_3": "…marcher en arrière et en diagonale.",
+    "question_2": "Si j'augmente la vitesse de marche de Zowi, se déplace-t-il toujours plus vite ?",
+    "question_2_answer_1": "Non. Il bouge plus vite, mais parfois il n'avance pas plus vite car il glisse.",
+    "question_2_answer_2": "Non. S'il bouge trop vite il peut casser et s'arrêter d'avancer.",
+    "question_2_answer_3": "Oui. Zowi avance toujours plus vite si la vitesse de mouvement est plus élevée."
+  },
+  "QuizComponent.qml": {
+    "run_test": "Lancer le test",
+    "correct": "Correct !",
+    "incorrect": "Incorrect.",
+    "quiz_blocked": "Test bloqué. Réessayez dans %1."
   }
 }
