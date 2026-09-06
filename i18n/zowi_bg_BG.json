@@ -213,7 +213,8 @@
     "title": "Редактор на усти",
     "subtitle": "Нарисувайте устата на Zowi върху решетката. Актуализира се в реално време.",
     "clear_all": "Изчисти всичко",
-    "select_all": "Избери всичко"
+    "select_all": "Избери всичко",
+    "pattern_label": "Модел"
   },
   "GestureScreen.qml": {
     "gestures_title": "Жестове"

@@ -214,7 +214,8 @@
     "title": "Mouth editor",
     "subtitle": "Draw Zowi's mouth on the grid. It updates in real time.",
     "clear_all": "Clear all",
-    "select_all": "Select all"
+    "select_all": "Select all",
+    "pattern_label": "Pattern"
   },
   "GestureScreen.qml": {
     "gestures_title": "Gestures"

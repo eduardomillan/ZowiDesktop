@@ -24,7 +24,7 @@ ScreenTemplate {
     readonly property int rows: 5
     // Tamaño de cada píxel de la boca (px). Cambia aquí para hacer la rejilla
     // más grande o más pequeña. Default 50 ≈ 20% mayor que el original (42px).
-    property real cellSize: 50
+    property real cellSize: 40
     readonly property int cellSpacing: 8
     // Fondo de la rejilla: tono verde claro distinto del fondo de la app para
     // que se aprecien los píxeles antes de marcarlos.
@@ -37,6 +37,13 @@ ScreenTemplate {
 
     property var lastItem: null
     property bool lastWasOn: false
+    readonly property string patternBits: {
+        var s = ""
+        for (var i = 0; i < gridModel.count; i++) {
+            s += gridModel.get(i).on ? "1" : "0"
+        }
+        return s
+    }
 
     ListModel {
         id: gridModel
@@ -121,10 +128,11 @@ ScreenTemplate {
     }
 
     Rectangle {
+        id: gridRect
         anchors {
             horizontalCenter: parent.horizontalCenter
-            bottom: parent.bottom
-            bottomMargin: 24
+            verticalCenter: parent.verticalCenter
+            verticalCenterOffset: -100
         }
         width: root.columns * root.cellSize + (root.columns - 1) * root.cellSpacing
         height: root.rows * root.cellSize + (root.rows - 1) * root.cellSpacing
@@ -173,17 +181,18 @@ ScreenTemplate {
 
         // Mouse area global sobre la rejilla: dibujo por arrastre.
         MouseArea {
+            id: gridMouseArea
             anchors.fill: parent
             preventStealing: true
             onPressed: {
-                var idx = cellAt(mouse.x, mouse.y)
+                var idx = cellAt(gridMouseArea.mouseX, gridMouseArea.mouseY)
                 if (idx >= 0)
                     handleCellPress(idx)
             }
             onPositionChanged: {
                 if (!pressed)
                     return
-                var idx = cellAt(mouse.x, mouse.y)
+                var idx = cellAt(gridMouseArea.mouseX, gridMouseArea.mouseY)
                 if (idx < 0) {
                     // Fuera de la rejilla: se reinicia el arrastre, como en Android.
                     lastItem = null
@@ -195,6 +204,51 @@ ScreenTemplate {
             onReleased: {
                 lastItem = null
                 lastWasOn = false
+            }
+        }
+    }
+
+    // Bit-pattern display below the grid (copyable)
+    Column {
+        id: patternColumn
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            top: gridRect.bottom
+            topMargin: 12
+        }
+        spacing: 4
+
+        // Informative label (i18n)
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: root.tr("pattern_label")
+            color: Config.get("color_primary") || "#2d5a2d"
+            font.pixelSize: 13
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+        }
+
+        // Pattern text with white background
+        Rectangle {
+            width: patternText.implicitWidth + 24
+            height: patternText.implicitHeight + 12
+            color: "#ffffff"
+            radius: 6
+            border.color: Config.get("color_primary") || "#2d5a2d"
+            border.width: 1
+
+            TextEdit {
+                id: patternText
+                text: root.patternBits
+                color: Config.get("color_primary") || "#2d5a2d"
+                font.family: "monospace"
+                font.pixelSize: 14
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                readOnly: true
+                selectByMouse: true
+                anchors.fill: parent
+                anchors.margins: 6
             }
         }
     }

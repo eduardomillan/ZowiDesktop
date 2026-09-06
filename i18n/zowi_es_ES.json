@@ -204,7 +204,8 @@
     "title": "Editor de bocas",
     "subtitle": "Dibuja la boca de Zowi sobre la rejilla. Se actualiza en tiempo real.",
     "clear_all": "Borrar todo",
-    "select_all": "Seleccionar todo"
+    "select_all": "Seleccionar todo",
+    "pattern_label": "Patrón"
   },
   "GestureScreen.qml": {
     "gestures_title": "Gestos"
