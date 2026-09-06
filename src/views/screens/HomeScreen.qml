@@ -28,18 +28,22 @@ FocusScope {
 
         color: Config.get("color_bg_app") || "#f4f9f4"
 
-        property var projectsData: [
-            { id: "move", name: tr("move_objects"),    icon: "qrc:/images/android/move_button.png",        enabled: true },
-            { id: "choreography", name: tr("choreography"),    icon: "qrc:/images/android/choreography_button.png", enabled: false },
-            { id: "form", name: tr("robot_form"),      icon: "qrc:/images/android/robot_form_button.png",   enabled: false },
-            { id: "bio1", name: tr("robot_eyes"),      icon: "qrc:/images/android/eyes_button.png",         enabled: false },
-            { id: "bio3", name: tr("robot_feet"),      icon: "qrc:/images/android/feet_button.png",         enabled: false },
-            { id: "reprogram", name: tr("robot_alarm"),     icon: "qrc:/images/android/alarm_button.png",        enabled: false },
-            { id: "adivinawi", name: tr("adivinawi"),       icon: "qrc:/images/android/adivinawi_button.png",    enabled: false },
-            { id: "gravity", name: tr("gravity"),         icon: "qrc:/images/android/gravity_button.png",      enabled: false },
-            { id: "helloworld", name: tr("hello_world"),     icon: "qrc:/images/android/bitbloq_button.png",      enabled: false },
-            { id: "bitbloq2", name: tr("bitbloq_sensors"), icon: "qrc:/images/android/bitbloq2_button.png",     enabled: false }
-        ]
+        property var projectsData: (function() {
+            var data = [
+                { id: "move", name: tr("move_objects"),    icon: "qrc:/images/android/move_button.png",        enabled: true },
+                { id: "choreography", name: tr("choreography"),    icon: "qrc:/images/android/choreography_button.png", enabled: false },
+                { id: "form", name: tr("robot_form"),      icon: "qrc:/images/android/robot_form_button.png",   enabled: false },
+                { id: "bio1", name: tr("robot_eyes"),      icon: "qrc:/images/android/eyes_button.png",         enabled: false },
+                { id: "bio3", name: tr("robot_feet"),      icon: "qrc:/images/android/feet_button.png",         enabled: false },
+                { id: "reprogram", name: tr("robot_alarm"),     icon: "qrc:/images/android/alarm_button.png",        enabled: false },
+                { id: "adivinawi", name: tr("adivinawi"),       icon: "qrc:/images/android/adivinawi_button.png",    enabled: false },
+                { id: "gravity", name: tr("gravity"),         icon: "qrc:/images/android/gravity_button.png",      enabled: false },
+                { id: "helloworld", name: tr("hello_world"),     icon: "qrc:/images/android/bitbloq_button.png",      enabled: false },
+                { id: "bitbloq2", name: tr("bitbloq_sensors"), icon: "qrc:/images/android/bitbloq2_button.png",     enabled: false }
+            ];
+            console.log("HomeScreen: projectsData initialized, first item:", data[0].id, data[0].name, data[0].enabled);
+            return data;
+        })()
 
     // Top bar with Settings and Achievements
     Row {
@@ -280,12 +284,15 @@ FocusScope {
                             color: "transparent"
 
                             MouseArea {
+                                id: projectMouse
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 enabled: modelData.enabled
                                 onClicked: {
+                                    console.log("HomeScreen: project clicked, id:", modelData.id, "enabled:", modelData.enabled)
                                     if (modelData.id === "move") {
+                                        console.log("HomeScreen: emitting projectMoveClicked")
                                         homeScope.projectMoveClicked()
                                     }
                                 }
@@ -296,6 +303,7 @@ FocusScope {
                                 spacing: 4
 
                                 Rectangle {
+                                    id: projectRect
                                     width: homeScope.iconSize
                                     height: homeScope.iconSize
                                     radius: Math.min(homeScope.iconSize * 0.2, 16)
@@ -317,12 +325,6 @@ FocusScope {
                                         sourceSize: Qt.size(homeScope.iconSize * 2, homeScope.iconSize * 2)
                                         fillMode: Image.PreserveAspectFit
                                         opacity: modelData.enabled ? 1.0 : 0.5
-                                    }
-
-                                    MouseArea {
-                                        id: projectMouse
-                                        anchors.fill: parent
-                                        hoverEnabled: true
                                     }
                                 }
 
