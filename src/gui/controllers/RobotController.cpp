@@ -881,6 +881,11 @@ void RobotController::connectToDevice(const QString &address)
 
 void RobotController::connectUsb(const QString &port)
 {
+    // Enter the "connecting" state *before* probing: when no port is known,
+    // auto-detection runs probeZowiOnPort(), which can block for up to
+    // kProbeTimeoutMs (6 s) while pumping events. `connecting` must already be
+    // true so the UI shows the wait cursor during that window.
+    setConnecting(true);
     QString target = port;
     if (target.isEmpty()) target = m_usbPort;
     if (target.isEmpty()) {
@@ -896,6 +901,7 @@ void RobotController::connectUsb(const QString &port)
         }
     }
     if (target.isEmpty()) {
+        setConnecting(false);
         emit errorOccurred(tr("No USB robot detected"));
         return;
     }
@@ -904,7 +910,7 @@ void RobotController::connectUsb(const QString &port)
     if (m_backendKind != Usb) useSerialBackend();
     m_usbPort = target;
     m_deviceAddress = target;
-    setConnecting(true);
+    // connecting was set at the top; the setter is guarded so this is a no-op.
     // The serial backend opens the TTY synchronously and reports failure by
     // return value only (no callback), so handle it here: otherwise
     // m_connecting would stay true until the watchdog fires.

@@ -109,7 +109,10 @@ Window {
                 if (Robot.usbAvailable && !Robot.bluetoothAvailable) {
                     var usbFound = stack.push("qrc:/src/views/screens/WizardFoundScreen.qml")
                     usbFound.usbMode = true
-                    usbFound.backClicked.connect(function() { stack.pop() })
+                    usbFound.pairingAttemptChanged.connect(function() {
+                        wizardBusy = usbFound.pairingAttempt
+                    })
+                    usbFound.backClicked.connect(function() { wizardBusy = false; stack.pop() })
                     usbFound.paired.connect(function() {
                         finishRegistration()
                     })
@@ -121,7 +124,10 @@ Window {
                 scan.back.connect(function() { stack.pop() })
                 scan.deviceSelected.connect(function() {
                     var found = stack.push("qrc:/src/views/screens/WizardFoundScreen.qml")
-                    found.backClicked.connect(function() { stack.pop() })
+                    found.pairingAttemptChanged.connect(function() {
+                        wizardBusy = found.pairingAttempt
+                    })
+                    found.backClicked.connect(function() { wizardBusy = false; stack.pop() })
                     found.paired.connect(function() {
                         finishRegistration()
                     })
@@ -221,6 +227,14 @@ Window {
         }
     }
 
+    // Wait-cursor state. True while the app cannot respond: a connection
+    // attempt (incl. the blocking USB probe), a firmware restore, the pairing
+    // attempt of the wizard, or the short home transition.
+    property bool wizardBusy: false
+    property bool busy: Robot.connecting || Robot.restoring
+                        || homeTransitionTimer.running
+                        || wizardBusy
+
     DevOverlay {
     }
 
@@ -235,5 +249,17 @@ Window {
 
     MessageBar {
         id: rootNotice
+    }
+
+    // Hourglass overlay: while `busy` is true the wait cursor is shown and
+    // every input event is swallowed, so the user gets feedback instead of a
+    // seemingly frozen window.
+    MouseArea {
+        anchors.fill: parent
+        z: 10000
+        visible: busy
+        hoverEnabled: true
+        acceptedButtons: Qt.AllButtons
+        cursorShape: Qt.WaitCursor
     }
 }
