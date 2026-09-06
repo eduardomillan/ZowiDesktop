@@ -61,7 +61,12 @@ Core business logic. Zero Qt dependency. Testable on any platform.
 | `DeviceInfo` | Data struct: device name, address, RSSI |
 | `SessionStore` | JSON key-value persistence (read/write/get/set) |
 | `ConfigStore` | JSON config reader (load from file or string) |
-| `TranslationEngine` | Custom XML-based i18n engine |
+| `TranslationEngine` | JSON-file i18n engine; loader + log callback injectable (Qt-free) |
+| `RobotCommands` | Firmware command builder (20 movements) |
+| `RobotState` | Cached robot identity/battery state |
+| `MessageParser` | Parses incoming robot stream messages |
+| `MovementSequencer` | Drives sequences of timed movements |
+| `CalibrationSession` | Servo trim calibration state machine |
 | `BluetoothApi` | Abstract Bluetooth interface (std::function callbacks) |
 
 ### zowi_bt_qt (Qt Bluetooth backend)
@@ -82,6 +87,8 @@ Qt Quick application. Controllers wrap core classes and expose them to QML via c
 | `TranslatorController` | `TranslationEngine` | `Translator` |
 | `RobotController` | `QtBluetoothBackend` **or** `SerialBluetoothBackend` | `Bluetooth` |
 | `ConfigController` | `ConfigStore` | `Config` |
+| `CommandsController` | `RobotCommands` + serial command queue | `Commands` |
+| `CalibrationSessionController` | `CalibrationSession` | `Calibration` |
 
 `RobotController` is transport-agnostic: it builds either the Qt/BlueZ SPP
 backend (`QtBluetoothBackend`) or the serial/USB backend
@@ -107,20 +114,37 @@ CLI11-based tool. Directly instantiates core classes. No QML involved.
 
 ```
 src/
-├── core/                            # Pure C++ library (no Qt)
+├── core/                            # Pure C++ library (no Qt, C++20)
 │   ├── CMakeLists.txt
 │   ├── include/zowi/
 │   │   ├── bluetooth_api.h          # Abstract BT interface
+│   │   ├── calibration_session.h    # Servo trim calibration
 │   │   ├── config_store.h           # JSON config reader
 │   │   ├── device_info.h            # Device data struct
+│   │   ├── message_parser.h         # Robot stream message parser
+│   │   ├── movement_sequencer.h     # Timed movement sequences
+│   │   ├── protocol.h               # Firmware framing (&&cmd value%%)
+│   │   ├── robot_commands.h         # Firmware command builder
+│   │   ├── robot_state.h            # Robot identity/battery state
 │   │   ├── session_store.h          # JSON key-value store
-│   │   └── translation_engine.h     # i18n engine
+│   │   ├── translation_engine.h     # i18n engine (injectable loader)
+│   │   └── transport_constants.h    # usb/bt transport identifiers
 │   ├── src/
+│   │   ├── calibration_session.cpp
 │   │   ├── config_store.cpp
+│   │   ├── message_parser.cpp
+│   │   ├── movement_sequencer.cpp
+│   │   ├── robot_commands.cpp
+│   │   ├── robot_state.cpp
 │   │   ├── session_store.cpp
 │   │   └── translation_engine.cpp
 │   └── tests/
+│       ├── test_calibration_session.cpp
 │       ├── test_config_store.cpp
+│       ├── test_message_parser.cpp
+│       ├── test_movement_sequencer.cpp
+│       ├── test_robot_commands.cpp
+│       ├── test_robot_state.cpp
 │       ├── test_session_store.cpp
 │       └── test_translation_engine.cpp
 ├── backends/bt_qt/                  # Qt Bluetooth backend
@@ -131,13 +155,18 @@ src/
 │   ├── CMakeLists.txt
 │   ├── main.cpp                     # Entry point, hot-reload, context wiring
 │   └── controllers/
-│       ├── RobotController.h/.cpp
-│       ├── ConfigController.h/.cpp
-│       ├── SessionController.h/.cpp
-│       └── TranslatorController.h/.cpp
+│       ├── RobotController         # situation state machine, transport
+│       ├── SessionController       # SessionStore adapter
+│       ├── TranslatorController    # TranslationEngine adapter (Qt loader)
+│       ├── ConfigController        # ConfigStore adapter
+│       ├── CalibrationSession      # CalibrationSession adapter
+│       └── CommandsController      # RobotCommands/serial command queue
 ├── cli/                             # CLI tool
 │   ├── CMakeLists.txt
-│   └── main.cpp
+│   ├── main.cpp                     # entry point
+│   ├── cli_commands.cpp/h           # CLI11 subcommand wiring
+│   ├── cli_state.cpp/h              # app/bot state helper
+│   └── cli_util.cpp/h               # logging/fs helpers
 ├── views/                           # QML screens
 │   ├── main.qml
 │   └── screens/
@@ -147,18 +176,22 @@ src/
 │       ├── WelcomeScreen.qml
 │       └── WizardScreen.qml
 ├── config.json                      # App config (image paths, URLs)
-└── i18n/                            # Translation files (.ts)
+└── i18n/                            # Translation files (.json)
 ```
 
 ## Build Targets
 
 | Target | Type | Depends on |
 |--------|------|-----------|
-| `zowi_core` | Static lib | nlohmann/json (FetchContent) |
-| `zowi_bt_qt` | Static lib | `zowi_core`, Qt6::Core, Qt6::Bluetooth |
-| `ZowiDesktop` | Executable | `zowi_core`, `zowi_bt_qt`, Qt6::Quick, Qt6::QuickControls2 |
-| `zowi_cli` | Executable | `zowi_core`, `zowi_bt_qt`, CLI11 (FetchContent), Qt6::Core, Qt6::Bluetooth |
-| `test_*` | Test exe | `zowi_core` |
+| `zowi_core` | Static lib | nlohmann/json |
+| `zowi_firmware` | Static lib (STK500v1/Optiboot) | — |
+| `zowi_bt_qt` | Static lib | `zowi_core`, Qt::Core, Qt::Bluetooth, Qt::DBus |
+| `zowi_bt_serial` | Static lib (POSIX serial) | `zowi_core`, Qt::Core |
+| `zowi_bt_serial_win` | Static lib (Win32 serial) | `zowi_core`, Qt::Core |
+| `zowi_bt_native` | Static lib (Windows WinRT) | `zowi_core` (+ Qt::Core, WinRT privately) |
+| `ZowiDesktop` | Executable | `zowi_core`, `zowi_bt_qt`, `zowi_bt_serial*`, Qt::Quick, Qt::QuickControls2 |
+| `zowi_cli` | Executable | `zowi_core`, `zowi_firmware`, CLI11, Qt::Core (+ backend libs) |
+| `test_*` | Test exe | `zowi_core` only |
 
 ### CMake options
 
@@ -195,8 +228,8 @@ CLI11 args → main.cpp → Core class → QtBluetoothBackend
 
 | Library | Version | Purpose | How obtained |
 |---------|---------|---------|-------------|
-| CLI11 | v2.4.2 | CLI argument parsing | FetchContent |
-| nlohmann/json | v3.11.3 | JSON read/write | FetchContent |
+| CLI11 | v2.4.2 | CLI argument parsing | System package, or FetchContent fallback |
+| nlohmann/json | v3.11.3 | JSON read/write | System package, or FetchContent fallback (`-DFETCHLIBRARIES=TRUE`) |
 | Qt 6 | 6.5+ | GUI framework, Bluetooth | System install |
 
 ## Screen Navigation
@@ -236,7 +269,10 @@ cmake --build build
 ctest --test-dir build
 ```
 
-3 tests: `test_session_store`, `test_config_store`, `test_translation_engine`.
+8 tests, all Qt-free: `test_session_store`, `test_config_store`,
+`test_translation_engine`, `test_robot_commands`, `test_robot_state`,
+`test_message_parser`, `test_movement_sequencer`, `test_calibration_session`.
+The CLI also ships a black-box test (`cli_blackbox`).
 
 ## Architecture evolution (MVVM → API + CLI + Frontend)
 

@@ -43,6 +43,10 @@ src/
 │   ├── config_store        # Read-only config loader
 │   ├── translation_engine  # JSON-based i18n (5 locales)
 │   ├── robot_commands      # Firmware command builder (20 movements)
+│   ├── robot_state         # Cached robot identity/battery state
+│   ├── message_parser      # Parses incoming robot stream messages
+│   ├── movement_sequencer  # Drives sequences of timed movements
+│   ├── calibration_session # Servo trim calibration state machine
 │   ├── bluetooth_api       # Abstract backend interface
 │   ├── protocol            # Firmware framing (&&cmd value%%)
 │   ├── device_info         # Device struct (name, address, rssi)
@@ -58,9 +62,14 @@ src/
 └── views/         # QML screens (13) + template + components (6)
 ```
 
-- `zowi::core` is intentionally Qt-free (except `translation_engine` which uses `QFile`).
+- `zowi::core` is 100 % Qt-free: it has no Qt dependency at all, and its only
+  third-party dependency is `nlohmann/json`. Platform-dependent plumbing (the
+  translation file loader, the `SessionStore` config directory, log sinks) is
+  injected by the consumers — see [ANDROID_PORT.md](ANDROID_PORT.md).
 - GUI and CLI share `core` and `backends` but are independent consumers.
-- Two Bluetooth backends implement `BluetoothApi`: BlueZ D-Bus (SPP) and POSIX termios (serial).
+- Four backends implement `BluetoothApi`: `bt_qt` (BlueZ D-Bus SPP, POSIX),
+  `bt_native` (WinRT, Windows), `bt_serial` (POSIX termios) and
+  `bt_serial_win` (Win32 serial).
 
 ## Milestones
 

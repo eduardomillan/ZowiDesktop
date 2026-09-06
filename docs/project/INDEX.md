@@ -28,6 +28,7 @@ in English.
 | [DOWNGRADING_TO_QT5.md](DOWNGRADING_TO_QT5.md) | Building with Qt 5.15 instead of Qt 6.5: dependency swap and the changes required in the GUI and Bluetooth backend. |
 | [ZOWI_CLI_SHELL.md](ZOWI_CLI_SHELL.md) | Design document for the CLI **shell** (interactive mode): motivation, UX spec, command set, technical design, limitations and the future daemon mode. |
 | [ANIMATIONS.md](ANIMATIONS.md) | Animation formats supported in QML (GIF, sprite sheets, frames, SVG, WEBP, Lottie) and recommended approaches for the splash screen. |
+| [ANDROID_PORT.md](ANDROID_PORT.md) | Reusing the `zowi_core` business logic in Android/Flutter: what is portable, the Qt-free refactor (injectable translation loader, config-dir injection), and integration routes via NDK/JNI or dart:ffi. |
 
 ## Related navigation
 

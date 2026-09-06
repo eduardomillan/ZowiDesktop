@@ -191,6 +191,10 @@ cmake --build build
 # Disable tests
 cmake -B build -DBUILD_TESTS=OFF
 cmake --build build
+
+# Core only (no Qt needed — zowi::core is 100 % Qt-free)
+cmake -B build -DZOWI_BUILD_GUI=OFF -DZOWI_BUILD_CLI=OFF
+cmake --build build
 ```
 
 ## Build targets
