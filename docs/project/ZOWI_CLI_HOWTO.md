@@ -242,7 +242,7 @@ zowi_cli translate -l ca_ES -s "Hola mundo"
 zowi_cli translate -c "WelcomeScreen.qml" -s "Start"
 ```
 
-Available locales: `es_ES`, `ca_ES`, `en_US`, `fr_FR`, `bg_BG`.
+Available locales: `es_ES`, `ca_ES`, `en_US`, `fr_FR`, `bg_BG`. Additional locales can be added by dropping a new `i18n/zowi_<locale>.json` file and updating `TranslationEngine::availableLocales()`.
 
 ## Scan
 

@@ -26,7 +26,7 @@ for locale in es_ES ca_ES en_US fr_FR bg_BG; do
     "$CLI" translate -l "$locale" -s "$SRC" >/dev/null 2>&1 \
         || fail "translate with locale $locale failed"
 done
-echo "ok: all 5 supported locales load without error"
+echo "ok: all supported locales load without error"
 
 # Translate a real string known to exist in the es_ES dictionary to prove the
 # lookup path works end to end.

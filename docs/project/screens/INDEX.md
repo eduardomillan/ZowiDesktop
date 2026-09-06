@@ -64,7 +64,7 @@ with **Ctrl+D** (window-level `Shortcut` in `main.qml`).
 
 - **i18n context** = the QML file name: every screen calls
   `Translator.translate("<Screen>.qml", source)`; keys live in
-  `i18n/zowi_<locale>.json` (5 locales: `es_ES`, `ca_ES`, `en_US`, `fr_FR`,
+  `i18n/zowi_<locale>.json` (all locales: `es_ES`, `ca_ES`, `en_US`, `fr_FR`,
   `bg_BG`).
 - **Context objects** registered in `src/gui/main.cpp`: `Session`, `Translator`,
   `Robot`, `Config`, `Calibration`, `Commands`, `AppVersion`.

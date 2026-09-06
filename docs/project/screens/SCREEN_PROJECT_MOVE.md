@@ -7,7 +7,7 @@
 
 - **Status:** ✅ **IMPLEMENTED** (v0.8.0).
 - **File:** `src/views/screens/ProjectMoveScreen.qml` (implemented).
-- **i18n context:** `"ProjectMoveScreen.qml"` (implemented in all 5 locales).
+- **i18n context:** `"ProjectMoveScreen.qml"` (implemented in all locales).
 - **Project id:** `move` — Home tile `move_objects`.
 - **Source JSON:** `projects/move.json` (registered in `projects.qrc`).
 - **Achievement:** `flapping` (reserved for the deferred ACHIEVEMENTS layer).
@@ -59,5 +59,5 @@ dialog until the ACHIEVEMENTS toggle is enabled (see SCREEN_PROJECTS.md).
   blockade timing, and persistence via `SessionController.saveString/getString`.
 - Preferences: `ProjectsPreferencesStore` stores `blockade_duration_ms`,
   `achievements_enabled`, `quiz_enabled` in `projects_preferences.json`.
-- i18n: All strings in 5 locales under `"ProjectMoveScreen.qml"` and
+- i18n: All strings in all locales under `"ProjectMoveScreen.qml"` and
   `"QuizComponent.qml"` contexts.

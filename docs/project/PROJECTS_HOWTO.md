@@ -205,7 +205,7 @@ Projects.setQuizEnabled(bool)           // void
 <file alias="choreography.json">projects/choreography.json</file>
 ```
 
-3. **Add i18n keys** in all 5 `i18n/zowi_*.json` under `"ProjectChoreographyScreen.qml"` context:
+3. **Add i18n keys** in all `i18n/zowi_*.json` under `"ProjectChoreographyScreen.qml"` context:
    - `title`, `learning_description`, `url`, `project_link`, `run_test`, `quiz_passed`, `quiz_failed`, `quiz_blocked`, `correct`, `incorrect`
    - `question_1`, `question_1_answer_1/2/3`, `question_2`, `question_2_answer_1/2/3`
 
@@ -284,7 +284,7 @@ Each project screen uses its own context: `"Project<Id>Screen.qml"` (e.g., `"Pro
 
 The reusable `QuizComponent` uses `"QuizComponent.qml"`.
 
-Keys are stored in `i18n/zowi_<locale>.json` (5 locales: `en_US`, `es_ES`, `ca_ES`, `fr_FR`, `bg_BG`).
+Keys are stored in `i18n/zowi_<locale>.json` (for all locales implemented).
 
 **Required keys per project:**
 

@@ -81,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   expressions / body gestures, and sends the firmware `L` / `H` command on tap.
   A local `iconSize` parameter (default 64) scales the icon grid up or down for
   future editor work. The screens pause the identity poll while open and are
-  translated across all five locales.
+  translated across all locales.
 
 ### Changed
 - **`move` runs a bounded number of cycles and stops the robot.** One-shot
@@ -465,4 +465,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release: desktop GUI and CLI to connect to a Zowi robot over
   Bluetooth, drive its behaviours, manage firmware, and a translation engine
-  with the 5 supported locales.
+  with all supported locales.

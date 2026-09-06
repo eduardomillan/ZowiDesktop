@@ -31,7 +31,7 @@ Status:
 
 | Version | Milestone | Description | Status |
 |---------|-----------|-------------|--------|
-| **0.1.0** | M1 | Initial release: desktop GUI and CLI, Bluetooth connection, behaviours, firmware, i18n (5 locales) | ✅ |
+| **0.1.0** | M1 | Initial release: desktop GUI and CLI, Bluetooth connection, behaviours, firmware, i18n (all locales) | ✅ |
 | **0.2.0** | M2 | Debian/Lliurex packaging + Wayland support | ✅ |
 | **0.3.0** | M3 | Automated GitHub Releases, signed APT repo, translations embedded in binary | ✅ |
 | **0.3.2** | M3 | Multi-distro .deb (jammy + noble), AppImage on older base | ✅ |
@@ -50,7 +50,7 @@ src/
 ├── core/          # Qt-free C++20 static library (zowi::core)
 │   ├── session_store       # Persistent key-value store (JSON)
 │   ├── config_store        # Read-only config loader
-│   ├── translation_engine  # JSON-based i18n (5 locales)
+│   ├── translation_engine  # JSON-based i18n (all locales)
 │   ├── robot_commands      # Firmware command builder (20 movements)
 │   ├── robot_state         # Cached robot identity/battery state
 │   ├── message_parser      # Parses incoming robot stream messages
@@ -84,7 +84,7 @@ src/
 
 ### M1 — Initial release ✅
 - [x] Desktop GUI and CLI to connect to Zowi over Bluetooth
-- [x] Multilingual support (5 locales)
+- [x] Multilingual support (all locales)
 - [x] Persistent session and device configuration
 - [x] Device discovery and pairing flow
 - [x] Connection status and battery indicators

@@ -15,7 +15,7 @@
 - **Implemented files:**
   - Core: `src/core/include/zowi/project_model.h`, `projects_store.h/.cpp`, `projects_preferences_store.h/.cpp`
   - GUI: `src/gui/controllers/ProjectsController.h/.cpp`, `src/views/components/QuizComponent.qml`, `src/views/screens/ProjectMoveScreen.qml`
-  - Assets: `projects/move.json`, `projects.qrc`, i18n keys in all 5 locales under `"ProjectMoveScreen.qml"` and `"QuizComponent.qml"` contexts
+  - Assets: `projects/move.json`, `projects.qrc`, i18n keys in all locales under `"ProjectMoveScreen.qml"` and `"QuizComponent.qml"` contexts
 - **Planned files:** one `src/views/screens/ProjectXXXScreen.qml` per remaining project (choreography, form, bio1, bio3, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet.
 - **Planned i18n contexts:** `"ProjectXXXScreen.qml"` (one per screen). The 10
   tile titles are already translated on the Home-screen context (`move_objects`,
@@ -204,7 +204,7 @@ stored in a separate `projects_preferences.json` file via `ProjectsPreferencesSt
 ## i18n
 
 New keys per project (`<prefix>_title`, `_learning_description`, `_url`,
-`_question_1/2`, `_question_1/2_answer_1..3`) in the 5 desktop locales,
+`_question_1/2`, `_question_1/2_answer_1..3`) in all desktop locales,
 grouped under each `"ProjectXXXScreen.qml"` context. The Android strings
 (`strings.xml`) and the desktop `i18n/zowi_*.json` naming differ
 (`project_move_title` vs `move_objects`) — the tile titles already exist

@@ -58,12 +58,18 @@ void test_available_locales() {
 
     zowi::TranslationEngine engine;
     auto locales = engine.availableLocales();
-    assert(locales.size() == 5);
-    assert(locales[0] == "es_ES");
-    assert(locales[1] == "ca_ES");
-    assert(locales[2] == "en_US");
-    assert(locales[3] == "fr_FR");
-    assert(locales[4] == "bg_BG");
+
+    // Verify non-empty list
+    assert(!locales.empty());
+
+    // Verify each reported locale can be loaded successfully
+    for (const auto& locale : locales) {
+        engine.load(locale);
+        assert(engine.currentLocale() == locale);
+        // Basic sanity check
+        std::string result = engine.translate("WelcomeScreen.qml", "zowi");
+        assert(!result.empty());
+    }
 
     std::cout << "OK" << std::endl;
 }
