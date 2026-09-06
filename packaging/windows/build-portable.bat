@@ -29,9 +29,9 @@ REM --- Packaged builds ship with dev mode OFF. Re-enabled at runtime via DEV_MO
 powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0set_dev_mode.ps1" false "src\config.json"
 if %ERRORLEVEL% neq 0 exit /b %ERRORLEVEL%
 
-REM --- Extract version from CMakeLists.txt ---
-set VERSION=
-for /f %%v in ('powershell -NoProfile -Command "$c = Get-Content 'CMakeLists.txt' -Raw; if ($c -match 'project\(.*VERSION\s+([\d\.]+)') { $Matches[1] }"') do set VERSION=%%v
+REM --- Extract version from VERSION file ---
+set /p VERSION=<VERSION
+set VERSION=%VERSION: =%
 echo Detected version: %VERSION%
 
 echo === Step 1: Configure with CMake ===

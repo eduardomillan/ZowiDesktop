@@ -232,13 +232,13 @@ Linux distribution without installing Qt.
 ./packaging/linux/create-appimage.sh
 ```
 
-The version is read from `CMakeLists.txt`. Resources are compiled without
+The version is read from the `VERSION` file. Resources are compiled without
 zstd compression (`--no-zstd`) to ensure compatibility with older Qt versions.
 
 ## Linux Debian packages
 
 The script builds `.deb` packages for Ubuntu/Lliurex distributions. The version
-is read from `CMakeLists.txt` and release notes are extracted from `CHANGELOG.md`.
+is read from the `VERSION` file and release notes are extracted from `CHANGELOG.md`.
 
 ```bash
 # Build for Ubuntu 22.04 (jammy)
@@ -285,7 +285,7 @@ attached with the AppImage and Debian packages:
 ```
 
 The script:
-- Reads the version from `CMakeLists.txt`
+- Reads the version from the `VERSION` file
 - Verifies the required artifacts exist (AppImage + .deb jammy + .deb noble)
 - Attaches the Windows portable zip and installer too, if found in
   `dist/`

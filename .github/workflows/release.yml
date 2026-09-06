@@ -8,7 +8,7 @@
 #   2. Build selected Windows artifacts (portable zip, setup installer).
 #   3. Download requested artifacts into dist/ and run
 #      packaging/create-gh-release.sh with corresponding flags, which reads
-#      the version from CMakeLists.txt, extracts notes from debian/changelog,
+#      the version from the VERSION file, extracts notes from debian/changelog,
 #      tags, and creates the GitHub Release with the selected assets.
 #
 # Publishing the signed apt repository (--with-apt) is opt-in via the

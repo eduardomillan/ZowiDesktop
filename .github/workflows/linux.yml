@@ -51,7 +51,7 @@ jobs:
         id: ver
         shell: bash
         run: |
-          V=$(grep -oP 'project\(ZowiDesktop\s+VERSION\s+\K\S+(?=\s+LANGUAGES)' CMakeLists.txt)
+          V=$(tr -d '\r\n' < VERSION)
           test -n "$V"
           echo "version=$V" >> "$GITHUB_OUTPUT"
 
@@ -92,7 +92,7 @@ jobs:
         id: ver
         shell: bash
         run: |
-          V=$(grep -oP 'project\(ZowiDesktop\s+VERSION\s+\K\S+(?=\s+LANGUAGES)' CMakeLists.txt)
+          V=$(tr -d '\r\n' < VERSION)
           test -n "$V"
           echo "version=$V" >> "$GITHUB_OUTPUT"
 
@@ -130,7 +130,7 @@ jobs:
         id: ver
         shell: bash
         run: |
-          V=$(grep -oP 'project\(ZowiDesktop\s+VERSION\s+\K\S+(?=\s+LANGUAGES)' CMakeLists.txt)
+          V=$(tr -d '\r\n' < VERSION)
           test -n "$V"
           echo "version=$V" >> "$GITHUB_OUTPUT"
 

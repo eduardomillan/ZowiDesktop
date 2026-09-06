@@ -100,16 +100,15 @@ artifacts are attached automatically when present.
 
 ## Release version
 
-The version lives in a single source of truth, the top of `CMakeLists.txt`:
+The version lives in a single source of truth, the root `VERSION` file:
 
-```cmake
-project(ZowiDesktop VERSION 0.6.10 LANGUAGES CXX)
+```text
+0.7.1
 ```
 
-All release scripts parse the `project()` line with a regex (`VERSION\s+(\S+)`)
-and derive the git tag as `v<version>`. To cut a new release:
+`CMakeLists.txt` reads this file automatically (`file(READ ...)`), and all release scripts and CI workflows read it directly, deriving the git tag as `v<version>`. To cut a new release:
 
-1. Bump the version in `CMakeLists.txt`.
+1. Bump the version in `VERSION`.
 2. Add the matching entry at the top of `CHANGELOG.md`:
 
    ```markdown
@@ -129,7 +128,7 @@ and derive the git tag as `v<version>`. To cut a new release:
 
 ## Release checklist
 
-1. Bump `CMakeLists.txt` and update `CHANGELOG.md`.
+1. Bump `VERSION` and update `CHANGELOG.md`.
 2. Commit those changes.
 3. Either:
    - **One button**: go to **Actions → Release → Run workflow** (see
@@ -166,7 +165,7 @@ and derive the git tag as `v<version>`. To cut a new release:
 QT_ROOT_DIR=/path/to/qt6 bash packaging/linux/create-appimage.sh
 ```
 
-- Reads the version from `CMakeLists.txt` (override the name with
+- Reads the version from `VERSION` (override the name with
   `APPIMAGE_NAME=...`).
 - Downloads `linuxdeploy` and its Qt plugin automatically into `build/.tools`,
   bundles Qt platform plugins (xcb + wayland) and essential QML modules
@@ -186,7 +185,7 @@ DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04
 ```
 
 - Regenerates `debian/changelog` from `CHANGELOG.md` (top entry uses the
-  `CMakeLists.txt` version).
+  `VERSION` file).
 - Builds with `dpkg-buildpackage -b -us -uc`.
 - Output: `dist/zowi-desktop_<version>-1+<suffix>_amd64.deb`.
 
@@ -217,7 +216,7 @@ packaging\windows\installer\build-installer.bat    :: installer
 packaging\windows\build-portable.bat               :: portable zip
 ```
 
-- Both scripts read the version from `CMakeLists.txt` and write directly to
+- Both scripts read the version from `VERSION` and write directly to
   `dist/`:
   - `build-installer.bat` → `dist\ZowiDesktop-<version>-setup-x64.exe`
     (packed from the windeployqt staging dir `build-windows\stage\`)
@@ -262,7 +261,7 @@ bash packaging/create-gh-release.sh --with-apt
 The script:
 
 1. Checks `gh` is authenticated.
-2. Reads the version from `CMakeLists.txt` (`TAG="v<version>"`).
+2. Reads the version from `VERSION` (`TAG="v<version>"`).
 3. Verifies the mandatory artifacts exist (AppImage + both `.deb`).
 4. Extracts the changelog notes for the version from `debian/changelog`.
 5. Confirms interactively, then creates the annotated tag `v<version>` and

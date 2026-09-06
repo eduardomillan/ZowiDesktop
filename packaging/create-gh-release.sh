@@ -74,9 +74,11 @@ if ! gh auth status &>/dev/null; then
     exit 1
 fi
 
-VERSION=$(grep -oP 'project\(ZowiDesktop\s+VERSION\s+\K\S+(?=\s+LANGUAGES)' "$PROJECT_ROOT/CMakeLists.txt")
+if [ -f "$PROJECT_ROOT/VERSION" ]; then
+    VERSION=$(tr -d '\r\n' < "$PROJECT_ROOT/VERSION")
+fi
 if [ -z "$VERSION" ]; then
-    echo "ERROR: could not read VERSION from CMakeLists.txt" >&2
+    echo "ERROR: could not read VERSION from $PROJECT_ROOT/VERSION" >&2
     exit 1
 fi
 TAG="v${VERSION}"

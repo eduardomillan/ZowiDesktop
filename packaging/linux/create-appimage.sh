@@ -5,7 +5,7 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
 APPDIR="$PROJECT_ROOT/build/AppDir"
 TOOLS_DIR="$PROJECT_ROOT/build/.tools"
-VERSION=$(grep -oP 'project\(ZowiDesktop\s+VERSION\s+\K\S+(?=\s+LANGUAGES)' "$PROJECT_ROOT/CMakeLists.txt")
+VERSION=$(tr -d '\r\n' < "$PROJECT_ROOT/VERSION")
 
 # Qt6 location — override with: export QT_ROOT_DIR=/path/to/qt6
 QT_ROOT_DIR="${QT_ROOT_DIR:-/home/eduardo/Qt/6.5.2/gcc_64}"

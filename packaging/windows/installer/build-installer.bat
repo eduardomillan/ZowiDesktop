@@ -27,9 +27,9 @@ if not defined ISCC_PATH   set ISCC_PATH=C:\Program Files (x86)\Inno Setup 6
 
 set "PATH=%CMAKE_PATH%;%QT_PATH%\bin%;%ISCC_PATH%;C:\Windows\System32\WindowsPowerShell\v1.0;%PATH%"
 
-REM --- Extract version from CMakeLists.txt (match the project() line, not cmake_minimum_required) ---
-set VERSION=
-for /f %%v in ('powershell -NoProfile -Command "$c = Get-Content '%PROJECT_ROOT%\CMakeLists.txt' -Raw; if ($c -match 'project\(.*VERSION\s+([\d\.]+)') { $Matches[1] }"') do set VERSION=%%v
+REM --- Extract version from VERSION file ---
+set /p VERSION=<"%PROJECT_ROOT%\VERSION"
+set VERSION=%VERSION: =%
 echo Detected version: %VERSION%
 
 REM --- Back up src/config.json so uncommitted changes survive packaging ---

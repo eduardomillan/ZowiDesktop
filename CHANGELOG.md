@@ -7,143 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-09-06
+
 ### Added
-- **Shared movement sequencer.** New Qt-free `zowi::MovementSequencer`
-  (`src/core/include/zowi/movement_sequencer.h`): a pure state machine that
-  owns the move-N-cycles sequencing (&&A start marker, per-cycle &&F
-  counting, stop queued mid-last-cycle) as event callbacks plus polled
-  queries (`started()`, `completedCycles()`, `shouldQueueStop()`) and the
-  timing guidance (`startTimeoutMs`, `cycleTimeoutMs`). The CLI's
-  `runMovementCycles` now drives it; a GUI consumer can feed it from the
-  message pump event-driven. Unit-tested with MessageParser round-trips.
-- **Shared robot identity state.** New `zowi::RobotState` +
-  `sendIdentityQueries()` (`src/core/include/zowi/robot_state.h`): the
-  value-application rules for name/appId/battery (prefixed &&E/&&I/&&B and
-  legacy N/U/B forms) and the E/I/B request burst now live once and serve
-  both the CLI (`applyRobotMessageUnlocked`) and the GUI
-  (`RobotController::parseIncoming`). Shared poll cadence
-  `zowi::kIdentityPollMs` (1200 ms) replaces the divergent hardcodes (CLI
-  1200, GUI 1000).
-- **Pad pauses the identity poll while driving.** `PadScreen` now stops the
-  E/I/B polling while a pad button is held and resumes it on release (the
-  same `setDataPollingEnabled` hook CalibrationScreen already used) — the
-  poll made the robot run `zowi.home()` mid-movement, stuttering the pad.
-- **Shared robot message parser.** New Qt-free `zowi::MessageParser`
-  (`src/core/include/zowi/message_parser.h`), the host-side inverse of the
-  firmware's `ZowiSerialCommand`: incremental `feed()`/`drain()` API covering
-  `&&<cmd>[ <value>]%%` frames (including bare `&&A%%`/`&&F%%` acks), the
-  legacy `N`/`U`/`B` line forms, frames split across transport chunks, and a
-  4 KB resync valve against broken streams. Unit-tested in
-  `src/core/tests/test_message_parser.cpp`. Both consumers now use it: the
-  CLI (`cli_state.cpp`) and the GUI (`RobotController::parseIncoming`, which
-  previously only understood battery/name/appId and now also sees acks,
-  distance and noise).
-- **Buzzer command builder.** `commandTone(frequencyHz, durationMs)` builds
-  `T <freq> <ms>\r` (the previously unused `Command::Buzzer` enum value).
-- **Raw mouth patterns in the CLI.** `zowi_cli mouth` (one-shot and shell)
-  accepts a `0/1` binary token of up to 32 digits and sends it via the
-  firmware's `L` command, mirroring `receiveLED`'s `strtoul` parse: the token
-  is read as a binary value, so missing digits are leading zeros and the
-  30-bit matrix patterns can be written without the 2 unused top bits.
-  Tokens whose value fits 0-30 stay catalog ids; a `0/1` token of 25+ digits
-  is always raw. Includes a specific error for over-long patterns and a
-  friendlier `--list`/shell help. Used to hardware-verify the canonical
-  okMouth pattern (see `docs/project/ZOWILIBS.md`); new core helper
-  `commandMouthFromBinary()` is unit-tested.
-- **Arduino mirror verification script.** New
-  `scripts/verify_arduino_mirrors.sh` diffs ZowiDesktop's hand-mirrored
-  protocol constants and data catalogs (mouth patterns, gestures, melody wire
-  order, command letters) against `zowiLibs/arduinolibs` and the
-  `ZOWI_BASE_v2.ino` firmware sources; non-zero exit on drift. Catalog
-  counterpart of `sync_firmware_from_zowiLibs.sh`.
-- **Servo calibration.** New `calibrate` CLI subcommand for interactive servo-trim
-  calibration (wizard with arrow keys) or direct mode (`--yl/--yr/--rl/--rr`).
-  New GUI `CalibrationScreen` with a 4-step wizard (WARNING → LEGS → FEET → CHECK)
-  accessible from Settings. Both share a Qt-free `CalibrationSession` core module
-  that owns the trim state, clamps (±60°), command generation and the one-G-in-flight
-  debounce policy.
-- **Extended robot commands.** `robot_commands.h` now exposes `MouthId` (31 mouth
-  patterns), `GestureId` (13 gestures) and `MelodyId` (19 melodies) enums, plus
-  `commandMouth()`, `commandMouthById()`, `commandGesture(GestureId)` and
-  `commandSing()` functions. A new `CommandsController` exposes all robot commands
-  to QML, replacing hardcoded protocol strings in `PadScreen`.
-- **CLI robot control subcommands.** New `move`, `gesture`, `mouth` and `sing`
-  subcommands for one-shot robot control from the command line. Each accepts
-  either a name or numeric ID, and supports `--list` to show available options.
-  Examples: `zowi_cli move forward --speed fast`, `zowi_cli gesture victory`,
-  `zowi_cli mouth smile`, `zowi_cli sing happy`.
-- **Mouth and gesture screens in the gamepad.** The Mouths and Gestures/Animations
-  buttons on `PadScreen` now open dedicated `ScreenTemplate`-based screens
-  (`MouthScreen`, `GestureScreen`) with a back button, replacing the earlier
-  dialog-overlay approach — the same navigation pattern as Settings →
-  CalibrationScreen. Each screen shows a centred, responsive grid (80% width,
-  reflowing into rows/columns on window resize, like a webpage) of mouth
-  expressions / body gestures, and sends the firmware `L` / `H` command on tap.
-  A local `iconSize` parameter (default 64) scales the icon grid up or down for
-  future editor work. The screens pause the identity poll while open and are
-  translated across all locales.
+- **Move project:** First interactive educational project (`ProjectMoveScreen`) teaching how Zowi walks and turns, featuring instructional slides, comprehension questions (`QuizComponent`), and an embedded control pad.
+- **Projects infrastructure:** Core Qt-free models (`Project`, `ProjectsStore`, `ProjectsPreferencesStore`) and GUI `ProjectsController` integrated into the `HomeScreen` project grid.
+
+## [0.7.0] - 2026-09-05
+
+### Added
+- **Servo calibration:** Guided 4-step wizard in GUI (`CalibrationScreen`) and interactive CLI subcommand (`zowi_cli calibrate`) to adjust servo trims via `C`/`G` protocol commands, powered by the core `CalibrationSession` module.
+- **Dedicated mouth and gesture screens:** Dedicated screens for mouth expressions (`MouthScreen`), visual LED matrix drawing editor (`MouthEditorScreen`), and animations (`GestureScreen`).
+- **CLI robot control commands:** Subcommands `move` (with cycle counting and precise stopping), `gesture`, `mouth`, `sing`, and buzzer tone generation.
+- **Shared core architecture (Qt-free):** New `MovementSequencer`, `RobotState`, and `MessageParser` modules shared across CLI and GUI.
 
 ### Changed
-- **`move` runs a bounded number of cycles and stops the robot.** One-shot
-  and shell `move` now take an optional cycle count (`move <dir> [cycles]
-  [speed]`, default 1): the CLI sends the movement once, tracks each
-  completed gait cycle through the firmware's per-cycle final acks (printing
-  `Cycle k/N`), and queues `S` (home + rest) mid-last-cycle so the robot
-  runs exactly N cycles — the robot only reads serial between cycles, so a
-  stop sent after the last ack lets one extra cycle slip in (observed on
-  hardware). The movement's software ack (`&&A`) is used as the start
-  marker, the cycle counter is reset per movement, and the stop's own acks
-  are drained before returning, so consecutive movements count cleanly.
-  The connect-time identity polling cadence was also slowed (500 ms →
-  1200 ms) to reduce the command backlog that delays movements.
-- **Direction/speed abbreviations in `move`.** Case-insensitive short forms:
-  `fw`/`bk`/`lf`/`rg`/`ml`/`mr` for the six directions and `s`/`m`/`f` for
-  the speeds, in both the one-shot subcommand and the shell; `--list` and
-  the shell help document the new syntax.
-- **CLI default `--timeout` raised from 3 s to 5 s.** All robot-facing
-  subcommands (`connect`, `rename`, `status`, `control`, `calibrate`, `move`,
-  `gesture`, `mouth`, `sing`, `shell`) now default to 5 s via a shared
-  `kDefaultRobotTimeout` constant. The HC-05 on the robot can take longer
-  than 3 s to establish the SPP connection, which made one-shot commands fail
-  with "Could not connect to the robot within 3s" (observed on hardware).
-  Per-command `-t` still overrides it; `scan` (5 s scan duration) and the
-  firmware commands (10 s confirmation waits) keep their own defaults.
-- **Canonical okMouth pattern restored.** `kMouthPatterns[25]` (MouthId::Ok)
-  went back to the original `Zowi_mouths.h` bit pattern
-  (`0b00000001000010010100001000000000`), reverting an unexplained deviation
-  introduced while centralizing the mouth table. Verified against the local
-  Arduino library, the `bq/zowiLibs` upstream, the Bobwi fork and a render of
-  the `LedMatrix` 5x6 bit layout (details in `docs/project/ZOWILIBS.md`);
-  locked by `test_robot_commands`.
-- **PadScreen refactor.** All movement/action buttons now use `Commands.xxx()`
-  methods instead of hardcoded protocol strings (`"M 3 " + speed + "\r"` →
-  `Commands.turnLeft(speed)`), making the code type-safe and testable.
-- **Calibration button styling.** CalibrationScreen action buttons now use the
-  same pill style as Welcome/Wizard/WizardFound screens (200×56 in rows, 260×56
-  for solo buttons, 190×56 for the 3-button CHECK step), with consistent
-  `radius: 28` and `font.pixelSize: 16`.
-- **`dev_mode` default.** The `dev_mode` key in `config.json` is now `false` by
-  default (was `true`).
-- **Renamed `ZOWI_DEV` environment variable to `DEV_MODE`.** The env var
-  that enables dev mode and the dev overlay is now `DEV_MODE` (accepted
-  values: `1`, `true`, `on`, case-insensitive). The `dev_mode` key in
-  `config.json` is unchanged.
+- Pad control buttons now use typed methods from `CommandsController` instead of hardcoded protocol strings.
+- CLI default connection timeout increased to 5 seconds.
 
 ### Fixed
-- **Calibration entry caused an unwanted leg sweep.** Entering calibration
-  (GUI or CLI) used to send `C 0 0 0 0` followed immediately by
-  `G 90 90 90 90`. Because the firmware's `receiveTrims` handler calls
-  `zowi.home()` internally, this produced two back-to-back moves to 90°
-  with a detach/re-attach in between — causing the legs to sag, re-energise
-  with a visible clunk, and appear to "collide at the rear" when swinging
-  inward from an arbitrary posture. The entry sequence now sends a single
-  `S` (stop) command, which invokes the firmware's `home()` exactly once,
-  settling the robot cleanly to rest without the redundant second move.
-- **Calibration state persisted between openings.** The global
-  `CalibrationSessionController` kept its step/trims state between screen
-  openings, so a previous calibration's step 3 would reappear on the next
-  open. `CalibrationScreen` now resets to step 0 with zeroed trims on
-  `Component.onCompleted` (respecting the preview's `PreviewStep` hook).
+- Fixed unwanted leg sweep and jolt when entering calibration mode.
+- Fixed calibration wizard state persisting across screen reopenings.
 
 ## [0.6.0] - 2026-09-01
 

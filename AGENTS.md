@@ -14,6 +14,7 @@ Compact guidance for OpenCode sessions in this repo. Read `.github/copilot-instr
 - Linux artifacts are now placed in `dist/` (AppImage + jammy/noble `.deb`) and the `create-gh-release.sh` script expects them there.
 - `QT_PATH=~/Qt/6.5.2/gcc_64 ./build.sh` to point at a specific Qt install.
 - Core-only build (no Qt, fast): `cmake -S . -B build -DZOWI_BUILD_GUI=OFF -DZOWI_BUILD_CLI=OFF && cmake --build build`.
+- Version: defined in the root file `VERSION` (single source of truth), read automatically by `CMakeLists.txt` and all packaging scripts.
 - Tests: `ctest --test-dir build --output-on-failure`. Single test: `ctest --test-dir build -R '^test_translation_engine$' --output-on-failure`. Build one: `cmake --build build --target test_translation_engine`.
 - No lint/format/typecheck config exists in the repo — do not invent `lint`/`format` commands.
 

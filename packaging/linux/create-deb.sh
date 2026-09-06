@@ -3,7 +3,7 @@ set -e
 
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
-VERSION=$(grep -oP 'project\(ZowiDesktop\s+VERSION\s+\K\S+(?=\s+LANGUAGES)' "$PROJECT_ROOT/CMakeLists.txt")
+VERSION=$(tr -d '\r\n' < "$PROJECT_ROOT/VERSION")
 DIST_DIR="$PROJECT_ROOT/dist"
 
 echo "=== Generating debian/changelog from CHANGELOG.md ==="
