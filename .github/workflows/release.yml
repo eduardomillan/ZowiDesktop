@@ -57,6 +57,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Warn if Windows build did not succeed
+        if: ${{ needs.build-windows.result != 'success' && needs.build-windows.result != 'skipped' }}
+        run: |
+          echo "::warning::Windows build result was '${{ needs.build-windows.result }}' (expected success or skipped); releasing with Linux artifacts only."
+
       - name: Download Linux artifacts
         uses: actions/download-artifact@v5
         with:
@@ -95,3 +100,10 @@ jobs:
             ARGS+=(--with-apt)
           fi
           bash packaging/create-gh-release.sh "${ARGS[@]}"
+
+      - name: Remove imported apt signing key
+        if: ${{ always() && inputs.publish_apt }}
+        run: |
+          for fpr in $(gpg --list-secret-keys --with-colons 2>/dev/null | awk -F: '/^fpr:/ {print $10}' | sort -u); do
+            gpg --batch --yes --delete-secret-and-public-keys "$fpr" || true
+          done
