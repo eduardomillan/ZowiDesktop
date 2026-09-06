@@ -8,6 +8,8 @@ add_library(zowi_core STATIC
     src/message_parser.cpp
     src/movement_sequencer.cpp
     src/robot_state.cpp
+    src/projects_store.cpp
+    src/projects_preferences_store.cpp
 )
 
 target_include_directories(zowi_core
