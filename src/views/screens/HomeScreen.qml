@@ -29,16 +29,16 @@ FocusScope {
         color: Config.get("color_bg_app") || "#f4f9f4"
 
         property var projectsData: [
-            { name: tr("move_objects"),    icon: "qrc:/images/android/move_button.png",        enabled: true },
-            { name: tr("choreography"),    icon: "qrc:/images/android/choreography_button.png", enabled: false },
-            { name: tr("robot_form"),      icon: "qrc:/images/android/robot_form_button.png",   enabled: false },
-            { name: tr("robot_eyes"),      icon: "qrc:/images/android/eyes_button.png",         enabled: false },
-            { name: tr("robot_feet"),      icon: "qrc:/images/android/feet_button.png",         enabled: false },
-            { name: tr("robot_alarm"),     icon: "qrc:/images/android/alarm_button.png",        enabled: false },
-            { name: tr("adivinawi"),       icon: "qrc:/images/android/adivinawi_button.png",    enabled: false },
-            { name: tr("gravity"),         icon: "qrc:/images/android/gravity_button.png",      enabled: false },
-            { name: tr("hello_world"),     icon: "qrc:/images/android/bitbloq_button.png",      enabled: false },
-            { name: tr("bitbloq_sensors"), icon: "qrc:/images/android/bitbloq2_button.png",     enabled: false }
+            { id: "move", name: tr("move_objects"),    icon: "qrc:/images/android/move_button.png",        enabled: true },
+            { id: "choreography", name: tr("choreography"),    icon: "qrc:/images/android/choreography_button.png", enabled: false },
+            { id: "form", name: tr("robot_form"),      icon: "qrc:/images/android/robot_form_button.png",   enabled: false },
+            { id: "bio1", name: tr("robot_eyes"),      icon: "qrc:/images/android/eyes_button.png",         enabled: false },
+            { id: "bio3", name: tr("robot_feet"),      icon: "qrc:/images/android/feet_button.png",         enabled: false },
+            { id: "reprogram", name: tr("robot_alarm"),     icon: "qrc:/images/android/alarm_button.png",        enabled: false },
+            { id: "adivinawi", name: tr("adivinawi"),       icon: "qrc:/images/android/adivinawi_button.png",    enabled: false },
+            { id: "gravity", name: tr("gravity"),         icon: "qrc:/images/android/gravity_button.png",      enabled: false },
+            { id: "helloworld", name: tr("hello_world"),     icon: "qrc:/images/android/bitbloq_button.png",      enabled: false },
+            { id: "bitbloq2", name: tr("bitbloq_sensors"), icon: "qrc:/images/android/bitbloq2_button.png",     enabled: false }
         ]
 
     // Top bar with Settings and Achievements
@@ -285,7 +285,7 @@ FocusScope {
                                 cursorShape: modelData.enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 enabled: modelData.enabled
                                 onClicked: {
-                                    if (modelData.name === tr("move_objects")) {
+                                    if (modelData.id === "move") {
                                         homeScope.projectMoveClicked()
                                     }
                                 }
