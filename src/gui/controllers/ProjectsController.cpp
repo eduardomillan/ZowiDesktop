@@ -89,9 +89,9 @@ void ProjectsController::blockQuiz(const QString &id, int durationMs) {
     emit projectsChanged();
 }
 
-void ProjectsController::setCompleted(const QString &id) {
+void ProjectsController::setCompleted(const QString &id, bool completed) {
     std::string key = id.toStdString() + "_project_completeness";
-    m_session->saveString(QString::fromStdString(key), "true");
+    m_session->saveString(QString::fromStdString(key), completed ? "true" : "");
     emit projectsChanged();
 }
 

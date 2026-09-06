@@ -15,11 +15,18 @@ Rectangle {
     property alias title: titleText.text
     property alias subtitle: subtitleText.text
     property bool showBackButton: false
+    property bool showRightButton: false
     property bool showDisconnectButton: false
     property bool showStatusBar: true
     property real footerHeight: 0
+    property bool debugBorders: false
+    property url rightButtonSource: ""
+
+    property alias leftButton: leftBtn
+    property alias rightButton: rightBtn
 
     signal backClicked()
+    signal rightClicked()
     signal disconnectClicked()
 
     default property alias content: contentArea.data
@@ -41,7 +48,7 @@ Rectangle {
     }
 
     Button {
-        id: backBtn
+        id: leftBtn
         visible: root.showBackButton
         width: 88
         height: 88
@@ -60,10 +67,36 @@ Rectangle {
 
         background: Rectangle {
             radius: 44
-            color: backBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+            color: leftBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
         }
 
         onClicked: root.backClicked()
+    }
+
+    Button {
+        id: rightBtn
+        visible: root.showRightButton
+        width: 88
+        height: 88
+        anchors {
+            top: statusBar.bottom
+            right: parent.right
+            margins: 12
+        }
+
+        contentItem: Image {
+            source: root.rightButtonSource
+            sourceSize.width: 56
+            sourceSize.height: 56
+            fillMode: Image.PreserveAspectFit
+        }
+
+        background: Rectangle {
+            radius: 44
+            color: rightBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+        }
+
+        onClicked: root.rightClicked()
     }
 
     Button {

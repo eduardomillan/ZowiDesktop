@@ -31,10 +31,31 @@ Item {
     }
 
     function startQuiz() {
-        currentQuestionIndex = 0
         answered = false
         allCorrect = true
         blockadeRemainingMsInternal = 0
+        if (currentQuestionIndex !== 0)
+            currentQuestionIndex = 0
+        else
+            populateAnswers()
+    }
+
+    function populateAnswers() {
+        var children = answersColumn.children
+        for (var c = children.length - 1; c >= 0; c--)
+            children[c].destroy()
+        if (currentQuestionIndex >= questions.length) return
+
+        var q = questions[currentQuestionIndex]
+        for (var i = 0; i < q.answers.length; i++) {
+            var ans = q.answers[i]
+            var btn = Qt.createQmlObject('import QtQuick 2.15; import QtQuick.Controls 2.15; Button { width: parent.width; height: 56; text: "' + ans.text + '"; font.pixelSize: 16; contentItem: Text { text: parent.text; color: "#ffffff"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter } background: Rectangle { radius: 28; color: parent.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : Config.get("color_accent") || "#21a69b" } }', answersColumn)
+            if (btn) {
+                btn.clicked.connect((function(idx) {
+                    return function() { answerQuestion(idx) }
+                })(i))
+            }
+        }
     }
 
     function answerQuestion(answerIndex) {
@@ -156,50 +177,7 @@ Item {
             text: tr("quiz_blocked").arg(blockadeCountdown)
         }
 
-        // Run Test button (only shown when not in a question)
-        Button {
-            id: runTestButton
-            width: parent.width * 0.5
-            height: 48
-            anchors.horizontalCenter: parent.horizontalCenter
-            visible: questions.length > 0 && currentQuestionIndex === 0 && !answered && !isBlocked && Projects.isQuizEnabled()
-            enabled: !isBlocked
-            text: tr("run_test")
-            background: Rectangle {
-                radius: 24
-                color: runTestButton.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : Config.get("color_accent") || "#21a69b"
-            }
-            contentItem: Text {
-                text: parent.text
-                color: "#ffffff"
-                font.bold: true
-                font.pixelSize: 16
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-            onClicked: startQuiz()
-        }
     }
 
-    // Populate answers when question changes
-    Component.onCompleted: {
-        if (questions.length > 0) {
-            // Will be triggered by startQuiz
-        }
-    }
-
-    // Watch for question index changes
-    onCurrentQuestionIndexChanged: {
-        answersColumn.children.forEach(function(child) { child.destroy() })
-        if (currentQuestionIndex >= questions.length) return
-
-        var q = questions[currentQuestionIndex]
-        for (var i = 0; i < q.answers.length; i++) {
-            var ans = q.answers[i]
-            var btn = Qt.createQmlObject('import QtQuick 2.15; import QtQuick.Controls 2.15; Button { width: parent.width; height: 56; text: "' + ans.text + '"; font.pixelSize: 16; contentItem: Text { text: parent.text; color: "#ffffff"; font.bold: true; horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter } background: Rectangle { radius: 28; color: parent.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : Config.get("color_accent") || "#21a69b" } }', answersColumn)
-            if (btn) {
-                btn.clicked.connect(function() { answerQuestion(i) })
-            }
-        }
-    }
+    onCurrentQuestionIndexChanged: populateAnswers()
 }
