@@ -11,13 +11,37 @@ name: Linux CI
 
 on:
   workflow_dispatch:
+    inputs:
+      build_appimage:
+        description: 'Build Linux AppImage'
+        type: boolean
+        default: true
+      build_deb_jammy:
+        description: 'Build Debian package for Ubuntu 22.04 (Jammy)'
+        type: boolean
+        default: true
+      build_deb_noble:
+        description: 'Build Debian package for Ubuntu 24.04 (Noble)'
+        type: boolean
+        default: true
   workflow_call:
+    inputs:
+      build_appimage:
+        type: boolean
+        default: true
+      build_deb_jammy:
+        type: boolean
+        default: true
+      build_deb_noble:
+        type: boolean
+        default: true
 
 permissions:
   contents: read
 
 jobs:
   appimage:
+    if: ${{ inputs.build_appimage != false }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -58,6 +82,7 @@ jobs:
           if-no-files-found: error
 
   deb-jammy:
+    if: ${{ inputs.build_deb_jammy != false }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -95,6 +120,7 @@ jobs:
           if-no-files-found: error
 
   deb-noble:
+    if: ${{ inputs.build_deb_noble != false }}
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout

@@ -6,8 +6,9 @@ import "components"
 
 Window {
     visible: true
-    width: 1024
-    height: 600
+    // Window size ratio: change 0.6 to desired fraction (e.g., 0.8 for 80%)
+    width: Screen.desktopAvailableWidth * 0.6
+    height: Screen.desktopAvailableHeight * 0.65
     title: "ZowiDesktop - " + AppVersion + (stack.currentItem && stack.currentItem.screenName ? " - " + stack.currentItem.screenName : "")
     color: Config.get("color_bg_app") || "#f4f9f4"
 

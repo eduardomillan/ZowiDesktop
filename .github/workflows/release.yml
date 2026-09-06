@@ -4,34 +4,49 @@
 # push/tag) while collapsing the multi-step process documented in
 # docs/project/RELEASE.md into a single `workflow_dispatch` run:
 #
-#   1. Build the Linux artifacts (reuses linux.yml as a reusable workflow).
-#   2. Build the Windows artifacts (reuses windows.yml as a reusable workflow).
-#   3. Download all artifacts into dist/ and run the existing
-#      packaging/create-gh-release.sh, which reads the version from
-#      CMakeLists.txt, extracts notes from debian/changelog, tags, and
-#      creates the GitHub Release with all available assets attached.
-#
-# Windows artifacts are optional (same as when running the release script
-# locally): if the Windows build fails or is skipped, the release still goes
-# ahead with the mandatory Linux artifacts (AppImage + jammy/noble .deb).
+#   1. Build selected Linux artifacts (AppImage, jammy .deb, noble .deb).
+#   2. Build selected Windows artifacts (portable zip, setup installer).
+#   3. Download requested artifacts into dist/ and run
+#      packaging/create-gh-release.sh with corresponding flags, which reads
+#      the version from CMakeLists.txt, extracts notes from debian/changelog,
+#      tags, and creates the GitHub Release with the selected assets.
 #
 # Publishing the signed apt repository (--with-apt) is opt-in via the
 # `publish_apt` input and requires the `APT_GPG_PRIVATE_KEY` and
 # `APT_GPG_PASSPHRASE` secrets to be configured on the repository — see
-# docs/project/RELEASE.md for details. Leave it disabled to only create the
-# GitHub Release.
+# docs/project/RELEASE.md for details.
 
 name: Release
 
 on:
   workflow_dispatch:
     inputs:
+      include_appimage:
+        description: 'Linux: AppImage (.AppImage)'
+        type: boolean
+        default: true
+      include_deb_jammy:
+        description: 'Linux: Ubuntu 22.04 Jammy (.deb)'
+        type: boolean
+        default: true
+      include_deb_noble:
+        description: 'Linux: Ubuntu 24.04 Noble (.deb)'
+        type: boolean
+        default: true
+      include_windows_zip:
+        description: 'Windows: Portable zip (.zip)'
+        type: boolean
+        default: true
+      include_windows_installer:
+        description: 'Windows: Setup installer (.exe)'
+        type: boolean
+        default: true
       publish_apt:
         description: 'Also publish the signed apt repo (jammy+noble) to gh-pages'
         type: boolean
         default: false
-      skip_windows:
-        description: 'Skip the Windows build (release with Linux artifacts only)'
+      overwrite:
+        description: 'Overwrite existing release and tag if they already exist'
         type: boolean
         default: false
 
@@ -40,16 +55,28 @@ permissions:
 
 jobs:
   build-linux:
+    if: ${{ inputs.include_appimage || inputs.include_deb_jammy || inputs.include_deb_noble }}
     uses: ./.github/workflows/linux.yml
+    with:
+      build_appimage: ${{ inputs.include_appimage }}
+      build_deb_jammy: ${{ inputs.include_deb_jammy }}
+      build_deb_noble: ${{ inputs.include_deb_noble }}
 
   build-windows:
-    if: ${{ !inputs.skip_windows }}
+    if: ${{ inputs.include_windows_zip || inputs.include_windows_installer }}
     uses: ./.github/workflows/windows.yml
+    with:
+      build_zip: ${{ inputs.include_windows_zip }}
+      build_installer: ${{ inputs.include_windows_installer }}
 
   release:
     name: Create GitHub Release
     needs: [build-linux, build-windows]
-    if: ${{ always() && needs.build-linux.result == 'success' }}
+    if: |
+      always() &&
+      (needs.build-linux.result == 'success' || needs.build-windows.result == 'success') &&
+      needs.build-linux.result != 'cancelled' &&
+      needs.build-windows.result != 'cancelled'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -63,11 +90,12 @@ jobs:
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Warn if Windows build did not succeed
-        if: ${{ needs.build-windows.result != 'success' && needs.build-windows.result != 'skipped' }}
+        if: ${{ (inputs.include_windows_zip || inputs.include_windows_installer) && needs.build-windows.result != 'success' }}
         run: |
-          echo "::warning::Windows build result was '${{ needs.build-windows.result }}' (expected success or skipped); releasing with Linux artifacts only."
+          echo "::warning::Windows build result was '${{ needs.build-windows.result }}' (expected success); releasing without Windows artifacts."
 
       - name: Download Linux artifacts
+        if: ${{ needs.build-linux.result == 'success' }}
         uses: actions/download-artifact@v5
         with:
           pattern: linux-*
@@ -75,7 +103,7 @@ jobs:
           merge-multiple: true
 
       - name: Download Windows artifacts
-        if: needs.build-windows.result == 'success'
+        if: ${{ needs.build-windows.result == 'success' }}
         uses: actions/download-artifact@v5
         with:
           pattern: windows-*
@@ -101,8 +129,30 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.APT_GPG_PASSPHRASE }}
         run: |
           ARGS=()
+          if [ "${{ inputs.include_appimage }}" = "false" ]; then
+            ARGS+=(--skip-appimage)
+          fi
+          if [ "${{ inputs.include_deb_jammy }}" = "false" ]; then
+            ARGS+=(--skip-deb-jammy)
+          fi
+          if [ "${{ inputs.include_deb_noble }}" = "false" ]; then
+            ARGS+=(--skip-deb-noble)
+          fi
+          if [ "${{ inputs.include_windows_zip }}" = "false" ] || [ "${{ needs.build-windows.result }}" != "success" ]; then
+            ARGS+=(--skip-windows-zip)
+          fi
+          if [ "${{ inputs.include_windows_installer }}" = "false" ] || [ "${{ needs.build-windows.result }}" != "success" ]; then
+            ARGS+=(--skip-windows-installer)
+          fi
           if [ "${{ inputs.publish_apt }}" = "true" ]; then
+            if [ "${{ inputs.include_deb_jammy }}" = "false" ] || [ "${{ inputs.include_deb_noble }}" = "false" ]; then
+              echo "ERROR: publish_apt requires both jammy and noble .deb packages to be included." >&2
+              exit 1
+            fi
             ARGS+=(--with-apt)
+          fi
+          if [ "${{ inputs.overwrite }}" = "true" ]; then
+            ARGS+=(--overwrite)
           fi
           bash packaging/create-gh-release.sh "${ARGS[@]}"
 

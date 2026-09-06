@@ -40,8 +40,8 @@ Status:
 | **0.6.0** | M6 | Transport situation state machine, automatic transport, persistent preference, DEV overlay, restore feedback | ✅ |
 | **0.7.0** | M7 | Zowi calibration (servo trims via `C`/`G` protocol commands) | ✅ |
 | **0.8.0** | M8 | Basic projects | 🚧 |
-| **0.9.0** | M8 | Advanced projects | 🕒 |
-| **0.10.0** | M8 | Design improvements | 🕒 |
+| **0.9.0** | M9 | Advanced projects | 🕒 |
+| **0.10.0** | M10 | Design improvements | 🕒 |
 
 ## Architecture
 
@@ -74,7 +74,7 @@ src/
 - `zowi::core` is 100 % Qt-free: it has no Qt dependency at all, and its only
   third-party dependency is `nlohmann/json`. Platform-dependent plumbing (the
   translation file loader, the `SessionStore` config directory, log sinks) is
-  injected by the consumers — see [ANDROID_PORT.md](ANDROID_PORT.md).
+  injected by the consumers — see [ANDROID_VERSION.md](ANDROID_VERSION.md).
 - GUI and CLI share `core` and `backends` but are independent consumers.
 - Four backends implement `BluetoothApi`: `bt_qt` (BlueZ D-Bus SPP, POSIX),
   `bt_native` (WinRT, Windows), `bt_serial` (POSIX termios) and

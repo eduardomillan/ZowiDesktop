@@ -14,13 +14,30 @@ name: Windows CI
 
 on:
   workflow_dispatch:
+    inputs:
+      build_zip:
+        description: 'Build portable zip'
+        type: boolean
+        default: true
+      build_installer:
+        description: 'Build Inno Setup installer'
+        type: boolean
+        default: true
   workflow_call:
+    inputs:
+      build_zip:
+        type: boolean
+        default: true
+      build_installer:
+        type: boolean
+        default: true
 
 permissions:
   contents: read
 
 jobs:
   windows:
+    if: ${{ inputs.build_zip != false || inputs.build_installer != false }}
     runs-on: windows-2022
     steps:
       - name: Checkout
@@ -46,6 +63,7 @@ jobs:
           modules: 'qtconnectivity'
 
       - name: Install Inno Setup
+        if: ${{ inputs.build_installer != false }}
         run: choco install innosetup -y
 
       - name: Disable dev mode for packaged build
@@ -90,6 +108,7 @@ jobs:
           Copy-Item build-win\src\cli\Release\zowi_cli.exe build-windows\stage\ -ErrorAction SilentlyContinue
 
       - name: Create portable zip
+        if: ${{ inputs.build_zip != false }}
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path dist -Force | Out-Null
@@ -97,18 +116,21 @@ jobs:
           & 7z a "../../dist/ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip" .
 
       - name: Build installer
+        if: ${{ inputs.build_installer != false }}
         shell: pwsh
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           & $iscc /DVERSION=${{ steps.ver.outputs.version }} packaging\windows\installer\zowi-desktop.iss
 
       - name: Upload portable zip
+        if: ${{ inputs.build_zip != false }}
         uses: actions/upload-artifact@v5
         with:
           name: windows-portable
           path: dist/ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip
 
       - name: Upload installer
+        if: ${{ inputs.build_installer != false }}
         uses: actions/upload-artifact@v5
         with:
           name: windows-installer

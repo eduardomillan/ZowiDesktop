@@ -68,7 +68,7 @@ cp -r ~/.aptly/public/pool "$WORK/publish/docs/"
 gpg --export > "$WORK/publish/docs/keyring.gpg"
 touch "$WORK/publish/.nojekyll"
 
-REPO_URL=$(gh -C "$PROJECT_ROOT" repo view --json sshUrl -q .sshUrl)
+REPO_URL=$(cd "$PROJECT_ROOT" && gh repo view --json sshUrl -q .sshUrl)
 echo "=== Publishing to gh-pages ($REPO_URL) ==="
 rm -rf "$WORK/ghpages"
 git clone -b gh-pages --single-branch "$REPO_URL" "$WORK/ghpages"
@@ -90,4 +90,4 @@ fi
 
 echo ""
 echo "=== Apt repo published ==="
-echo "  - https://github.com/$(gh -C "$PROJECT_ROOT" repo view --json nameWithOwner -q .nameWithOwner)/tree/gh-pages/docs"
+echo "  - https://github.com/$(cd "$PROJECT_ROOT" && gh repo view --json nameWithOwner -q .nameWithOwner)/tree/gh-pages/docs"

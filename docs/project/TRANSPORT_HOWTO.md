@@ -6,6 +6,23 @@
 
 ---
 
+## Table of contents
+
+- [1. Background & Design Decisions](#1-background--design-decisions)
+- [2. Situation State Machine](#2-situation-state-machine)
+- [3. State Resolution Logic](#3-state-resolution-logic)
+- [4. Registration Flows](#4-registration-flows)
+- [5. Rename & Firmware on Re-registration](#5-rename--firmware-on-re-registration)
+- [6. Test Checklist (Casuistics)](#6-test-checklist-casuistics)
+- [7. Persistence Keys (SessionStore)](#7-persistence-keys-sessionstore)
+- [8. UI Integration](#8-ui-integration)
+- [9. Build & Test](#9-build--test)
+- [10. CLI Integration](#10-cli-integration)
+- [11. Implementation Pointers](#11-implementation-pointers)
+- [12. Adding a New Transport](#12-adding-a-new-transport)
+
+---
+
 ## 1. Background & Design Decisions
 
 ZowiDesktop originated from BQ's Android app (2015), which only supported

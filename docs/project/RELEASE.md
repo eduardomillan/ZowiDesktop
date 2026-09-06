@@ -52,13 +52,20 @@ This document is the end-to-end guide. For low-level build details (toolchains,
 
 Go to **Actions → Release → Run workflow** to start it. Inputs:
 
-- `skip_windows` — skip the Windows build and release with the Linux
-  artifacts only (useful if you don't need Windows artifacts this time).
+- `include_appimage` — include the Linux AppImage (`default: true`).
+- `include_deb_jammy` — include the Ubuntu 22.04 Jammy `.deb` package (`default: true`).
+- `include_deb_noble` — include the Ubuntu 24.04 Noble `.deb` package (`default: true`).
+- `include_windows_zip` — include the Windows portable `.zip` (`default: true`).
+- `include_windows_installer` — include the Windows setup `.exe` installer (`default: true`).
+- `overwrite` — delete and recreate the existing GitHub release and git tag if
+  they already exist (`default: false`). Useful to re-run or replace a release
+  without having to manually delete the tag and release first.
 - `publish_apt` — also publish the signed apt repository (jammy + noble) to
   `gh-pages`, equivalent to `create-gh-release.sh --with-apt`. This requires
   the `APT_GPG_PRIVATE_KEY` (base64-encoded exported private key) and
-  `APT_GPG_PASSPHRASE` repository secrets to be configured beforehand; leave
-  this input off to only create the GitHub Release.
+  `APT_GPG_PASSPHRASE` repository secrets to be configured beforehand (both
+  `.deb` packages must be included); leave this input off to only create the
+  GitHub Release.
 
 This does **not** turn releases into an automatic-on-tag process — it still
 requires a human to click "Run workflow" — it just collapses the manual

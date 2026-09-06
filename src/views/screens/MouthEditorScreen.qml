@@ -12,7 +12,7 @@ ScreenTemplate {
     title: tr("title")
     subtitle: tr("subtitle")
     showBackButton: true
-    footerHeight: 72
+    footerHeight: 0
 
     // The identity poll (E/I/B burst) drains the robot's command queue and can
     // delay/interrupt the live mouth updates — pause it while editing (handled
@@ -24,8 +24,8 @@ ScreenTemplate {
     readonly property int rows: 5
     // Tamaño de cada píxel de la boca (px). Cambia aquí para hacer la rejilla
     // más grande o más pequeña. Default 50 ≈ 20% mayor que el original (42px).
-    property real cellSize: 40
-    readonly property int cellSpacing: 8
+    property real cellSize: 35
+    readonly property int cellSpacing: 6
     // Fondo de la rejilla: tono verde claro distinto del fondo de la app para
     // que se aprecien los píxeles antes de marcarlos.
     property color gridBackground: "#cdeccd"
@@ -132,7 +132,7 @@ ScreenTemplate {
         anchors {
             horizontalCenter: parent.horizontalCenter
             verticalCenter: parent.verticalCenter
-            verticalCenterOffset: -100
+            verticalCenterOffset: -75
         }
         width: root.columns * root.cellSize + (root.columns - 1) * root.cellSpacing
         height: root.rows * root.cellSize + (root.rows - 1) * root.cellSpacing
@@ -230,6 +230,7 @@ ScreenTemplate {
 
         // Pattern text with white background
         Rectangle {
+            anchors.horizontalCenter: parent.horizontalCenter
             width: patternText.implicitWidth + 24
             height: patternText.implicitHeight + 12
             color: "#ffffff"
@@ -239,79 +240,78 @@ ScreenTemplate {
 
             TextEdit {
                 id: patternText
+                anchors.centerIn: parent
                 text: root.patternBits
                 color: Config.get("color_primary") || "#2d5a2d"
                 font.family: "monospace"
                 font.pixelSize: 14
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: TextEdit.AlignHCenter
+                verticalAlignment: TextEdit.AlignVCenter
                 readOnly: true
                 selectByMouse: true
-                anchors.fill: parent
-                anchors.margins: 6
-            }
-        }
-    }
-
-    footer: Row {
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            bottom: parent.bottom
-            bottomMargin: 14
-        }
-        spacing: 20
-
-        Button {
-            id: clearBtn
-            implicitWidth: 170
-            height: 44
-            anchors.verticalCenter: parent.verticalCenter
-            text: root.tr("clear_all")
-
-            contentItem: Text {
-                text: parent.text
-                color: "#ffffff"
-                font.bold: true
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            background: Rectangle {
-                radius: 22
-                color: clearBtn.pressed ? Config.get("color_error") || "#c0392b" : Config.get("color_danger") || "#e74c3c"
-            }
-
-            onClicked: {
-                console.log("[MouthEditorScreen] clear all")
-                root.clearAll()
             }
         }
 
-        Button {
-            id: selectAllBtn
-            implicitWidth: 170
-            height: 44
-            anchors.verticalCenter: parent.verticalCenter
-            text: root.tr("select_all")
+        // Buttons below pattern text with 10% window height spacing
+        Item {
+            width: 1
+            height: root.height * 0.1
+        }
 
-            contentItem: Text {
-                text: parent.text
-                color: "#ffffff"
-                font.bold: true
-                font.pixelSize: 14
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+        Row {
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 20
+
+            Button {
+                id: clearBtn
+                implicitWidth: 170
+                height: 44
+                text: root.tr("clear_all")
+
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.bold: true
+                    font.pixelSize: 14
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: 22
+                    color: clearBtn.pressed ? Config.get("color_error") || "#c0392b" : Config.get("color_danger") || "#e74c3c"
+                }
+
+                onClicked: {
+                    console.log("[MouthEditorScreen] clear all")
+                    root.clearAll()
+                }
             }
 
-            background: Rectangle {
-                radius: 22
-                color: selectAllBtn.pressed ? Config.get("color_primary_pressed") || "#1f4a1f" : Config.get("color_primary") || "#2d5a2d"
-            }
+            Button {
+                id: selectAllBtn
+                implicitWidth: 170
+                height: 44
+                text: root.tr("select_all")
 
-            onClicked: {
-                console.log("[MouthEditorScreen] select all")
-                root.selectAll()
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.bold: true
+                    font.pixelSize: 14
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: 22
+                    color: selectAllBtn.pressed ? Config.get("color_primary_pressed") || "#1f4a1f" : Config.get("color_primary") || "#2d5a2d"
+                }
+
+                onClicked: {
+                    console.log("[MouthEditorScreen] select all")
+                    root.selectAll()
+                }
             }
         }
     }
