@@ -134,11 +134,12 @@ src/
 - [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
 ### M8 - Basic projects
-- [ ] Move objects
+- [x] **Move objects** — implemented (ProjectMoveScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
 - [ ] The shape of Zowi and biped robots
 - [ ] Zowi eyes and ultrasounds
 - [ ] The Zowi legs and servos
 - [ ] The gravity and calibration
+- [ ] **Projects CLI commands** — `project list/show/reset/prefs` (uses core ProjectsStore/ProjectsPreferencesStore, no Qt)
 
 ### M9 - Advanced projects
 - [ ] Robot dancing and choreography (sequence programming in home screen)

@@ -1558,3 +1558,16 @@ Welcome
 ```
 
 The binary is at `build/src/cli/zowi_cli`.
+
+## Future: Projects CLI commands (planned for M8)
+
+The Projects system (see [PROJECTS_HOWTO.md](PROJECTS_HOWTO.md)) adds educational projects with quizzes and persistence. CLI integration is planned:
+
+| Command | Description |
+|---------|-------------|
+| `zowi_cli project list` | List all projects with completion status |
+| `zowi_cli project show <id>` | Show project details (title, description, questions) |
+| `zowi_cli project reset <id>` | Reset completion + blockade for a project |
+| `zowi_cli project prefs` | Show/set preferences (blockade duration, achievements toggle, quiz enabled) |
+
+These would use the core `ProjectsStore` and `ProjectsPreferencesStore` directly (no Qt), similar to how `cli_commands.cpp` uses `SessionStore` and `ConfigStore`. The `projects_preferences.json` file is already compatible with CLI access since it uses the same config dir resolution as `SessionStore`.

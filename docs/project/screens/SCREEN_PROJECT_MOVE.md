@@ -5,9 +5,9 @@
 > `01_project_mueve.json`; shared screen design in
 > [SCREEN_PROJECTS.md](SCREEN_PROJECTS.md).
 
-- **Status:** ⚠️ **NOT IMPLEMENTED** — design proposal pending review.
-- **File:** `src/views/screens/ProjectMoveScreen.qml` (does not exist yet).
-- **i18n context:** `"ProjectMoveScreen.qml"` (planned).
+- **Status:** ✅ **IMPLEMENTED** (v0.8.0).
+- **File:** `src/views/screens/ProjectMoveScreen.qml` (implemented).
+- **i18n context:** `"ProjectMoveScreen.qml"` (implemented in all 5 locales).
 - **Project id:** `move` — Home tile `move_objects`.
 - **Source JSON:** `projects/move.json` (registered in `projects.qrc`).
 - **Achievement:** `flapping` (reserved for the deferred ACHIEVEMENTS layer).
@@ -17,15 +17,15 @@
   `qrc:/images/android/project_move_image.png`.
 - Reached from Home *Projects* page tile → push; back → pop.
 
-## Contents (planned)
+## Contents
 
 - Title ("Move"), learning description and project image.
 - Done icon — `move_project_completeness` (done / not-done).
 - Project link — opens the URL in the system browser.
-- **Run Test** — quiz (below), in-screen; disabled during a quiz blockade.
+- **Run Test** — quiz via reusable `QuizComponent`, in-screen; disabled during a quiz blockade.
 - **No firmware install** — this project has no `project_hex`.
 
-## Quiz (planned)
+## Quiz
 
 | Q | Answers (correct in bold) |
 |---|---|
@@ -36,10 +36,28 @@ All correct → `move_project_completeness = true` + done icon; wrong answer →
 `move_project_quiz_blockade` (10 min lock, `mm:ss` countdown). No achievement
 dialog until the ACHIEVEMENTS toggle is enabled (see SCREEN_PROJECTS.md).
 
-## Signals / QML context (planned)
+**Note:** The blockade countdown UI is documented and configurable via
+`ProjectsPreferencesStore.blockade_duration_ms` (default 600000 ms), but the
+`mm:ss` countdown display in the quiz is not yet wired for Move. The
+`QuizComponent` handles the blockade logic and emits `blocked(remainingMs)`.
 
-- `backClicked()` → pop; in-screen quiz signals `quizFinished` / `quizBlocked`.
+## Signals / QML context
+
+- `backClicked()` → pop; in-screen quiz signals `quizFinished(bool)` / `quizBlocked(int)`.
 - `Robot` (connected/appId/battery), `Session.loadActiveZowiName()`,
   `Projects` context (`getProject("move")`, `isCompleted`,
-  `isQuizBlocked`, `blockQuiz`, `setCompleted`), `Translator`.
+  `isQuizBlocked`, `blockQuiz`, `setCompleted`, `getBlockadeDurationMs`,
+  `setBlockadeDurationMs`, `isAchievementsEnabled`, `setAchievementsEnabled`,
+  `isQuizEnabled`, `setQuizEnabled`), `Translator`.
 - No commands sent (quiz is local; no firmware for this project).
+
+## Implementation notes
+
+- Core: `zowi::ProjectsStore` loads `:/projects/move.json` (resource) or filesystem (dev).
+- GUI: `ProjectsController` wraps the core store and exposes the QML API.
+- Quiz: `QuizComponent.qml` (reusable) handles question flow, answer validation,
+  blockade timing, and persistence via `SessionController.saveString/getString`.
+- Preferences: `ProjectsPreferencesStore` stores `blockade_duration_ms`,
+  `achievements_enabled`, `quiz_enabled` in `projects_preferences.json`.
+- i18n: All strings in 5 locales under `"ProjectMoveScreen.qml"` and
+  `"QuizComponent.qml"` contexts.

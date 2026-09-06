@@ -1,4 +1,4 @@
-# SCREEN_PROJECTS — ProjectXXXScreen family (designed, NOT implemented)
+# SCREEN_PROJECTS — ProjectXXXScreen family
 
 > Educational "Discover" projects: 10 guided lessons. Each project ships as its
 > own `ProjectXXXScreen.qml` pushed from the Home *Projects* page, shows a
@@ -8,17 +8,20 @@
 > `ProjectQuizViewActivity` + `assets/projects/*.json`), adapted to the desktop
 > per the decisions below.
 
-- **Status:** ⚠️ **NOT IMPLEMENTED** — design proposal only, pending review.
-  No QML files, no core module, no controller exist yet. The only trace of this
-  feature in the GUI today is the *Projects* page of
-  [SCREEN_HOME.md](SCREEN_HOME.md), whose 10 tiles are all disabled placeholders.
-- **Planned files:** one `src/views/screens/ProjectXXXScreen.qml` per project,
-  where `XXX` is the project id (see table below). They do **not** exist yet.
+- **Status:** ✅ **Move project implemented** (v0.8.0); 9 projects remaining (design only).
+  `ProjectMoveScreen.qml` exists, backed by the Qt-free `zowi::projects` core module,
+  `ProjectsController` context, `projects.qrc` resource, and a reusable `QuizComponent.qml`.
+  The other 9 project screens are **NOT IMPLEMENTED** — design proposal only.
+- **Implemented files:**
+  - Core: `src/core/include/zowi/project_model.h`, `projects_store.h/.cpp`, `projects_preferences_store.h/.cpp`
+  - GUI: `src/gui/controllers/ProjectsController.h/.cpp`, `src/views/components/QuizComponent.qml`, `src/views/screens/ProjectMoveScreen.qml`
+  - Assets: `projects/move.json`, `projects.qrc`, i18n keys in all 5 locales under `"ProjectMoveScreen.qml"` and `"QuizComponent.qml"` contexts
+- **Planned files:** one `src/views/screens/ProjectXXXScreen.qml` per remaining project (choreography, form, bio1, bio3, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet.
 - **Planned i18n contexts:** `"ProjectXXXScreen.qml"` (one per screen). The 10
   tile titles are already translated on the Home-screen context (`move_objects`,
   `choreography`, `robot_form`, `robot_eyes`, `robot_feet`, `robot_alarm`,
   `adivinawi`, `gravity`, `hello_world`, `bitbloq_sensors`); descriptions, links
-  and quiz strings are **not** translated yet.
+  and quiz strings for Move are now translated.
 - **Projects data:** all project JSON files live in a dedicated
   `projects.qrc` (new Qt resource), where future projects are appended. Debug
   builds get a filesystem fallback, mirroring how `src/config.json` is both
@@ -106,7 +109,7 @@ HomeScreen (Projects page, tile "XXX") ──projectXXXClicked()──▶ Projec
   install/failure dialogs also return to the project window (not Home).
 - Achievements toasts are **not** part of this cycle yet (deferred layer).
 
-## ProjectXXXScreen.qml — contents (planned)
+## ProjectXXXScreen.qml — contents
 
 Each project screen is a `ScreenTemplate` subclass showing, for its project:
 
@@ -119,14 +122,17 @@ Each project screen is a `ScreenTemplate` subclass showing, for its project:
   it). Conn-gated, 50 % battery check → `Robot.restoreFirmware(hex)` with the
   existing progress/low-battery dialogs (mirrors the Settings restore flow).
   Triggered and resolved from the project's own window.
-- **Run Test** — the project quiz, presented in the same screen (question /
-  progress / result); disabled and showing `mm:ss` countdown while a quiz
-  blockade is pending (`<id>_project_quiz_blockade`).
+- **Run Test** — the project quiz, presented in the same screen via the reusable
+  `QuizComponent` (question / progress / result); disabled and showing `mm:ss`
+  countdown while a quiz blockade is pending (`<id>_project_quiz_blockade`).
+  **Note:** The blockade is *documented and configurable* via `ProjectsPreferencesStore`
+  (`blockade_duration_ms`, default 10 min), but the countdown UI is not yet wired
+  for the Move project (see [PROJECTS_HOWTO.md](../PROJECTS_HOWTO.md)).
 - **Result handling** — all correct → `<id>_project_completeness = true` + done
-  icon; wrong answer → blockade (`600000 ms` = 10 min) + failure feedback.
+  icon; wrong answer → blockade + failure feedback.
   No achievement dialog until the toggle in decision 2 is enabled.
 
-## Signals (planned)
+## Signals
 
 | Signal | Emitted by | Consumed in |
 |--------|-----------|-------------|
@@ -134,9 +140,9 @@ Each project screen is a `ScreenTemplate` subclass showing, for its project:
 | `linkClicked(url)` | project link | external browser |
 | `installFirmwareClicked(hex)` | Install button (only if `project_hex != ""`) | `Robot.restoreFirmware(hex)` |
 | `backClicked()` | ScreenTemplate back button | pop |
-| `quizFinished()` / `quizBlocked()` | in-screen quiz | mark completeness / blockade |
+| `quizFinished(bool)` / `quizBlocked(int)` | `QuizComponent` (in-screen) | mark completeness / blockade |
 
-## QML context used (planned)
+## QML context used
 
 - `Robot`: `connected`, `appId`, battery gating (`battery >= 50`), firmware
   signals `onFirmwareRestoreStarted/Progress/Finished/BatteryLow`,
@@ -144,10 +150,12 @@ Each project screen is a `ScreenTemplate` subclass showing, for its project:
 - `Config.get(...)`: theme colors; `project_*` asset paths; the
   **achievements enabled/disabled flag** (decision 2).
 - `Session`: `loadActiveZowiName()` (firmware dialogs reference the name).
-- `Projects` (new context object, backed by a Qt-free `projects` core module):
+- `Projects` (context object, backed by a Qt-free `projects` core module):
   `getProject(id)`, `isCompleted(id)`, `isQuizBlocked(id)`, `blockQuiz(id)`,
-  `setCompleted(id)` — mirrors `ProjectController`. The `achievement` field is
-  returned but currently ignored.
+  `setCompleted(id)`, `getBlockadeDurationMs()`, `setBlockadeDurationMs(ms)`,
+  `isAchievementsEnabled()`, `setAchievementsEnabled(bool)`,
+  `isQuizEnabled()`, `setQuizEnabled(bool)` — implemented in `ProjectsController`.
+  The `achievement` field is returned but currently ignored.
 - `Translator` (via `tr()`).
 
 ## Commands sent
@@ -156,7 +164,7 @@ Each project screen is a `ScreenTemplate` subclass showing, for its project:
   backend (`Robot.restoreFirmware`), identical to Settings' restore flow.
 - The quiz is local logic; the robot is not involved.
 
-## projects.qrc (planned)
+## projects.qrc
 
 New file `projects.qrc` at the repo root following the split-by-domain resource
 convention:
@@ -179,7 +187,7 @@ convention:
 - Future projects: drop a `.json` in `projects/`, add an `<file>` entry,
   register a tile in HomeScreen and add the matching `ProjectXXXScreen.qml`.
 
-## Persistence (planned)
+## Persistence
 
 Two keys per project, aligned with the Android `SharedPreferences` names and
 the session/config-store conventions (see AGENTS.md):
@@ -188,22 +196,33 @@ the session/config-store conventions (see AGENTS.md):
 - `<id>_project_quiz_blockade` — epoch millis of the last wrong answer;
   ≤ `now` means not blocked, `> now` yields a `mm:ss` countdown.
 
-"Forget playing history" (Settings) resets all `*_project_*` keys.
+"Forget playing history" (Settings) resets all `*_project_*` keys (not yet wired).
 
-## i18n (planned)
+Project preferences (blockade duration, achievements toggle, quiz enabled) are
+stored in a separate `projects_preferences.json` file via `ProjectsPreferencesStore`.
+
+## i18n
 
 New keys per project (`<prefix>_title`, `_learning_description`, `_url`,
 `_question_1/2`, `_question_1/2_answer_1..3`) in the 5 desktop locales,
 grouped under each `"ProjectXXXScreen.qml"` context. The Android strings
 (`strings.xml`) and the desktop `i18n/zowi_*.json` naming differ
 (`project_move_title` vs `move_objects`) — the tile titles already exist
-under the Home context; the per-screen keys would be new.
+under the Home context; the per-screen keys for Move are now implemented.
+
+The reusable `QuizComponent` uses its own context `"QuizComponent.qml"` with
+keys: `run_test`, `correct`, `incorrect`, `quiz_blocked`.
 
 ## Open questions (for review)
 
-- Run Test as an in-screen mode vs a shared pop-up quiz component — decided
-  tentatively as in-screen; confirm during implementation.
-- ACHIEVEMENTS toggle: plain `Config` boolean now, or an explicit
-  `zowi_cli`/CLI-visible setting so testers can flip it headlessly?
+- Run Test as an in-screen mode vs a shared pop-up quiz component — **decided:
+  reusable `QuizComponent` used inline in each project screen**.
+- ACHIEVEMENTS toggle: currently implemented in `ProjectsPreferencesStore`
+  (`isAchievementsEnabled`/`setAchievementsEnabled`), exposed via `Projects`
+  context. Not yet wired to UI or CLI.
 - Where exactly the project JSON source files live (`projects/` vs
-  `src/projects/`) — the table above assumes `projects/`.
+  `src/projects/`) — implemented at `projects/` (repo root).
+- Quiz blockade countdown UI: documented and configurable via
+  `ProjectsPreferencesStore.blockade_duration_ms`, but not yet displayed in
+  `ProjectMoveScreen` (shows a message bar instead). To be completed in a
+  follow-up.
