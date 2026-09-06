@@ -57,6 +57,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
       - name: Warn if Windows build did not succeed
         if: ${{ needs.build-windows.result != 'success' && needs.build-windows.result != 'skipped' }}
         run: |
