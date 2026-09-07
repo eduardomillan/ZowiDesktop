@@ -7,6 +7,7 @@
   - `./build.sh --gui` builds only the GUI executable
   - `./build.sh --cli` builds only the CLI executable
   - `./build.sh -5 --cli` builds the CLI against Qt 5
+  - `--clean` (e.g. `./build.sh --clean --gui`) wipes `build/` before building; combinable with any other flag
 - Use direct CMake targets for scoped rebuilds:
   - `cmake -S . -B build -DZOWI_QT_VERSION=6 -DZOWI_BUILD_GUI=ON -DZOWI_BUILD_CLI=ON`
   - `cmake --build build --target ZowiDesktop`

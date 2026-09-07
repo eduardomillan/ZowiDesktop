@@ -8,7 +8,7 @@ Compact guidance for OpenCode sessions in this repo. Read `.github/copilot-instr
 - Core tests in `src/core/tests/` link only `Zowi::core` — keep core Qt-free.
 
 ## Build & test (non-obvious)
-- Normal build: `./build.sh` (Linux, Qt 6, GUI+CLI). Scoped: `./build.sh --gui`, `./build.sh --cli`, `./build.sh -5 --cli` (Qt 5), `./build.sh --demo`.
+- Normal build: `./build.sh` (Linux, Qt 6, GUI+CLI). Scoped: `./build.sh --gui`, `./build.sh --cli`, `./build.sh -5 --cli` (Qt 5), `./build.sh --demo`. `--clean` wipes `build/` first and combines with any of them (same on `build.bat`).
 - Windows build: `build.bat` (GUI+CLI) from a **x64 Native Tools Command Prompt for VS 2022** (or any VS 2022 prompt that has `vcvarsall.bat` on PATH). Scoped: `build.bat --gui`, `build.bat --cli`. `windeployqt --qmldir src\views` runs automatically after GUI build.
 - Windows CI: `.github/workflows/windows.yml` (manual `workflow_dispatch`) builds the portable zip + installer on `windows-2022` with MSVC + Qt 6.8. There is **no MinGW cross-compile from Linux** (the WinRT `bt_native`/Win32 `bt_serial_win` backends need the Windows SDK) — `create-portable-zip.sh`, `mingw-toolchain.cmake`, and `qt.conf` were removed. Download the CI artifacts into `dist/` before `create-gh-release.sh --with-apt`.
 - Linux artifacts are now placed in `dist/` (AppImage + jammy/noble `.deb`) and the `create-gh-release.sh` script expects them there.

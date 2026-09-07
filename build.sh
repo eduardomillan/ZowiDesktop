@@ -6,6 +6,7 @@ BUILD_DIR="$SCRIPT_DIR/build"
 QT_VERSION=6
 TARGET="all"
 RUN_DEMO=0
+DO_CLEAN=0
 
 usage() {
     cat <<EOF
@@ -21,6 +22,7 @@ Options:
   --cli         Build CLI only (zowi_cli)
   --demo        Build CLI and run demo commands
   --all         Build everything (default)
+  --clean       Remove the build/ directory before building (combinable)
   -h            Show this help message
 
 Environment:
@@ -33,6 +35,7 @@ Examples:
   ./build.sh --demo           # Build CLI and run demo commands
   ./build.sh -5 --cli         # Build CLI with Qt 5
   ./build.sh -6 --gui         # Build GUI with Qt 6 (explicit)
+  ./build.sh --clean --gui    # Wipe build/ and build only the GUI
   QT_PATH=~/Qt/5.15.2/gcc_64 ./build.sh -5 --all
 
 Targets:
@@ -50,6 +53,7 @@ while [[ $# -gt 0 ]]; do
         --cli) TARGET="cli"; shift ;;
         --demo) TARGET="cli"; RUN_DEMO=1; shift ;;
         --all) TARGET="all"; shift ;;
+        --clean) DO_CLEAN=1; shift ;;
         -h|--help) usage ;;
         *) echo "Unknown option: $1"; usage ;;
     esac
@@ -67,6 +71,11 @@ case "$TARGET" in
     gui) BUILD_GUI=ON ;;
     cli) BUILD_CLI=ON ;;
 esac
+
+if [ "$DO_CLEAN" = "1" ] && [ -d "$BUILD_DIR" ]; then
+    echo "=== Cleaning $BUILD_DIR ==="
+    rm -rf "$BUILD_DIR"
+fi
 
 echo "=== Building Zowi Desktop (Qt $QT_VERSION) ==="
 echo "    GUI: $BUILD_GUI | CLI: $BUILD_CLI"

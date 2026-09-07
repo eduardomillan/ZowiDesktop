@@ -10,6 +10,7 @@
   - [Environment variables](#environment-variables)
 - [Manual CMake invocations](#manual-cmake-invocations)
 - [Build targets](#build-targets)
+- [Cleaning project](#cleaning-project)
 - [Platform builds](#platform-builds)
 - [Linux AppImage](#linux-appimage)
 - [Linux Debian packages](#linux-debian-packages)
@@ -219,6 +220,44 @@ cmake --build build
 | `zowi_bt_qt` | Static library (Qt Bluetooth SPP) | `ZOWI_BUILD_GUI=ON` or `ZOWI_BUILD_CLI=ON` |
 | `zowi_bt_serial` | Static library (RFCOMM TTY + USB serial, POSIX only) | `ZOWI_BUILD_GUI=ON` or `ZOWI_BUILD_CLI=ON` (excluded on Windows) |
 | `test_*` | Test executables | `BUILD_TESTS=ON` |
+
+## Cleaning project
+
+`--clean` removes the `build/` directory before configuring and building. It
+is combinable with any other flag, in any order:
+
+```bash
+./build.sh --clean                 # wipe build/ and build GUI + CLI
+./build.sh --clean --gui           # wipe and build only the GUI
+./build.sh -5 --clean --cli        # wipe and build the CLI with Qt 5
+```
+
+```bat
+build.bat --clean                  :: wipe build\ and build GUI + CLI
+build.bat --clean --cli            :: wipe and build only the CLI
+```
+
+Manual alternatives when a full wipe is not wanted:
+
+| Goal | Linux | Windows (MSVC prompt) |
+|---|---|---|
+| Remove compiled objects, keep CMake cache | `cmake --build build --target clean` | `cmake --build build --target clean` |
+| Full reset (same as `--clean`) | `rm -rf build` | `rd /s /q build` |
+| Remove release artifacts | `rm -rf dist` | `rd /s /q dist` |
+
+Notes:
+
+- `--clean` never touches `dist/`; release artifacts are removed manually.
+- `--target clean` keeps the CMake cache, so the next build reconfigures
+  instantly; use it for a cheap rebuild after touching sources or headers.
+- Switching Qt major version (`./build.sh` vs `./build.sh -5`) or toolchain in
+  the same `build/` directory is not reliable: use `--clean` (or a full reset)
+  first.
+- Test binaries and `ctest` state live inside `build/`, so every option above
+  covers them.
+- A rebuilt `zowi_cli` loses `cap_net_admin`: re-run
+  `sudo ./scripts/grant_bluetooth_cap.sh` after any rebuild (see
+  [Running](#linux)).
 
 ## Platform builds
 

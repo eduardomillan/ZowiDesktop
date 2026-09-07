@@ -7,6 +7,7 @@ set "BUILD_DIR=%SCRIPT_DIR%\build"
 set QT_VERSION=6
 set TARGET=all
 set RUN_DEMO=0
+set DO_CLEAN=0
 
 rem Locate cmake
 set "CMAKE_EXE=cmake"
@@ -65,6 +66,7 @@ if "%~1"=="--gui" ( set "TARGET=gui" & shift & goto :parse_args )
 if "%~1"=="--cli" ( set "TARGET=cli" & shift & goto :parse_args )
 if "%~1"=="--demo" ( set "TARGET=cli" & set "RUN_DEMO=1" & shift & goto :parse_args )
 if "%~1"=="--all" ( set "TARGET=all" & shift & goto :parse_args )
+if "%~1"=="--clean" ( set "DO_CLEAN=1" & shift & goto :parse_args )
 if "%~1"=="-h" goto :usage
 if "%~1"=="--help" goto :usage
 echo Unknown option: %~1
@@ -83,6 +85,7 @@ echo   --gui         Build GUI only (ZowiDesktop)
 echo   --cli         Build CLI only (zowi_cli)
 echo   --demo        Build CLI and run demo commands
 echo   --all         Build everything (default)
+echo   --clean       Remove the build\ directory before building (combinable)
 echo   -h            Show this help message
 echo.
 echo Environment:
@@ -95,6 +98,7 @@ echo   build.bat --cli            Build only the CLI
 echo   build.bat --demo           Build CLI and run demo commands
 echo   build.bat -5 --cli         Build CLI with Qt 5
 echo   build.bat -6 --gui         Build GUI with Qt 6 (explicit)
+echo   build.bat --clean --gui    Wipe build\ and build only the GUI
 echo   set QT_PATH=C:\Qt\5.15.2\msvc2019_64 ^&^& build.bat -5 --all
 echo.
 echo Targets:
@@ -112,6 +116,13 @@ if "%TARGET%"=="cli" ( set "BUILD_CLI=ON" )
 set "CMAKE_EXTRA_ARGS="
 if defined QT_PATH (
     set "CMAKE_EXTRA_ARGS=-DCMAKE_PREFIX_PATH=%QT_PATH%"
+)
+
+if defined DO_CLEAN (
+    if exist "%BUILD_DIR%" (
+        echo === Cleaning %BUILD_DIR% ===
+        rd /s /q "%BUILD_DIR%"
+    )
 )
 
 echo === Building Zowi Desktop (Qt %QT_VERSION%) ===
