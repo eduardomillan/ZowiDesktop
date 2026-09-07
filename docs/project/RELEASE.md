@@ -42,7 +42,7 @@ This document is the end-to-end guide. For low-level build details (toolchains,
 The **Release** workflow (`.github/workflows/release.yml`) runs the whole
 release process end to end in a single manual run. Full details, all inputs,
 and examples:
-**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#release)**.
+**[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#release)**.
 
 Go to **Actions → Release → Run workflow** to start it.
 
@@ -57,7 +57,7 @@ manually if you need finer control (e.g. building on a local machine).
 All workflows are manual (`workflow_dispatch`). The build workflows are also
 reusable (`workflow_call`) so the **Release** workflow can invoke them. Full
 details, inputs, and examples for each:
-**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md)**.
+**[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md)**.
 
 | Workflow | File | What it produces |
 |----------|------|------------------|
@@ -126,7 +126,7 @@ The version lives in a single source of truth, the root `VERSION` file:
 ### Option A — GitHub Actions (recommended)
 
 Go to **Actions → Linux CI → Run workflow**. Inputs and details:
-**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#linux-ci)**.
+**[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#linux-ci)**.
 
 When it finishes, download the three artifacts
 (`linux-appimage`, `linux-deb-jammy`, `linux-deb-noble`) into `dist/`,
@@ -181,7 +181,7 @@ DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04
 ### Option A — GitHub Actions (recommended)
 
 Go to **Actions → Windows CI → Run workflow**. Inputs and details:
-**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#windows-ci)**.
+**[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#windows-ci)**.
 
 When it finishes, download the two artifacts and place them in `dist/` — where
 the release script looks for both Windows artifacts.

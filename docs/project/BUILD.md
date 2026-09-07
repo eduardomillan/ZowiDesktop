@@ -256,14 +256,14 @@ The **Linux CI** workflow (`.github/workflows/linux.yml`) builds the Linux
 release artifacts (AppImage + jammy/noble `.deb`) on GitHub-hosted runners
 with Qt 6.8. It is manual (`workflow_dispatch`) and accepts inputs to select
 which artifacts to build. Full details and examples:
-**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#linux-ci)**.
+**[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#linux-ci)**.
 
 ## GitHub Releases
 
 Releases are created **manually** via the **Release** workflow
 (`.github/workflows/release.yml`), which builds all platform artifacts and
 creates the GitHub Release in a single run. For full details, inputs, and
-examples: **[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#release)**.
+examples: **[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#release)**.
 
 You can also create releases locally:
 
@@ -322,7 +322,7 @@ The **Windows CI** workflow (`.github/workflows/windows.yml`) builds the Windows
 release artifacts (portable `.zip` + Inno Setup installer) on a `windows-2022`
 runner with MSVC 2022 + Qt 6.8. It is manual (`workflow_dispatch`) and accepts
 inputs to select which artifacts to build. Full details and examples:
-**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#windows-ci)**.
+**[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#windows-ci)**.
 
 ## Windows native Bluetooth (bt_native)
 
