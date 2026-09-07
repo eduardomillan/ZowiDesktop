@@ -39,33 +39,12 @@ This document is the end-to-end guide. For low-level build details (toolchains,
 
 ## One-button release (recommended)
 
-`.github/workflows/release.yml` ("Release") is a single **manual
-(`workflow_dispatch`)** workflow that runs the whole process end to end:
+The **Release** workflow (`.github/workflows/release.yml`) runs the whole
+release process end to end in a single manual run. Full details, all inputs,
+and examples:
+**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#release)**.
 
-1. Runs `linux.yml` and `windows.yml` as reusable workflows to (re)build the
-   AppImage, both `.deb` packages, the portable zip and the installer.
-2. Downloads every produced artifact into `dist/`.
-3. Runs `packaging/create-gh-release.sh` non-interactively, which reads the
-   version from `CMakeLists.txt`, extracts notes from `debian/changelog`,
-   tags `v<version>`, and creates the GitHub Release with all available
-   assets attached.
-
-Go to **Actions → Release → Run workflow** to start it. Inputs:
-
-- `include_appimage` — include the Linux AppImage (`default: true`).
-- `include_deb_jammy` — include the Ubuntu 22.04 Jammy `.deb` package (`default: true`).
-- `include_deb_noble` — include the Ubuntu 24.04 Noble `.deb` package (`default: true`).
-- `include_windows_zip` — include the Windows portable `.zip` (`default: true`).
-- `include_windows_installer` — include the Windows setup `.exe` installer (`default: true`).
-- `overwrite` — delete and recreate the existing GitHub release and git tag if
-  they already exist (`default: false`). Useful to re-run or replace a release
-  without having to manually delete the tag and release first.
-- `publish_apt` — also publish the signed apt repository (jammy + noble) to
-  `gh-pages`, equivalent to `create-gh-release.sh --with-apt`. This requires
-  the `APT_GPG_PRIVATE_KEY` (base64-encoded exported private key) and
-  `APT_GPG_PASSPHRASE` repository secrets to be configured beforehand (both
-  `.deb` packages must be included); leave this input off to only create the
-  GitHub Release.
+Go to **Actions → Release → Run workflow** to start it.
 
 This does **not** turn releases into an automatic-on-tag process — it still
 requires a human to click "Run workflow" — it just collapses the manual
@@ -75,15 +54,18 @@ manually if you need finer control (e.g. building on a local machine).
 
 ## Workflows at a glance
 
-Both build workflows are **manual (`workflow_dispatch`)**, and are also
-**reusable (`workflow_call`)** so `release.yml` can run them — running them
-directly never creates a tag or a GitHub Release; they only produce build
-artifacts:
+All workflows are manual (`workflow_dispatch`). The build workflows are also
+reusable (`workflow_call`) so the **Release** workflow can invoke them. Full
+details, inputs, and examples for each:
+**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md)**.
 
-| Workflow | File | Trigger | Artifacts |
-|----------|------|---------|-----------|
-| Linux CI | `.github/workflows/linux.yml` | **Actions → Linux CI → Run workflow** | AppImage (ubuntu-latest) + jammy `.deb` (ubuntu-22.04) + noble `.deb` (ubuntu-24.04) |
-| Windows CI | `.github/workflows/windows.yml` | **Actions → Windows CI → Run workflow** | portable zip (+ installer via Inno Setup), MSVC 2022 + Qt 6.8 |
+| Workflow | File | What it produces |
+|----------|------|------------------|
+| **Linux CI** | `linux.yml` | AppImage + jammy/noble `.deb` packages |
+| **Windows CI** | `windows.yml` | Portable `.zip` + Inno Setup installer |
+| **Tests** | `tests.yml` | White-box + black-box test results (Linux) |
+| **Tests (Windows)** | `tests-windows.yml` | White-box + black-box test results (Windows) |
+| **Release** | `release.yml` | Full end-to-end release (calls Linux CI + Windows CI) |
 
 ## Artifacts
 
@@ -143,12 +125,12 @@ The version lives in a single source of truth, the root `VERSION` file:
 
 ### Option A — GitHub Actions (recommended)
 
-1. Go to **Actions → Linux CI → Run workflow**. The workflow builds three
-   jobs on `ubuntu-latest` / `ubuntu-22.04` / `ubuntu-24.04` with Qt 6.8:
-   AppImage, jammy `.deb` and noble `.deb`.
-2. When it finishes, download the three artifacts
-   (`linux-appimage`, `linux-deb-jammy`, `linux-deb-noble`) into `dist/`,
-   where the release script looks for them.
+Go to **Actions → Linux CI → Run workflow**. Inputs and details:
+**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#linux-ci)**.
+
+When it finishes, download the three artifacts
+(`linux-appimage`, `linux-deb-jammy`, `linux-deb-noble`) into `dist/`,
+where the release script looks for them.
 
 ### Option B — Local machine
 
@@ -198,13 +180,11 @@ DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04
 
 ### Option A — GitHub Actions (recommended)
 
-1. Go to **Actions → Windows CI → Run workflow** (manual `workflow_dispatch`).
-   The workflow builds on `windows-2022` with MSVC 2022 and Qt 6.8.
-2. When it finishes, download the two artifacts:
-   - `ZowiDesktop-<version>-windows-x86_64.zip` (portable, **GUI + CLI**)
-   - `ZowiDesktop-<version>-setup-x64.exe` (Inno Setup installer)
-3. Place them in `dist/` — where the release script looks for
-   both Windows artifacts.
+Go to **Actions → Windows CI → Run workflow**. Inputs and details:
+**[.github/WORKFLOWS_HOWTO.md](../../.github/WORKFLOWS_HOWTO.md#windows-ci)**.
+
+When it finishes, download the two artifacts and place them in `dist/` — where
+the release script looks for both Windows artifacts.
 
 ### Option B — Local Windows machine
 
