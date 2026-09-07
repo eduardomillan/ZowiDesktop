@@ -28,6 +28,25 @@ sudo apt update && sudo apt install zowi-desktop
 Releases are created manually as GitHub Releases with the AppImage and
 Debian packages attached.
 
+## USB serial access (connecting a robot)
+
+To connect to a Zowi robot over USB the user needs read/write access to the
+USB serial device (e.g. `/dev/ttyUSB0` for the CP210x UART bridge used by the
+robot). By default this device is owned by `root:dialout` with mode
+`rw-rw----`, so the user must belong to the `dialout` group:
+
+```bash
+sudo usermod -aG dialout "$USER"
+# log out and back in for the group to take effect
+```
+
+- Verify with `id` or `groups` (you should see `dialout` in the list).
+- The CLI lists detected ports with `zowi_cli ports`.
+- On **Lliurex**, the required group membership is configured automatically when
+  the **`lliurex-robotics`** package from *Aplicaciones Tecnológicas*
+  (in English, *Technological Applications*) is installed via the **Zero Center**
+  or the **Lliurex Store**.
+
 ## Windows
 
 Windows builds are attached to each Release as a portable `.zip` and an

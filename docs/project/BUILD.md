@@ -34,6 +34,16 @@ sudo apt install cmake g++ qt6-base-dev qt6-declarative-dev qt6-connectivity-dev
     libbluetooth-dev libgl1-mesa-dev libxkbcommon-dev nlohmann-json3-dev libcli11-dev
 ```
 
+The above also installs `nlohmann-json3-dev` and `libcli11-dev` so the build
+resolves them from the system instead of fetching them over the network during
+configuration. If your CMake logs `Looking for nlohmann_json library... NOT
+FOUND` / `Looking for CLI11 library... NOT FOUND` or cannot find `Qt6`, run
+this `apt install` and configure again.
+
+> **USB serial access**: to connect a Zowi robot over USB the user needs `dialout`
+> membership to open `/dev/ttyUSB0`. See [INSTALL.md](../../INSTALL.md) — on
+> Lliurex this is set up by the `lliurex-robotics` package.
+
 ## Quick start (native Linux)
 
 ```bash
