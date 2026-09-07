@@ -34,6 +34,16 @@ sudo apt install cmake g++ qt6-base-dev qt6-declarative-dev qt6-connectivity-dev
     libbluetooth-dev libgl1-mesa-dev libxkbcommon-dev nlohmann-json3-dev libcli11-dev
 ```
 
+The above also installs `nlohmann-json3-dev` and `libcli11-dev` so the build
+resolves them from the system instead of fetching them over the network during
+configuration. If your CMake logs `Looking for nlohmann_json library... NOT
+FOUND` / `Looking for CLI11 library... NOT FOUND` or cannot find `Qt6`, run
+this `apt install` and configure again.
+
+> **USB serial access**: to connect a Zowi robot over USB the user needs `dialout`
+> membership to open `/dev/ttyUSB0`. See [INSTALL.md](../../INSTALL.md) — on
+> Lliurex this is set up by the `lliurex-robotics` package.
+
 ## Quick start (native Linux)
 
 ```bash
@@ -252,52 +262,29 @@ The resulting `.deb` files are placed in `dist/`.
 
 ## Linux CI (GitHub Actions)
 
-The repository ships `.github/workflows/linux.yml` which builds the **Linux
-release artifacts** on GitHub-hosted runners with Qt 6.8:
-
-- **Trigger**: manual (`workflow_dispatch`) — consistent with the manual-
-  release philosophy (no automatic releases).
-- **Jobs**:
-  - `appimage` → `ubuntu-latest`: `packaging/linux/create-appimage.sh`
-  - `deb-jammy` → `ubuntu-22.04`: `DISTRO_SUFFIX=jammy packaging/linux/create-deb.sh`
-  - `deb-noble` → `ubuntu-24.04`: `DISTRO_SUFFIX=noble packaging/linux/create-deb.sh`
-- **Produced artifacts**: the AppImage and the jammy/noble `.deb`s.
-
-To run it: **Actions → Linux CI → Run workflow**. When it finishes, download the
-three artifacts into `dist/` and they are picked up automatically by
-`packaging/create-gh-release.sh` (which expects the Linux artifacts in `dist/`).
+The **Linux CI** workflow (`.github/workflows/linux.yml`) builds the Linux
+release artifacts (AppImage + jammy/noble `.deb`) on GitHub-hosted runners
+with Qt 6.8. It is manual (`workflow_dispatch`) and accepts inputs to select
+which artifacts to build. Full details and examples:
+**[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#linux-ci)**.
 
 ## GitHub Releases
 
-Releases are created **manually** (there is no automatic release workflow, but
-the artifact-building workflows are also manual). To create a GitHub release
-attached with the AppImage and Debian packages:
+Releases are created **manually** via the **Release** workflow
+(`.github/workflows/release.yml`), which builds all platform artifacts and
+creates the GitHub Release in a single run. For full details, inputs, and
+examples: **[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#release)**.
 
-> The complete end-to-end release guide (version bumps, all platform artifacts,
-> apt repo publishing) lives in [docs/project/RELEASE.md](RELEASE.md).
+You can also create releases locally:
 
 ```bash
-# GitHub Release with Linux artifacts (+ Windows zip/installer if present)
-./packaging/create-gh-release.sh
-
-# Same, and also publish the signed apt repo (jammy+noble) to gh-pages
-./packaging/create-gh-release.sh --with-apt
+./packaging/create-gh-release.sh            # GitHub Release with artifacts in dist/
+./packaging/create-gh-release.sh --with-apt # same + publish signed apt repo
 ```
 
-The script:
-- Reads the version from the `VERSION` file
-- Verifies the required artifacts exist (AppImage + .deb jammy + .deb noble)
-- Attaches the Windows portable zip and installer too, if found in
-  `dist/`
-- Extracts changelog entries from `debian/changelog`
-- Creates a git tag `v<version>` and pushes it
-- Creates a GitHub Release with the artifacts attached
-- With `--with-apt`, signs and publishes the apt repo (jammy+noble) under
-  `docs/` on `gh-pages` via `packaging/publish-apt-repo.sh` (keeps the website)
-
 Requires the `gh` CLI authenticated (`gh auth login`). Publishing the apt repo
-additionally requires `aptly`, `gnupg`, the repo's GPG signing key on this
-machine, and `GPG_PASSPHRASE` (or `APTLY_GPG_PASSPHRASE`) set.
+additionally requires `aptly`, `gnupg`, the GPG signing key, and
+`GPG_PASSPHRASE` (or `APTLY_GPG_PASSPHRASE`) set.
 
 ## Windows builds
 
@@ -341,22 +328,11 @@ everything in `dist\`.
 
 ## Windows CI (GitHub Actions + MSVC)
 
-The repository ships `.github/workflows/windows.yml` which compiles Windows
-artifacts on a `windows-2022` runner using the MSVC 2022 toolchain and Qt 6.8:
-
-- **Trigger**: manual (`workflow_dispatch`) — consistent with the manual-
-  release philosophy (no automatic releases).
-- **Produced artifacts**:
-  - `ZowiDesktop-<version>-windows-x86_64.zip` (portable, GUI + CLI)
-  - `ZowiDesktop-<version>-setup-x64.exe` (Inno Setup installer)
-
-To run it: **Actions → Windows CI → Run workflow**. When it finishes, download
-the two artifacts. To attach them to a manual GitHub Release, place them in
-`dist/`, then run:
-
-```bash
-./packaging/create-gh-release.sh --with-apt
-```
+The **Windows CI** workflow (`.github/workflows/windows.yml`) builds the Windows
+release artifacts (portable `.zip` + Inno Setup installer) on a `windows-2022`
+runner with MSVC 2022 + Qt 6.8. It is manual (`workflow_dispatch`) and accepts
+inputs to select which artifacts to build. Full details and examples:
+**[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#windows-ci)**.
 
 ## Windows native Bluetooth (bt_native)
 

@@ -35,6 +35,7 @@ in English.
 | [PLANNING.md](PLANNING.md) | Living roadmap: release plan, current architecture thumbnail, implemented milestones (M1–M7) and future ones (M8, M9, future ideas), plus testing strategy and technical notes. |
 | [BUILD.md](BUILD.md) | Building from source on Linux and Windows: prerequisites, Git settings, quick start, build targets, CMake options, platform builds (AppImage, `.deb`), CI workflows, `windeployqt`, Qt 5 vs Qt 6 notes. |
 | [RELEASE.md](RELEASE.md) | End-to-end release guide: manual CI workflows (Linux CI, Windows CI), artifact production (local or CI), `create-gh-release.sh`, and publishing the signed apt repository to `gh-pages`. |
+| [WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md) | Usage guide for every GitHub Actions workflow in the repository (Linux CI, Windows CI, Tests, Tests (Windows), Release): how to run each one, the inputs it accepts, what it does, and usage examples. |
 | [ANIMATIONS.md](ANIMATIONS.md) | Animation formats supported in QML (GIF, sprite sheets, frames, SVG, WEBP, Lottie) and recommended approaches for the splash screen. |
 | [ANDROID_VERSION.md](ANDROID_VERSION.md) | Reusing the `zowi_core` business logic in Android/Flutter: what is portable, the Qt-free refactor (injectable translation loader, config-dir injection), and integration routes via NDK/JNI or dart:ffi. |
 | [WEB_VERSION.md](WEB_VERSION.md) | Design document for a **web frontend**: feasibility of `zowi_core` → WASM, the Bluetooth Classic browser constraint, and a phased roadmap (core-to-WASM, hardware-free demo, real hardware). |
