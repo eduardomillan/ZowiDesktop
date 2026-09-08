@@ -49,6 +49,10 @@ on:
         description: 'Overwrite existing release and tag if they already exist'
         type: boolean
         default: false
+      prerelease:
+        description: 'Mark the GitHub Release as a pre-release (not latest)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -153,6 +157,9 @@ jobs:
           fi
           if [ "${{ inputs.overwrite }}" = "true" ]; then
             ARGS+=(--overwrite)
+          fi
+          if [ "${{ inputs.prerelease }}" = "true" ]; then
+            ARGS+=(--prerelease)
           fi
           bash packaging/create-gh-release.sh "${ARGS[@]}"
 

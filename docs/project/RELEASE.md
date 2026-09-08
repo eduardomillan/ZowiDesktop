@@ -236,7 +236,14 @@ bash packaging/create-gh-release.sh
 
 # Same, and also publish the signed apt repo (jammy + noble) to gh-pages
 bash packaging/create-gh-release.sh --with-apt
+
+# Same, but marked as a GitHub pre-release (not set as "latest")
+bash packaging/create-gh-release.sh --prerelease
 ```
+
+`--prerelease` cannot be combined with `--with-apt`: the signed apt repo is
+the stable channel and must not carry pre-release packages (the script fails
+with an error).
 
 The script:
 
@@ -247,7 +254,8 @@ The script:
 5. Confirms interactively, then creates the annotated tag `v<version>` and
    pushes it.
 6. Creates the GitHub Release (`gh release create`) with the notes and the
-   artifacts attached.
+   artifacts attached; with `--prerelease`, adds the `--prerelease` flag so
+   GitHub does not mark it as *latest*.
 7. With `--with-apt`, runs `packaging/publish-apt-repo.sh` to publish the
    signed apt repository.
 

@@ -11,6 +11,7 @@ WIN_DIST_DIR="$DIST_DIR"
 # Release flags and artifact selection
 PUBLISH_APT=0
 OVERWRITE=0
+PRERELEASE=0
 INCLUDE_APPIMAGE=1
 INCLUDE_DEB_JAMMY=1
 INCLUDE_DEB_NOBLE=1
@@ -24,6 +25,9 @@ for arg in "$@"; do
             ;;
         --overwrite)
             OVERWRITE=1
+            ;;
+        --prerelease)
+            PRERELEASE=1
             ;;
         --skip-appimage|--without-appimage)
             INCLUDE_APPIMAGE=0
@@ -45,6 +49,7 @@ for arg in "$@"; do
             echo "Options:"
             echo "  --with-apt                  Publish signed apt repo to gh-pages"
             echo "  --overwrite                 Delete and recreate existing release and tag"
+            echo "  --prerelease                Mark the GitHub Release as a pre-release (not latest)"
             echo "  --skip-appimage             Do not include Linux AppImage"
             echo "  --skip-deb-jammy            Do not include Ubuntu 22.04 (Jammy) .deb"
             echo "  --skip-deb-noble            Do not include Ubuntu 24.04 (Noble) .deb"
@@ -61,6 +66,10 @@ done
 if [ "$PUBLISH_APT" -eq 1 ]; then
     if [ "$INCLUDE_DEB_JAMMY" -eq 0 ] || [ "$INCLUDE_DEB_NOBLE" -eq 0 ]; then
         echo "ERROR: --with-apt requires both jammy and noble .deb packages to be included." >&2
+        exit 1
+    fi
+    if [ "$PRERELEASE" -eq 1 ]; then
+        echo "ERROR: --prerelease cannot be combined with --with-apt: the signed apt repo is the stable channel and must not carry pre-release packages." >&2
         exit 1
     fi
 fi
@@ -241,6 +250,9 @@ fi
 for f in "${RELEASE_FILES[@]}"; do
     echo "  - $(basename "$f")"
 done
+if [ "$PRERELEASE" -eq 1 ]; then
+    echo "  (marked as pre-release; GitHub will NOT set it as latest)"
+fi
 if [ "$PUBLISH_APT" -eq 1 ]; then
     echo "  (+ signed apt repo jammy+noble published to gh-pages/docs)"
 fi
@@ -270,10 +282,12 @@ fi
 
 echo ""
 echo "=== Creating GitHub Release ==="
-(cd "$PROJECT_ROOT" && gh release create "$TAG" \
-    --title "$TAG" \
-    --notes "$NOTES" \
-    "${RELEASE_FILES[@]}")
+GH_RELEASE_ARGS=(release create "$TAG" --title "$TAG" --notes "$NOTES")
+if [ "$PRERELEASE" -eq 1 ]; then
+    GH_RELEASE_ARGS+=(--prerelease)
+fi
+GH_RELEASE_ARGS+=("${RELEASE_FILES[@]}")
+(cd "$PROJECT_ROOT" && gh "${GH_RELEASE_ARGS[@]}")
 
 REPO="$PROJECT_ROOT"
 if [ "$PUBLISH_APT" -eq 1 ]; then

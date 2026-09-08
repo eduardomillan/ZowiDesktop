@@ -199,6 +199,7 @@ apt repository to `gh-pages`.
 | `include_windows_installer` | boolean | `true` | Windows: include setup `.exe` installer |
 | `publish_apt` | boolean | `false` | Publish signed apt repo (jammy + noble) to `gh-pages` |
 | `overwrite` | boolean | `false` | Overwrite existing release and tag if they exist |
+| `prerelease` | boolean | `false` | Mark the GitHub Release as a pre-release (not *latest*) |
 
 ### What it does
 
@@ -211,6 +212,15 @@ Three sequential phases:
 3. **Create GitHub Release** — downloads all produced artifacts into `dist/`,
    then runs `packaging/create-gh-release.sh` with the appropriate `--skip-*`
    flags (derived from which inputs were unchecked or whose builds failed).
+
+When `prerelease` is enabled:
+
+- The release is created with `gh release create --prerelease`: GitHub shows
+  it as a **pre-release** and does **not** mark it as *latest* (a normal run
+  is marked *latest* automatically).
+- Cannot be combined with `publish_apt`: the signed apt repo is the stable
+  channel and must not carry pre-release packages (the script fails with an
+  error if both are requested).
 
 When `publish_apt` is enabled:
 
@@ -256,6 +266,15 @@ Re-run a failed release, replacing the existing tag:
 Actions → Release → Run workflow
   (all inputs as needed)
   overwrite:               ✓
+```
+
+Test release that must not become *latest* (no apt publishing):
+
+```
+Actions → Release → Run workflow
+  (artifact inputs as needed)
+  publish_apt:             ✗
+  prerelease:              ✓
 ```
 
 ### Prerequisites
