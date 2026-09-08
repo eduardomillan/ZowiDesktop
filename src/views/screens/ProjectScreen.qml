@@ -12,6 +12,7 @@ ScreenTemplate {
     showBackButton: true
     showRightButton: true
     rightButtonSource: doneIconSource
+    contentTopMargin: 50
     onRightClicked: Projects.setCompleted(projectId, false)
 
     property string projectId: ""
@@ -122,7 +123,7 @@ ScreenTemplate {
             Column {
                 id: articleCol
                 width: articleFlick.width
-                spacing: 16
+                spacing: 20
 
                 Image {
                     id: projectThumb
