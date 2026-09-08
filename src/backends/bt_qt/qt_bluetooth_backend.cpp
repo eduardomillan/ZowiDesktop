@@ -12,6 +12,7 @@
 #include <QBluetoothServiceInfo>
 #ifdef Q_OS_LINUX
 #include <QDBusReply>
+#include <QDir>
 #endif
 
 static const QBluetoothUuid SPP_UUID = QBluetoothUuid(QStringLiteral("00001101-0000-1000-8000-00805F9B34FB"));
@@ -60,6 +61,19 @@ bool QtBluetoothBackend::hasAdapter()
     // A physically present but powered-off adapter (e.g. `hciconfig` shows
     // "DOWN") cannot scan or connect, so the app must treat it as unavailable
     // and fall back to USB / demo instead of driving the Bluetooth flow.
+
+#ifdef Q_OS_LINUX
+    // Fast path: when no Bluetooth hardware is present (or the kernel
+    // Bluetooth subsystem is not loaded), the D-Bus call to BlueZ inside
+    // QBluetoothLocalDevice::allDevices() can block for many seconds.
+    // Checking /sys/class/bluetooth/ is nearly instant and avoids the hang.
+    {
+        const QDir btDir("/sys/class/bluetooth");
+        if (!btDir.exists() || btDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot).isEmpty())
+            return false;
+    }
+#endif
+
     const auto devices = QBluetoothLocalDevice::allDevices();
     for (const auto &info : devices) {
         QBluetoothLocalDevice dev(info.address());

@@ -9,6 +9,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
+#include <atomic>
 #include <zowi/bluetooth_api.h>
 #include <zowi/message_parser.h>
 #include <zowi/robot_state.h>
@@ -22,6 +23,16 @@ class SessionController;
 // is selected automatically (Bluetooth preferred when available; USB is only
 // used as fallback when no Bluetooth adapter is present) but the user can
 // override it from the UI. See docs/project for the design.
+
+// Result carrier for the background Bluetooth-adapter probe (see
+// RobotController::pollTransports). Shared with the worker thread so a probe
+// that is still running when the controller is destroyed can finish safely
+// without touching a destroyed instance.
+struct BtCheckState {
+    std::atomic<bool> result{false};
+    std::atomic<bool> done{false};
+};
+
 class RobotController : public QObject
 {
     Q_OBJECT
@@ -80,6 +91,7 @@ private:
 
 public:
     explicit RobotController(QObject *parent = nullptr);
+    ~RobotController();
 
     int transportAuto() const { return Auto; }
     int transportBluetooth() const { return Bluetooth; }
@@ -258,4 +270,12 @@ private:
     bool m_restoring = false;
     bool m_simulateLowBattery = false; // TEMP: force low-battery dialog for testing
     float m_lowBatteryThreshold = 50.0f; // configurable low-battery threshold
+
+    // The Bluetooth adapter is probed on a detached background thread: on
+    // machines with no Bluetooth hardware the platform query can block for
+    // many seconds, so the GUI thread must never call it synchronously. The
+    // worker owns the state (shared_ptr), so a probe still running at teardown
+    // can finish without touching a destroyed controller.
+    std::shared_ptr<BtCheckState> m_btCheckState;
+    bool m_btAvailLast = false;   // last completed probe result
 };

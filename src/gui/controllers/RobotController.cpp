@@ -7,6 +7,8 @@
 #include <vector>
 #include <fstream>
 #include <memory>
+#include <thread>
+#include <chrono>
 
 #include <QCoreApplication>
 #include <QGuiApplication>
@@ -49,6 +51,9 @@ namespace {
 constexpr int kPollIntervalMs = 2500;
 // How long (ms) to wait for a Zowi to answer the identification handshake.
 constexpr int kProbeTimeoutMs = 6000;
+// Max time (ms) to wait at startup for the first Bluetooth-adapter probe
+// (runs before the window is shown; the cap covers hung platform queries).
+constexpr int kBtProbeWaitMs = 1000;
 
 RobotController::Transport transportFromString(const QString &s)
 {
@@ -121,7 +126,32 @@ RobotController::RobotController(QObject *parent)
 
     // Initial availability snapshot + auto-detection.
     refreshTransports();
+
+    // refreshTransports() above started the first Bluetooth probe on a
+    // background thread. Give it a short bounded grace period (still before the
+    // window is shown, so nothing visibly stalls) so a machine where Bluetooth
+    // IS present starts in the correct situation instead of lagging a full poll
+    // interval. The cap keeps startup fast even if the platform query hangs.
+    if (m_btCheckState) {
+        QElapsedTimer btWait;
+        btWait.start();
+        while (!m_btCheckState->done.load() && btWait.elapsed() < kBtProbeWaitMs) {
+            QCoreApplication::processEvents(QEventLoop::AllEvents, 25);
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        if (m_btCheckState->done.load())
+            m_bluetoothAvailable = m_btAvailLast = m_btCheckState->result.load();
+    }
+
     m_situation = computeSituation();
+}
+
+RobotController::~RobotController()
+{
+    m_pollTimer.stop();
+    // m_btCheckState is intentionally left untouched: dropping our shared_ptr
+    // reference lets a still-running (detached) probe own its state and finish
+    // without ever touching a destroyed controller.
 }
 
 // --- Backend construction ---------------------------------------------------
@@ -751,11 +781,31 @@ void RobotController::pollTransports()
     }
 
     bool usbAvail = !ports.isEmpty();
+
+    // Bluetooth presence is probed on a detached background thread: the
+    // platform query (BlueZ via D-Bus on Linux, WinRT on Windows) can block
+    // for many seconds on machines without Bluetooth, so it must never run on
+    // the GUI thread. A fresh probe is started only when the previous one has
+    // finished; while one is still in flight we keep the last known value so
+    // the UI never stalls waiting for the check.
+    bool btAvail = m_btAvailLast;
+    bool btProbeFinished = m_btCheckState && m_btCheckState->done.load();
+    if (btProbeFinished) {
+        m_btAvailLast = m_btCheckState->result.load();
+        btAvail = m_btAvailLast;
+    }
+    if (!m_btCheckState || btProbeFinished) {
+        auto state = std::make_shared<BtCheckState>();
+        m_btCheckState = state;
+        std::thread([state]() {
 #ifdef ZOWI_HAVE_NATIVE_BT
-    bool btAvail = zowi::NativeBluetoothBackend::hasAdapter();
+            state->result = zowi::NativeBluetoothBackend::hasAdapter();
 #else
-    bool btAvail = zowi::QtBluetoothBackend::hasAdapter();
+            state->result = zowi::QtBluetoothBackend::hasAdapter();
 #endif
+            state->done = true;
+        }).detach();
+    }
 
     bool changed = usbChanged || (usbAvail != m_usbAvailable) || (btAvail != m_bluetoothAvailable);
     m_usbAvailable = usbAvail;

@@ -54,6 +54,16 @@ namespace {
 constexpr winrt::guid SPP_SERVICE_UUID{
     0x00001101, 0x0000, 0x1000, {0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB}};
 
+// Result carrier for the bounded adapter-presence check (see
+// NativeBluetoothBackend::hasAdapter). Shared with the detached worker thread.
+struct AdapterCheckState {
+    std::atomic<bool> result{false};
+    std::atomic<bool> done{false};
+};
+
+// Max time (ms) to wait for the WinRT adapter queries before assuming none.
+constexpr std::chrono::milliseconds kAdapterCheckTimeoutMs{2000};
+
 std::string toColonAddr(const std::string &dashes) {
     std::string r = dashes;
     for (auto &c : r) if (c == '-') c = ':';
@@ -110,31 +120,53 @@ NativeBluetoothBackend::~NativeBluetoothBackend() {
 bool NativeBluetoothBackend::init() { return true; }
 
 bool NativeBluetoothBackend::hasAdapter() {
-    try {
-        auto adapters = winrt::DeviceInformation::FindAllAsync(
-            winrt::Windows::Devices::Bluetooth::BluetoothAdapter::GetDeviceSelector()).get();
-        if (adapters.Size() == 0)
-            return false;
-
+    // The WinRT queries below (.get() on async operations) can block for
+    // several seconds when no Bluetooth radio is present. Run them on a
+    // detached worker and bound the wait so callers (e.g. transport polling)
+    // never stall waiting for the platform stack.
+    auto state = std::make_shared<AdapterCheckState>();
+    std::thread([state]() {
         try {
-            auto radios = winrt::Windows::Devices::Radios::Radio::GetRadiosAsync().get();
-            bool sawBtRadio = false;
-            for (uint32_t i = 0; i < radios.Size(); ++i) {
-                auto radio = radios.GetAt(i);
-                if (radio.Kind() != winrt::Windows::Devices::Radios::RadioKind::Bluetooth)
-                    continue;
-                sawBtRadio = true;
-                if (radio.State() == winrt::Windows::Devices::Radios::RadioState::On)
-                    return true;
+            auto adapters = winrt::DeviceInformation::FindAllAsync(
+                winrt::Windows::Devices::Bluetooth::BluetoothAdapter::GetDeviceSelector()).get();
+            if (adapters.Size() == 0) {
+                state->result = false;
+                state->done = true;
+                return;
             }
-            if (sawBtRadio)
-                return false;
+            try {
+                auto radios = winrt::Windows::Devices::Radios::Radio::GetRadiosAsync().get();
+                bool sawBtRadio = false;
+                for (uint32_t i = 0; i < radios.Size(); ++i) {
+                    auto radio = radios.GetAt(i);
+                    if (radio.Kind() != winrt::Windows::Devices::Radios::RadioKind::Bluetooth)
+                        continue;
+                    sawBtRadio = true;
+                    if (radio.State() == winrt::Windows::Devices::Radios::RadioState::On) {
+                        state->result = true;
+                        state->done = true;
+                        return;
+                    }
+                }
+                if (sawBtRadio) {
+                    state->result = false;
+                    state->done = true;
+                    return;
+                }
+            } catch (...) {
+            }
+            state->result = true;
+            state->done = true;
         } catch (...) {
+            state->result = false;
+            state->done = true;
         }
-        return true;
-    } catch (...) {
-        return false;
-    }
+    }).detach();
+
+    auto deadline = std::chrono::steady_clock::now() + kAdapterCheckTimeoutMs;
+    while (!state->done.load() && std::chrono::steady_clock::now() < deadline)
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    return state->done.load() ? state->result.load() : false;
 }
 
 bool NativeBluetoothBackend::isAdapterAvailable() const {
