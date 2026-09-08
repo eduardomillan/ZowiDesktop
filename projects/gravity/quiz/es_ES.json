@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Los pies de Zowi son así de grandes...",
+      "answers": [
+        {
+          "text": "...para mantener mejor el equilibrio.",
+          "correct": true
+        },
+        {
+          "text": "...para andar más rápido.",
+          "correct": false
+        },
+        {
+          "text": "...para eliminar la fuerza de la gravedad",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "El centro de gravedad de Zowi:",
+      "answers": [
+        {
+          "text": "No existe.",
+          "correct": false
+        },
+        {
+          "text": "Está en los motores de sus patas.",
+          "correct": false
+        },
+        {
+          "text": "Está más o menos entre sus ojos.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Els peus de Zowi són així de grans...",
+      "answers": [
+        {
+          "text": "...per mantenir millor l'equilibri.",
+          "correct": true
+        },
+        {
+          "text": "...per caminar més ràpid.",
+          "correct": false
+        },
+        {
+          "text": "...per eliminar la força de la gravetat.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "El centre de gravetat de Zowi:",
+      "answers": [
+        {
+          "text": "No existeix.",
+          "correct": false
+        },
+        {
+          "text": "És als motors de les seves potes.",
+          "correct": false
+        },
+        {
+          "text": "És més o menys entre els seus ulls.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

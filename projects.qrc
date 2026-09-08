@@ -65,5 +65,21 @@
         <file alias="bio1/strings/ca_ES.json">projects/bio1/strings/ca_ES.json</file>
         <file alias="bio1/strings/fr_FR.json">projects/bio1/strings/fr_FR.json</file>
         <file alias="bio1/strings/bg_BG.json">projects/bio1/strings/bg_BG.json</file>
+        <file alias="gravity/project.json">projects/gravity/project.json</file>
+        <file alias="gravity/page/es_ES.html">projects/gravity/page/es_ES.html</file>
+        <file alias="gravity/page/en_US.html">projects/gravity/page/en_US.html</file>
+        <file alias="gravity/page/ca_ES.html">projects/gravity/page/ca_ES.html</file>
+        <file alias="gravity/page/fr_FR.html">projects/gravity/page/fr_FR.html</file>
+        <file alias="gravity/page/bg_BG.html">projects/gravity/page/bg_BG.html</file>
+        <file alias="gravity/quiz/es_ES.json">projects/gravity/quiz/es_ES.json</file>
+        <file alias="gravity/quiz/en_US.json">projects/gravity/quiz/en_US.json</file>
+        <file alias="gravity/quiz/ca_ES.json">projects/gravity/quiz/ca_ES.json</file>
+        <file alias="gravity/quiz/fr_FR.json">projects/gravity/quiz/fr_FR.json</file>
+        <file alias="gravity/quiz/bg_BG.json">projects/gravity/quiz/bg_BG.json</file>
+        <file alias="gravity/strings/es_ES.json">projects/gravity/strings/es_ES.json</file>
+        <file alias="gravity/strings/en_US.json">projects/gravity/strings/en_US.json</file>
+        <file alias="gravity/strings/ca_ES.json">projects/gravity/strings/ca_ES.json</file>
+        <file alias="gravity/strings/fr_FR.json">projects/gravity/strings/fr_FR.json</file>
+        <file alias="gravity/strings/bg_BG.json">projects/gravity/strings/bg_BG.json</file>
     </qresource>
 </RCC>

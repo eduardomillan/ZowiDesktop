@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Zowi's feet are this big...",
+      "answers": [
+        {
+          "text": "...to keep its balance better.",
+          "correct": true
+        },
+        {
+          "text": "...to walk faster.",
+          "correct": false
+        },
+        {
+          "text": "...to cancel the force of gravity.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Zowi's centre of gravity:",
+      "answers": [
+        {
+          "text": "Does not exist.",
+          "correct": false
+        },
+        {
+          "text": "Is inside the motors of its legs.",
+          "correct": false
+        },
+        {
+          "text": "Is more or less between its eyes.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

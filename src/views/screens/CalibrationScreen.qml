@@ -27,6 +27,21 @@ ScreenTemplate {
     function send(cmd) { if (Robot.connected) Robot.sendData(cmd) }
     function playVictory() { send("H 12\r") }
 
+    // Project image shown below the title/subtitle (centered). Width is
+    // parametrizable; height is derived proportionally from the source aspect.
+    property real projectImageWidth: 200
+    Image {
+        id: projectImage
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            top: parent.top
+            topMargin: 10
+        }
+        width: root.projectImageWidth
+        source: "qrc:/images/android/project_gravity_image.png"
+        fillMode: Image.PreserveAspectFit
+    }
+
     // Live-update the move via G after a trim change. Core's shouldSend keeps at
     // most one G in flight; if a change falls inside the debounce window it is
     // coalesced (the most recent value stays in the session), and this timer
@@ -99,7 +114,13 @@ ScreenTemplate {
     // ── Content: a 4-step StackLayout mirroring the Android pager ──
     StackLayout {
         id: steps
-        anchors.fill: parent
+        anchors {
+            top: projectImage.bottom
+            topMargin: 10
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
         currentIndex: Calibration.step
 
         // ── Step 0: WARNING ──────────────────────────────────────

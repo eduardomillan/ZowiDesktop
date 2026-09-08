@@ -1,0 +1,10 @@
+{
+  "id": "gravity",
+  "title_key": "title",
+  "description_key": "learning_description",
+  "image_key": "qrc:/images/projects/gravity_thumb.png",
+  "url_key": "url",
+  "hex_path": "",
+  "achievement_id": "sleepy",
+  "action_target": "calibration"
+}

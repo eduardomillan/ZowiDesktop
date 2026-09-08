@@ -54,6 +54,9 @@ Window {
                 stack.pop()
                 if (target === "gamepad") {
                     pushGamepad()
+                } else if (target === "calibration") {
+                    var calib = stack.push("qrc:/src/views/screens/CalibrationScreen.qml")
+                    calib.backClicked.connect(function() { stack.pop() })
                 } else {
                     console.warn("main.qml: unknown project action target:", target)
                 }

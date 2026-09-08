@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Zowi a de graaaands pieds...",
+      "answers": [
+        {
+          "text": "... pour ne pas perdre l'équilibre.",
+          "correct": true
+        },
+        {
+          "text": "... pour marcher plus vite.",
+          "correct": false
+        },
+        {
+          "text": "... pour éliminer la force de gravité.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Le centre de gravité de Zowi...",
+      "answers": [
+        {
+          "text": "... n'existe pas !",
+          "correct": false
+        },
+        {
+          "text": "... est caché dans les moteurs de ses jambes.",
+          "correct": false
+        },
+        {
+          "text": "... est situé plus ou moins entre ses yeux.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}
