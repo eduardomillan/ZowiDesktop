@@ -27,15 +27,14 @@ ScreenTemplate {
         "SmallSurprise": Commands.MouthSmallSurprise, "TongueOut": Commands.MouthTongueOut,
         "Vamp1": Commands.MouthVamp1, "Vamp2": Commands.MouthVamp2,
         "LineMouth": Commands.MouthLineMouth, "Confused": Commands.MouthConfused,
-        "Diagonal": Commands.MouthDiagonal, "Sad": Commands.MouthSad,
+        "DiagLeft": Commands.MouthDiagonal, "Sad": Commands.MouthSad,
         "SadOpen": Commands.MouthSadOpen, "SadClosed": Commands.MouthSadClosed,
         "Ok": Commands.MouthOk, "X": Commands.MouthX,
         "Interrogation": Commands.MouthInterrogation, "Thunder": Commands.MouthThunder,
         "Culito": Commands.MouthCulito, "Angry": Commands.MouthAngry
     })
-    // Reverse diagonal: no firmware mouth id — mirrored raw pattern of the
-    // canonical "diagonal" (bits 24/19/14/9/2 <=> "00000001000010000100000100000100").
-    readonly property int reverseDiagonalMatrix: 17318148
+    // DiagRight: mirrored diagonal — R1C6→R5C1 (bits 24/19/14/9/4).
+    readonly property int reverseDiagonalMatrix: 17318416
 
     readonly property var mouthOptions: [
         { name: "Smile",         normal: "qrc:/images/android/smile_button.png",         pressed: "qrc:/images/android/pressed_smile_button.png" },
@@ -48,8 +47,8 @@ ScreenTemplate {
         { name: "Vamp2",         normal: "qrc:/images/android/vamp2_button.png",          pressed: "qrc:/images/android/pressed_vamp2_button.png" },
         { name: "LineMouth",     normal: "qrc:/images/android/line_mouth_button.png",     pressed: "qrc:/images/android/pressed_line_mouth_button.png" },
         { name: "Confused",      normal: "qrc:/images/android/confused_button.png",       pressed: "qrc:/images/android/pressed_confused_button.png" },
-        { name: "Diagonal",      normal: "qrc:/images/android/diagonal_reverse_button.png", pressed: "qrc:/images/android/pressed_diagonal_reverse_button.png" },
-        { name: "DiagonalRev",   normal: "qrc:/images/android/diagonal_button.png",       pressed: "qrc:/images/android/pressed_diagonal_button.png" },
+        { name: "DiagLeft",      normal: "qrc:/images/android/diagonal_reverse_button.png", pressed: "qrc:/images/android/pressed_diagonal_reverse_button.png" },
+        { name: "DiagRight",     normal: "qrc:/images/android/diagonal_button.png",       pressed: "qrc:/images/android/pressed_diagonal_button.png" },
         { name: "Sad",           normal: "qrc:/images/android/sad_button.png",            pressed: "qrc:/images/android/pressed_sad_button.png" },
         { name: "SadOpen",       normal: "qrc:/images/android/sad_open_button.png",       pressed: "qrc:/images/android/pressed_sad_open_button.png" },
         { name: "SadClosed",     normal: "qrc:/images/android/sad_closed_button.png",     pressed: "qrc:/images/android/pressed_sad_closed_button.png" },
@@ -63,7 +62,7 @@ ScreenTemplate {
 
     function selectMouth(name) {
         var cmd
-        if (name === "DiagonalRev") {
+        if (name === "DiagRight") {
             cmd = Commands.mouth(root.reverseDiagonalMatrix)
         } else {
             var id = mouthIdByName[name]
