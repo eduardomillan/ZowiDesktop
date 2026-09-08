@@ -39,7 +39,7 @@ ScreenTemplate {
 
     property string doneIconSource: completed
         ? "qrc:/images/android/project_done_icon.png"
-        : "qrc:/images/android/project_not_done_icon.png"
+        : "qrc:/images/android/project_not_done_outline_icon.png"
 
     function refreshCompleted() { completed = Projects.isCompleted(projectId) }
 
