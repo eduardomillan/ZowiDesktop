@@ -1,0 +1,9 @@
+{
+  "id": "bio1",
+  "title_key": "title",
+  "description_key": "learning_description",
+  "image_key": "qrc:/images/projects/biology_thumb.jpg",
+  "url_key": "url",
+  "hex_path": "",
+  "achievement_id": "wave"
+}

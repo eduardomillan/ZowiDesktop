@@ -137,7 +137,7 @@ src/
 ### M8 — Basic projects 🚧
 - [x] **Move objects (`move`)** — implemented (generic ProjectScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
 - [x] **The shape of a robot (`form`)** — implemented (data folder with page/quiz/strings in 5 locales, tile enabled)
-- [ ] Zowi eyes and ultrasounds
+- [x] **Zowi eyes and ultrasounds (Zowi's eyes, `bio1`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
 - [x] **The Zowi legs and servos (Zowi's feet, `bio3`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
 - [ ] The gravity and calibration
 
@@ -160,6 +160,8 @@ src/
 - [ ] Implement the new firmware ZOWI_DESKTOP_FW
 - [ ] Add new feature in mouth editor, showing the current mouth
 - [ ] Implement button reading in the core
+- [ ] Add more projects (inside Zowi, buttons, etc.)
+- [ ] Add a sounds screen (like mouths screen)
 - [ ] Testing, validating and improving
 - [ ] Adapt the software to other robots (Otto with Arduino or ESP32)
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Zowi's eyes project (`bio1`):** new Discover lesson ("Los ojos de Zowi" —
+  Zowi's eyes and ultrasounds) with localized page/quiz/strings in the 5
+  locales, `biology_thumb.jpg` detail image, registered in `projects/index.json`
+  + `projects.qrc`, tile enabled in HomeScreen, and a `test_projects_store` case.
+  Quiz data ported from ZowiAppReborn's `04_project_bio1.json`.
+
 ## [0.7.2] - 2026-09-08
 
 ### Added

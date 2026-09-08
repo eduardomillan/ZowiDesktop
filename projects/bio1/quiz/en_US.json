@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "The truth is that Zowi's \"eyes\"...",
+      "answers": [
+        {
+          "text": "...are like human eyes. Without light they see nothing.",
+          "correct": false
+        },
+        {
+          "text": "...are like a cat's eyes: they see even at night.",
+          "correct": true
+        },
+        {
+          "text": "...do not see light. They actually emit ultrasound.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "Zowi's \"eyes\":",
+      "answers": [
+        {
+          "text": "Send out sounds that bounce off objects and come back.",
+          "correct": true
+        },
+        {
+          "text": "Are like superhero eyes: they work with X-rays.",
+          "correct": false
+        },
+        {
+          "text": "Work with ultraviolet rays.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

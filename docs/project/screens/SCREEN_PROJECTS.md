@@ -10,15 +10,15 @@
 > `ProjectQuizViewActivity` + `assets/projects/*.json`), adapted to the desktop
 > per the decisions below.
 
-- **Status:** ✅ **Move + Zowi's feet (bio3) + Robot form (form) projects implemented** (v0.8.0); 7 projects remaining (design only).
+- **Status:** ✅ **Move + Zowi's feet (bio3) + Robot form (form) + Zowi's eyes (bio1) projects implemented** (v0.8.0); 6 projects remaining (design only).
   A generic `ProjectScreen.qml` exists, backed by the Qt-free `zowi::projects` core module,
   `ProjectsController` context, `projects.qrc` resource, and a reusable `QuizComponent.qml`.
-  The other 8 projects are **NOT IMPLEMENTED** — design proposal only.
+  The other 6 projects are **NOT IMPLEMENTED** — design proposal only.
 - **Implemented files:**
   - Core: `src/core/include/zowi/project_model.h`, `projects_store.h/.cpp`, `projects_preferences_store.h/.cpp`
   - GUI: `src/gui/controllers/ProjectsController.h/.cpp`, `src/views/components/QuizComponent.qml`, `src/views/screens/ProjectScreen.qml`
-  - Assets: `projects/index.json`, `projects/move/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio3/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `images/projects/bio3_thumb.png`, `projects.qrc`
-- **Planned files:** data folders under `projects/<id>/` for each remaining project (choreography, bio1, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet. No new QML screens needed.
+  - Assets: `projects/index.json`, `projects/move/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio3/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio1/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `images/projects/bio3_thumb.png`, `images/projects/biology_thumb.jpg`, `projects.qrc`
+- **Planned files:** data folders under `projects/<id>/` for each remaining project (choreography, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet. No new QML screens needed.
 - **Project-specific i18n** lives in each project's `strings/<locale>.json` (title, url, description) and `quiz/<locale>.json` (inline text). Shared UI strings (`test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`) live once in the generic `"ProjectScreen.qml"` context of `i18n/zowi_*.json`. The 10 tile titles are translated on the Home-screen context (`move_objects`,
   `choreography`, `robot_form`, `robot_eyes`, `robot_feet`, `robot_alarm`,
   `adivinawi`, `gravity`, `hello_world`, `bitbloq_sensors`).
@@ -106,7 +106,7 @@ questions with inline translated text, and `strings/<locale>.json` holds
 | 01 | `move` | `move_objects` | `projects/move/` | `move_button.png` | `move_thumb.png` | `flapping` | — |
 | 02 | `choreography` | `choreography` | `projects/choreography/` | `choreography_button.png` | — | `swing` | — |
 | 03 | `form` | `robot_form` | `projects/form/` | `robot_form_button.png` | `form_thumb.jpg` | `confused` | — |
-| 04 | `bio1` | `robot_eyes` | `projects/bio1/` | `eyes_button.png` | — | `wave` | — |
+| 04 | `bio1` | `robot_eyes` | `projects/bio1/` | `eyes_button.png` | `biology_thumb.jpg` | `wave` | — |
 | 05 | `bio3` | `robot_feet` | `projects/bio3/` | `feet_button.png` | `bio3_thumb.png` | `jitter` | — |
 | 06 | `reprogram` | `robot_alarm` | `projects/reprogram/` | `alarm_button.png` | — | `angry` | `ZOWI_Alarm_v2.hex` |
 | 07 | `helloworld` | `hello_world` | `projects/helloworld/` | `bitbloq_button.png` | — | `super_happy` | — |
@@ -116,8 +116,8 @@ questions with inline translated text, and `strings/<locale>.json` holds
 
 Tile images live under `qrc:/images/android/`. Detail images live under
 `qrc:/images/projects/` and are only assigned once a project's data folder
-exists (the `image_key` is set in its `project.json` — currently `move`, `bio3`
-and `form` are implemented, the rest are "—" until they land). The Android
+exists (the `image_key` is set in its `project.json` — currently `move`, `bio3`,
+`form` and `bio1` are implemented, the rest are "—" until they land). The Android
 counterpart artwork (`qrc:/images/android/project_*.png`) is already bundled
 and can be reused. Achievements are **reserved for the deferred ACHIEVEMENTS
 layer** (see decision 2).

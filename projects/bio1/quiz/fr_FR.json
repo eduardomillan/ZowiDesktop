@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "La vérité c'est que « les yeux » de Zowi...",
+      "answers": [
+        {
+          "text": "...sont les mêmes que les nôtres. S'il n'y a pas de lumière ils ne voient rien !",
+          "correct": false
+        },
+        {
+          "text": "...sont comme ceux des chats, ils voient même de nuit.",
+          "correct": true
+        },
+        {
+          "text": "...ne voient pas la lumière, ils émettent des ultrasons.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "Les « yeux » de Zowi...",
+      "answers": [
+        {
+          "text": "...émettent des sons qui rebondissent sur les objets.",
+          "correct": true
+        },
+        {
+          "text": "...sont comme les yeux des super-héros, ils utilisent les rayons X.",
+          "correct": false
+        },
+        {
+          "text": "...lancent des rayons ultraviolets.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

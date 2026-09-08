@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "La veritat és que \"els ulls\" de Zowi...",
+      "answers": [
+        {
+          "text": "...són com els dels humans. Si no hi ha llum no veuen res.",
+          "correct": false
+        },
+        {
+          "text": "...són com els d'un gat, veuen encara que sigui de nit.",
+          "correct": true
+        },
+        {
+          "text": "...no veuen la llum. En realitat emeten ultrasons.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "\"Els ulls\" de Zowi:",
+      "answers": [
+        {
+          "text": "Envien sons que reboten als objectes i tornen.",
+          "correct": true
+        },
+        {
+          "text": "Són com els ulls dels superherois, funcionen amb raigs X.",
+          "correct": false
+        },
+        {
+          "text": "Funcionen amb raigs ultraviolats.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}
