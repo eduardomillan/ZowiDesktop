@@ -40,7 +40,7 @@ ScreenTemplate {
     property bool quizStarted: false
     property string contentHtml: ""
     property real thumbHeight: 120
-    footerHeight: 88
+    footerHeight: 0
 
     property string doneIconSource: completed
         ? "qrc:/images/android/project_done_icon.png"
@@ -91,11 +91,19 @@ ScreenTemplate {
         anchors.fill: parent
         visible: !projectScreen.quizStarted
 
+        // Parametrizable vertical gap between the article Flickable and the
+        // buttons row below it.
+        property real buttonsTopGap: 0
+
         Flickable {
             id: articleFlick
-            width: parent.width * 0.9
-            height: parent.height * 0.9
-            anchors.centerIn: parent
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+                bottom: buttonsRow.top
+                bottomMargin: contentPanel.buttonsTopGap
+            }
             clip: true
             contentWidth: width
             contentHeight: articleCol.height
@@ -138,23 +146,17 @@ ScreenTemplate {
                 }
             }
         }
-    }
 
-    QuizComponent {
-        id: quizComponent
-        anchors.fill: parent
-        visible: projectScreen.quizStarted
-        projectId: projectScreen.projectId
-        questions: project.questions
-        onFinished: onQuizFinished(allCorrect)
-        onBlocked: onQuizBlocked(remainingMs)
-    }
-
-    footer: Item {
-        anchors.fill: parent
+        // Action buttons: always visible below the scrollable article, separated
+        // by a parametrizable vertical gap (contentPanel.buttonsTopGap).
         Row {
-            anchors.centerIn: parent
-            spacing: 20
+            id: buttonsRow
+            anchors {
+                horizontalCenter: parent.horizontalCenter
+                bottom: parent.bottom
+                bottomMargin: 16
+            }
+            spacing: 15
 
             Button {
                 id: learnMoreButton
@@ -229,6 +231,16 @@ ScreenTemplate {
                 onClicked: projectScreen.actionRequested(project.actionTarget)
             }
         }
+    }
+
+    QuizComponent {
+        id: quizComponent
+        anchors.fill: parent
+        visible: projectScreen.quizStarted
+        projectId: projectScreen.projectId
+        questions: project.questions
+        onFinished: onQuizFinished(allCorrect)
+        onBlocked: onQuizBlocked(remainingMs)
     }
 
     MessageBar {
