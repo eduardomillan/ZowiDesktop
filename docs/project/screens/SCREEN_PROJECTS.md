@@ -10,15 +10,15 @@
 > `ProjectQuizViewActivity` + `assets/projects/*.json`), adapted to the desktop
 > per the decisions below.
 
-- **Status:** ✅ **Move project implemented** (v0.8.0); 9 projects remaining (design only).
+- **Status:** ✅ **Move + Zowi's feet (bio3) projects implemented** (v0.8.0); 8 projects remaining (design only).
   A generic `ProjectScreen.qml` exists, backed by the Qt-free `zowi::projects` core module,
   `ProjectsController` context, `projects.qrc` resource, and a reusable `QuizComponent.qml`.
-  The other 9 projects are **NOT IMPLEMENTED** — design proposal only.
+  The other 8 projects are **NOT IMPLEMENTED** — design proposal only.
 - **Implemented files:**
   - Core: `src/core/include/zowi/project_model.h`, `projects_store.h/.cpp`, `projects_preferences_store.h/.cpp`
   - GUI: `src/gui/controllers/ProjectsController.h/.cpp`, `src/views/components/QuizComponent.qml`, `src/views/screens/ProjectScreen.qml`
-  - Assets: `projects/index.json`, `projects/move/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects.qrc`
-- **Planned files:** data folders under `projects/<id>/` for each remaining project (choreography, form, bio1, bio3, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet. No new QML screens needed.
+  - Assets: `projects/index.json`, `projects/move/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio3/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `images/projects/bio3_thumb.png`, `projects.qrc`
+- **Planned files:** data folders under `projects/<id>/` for each remaining project (choreography, form, bio1, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet. No new QML screens needed.
 - **Project-specific i18n** lives in each project's `strings/<locale>.json` (title, url, description) and `quiz/<locale>.json` (inline text). Shared UI strings (`test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`) live once in the generic `"ProjectScreen.qml"` context of `i18n/zowi_*.json`. The 10 tile titles are translated on the Home-screen context (`move_objects`,
   `choreography`, `robot_form`, `robot_eyes`, `robot_feet`, `robot_alarm`,
   `adivinawi`, `gravity`, `hello_world`, `bitbloq_sensors`).

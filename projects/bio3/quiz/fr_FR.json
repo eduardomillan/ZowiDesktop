@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Pour se déplacer sur un sol plat, la manière la plus rapide est d'utiliser :",
+      "answers": [
+        {
+          "text": "Des roues.",
+          "correct": true
+        },
+        {
+          "text": "Des chenilles.",
+          "correct": false
+        },
+        {
+          "text": "Des pattes.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "De quoi sont équipées les pattes de Zowi ?",
+      "answers": [
+        {
+          "text": "De servos à rotation continue.",
+          "correct": false
+        },
+        {
+          "text": "De servos.",
+          "correct": true
+        },
+        {
+          "text": "De moteurs de voiture.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

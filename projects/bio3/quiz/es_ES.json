@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Para ir por un terreno llano, la forma más rápida de moverse es con:",
+      "answers": [
+        {
+          "text": "Ruedas.",
+          "correct": true
+        },
+        {
+          "text": "Orugas.",
+          "correct": false
+        },
+        {
+          "text": "Patas.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "¿Qué tienen las patas de Zowi?",
+      "answers": [
+        {
+          "text": "Servos de rotación continua.",
+          "correct": false
+        },
+        {
+          "text": "Servos.",
+          "correct": true
+        },
+        {
+          "text": "Motores de coche.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

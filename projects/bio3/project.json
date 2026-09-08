@@ -1,0 +1,9 @@
+{
+  "id": "bio3",
+  "title_key": "title",
+  "description_key": "learning_description",
+  "image_key": "qrc:/images/projects/bio3_thumb.png",
+  "url_key": "url",
+  "hex_path": "",
+  "achievement_id": "jitter"
+}

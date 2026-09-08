@@ -17,5 +17,21 @@
         <file alias="move/strings/ca_ES.json">projects/move/strings/ca_ES.json</file>
         <file alias="move/strings/fr_FR.json">projects/move/strings/fr_FR.json</file>
         <file alias="move/strings/bg_BG.json">projects/move/strings/bg_BG.json</file>
+        <file alias="bio3/project.json">projects/bio3/project.json</file>
+        <file alias="bio3/page/es_ES.html">projects/bio3/page/es_ES.html</file>
+        <file alias="bio3/page/en_US.html">projects/bio3/page/en_US.html</file>
+        <file alias="bio3/page/ca_ES.html">projects/bio3/page/ca_ES.html</file>
+        <file alias="bio3/page/fr_FR.html">projects/bio3/page/fr_FR.html</file>
+        <file alias="bio3/page/bg_BG.html">projects/bio3/page/bg_BG.html</file>
+        <file alias="bio3/quiz/es_ES.json">projects/bio3/quiz/es_ES.json</file>
+        <file alias="bio3/quiz/en_US.json">projects/bio3/quiz/en_US.json</file>
+        <file alias="bio3/quiz/ca_ES.json">projects/bio3/quiz/ca_ES.json</file>
+        <file alias="bio3/quiz/fr_FR.json">projects/bio3/quiz/fr_FR.json</file>
+        <file alias="bio3/quiz/bg_BG.json">projects/bio3/quiz/bg_BG.json</file>
+        <file alias="bio3/strings/es_ES.json">projects/bio3/strings/es_ES.json</file>
+        <file alias="bio3/strings/en_US.json">projects/bio3/strings/en_US.json</file>
+        <file alias="bio3/strings/ca_ES.json">projects/bio3/strings/ca_ES.json</file>
+        <file alias="bio3/strings/fr_FR.json">projects/bio3/strings/fr_FR.json</file>
+        <file alias="bio3/strings/bg_BG.json">projects/bio3/strings/bg_BG.json</file>
     </qresource>
 </RCC>

@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Per anar per un terreny pla, la manera més ràpida de moure's és amb:",
+      "answers": [
+        {
+          "text": "Rodes.",
+          "correct": true
+        },
+        {
+          "text": "Erugues.",
+          "correct": false
+        },
+        {
+          "text": "Potes.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Què tenen les potes de Zowi?",
+      "answers": [
+        {
+          "text": "Servos de rotació contínua.",
+          "correct": false
+        },
+        {
+          "text": "Servos.",
+          "correct": true
+        },
+        {
+          "text": "Motors de cotxe.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}
