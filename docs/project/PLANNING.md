@@ -134,7 +134,7 @@ src/
 - [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
 ### M8 - Basic projects
-- [x] **Move objects** — implemented (ProjectMoveScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
+- [x] **Move objects** — implemented (generic ProjectScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
 - [ ] The shape of Zowi and biped robots
 - [ ] Zowi eyes and ultrasounds
 - [ ] The Zowi legs and servos

@@ -24,9 +24,18 @@ as desktop screens. Each project is a self-contained lesson with:
 - Title, description, image, and external link
 - An in-screen quiz (2 questions × 3 answers)
 - Persistence of completion state and quiz blockade
-- Optional firmware flashing (for Reprogram and Adivinawi projects)
+- Optional firmware flashing for Reprogram and Adivinawi — **designed, not yet
+  implemented** in the current generic `ProjectScreen` (see decision 3 in
+  SCREEN_PROJECTS.md)
 
-The first implemented project is **Move** (id: `move`, Home tile: `move_objects`).
+The first implemented projects are **Move** (id: `move`, Home tile: `move_objects`)
+and **Zowi's feet** (id: `bio3`, Home tile: `robot_feet`).
+
+> **One generic screen for all projects.** Since the canonical per-project
+> layout was introduced, there is a **single `ProjectScreen.qml`** that serves
+> every project from its `projectId` — there are **no** per-project
+> `ProjectXxxScreen.qml` files anymore (adding a project is purely data under
+> `projects/<id>/` + enabling a tile).
 
 ---
 
@@ -36,7 +45,7 @@ The first implemented project is **Move** (id: `move`, Home tile: `move_objects`
 ┌─────────────────────────────────────────────────────────────────┐
 │                        GUI (Qt/QML)                             │
 │  ┌─────────────┐  ┌─────────────────┐  ┌────────────────────┐  │
-│  │ HomeScreen  │  │ ProjectMoveScreen│  │   QuizComponent    │  │
+│  │ HomeScreen  │  │  ProjectScreen  │  │   QuizComponent    │  │
 │  │ (tile push) │──▶│ (ScreenTemplate)│──▶│ (reusable inline)  │  │
 │  └─────────────┘  └────────┬────────┘  └────────────────────┘  │
 │                           │                                     │
@@ -149,7 +158,10 @@ Projects.setQuizEnabled(bool)           // void
 - Embeds `QuizComponent` inline with `projectId` and `questions: project.questions`.
 - Handles `QuizComponent.finished` / `blocked` signals to show `MessageBar` feedback.
 - External link via `Qt.openUrlExternally(project.url)`.
-- Replaces the former per-project `ProjectMoveScreen.qml`; adding a new project does **not** require a new QML screen.
+- Is the **single generic screen for all learning projects** (it replaced the
+  former per-project `ProjectXxxScreen.qml` approach). Inherits `ScreenTemplate`
+  with `showBackButton: true`; adding a new project does **not** require a new
+  QML screen.
 
 ### QuizComponent (`src/views/components/QuizComponent.qml`)
 
@@ -250,7 +262,8 @@ No new QML screen is needed: `ProjectScreen.qml` reads all content for a given `
 
 ## Quiz component
 
-The `QuizComponent` is designed to be **inlined** in each `ProjectXXXScreen.qml`:
+The `QuizComponent` is designed to be **inlined** in the single generic
+`ProjectScreen.qml` (shared by every project):
 
 ```qml
 QuizComponent {
@@ -298,30 +311,24 @@ Projects.setQuizEnabled(false)
 
 ## i18n
 
-Each project screen uses its own context: `"Project<Id>Screen.qml"` (e.g., `"ProjectMoveScreen.qml"`).
+There is a **single generic `ProjectScreen.qml`** shared by every project, so the
+screen has **one** shared UI context — there is no per-project
+`"Project<Id>Screen.qml"` context anymore.
 
-The reusable `QuizComponent` uses `"QuizComponent.qml"`.
+Strings live in two places:
 
-Keys are stored in `i18n/zowi_<locale>.json` (for all locales implemented).
+1. **Shared UI (in `i18n/zowi_<locale>.json`)** under the `"ProjectScreen.qml"`
+   context: `test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`
+   (for all implemented locales). The reusable `QuizComponent` uses its own
+   context `"QuizComponent.qml"` with `correct`, `incorrect`, `quiz_blocked`.
+2. **Per project (in `projects/<id>/` data folders)**, not as i18n keys:
+   - `strings/<locale>.json` → `title`, `url`, `learning_description`.
+   - `quiz/<locale>.json` → the quiz questions with inline translated text.
 
-**Required keys per project:**
+**Legacy note:** the old per-project model used keys like `project_link`,
+`run_test`, `question_1`, `question_1_answer_1/2/3`, etc. These are obsolete and
+have been replaced by the data-folder layout above (see "Adding a new project").
 
-| Key | Purpose |
-|-----|---------|
-| `title` | Screen title |
-| `learning_description` | Description text |
-| `url` | External link URL |
-| `project_link` | Button label for link |
-| `run_test` | "Run Test" button |
-| `quiz_passed` | Success message |
-| `quiz_failed` | Failure message (with `%1` = countdown) |
-| `quiz_blocked` | Blocked message (with `%1` = countdown) |
-| `correct` | Answer feedback |
-| `incorrect` | Answer feedback |
-| `question_1` | Q1 text |
-| `question_1_answer_1/2/3` | Q1 answers |
-| `question_2` | Q2 text |
-| `question_2_answer_1/2/3` | Q2 answers |
 
 ---
 
@@ -379,8 +386,8 @@ Run: `ctest --test-dir build -R test_projects_store --output-on-failure`
 
 1. Launch `ZowiDesktop`
 2. Navigate to Home → Projects page (swipe right)
-3. Verify "Move objects" tile is enabled (colored, not greyed out)
-4. Click tile → `ProjectMoveScreen` opens
+3. Verify "Move objects" and "Zowi's feet" (bio3) tiles are enabled (colored, not greyed out)
+4. Click a tile → `ProjectScreen` opens (with the matching `projectId`)
 5. Verify title, description, image, link button work
 6. Click "Run Test" → answer questions
 7. All correct → success message, done icon appears

@@ -5,8 +5,8 @@
 > localized quiz, localized strings). A **single generic `ProjectScreen.qml`**
 > is pushed from the Home *Projects* page and drives any project from its
 > `projectId`. It shows a learning page + external link, offers a "Run Test"
-> quiz, and two of them flash an alternate firmware from the project's own
-> window. Design derived from **ZowiAppReborn** (`ProjectViewActivity` +
+> quiz, and two of them are planned to flash an alternate firmware from the
+> same window (design, see decision 3). Design derived from **ZowiAppReborn** (`ProjectViewActivity` +
 > `ProjectQuizViewActivity` + `assets/projects/*.json`), adapted to the desktop
 > per the decisions below.
 
@@ -46,11 +46,16 @@
    project complete; no achievement unlock is wired yet. The feature is kept
    behind an **enable/disable switch** (a `Config` flag), so the unlock hooks
    can be added later without touching the screens.
-3. **Firmware is flashed from the project's own window.** Reprogram flashes
-   `ZOWI_Alarm_v2.hex` from `ProjectReprogramScreen`, Adivinawi flashes
-   `ZOWI_Adivinawi_v2.hex` from `ProjectAdivinawiScreen`. The hex path comes
-   from the project JSON (`project_hex`), so more firmware projects can be
-   added in the future without code changes.
+3. **Firmware is flashed from the project's own window (design, not yet
+   implemented).** Reprogram flashes `ZOWI_Alarm_v2.hex`, Adivinawi flashes
+   `ZOWI_Adivinawi_v2.hex` — both from the same generic `ProjectScreen` (there
+   is no per-project screen). The hex path comes from the project JSON
+   (`project_hex`), so more firmware projects can be added in the future
+   without code changes.
+   **⚠️ Pending:** the current `ProjectScreen.qml` / `ProjectsController` do
+   **not** yet expose any firmware-install UI or API; this section remains the
+   target design. Until it lands, the HEX files are flashable via the CLI
+   (`zowi_cli alarm` / `zowi_cli adivinawi`) and via Settings' restore flow.
 4. **Project data lives in `projects.qrc`.** A new domain resource at repo
    root, alongside `views.qrc` / `app.qrc` / `images.qrc` / `i18n.qrc`, and
    appended to `GUI_QRC_FILES` in `src/gui/CMakeLists.txt`. Each project is a
@@ -83,9 +88,9 @@ The metadata `project.json` mirrors the Android `com.bq.zowi.models.Project`:
   a localized `strings/<locale>.json` entry is missing.
 - `image_key` — detail image resource (desktop ships the original Android
   button artwork under `qrc:/images/android/*.png` / `qrc:/images/projects/*`).
-- `hex_path` — optional firmware to flash from the project's own window;
-  currently only Reprogram (Alarm) and Adivinawi carry a non-empty value, more
-  can be added later.
+- `hex_path` — optional firmware to flash from the project window (design,
+  see decision 3); currently only Reprogram (Alarm) and Adivinawi carry a
+  non-empty value, more can be added later.
 - `achievement_id` — achievement associated with the project. **Reserved for
   the deferred ACHIEVEMENTS layer** (see decision 2): parsed and stored, but
   not acted upon until the toggle is enabled.
@@ -96,22 +101,38 @@ questions with inline translated text, and `strings/<locale>.json` holds
 
 ### The 10 projects → data
 
-| # | Android id | Desktop i18n key | Data folder | Firmware |
-|---|---|---|---|---|
-| 01 | `move` | `move_objects` | `projects/move/` | — |
-| 02 | `choreography` | `choreography` | `projects/choreography/` | — |
-| 03 | `form` | `robot_form` | `projects/form/` | — |
-| 04 | `bio1` | `robot_eyes` | `projects/bio1/` | — |
-| 05 | `bio3` | `robot_feet` | `projects/bio3/` | — |
-| 06 | `reprogram` | `robot_alarm` | `projects/reprogram/` | `ZOWI_Alarm_v2.hex` |
-| 07 | `helloworld` | `hello_world` | `projects/helloworld/` | — |
-| 08 | `bitbloq2` | `bitbloq_sensors` | `projects/bitbloq2/` | — |
-| 09 | `adivinawi` | `adivinawi` | `projects/adivinawi/` | `ZOWI_Adivinawi_v2.hex` |
-| 10 | `gravity` | `gravity` | `projects/gravity/` | — |
+| # | Android id | Desktop i18n key | Data folder | Tile image | Detail image (`image_key`) | Achievement | Firmware |
+|---|---|---|--------------|------------|---------------------------|-------------|----------|
+| 01 | `move` | `move_objects` | `projects/move/` | `move_button.png` | `move_thumb.png` | `flapping` | — |
+| 02 | `choreography` | `choreography` | `projects/choreography/` | `choreography_button.png` | — | `swing` | — |
+| 03 | `form` | `robot_form` | `projects/form/` | `robot_form_button.png` | — | `confused` | — |
+| 04 | `bio1` | `robot_eyes` | `projects/bio1/` | `eyes_button.png` | — | `wave` | — |
+| 05 | `bio3` | `robot_feet` | `projects/bio3/` | `feet_button.png` | `bio3_thumb.png` | `jitter` | — |
+| 06 | `reprogram` | `robot_alarm` | `projects/reprogram/` | `alarm_button.png` | — | `angry` | `ZOWI_Alarm_v2.hex` |
+| 07 | `helloworld` | `hello_world` | `projects/helloworld/` | `bitbloq_button.png` | — | `super_happy` | — |
+| 08 | `bitbloq2` | `bitbloq_sensors` | `projects/bitbloq2/` | `bitbloq2_button.png` | — | `tip_toe` | — |
+| 09 | `adivinawi` | `adivinawi` | `projects/adivinawi/` | `adivinawi_button.png` | — | `magic` | `ZOWI_Adivinawi_v2.hex` |
+| 10 | `gravity` | `gravity` | `projects/gravity/` | `gravity_button.png` | — | `sleepy` | — |
 
-Both firmware HEX files are already bundled and flashable on desktop
-(`src/firmware/`, STK500v1 over BT/USB; the CLI exposes `zowi_cli alarm` /
-`zowi_cli adivinawi` and the GUI has `Robot.restoreFirmware(path)`).
+Tile images live under `qrc:/images/android/`. Detail images live under
+`qrc:/images/projects/` and are only assigned once a project's data folder
+exists (the `image_key` is set in its `project.json` — currently only `move`
+and `bio3` are implemented, the rest are "—" until they land). The Android
+counterpart artwork (`qrc:/images/android/project_*.png`) is already bundled
+and can be reused. Achievements are **reserved for the deferred ACHIEVEMENTS
+layer** (see decision 2).
+
+**About `url`:** each project's `strings/<locale>.json` stores the link as a
+**relative** path (e.g. `move/es/`, `bio3/es/`) that `ProjectsController` joins
+with the single global `base_url` in `projects/index.json`. A project that needs
+an external destination can **override** it by putting a full absolute `https://…`
+URL there instead — it passes through untouched. (The old `zowi.bq.com` URLs are
+omitted here; they are dead and will be replaced by the real docs URL.)
+
+**Firmware (design, not yet implemented in `ProjectScreen`):** both HEX files are
+already bundled and flashable on desktop (`src/firmware/`, STK500v1 over BT/USB;
+the CLI exposes `zowi_cli alarm` / `zowi_cli adivinawi`). Wiring an in-screen
+"Install" button into the generic `ProjectScreen` is pending — see decision 3.
 
 ## Navigation
 
@@ -123,8 +144,9 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
 
 - **Push:** Home *Projects* tiles emit a single `projectRequested(projectId)`
   signal; `main.qml` pushes `ProjectScreen.qml` with that id.
-- **Pop:** the `ScreenTemplate` back button pops the stack to Home; the firmware
-  install/failure dialogs also return to the project window (not Home).
+- **Pop:** the `ScreenTemplate` back button pops the stack to Home. (A future
+  firmware install/failure dialog would also return to the project window —
+  see decision 3.)
 - Achievements toasts are **not** part of this cycle yet (deferred layer).
 
 ## ProjectScreen.qml — contents
@@ -135,17 +157,17 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
 - **Done icon** — `project_done_icon` / `project_not_done_icon` driven by
   `<id>_project_completeness`.
 - **Project link** — opens `project_url` in the system browser.
-- **Install firmware** — **only in projects with `project_hex != ""`**
-  (Reprogram → Alarm, Adivinawi → Adivinawi; future firmware projects reuse
-  it). Conn-gated, 50 % battery check → `Robot.restoreFirmware(hex)` with the
-  existing progress/low-battery dialogs (mirrors the Settings restore flow).
-  Triggered and resolved from the project's own window.
+- **Install firmware** — **design, not yet implemented** (see decision 3).
+  Intended only in projects with `project_hex != ""` (Reprogram → Alarm,
+  Adivinawi → Adivinawi); conn-gated, 50 % battery check →
+  `Robot.restoreFirmware(hex)`. The current generic `ProjectScreen` does not
+  yet expose it.
 - **Run Test** — the project quiz, presented in the same screen via the reusable
   `QuizComponent` (question / progress / result); disabled and showing `mm:ss`
   countdown while a quiz blockade is pending (`<id>_project_quiz_blockade`).
   **Note:** The blockade is *documented and configurable* via `ProjectsPreferencesStore`
-  (`blockade_duration_ms`, default 10 min), but the countdown UI is not yet wired
-  for the Move project (see [PROJECTS_HOWTO.md](../PROJECTS_HOWTO.md)).
+  (`blockade_duration_ms`, default 10 min), but the `mm:ss` countdown UI is not
+  yet displayed in `ProjectScreen` (see [PROJECTS_HOWTO.md](../PROJECTS_HOWTO.md)).
 - **Result handling** — all correct → `<id>_project_completeness = true` + done
   icon; wrong answer → blockade + failure feedback.
   No achievement dialog until the toggle in decision 2 is enabled.
@@ -156,31 +178,35 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
 |--------|-----------|-------------|
 | `projectRequested(projectId)` | Home *Projects* tiles | `main.qml`: push→ `ProjectScreen.qml` |
 | `linkClicked(url)` | project link | external browser |
-| `installFirmwareClicked(hex)` | Install button (only if `project_hex != ""`) | `Robot.restoreFirmware(hex)` |
+| `installFirmwareClicked(hex)` | Install button (design only, not yet implemented) | `Robot.restoreFirmware(hex)` |
 | `backClicked()` | ScreenTemplate back button | pop |
 | `quizFinished(bool)` / `quizBlocked(int)` | `QuizComponent` (in-screen) | mark completeness / blockade |
 
 ## QML context used
 
-- `Robot`: `connected`, `appId`, battery gating (`battery >= 50`), firmware
-  signals `onFirmwareRestoreStarted/Progress/Finished/BatteryLow`,
-  `restoreFirmware(path)`.
-- `Config.get(...)`: theme colors; `project_*` asset paths; the
-  **achievements enabled/disabled flag** (decision 2).
-- `Session`: `loadActiveZowiName()` (firmware dialogs reference the name).
 - `Projects` (context object, backed by a Qt-free `projects` core module):
-  `getProject(id)`, `isCompleted(id)`, `isQuizBlocked(id)`, `blockQuiz(id)`,
-  `setCompleted(id)`, `getBlockadeDurationMs()`, `setBlockadeDurationMs(ms)`,
+  `getProject(id)`, `loadHtml(id, locale)`, `isCompleted(id)`, `setCompleted(id)`,
+  `isQuizBlocked(id)`, `blockQuiz(id)`, `getBlockadeRemainingMs(id)`,
+  `getBlockadeDurationMs()`, `setBlockadeDurationMs(ms)`,
   `isAchievementsEnabled()`, `setAchievementsEnabled(bool)`,
   `isQuizEnabled()`, `setQuizEnabled(bool)` — implemented in `ProjectsController`.
   The `achievement` field is returned but currently ignored.
-- `Translator` (via `tr()`).
+- `Translator` (via `tr()`), for the screen title and shared UI strings.
+- `Config.get(...)` — theme colors (e.g. `color_primary`, `color_warning`,
+  `color_accent`).
+
+**Not used today (deferred firmware design, see decision 3):** `Robot`
+(`connected`, `appId`, battery gating, `restoreFirmware(path)`, firmware
+signals) and `Session` (`loadActiveZowiName()`). They would only come into play
+once the in-screen "Install firmware" flow is implemented.
 
 ## Commands sent
 
-- None as raw strings. Firmware flashing goes through the existing STK500v1
-  backend (`Robot.restoreFirmware`), identical to Settings' restore flow.
-- The quiz is local logic; the robot is not involved.
+- None as raw strings; the robot is not involved in the current
+  `ProjectScreen` (the quiz is local logic).
+- In the deferred firmware design, flashing would go through the existing
+  STK500v1 backend (`Robot.restoreFirmware`), identical to Settings' restore
+  flow (see decision 3).
 
 ## projects.qrc
 
@@ -231,14 +257,14 @@ stored in a separate `projects_preferences.json` file via `ProjectsPreferencesSt
 - **Shared UI (in `i18n/zowi_*.json`)**: one `"ProjectScreen.qml"` context with
   `test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`. The
   reusable `QuizComponent` uses its own context `"QuizComponent.qml"` with keys:
-  `run_test`, `correct`, `incorrect`, `quiz_blocked`.
+  `correct`, `incorrect`, `quiz_blocked` (the legacy `run_test` key is unused).
 - The tile titles live under the Home context (`move_objects`,
   `choreography`, …) — unchanged.
 
 ## Open questions (for review)
 
 - Run Test as an in-screen mode vs a shared pop-up quiz component — **decided:
-  reusable `QuizComponent` used inline in each project screen**.
+  reusable `QuizComponent` used inline in the single generic `ProjectScreen`**.
 - ACHIEVEMENTS toggle: currently implemented in `ProjectsPreferencesStore`
   (`isAchievementsEnabled`/`setAchievementsEnabled`), exposed via `Projects`
   context. Not yet wired to UI or CLI.

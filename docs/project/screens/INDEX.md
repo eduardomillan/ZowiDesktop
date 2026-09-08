@@ -23,6 +23,7 @@
 | Pad (gamepad) | `src/views/screens/PadScreen.qml` | [SCREEN_PAD.md](SCREEN_PAD.md) |
 | Mouth picker | `src/views/screens/MouthScreen.qml` | [SCREEN_MOUTH.md](SCREEN_MOUTH.md) |
 | Gesture picker | `src/views/screens/GestureScreen.qml` | [SCREEN_GESTURE.md](SCREEN_GESTURE.md) |
+| Project (generic, all Discover lessons) | `src/views/screens/ProjectScreen.qml` | [SCREEN_PROJECTS.md](SCREEN_PROJECTS.md) |
 | Base template (not a screen) | `src/views/screens/ScreenTemplate.qml` | [SCREEN_TEMPLATE.md](SCREEN_TEMPLATE.md) |
 
 ## Navigation map
@@ -35,10 +36,10 @@ SplashScreen ──(hasDismissedWizard || hasDevice)──▶ HomeScreen
      │                                                    │
      └──(else)──▶ WelcomeScreen                           ├─▶ SettingsScreen ──▶ CalibrationScreen
                       │                                   ├─▶ MouthEditorScreen
-                      └─▶ WizardScreen                    └─▶ PadScreen ──▶ MouthScreen
+                      └─▶ WizardScreen                    ├─▶ PadScreen ──▶ MouthScreen
                               │                                              └─▶ GestureScreen
-                              ├─(USB-only)──▶ WizardFoundScreen(usb)
-                              └─(BT)──▶ ScanScreen ──▶ WizardFoundScreen ──▶ (rename if default name)
+                              ├─(USB-only)──▶ WizardFoundScreen(usb)          └─▶ ProjectScreen (any Discover
+                              └─(BT)──▶ ScanScreen ──▶ WizardFoundScreen ──▶ (rename if default name)      project, from Projects page)
                                         └─▶ WizardRenameScreen
 ```
 
@@ -52,6 +53,7 @@ SplashScreen ──(hasDismissedWizard || hasDevice)──▶ HomeScreen
 | WizardFound | `paired` | `finishRegistration()` → Home (replace) |
 | Home | `gamepadClicked` | Pad |
 | Pad | `mouthScreenRequested` / `gestureScreenRequested` | Mouth / Gesture |
+| Home | `projectRequested(projectId)` | Project (any Discover lesson) |
 | Home | `mouthEditorClicked` | MouthEditor |
 | Home | `settingsClicked` | Settings |
 | Settings | `calibrationRequested` | Calibration |
