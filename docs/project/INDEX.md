@@ -15,7 +15,7 @@ in English.
 - New to the project? Read [ARCHITECTURE.md](ARCHITECTURE.md) first, then [PLANNING.md](PLANNING.md).
 - Working on the CLI? See [ZOWI_CLI_HOWTO.md](ZOWI_CLI_HOWTO.md) and [ZOWI_CLI_SHELL.md](ZOWI_CLI_SHELL.md).
 - Building or packaging? See [BUILD.md](BUILD.md) and [RELEASE.md](RELEASE.md).
-- Working with the Zowi robot's firmware? See [FIRMWARE_HOWTO.md](FIRMWARE_HOWTO.md) and [ZOWILIBS.md](ZOWILIBS.md).
+- Working with the Zowi robot's firmware? See [FIRMWARE_HOWTO.md](FIRMWARE_HOWTO.md), [ZOWILIBS.md](ZOWILIBS.md) and [../firmware/](../firmware/) ([PROTOCOL.md](../firmware/PROTOCOL.md), [FW_DESKTOP.md](../firmware/FW_DESKTOP.md) — the planned project firmware `ZOWI_DESKTOP_FW`).
 
 ## Files
 

@@ -13,9 +13,9 @@
   - [M4 — USB support ✅](#m4--usb-support-)
   - [M5 — Firmware restore GUI + transport selection ✅](#m5--firmware-restore-gui--transport-selection-)
   - [M6 — Transport intelligence + gamepad ✅](#m6--transport-intelligence--gamepad-)
-  - [M7 - Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
-  - [M8 - Basic projects](#m8--basic-projects)
-  - [M9 - Advanced projects](#m9--advanced-projects)
+  - [M7 — Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
+  - [M8 — Basic projects 🚧](#m8--basic-projects-)
+  - [M9 — Advanced projects 🕒](#m9--advanced-projects-)
   - [Future milestones](#future-milestones)
 - [Testing](#testing)
 - [Technical notes](#technical-notes)
@@ -128,20 +128,18 @@ src/
 - [x] Compile the bt library for Windows
 - [x] Test the Windows version and fix bugs
 
-### M7 - Calibration and mouth/gestures in gamepad + editor ✅
+### M7 — Calibration and mouth/gestures in gamepad + editor ✅
 - [x] Zowi calibration (servo trims)
 - [x] Gamepad mouth control
 - [x] Gamepad gestures control
 - [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
 ### M8 — Basic projects 🚧
-- [x] **Move objects** — implemented (generic ProjectScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
-- [ ] The shape of Zowi and biped robots
+- [x] **Move objects (`move`)** — implemented (generic ProjectScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
 - [x] **The shape of a robot (`form`)** — implemented (data folder with page/quiz/strings in 5 locales, tile enabled)
 - [ ] Zowi eyes and ultrasounds
 - [x] **The Zowi legs and servos (Zowi's feet, `bio3`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
 - [ ] The gravity and calibration
-- [ ] **Projects CLI commands** — `project list/show/reset/prefs` (uses core ProjectsStore/ProjectsPreferencesStore, no Qt)
 
 ### M9 — Advanced projects 🕒
 - [ ] Robot dancing and choreography (sequence programming in home screen)
@@ -151,10 +149,17 @@ src/
 - [ ] Bitbloq II: Sensors
 
 ### Future milestones
+- [ ] **Projects CLI commands** — `project list/show/reset/prefs` (uses core ProjectsStore/ProjectsPreferencesStore, no Qt)
 - [ ] Game: Visual block editor
 - [ ] Game: Memory
 - [ ] Game: Draw the mouth
 - [ ] Achievements layer
+
+### Application new features
+
+- [ ] Implement the new firmware ZOWI_DESKTOP_FW
+- [ ] Add new feature in mouth editor, showing the current mouth
+- [ ] Implement button reading in the core
 - [ ] Testing, validating and improving
 - [ ] Adapt the software to other robots (Otto with Arduino or ESP32)
 

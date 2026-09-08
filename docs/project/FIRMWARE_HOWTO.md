@@ -11,6 +11,7 @@
 - [Working Over USB (Machines Without Bluetooth)](#working-over-usb-machines-without-bluetooth)
   - [What is needed for full USB support](#what-is-needed-for-full-usb-support)
   - [USB Summary](#usb-summary)
+- [Project Firmware: ZOWI_DESKTOP_FW (planned)](#project-firmware-zowi_desktop_fw-planned)
 
 ## Overview
 
@@ -23,8 +24,11 @@ flashes firmware to the robot by implementing the bootloader protocol itself.
 Firmware images are shipped as **Intel HEX** files, bundled under
 `src/firmware/`:
 
-- `ZOWI_BASE_v2.hex`
-- `ZOWI_Alarm_v2.hex`
+- `ZOWI_BASE_v2.hex` — factory firmware (from zowiLibs)
+- `ZOWI_Alarm_v2.hex` — Robot Alarm game firmware (from zowiLibs)
+- `ZOWI_Adivinawi_v2.hex` — Adivinawi game firmware (from zowiLibs)
+- `ZOWI_DESKTOP_FW.hex` — *planned*: the project's own firmware, built in
+  this repo (see [ZOWI_DESKTOP_FW](#project-firmware-zowi_desktop_fw-planned))
 
 ## Upload Protocol
 
@@ -116,3 +120,45 @@ architecture already supports it. The work is mainly (1) making the baud rate
 configurable, (2) adding serial-port enumeration, and (3) exposing the option in
 the GUI. From the command line, connecting over USB with `--tty /dev/ttyUSB0` is
 almost immediate.
+
+## Project Firmware: ZOWI_DESKTOP_FW (planned)
+
+> **Status: PLANNED — not implemented yet.** The full design and
+> implementation plan lives in
+> **[docs/firmware/FW_DESKTOP.md](../firmware/FW_DESKTOP.md)** — this section
+> is only a summary so the firmware docs stay navigable from here.
+
+ZowiDesktop will ship its **own firmware**, `ZOWI_DESKTOP_FW`, derived from
+BQ's `ZOWI_BASE_v2.ino` (sibling repo `zowiLibs`). It is fully
+backward-compatible with the stock protocol and adds two read-only commands
+that answer the long-standing gap of the **write-only LED matrix**:
+
+| Command | Reply | Purpose |
+|---|---|---|
+| `W\r` | `&&W <30 binary digits>%%` | Read the mouth pattern currently shown (MSB first, symmetric with `L` — exact round-trip) |
+| `V <row> <col>\r` | `&&V <0\|1>%%` | Read a single LED of the 5×6 matrix (1-based coordinates) |
+
+Neither handler has side effects (no `zowi.home()`): reading the mouth must
+not stop the robot.
+
+Key points of the plan (details in FW_DESKTOP.md):
+
+- **Sketch in this repo:** `src/firmware/ZOWI_DESKTOP_FW/ZOWI_DESKTOP_FW.ino`
+  (copy of the base sketch + `programID` change + the two handlers). The
+  Arduino **libraries are not copied**: they are imported at build time from
+  zowiLibs via `arduino-cli compile --libraries "$ZOWILIBS_PATH/arduinolibs"`
+  (`scripts/build_firmware.sh`).
+- **zowiLibs patch:** the libraries need three additive changes (command
+  table `MAXSERIALCOMMANDS` 14→20, the missing `LedMatrix::readLed`
+  implementation, and public `Zowi::getMouth()`/`readMouthLed()` accessors).
+  They ship as a patch file committed here
+  (`src/firmware/patches/zowiLibs_read_mouth.patch`) that the maintainer
+  applies in zowiLibs.
+- **Hex bundled and flashed like the rest:** the compiled
+  `ZOWI_DESKTOP_FW.hex` is committed under `src/firmware/` and uploaded with
+  the same STK500v1/raw-HEX machinery described in this document (GUI
+  Settings option, `zowi_cli desktop`).
+- **Host side:** the app detects the firmware via the existing identity
+  report (`I` → `&&I ZOWI_DESKTOP_FW%%`) and gates the new features on it —
+  e.g. the mouth editor (pintabocas) preloads the grid with the mouth the
+  robot is showing at that moment.
