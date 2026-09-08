@@ -113,6 +113,8 @@ ScreenTemplate {
                 Image {
                     id: projectThumb
                     source: project && project.image ? project.image : ""
+                    width: parent.width
+                    height: 220
                     anchors.horizontalCenter: parent.horizontalCenter
                     fillMode: Image.PreserveAspectFit
                 }
