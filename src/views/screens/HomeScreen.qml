@@ -18,6 +18,7 @@ FocusScope {
     property string screenName: "HomeScreen"
     property real cellSpacing: 60
     property real iconSize: Math.min(home.width * 0.55, 90)
+    property real headerFontSize: 22
 
     function tr(source) { return Translator.translate("HomeScreen.qml", source) }
 
@@ -128,7 +129,7 @@ FocusScope {
             Text {
                 text: tr("zowi_apps")
                 color: swipeView.currentIndex === 0 ? Config.get("color_accent") || "#21a69b" : Config.get("color_primary") || "#2d5a2d"
-                font.pixelSize: 18
+                font.pixelSize: headerFontSize
                 font.bold: swipeView.currentIndex === 0
                 opacity: swipeView.currentIndex === 0 ? 1.0 : 0.5
 
@@ -142,14 +143,14 @@ FocusScope {
             Text {
                 text: "|"
                 color: Config.get("color_primary") || "#2d5a2d"
-                font.pixelSize: 18
+                font.pixelSize: headerFontSize
                 opacity: 0.3
             }
 
             Text {
                 text: tr("projects")
                 color: swipeView.currentIndex === 1 ? Config.get("color_accent") || "#21a69b" : Config.get("color_primary") || "#2d5a2d"
-                font.pixelSize: 18
+                font.pixelSize: headerFontSize
                 font.bold: swipeView.currentIndex === 1
                 opacity: swipeView.currentIndex === 1 ? 1.0 : 0.5
 
