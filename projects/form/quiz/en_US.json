@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Zowi's head has that size and shape...",
+      "answers": [
+        {
+          "text": "...to keep its balance.",
+          "correct": false
+        },
+        {
+          "text": "...so the circuits and motors fit inside.",
+          "correct": true
+        },
+        {
+          "text": "...so the stickers look good on it.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Zowi's stickers...",
+      "answers": [
+        {
+          "text": "Change how the robot works.",
+          "correct": false
+        },
+        {
+          "text": "Are permanent.",
+          "correct": false
+        },
+        {
+          "text": "Only serve to change its look.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "El cap de Zowi té aquesta mida i forma...",
+      "answers": [
+        {
+          "text": "...perquè es mantingui en equilibri.",
+          "correct": false
+        },
+        {
+          "text": "...perquè hi càpiguen els circuits i motors.",
+          "correct": true
+        },
+        {
+          "text": "...perquè li quedin bé les adhesius.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Les adhesius de Zowi...",
+      "answers": [
+        {
+          "text": "Canvien el funcionament del robot.",
+          "correct": false
+        },
+        {
+          "text": "Són permanents.",
+          "correct": false
+        },
+        {
+          "text": "Només serveixen per canviar el seu aspecte.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

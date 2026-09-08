@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "La cabeza de Zowi tiene ese tamaño y forma...",
+      "answers": [
+        {
+          "text": "...para que se mantenga en equilibrio.",
+          "correct": false
+        },
+        {
+          "text": "...para que encajen los circuitos y motores.",
+          "correct": true
+        },
+        {
+          "text": "...para que le queden bien las pegatinas.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Las pegatinas de Zowi...",
+      "answers": [
+        {
+          "text": "Cambian el funcionamiento del robot.",
+          "correct": false
+        },
+        {
+          "text": "Son permanentes.",
+          "correct": false
+        },
+        {
+          "text": "Solo sirven para cambiar su aspecto.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

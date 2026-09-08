@@ -137,6 +137,7 @@ src/
 ### M8 — Basic projects 🚧
 - [x] **Move objects** — implemented (generic ProjectScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
 - [ ] The shape of Zowi and biped robots
+- [x] **The shape of a robot (`form`)** — implemented (data folder with page/quiz/strings in 5 locales, tile enabled)
 - [ ] Zowi eyes and ultrasounds
 - [x] **The Zowi legs and servos (Zowi's feet, `bio3`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
 - [ ] The gravity and calibration

@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "La tête de Zowi a cette taille et cette forme...",
+      "answers": [
+        {
+          "text": "...pour garder son équilibre.",
+          "correct": false
+        },
+        {
+          "text": "...pour que les circuits et les moteurs puissent y tenir.",
+          "correct": true
+        },
+        {
+          "text": "...pour que les autocollants soient bien placés.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Les autocollants de Zowi...",
+      "answers": [
+        {
+          "text": "Changent le fonctionnement du robot.",
+          "correct": false
+        },
+        {
+          "text": "Sont permanents.",
+          "correct": false
+        },
+        {
+          "text": "Servent seulement à changer son apparence.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

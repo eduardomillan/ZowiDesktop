@@ -2,6 +2,7 @@
   "base_url": "https://eduardomillan.github.io/ZowiDesktop/docs/projects/",
   "projects": [
     "move",
-    "bio3"
+    "bio3",
+    "form"
   ]
 }
