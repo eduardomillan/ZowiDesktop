@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-09-08
+
+### Added
+- **Canonical per-project data layout:** each project now lives in its own
+  self-contained folder (`projects/<id>/` with `project.json`, localized
+  `page/`, `quiz/` and `strings/` files), discovered via a manifest
+  `projects/index.json` that also carries a global `base_url`. Project URLs are
+  stored relative and resolved at load time by `ProjectsController`.
+- **Generic `ProjectScreen.qml`:** a single `ScreenTemplate`-based project
+  screen parametrized by `projectId`, replacing the one-off
+  `ProjectMoveScreen.qml`; `HomeScreen` now emits a generic
+  `projectRequested(projectId)`.
+- **Localized project quiz/strings:** quiz questions and project strings are
+  loaded per locale with an `en_US` fallback; the project model no longer
+  embeds questions (inline translated text instead of keys).
+- **`test_projects_store`:** core tests for the manifest-based project loader.
+
+### Changed
+- `HomeScreen` header font size and the Apps/Projects container widths are now
+  exposed as editable properties (`headerFontSize`, `appsWidthPercent`,
+  `appsHeightPercent`, `projectsWidthPercent`, `projectsHeightPercent`).
+- Mouth grid display names renamed `Diagonal` → `DiagLeft` and
+  `DiagonalRev` → `DiagRight`.
+
+### Fixed
+- Corrected the reversed-diagonal mouth pattern (`DiagRight`) to a clean mirror
+  of the canonical diagonal (bits 24/19/14/9/4, R1C6→R5C1) instead of the
+  kinked previous one.
+
 ## [0.7.1] - 2026-09-06
 
 ### Added

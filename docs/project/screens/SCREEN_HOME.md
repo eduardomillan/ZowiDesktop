@@ -44,3 +44,25 @@
   grayed out.
 - DEV navigation row (Splash / Welcome) visible only with
   `Config.devMode && Config.devOverlayVisible`.
+
+## Editable layout properties
+
+Tuning knobs exposed on the screen root (adjust proportions at build/design
+time without touching structure):
+
+| Property | Default | Purpose |
+|----------|---------|---------|
+| `headerFontSize` | `22` | Pixel size of the "Zowi Apps \| Projects" header text |
+| `appsWidthPercent` | `0.9` | Width of the Apps page container as a fraction of the window |
+| `appsHeightPercent` | `1.0` | Height of the Apps page container as a fraction of the window |
+| `projectsWidthPercent` | `0.9` | Width of the Projects page container as a fraction of the window |
+| `projectsHeightPercent` | `1.0` | Height of the Projects page container as a fraction of the window |
+
+## Project grid ordering
+
+The order in which project tiles appear is the positional order of the
+hard-coded array `projectsData` inside `HomeScreen.qml` —
+left-to-right, then top-to-bottom via the `Flow` layout. There is no dynamic
+sorting; reorder the entries in that array to change the on-screen order. Each
+entry carries `id`, translated `name`, `icon` and an `enabled` flag (the ids
+should match `projects/index.json`).

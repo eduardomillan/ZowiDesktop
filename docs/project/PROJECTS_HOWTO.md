@@ -31,11 +31,6 @@ as desktop screens. Each project is a self-contained lesson with:
 The first implemented projects are **Move** (id: `move`, Home tile: `move_objects`)
 and **Zowi's feet** (id: `bio3`, Home tile: `robot_feet`).
 
-> **One generic screen for all projects.** Since the canonical per-project
-> layout was introduced, there is a **single `ProjectScreen.qml`** that serves
-> every project from its `projectId` — there are **no** per-project
-> `ProjectXxxScreen.qml` files anymore (adding a project is purely data under
-> `projects/<id>/` + enabling a tile).
 
 ---
 

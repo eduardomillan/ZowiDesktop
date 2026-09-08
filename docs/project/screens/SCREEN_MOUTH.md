@@ -27,9 +27,13 @@
 
 20 entries (`MouthId` enum, protocol 0-based): Smile, HappyOpen, Heart,
 BigSurprise, SmallSurprise, TongueOut, Vamp1, Vamp2, LineMouth, Confused,
-Diagonal, Sad, SadOpen, SadClosed, Ok, X, Interrogation, Thunder, Culito,
-Angry. (Indices 0-9 — the "zero".."nine" digits — have no icon asset and are
-not shown.)
+DiagLeft, DiagRight, Sad, SadOpen, SadClosed, Ok, X, Interrogation, Thunder,
+Culito, Angry. (Indices 0-9 — the "zero".."nine" digits — have no icon asset
+and are not shown.)
+
+`DiagLeft` maps to `Commands.MouthDiagonal` (the firmware "diagonal" pattern);
+`DiagRight` has no firmware mouth id and is sent as a raw mirrored pattern
+(`reverseDiagonalMatrix`, bits 24/19/14/9/4 → R1C6→R5C1).
 
 ## Implementation notes
 
