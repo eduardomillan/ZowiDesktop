@@ -134,12 +134,13 @@ src/
 - [x] Gamepad gestures control
 - [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
-### M8 — Basic projects 🚧
-- [x] **Move objects (`move`)** — implemented (generic ProjectScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
-- [x] **The shape of a robot (`form`)** — implemented (data folder with page/quiz/strings in 5 locales, tile enabled)
-- [x] **Zowi eyes and ultrasounds (Zowi's eyes, `bio1`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
-- [x] **The Zowi legs and servos (Zowi's feet, `bio3`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
-- [ ] The gravity and calibration
+### M8 — Basic projects ✅
+- [x] Move objects
+- [x] The shape of a robot 
+- [x] Zowi eyes and ultrasounds
+- [x] The Zowi legs and servos
+- [x] The gravity and calibration
+- [ ] Add all the available mouth and gestures to Gamepad
 
 ### M9 — Advanced projects 🕒
 - [ ] Robot dancing and choreography (sequence programming in home screen)

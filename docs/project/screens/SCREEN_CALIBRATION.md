@@ -7,7 +7,11 @@
 
 - **File:** `src/views/screens/CalibrationScreen.qml`
 - **i18n context:** `"CalibrationScreen.qml"`
-- Pushed by `SettingsScreen.calibrationRequested`.
+- Pushed by `SettingsScreen.calibrationRequested` (and, since v0.7.4, by the
+  Gravity project's action button — `action_target: "calibration"` in
+  `projects/gravity/project.json`). Shows the Gravity project detail image
+  (`qrc:/images/projects/gravity_thumb.png`) below the title when opened from a
+  project, with its width parametrizable via `projectImageWidth`.
 
 ## Signals
 
