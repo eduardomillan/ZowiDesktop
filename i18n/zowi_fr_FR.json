@@ -226,7 +226,7 @@
     "quiz_blocked": "Questionnaire bloqué. Réessayez dans %1."
   },
   "ProjectScreen.qml": {
-    "test": "Questionnaire",
+    "test": "Questions",
     "learn_more": "En savoir plus",
     "quiz_passed": "Félicitations ! Vous avez terminé le projet.",
     "quiz_failed": "Mauvaise réponse. Réessayez dans %1.",

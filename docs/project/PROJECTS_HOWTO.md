@@ -212,9 +212,18 @@ joins them at load time (absolute URLs — containing `://` — pass through unc
   "image_key": "qrc:/images/projects/choreography_thumb.png",
   "url_key": "url",
   "hex_path": "",
-  "achievement_id": "choreography_achievement"
+  "achievement_id": "choreography_achievement",
+  "action_target": ""
 }
 ```
+
+`action_target` is **optional** (empty/absent = no action button): it configures
+the third footer button of `ProjectScreen`, which navigates to a place inside
+the app (e.g. `"gamepad"` in the `move` project). The target string is mapped
+to a concrete screen in `main.qml` (`actionRequested(target)`: pop back to
+Home, then push the destination); unknown targets are logged and ignored. The
+button label is the per-locale `action_label` in `strings/<locale>.json`
+(fallback: the raw target string).
 
 2. **Add page HTML** in `projects/<id>/page/<locale>.html` for each supported locale (fallback to `en_US.html` when a locale is missing).
 
@@ -240,10 +249,11 @@ joins them at load time (absolute URLs — containing `://` — pass through unc
    when a locale file is missing):
 
 ```json
-{ "title": "Choreography", "url": "choreography/es/", "learning_description": "..." }
+{ "title": "Choreography", "url": "choreography/es/", "learning_description": "...", "action_label": "..." }
 ```
 If a project needs an external/absolute destination, put a full `https://…` URL
-instead — it is left untouched.
+instead — it is left untouched. `action_label` is optional and only needed when
+`project.json` sets an `action_target` (localized label of the third button).
 
 5. **Register in `projects.qrc`**: add `index.json`, the project's `project.json`, every `page/*.html`, `quiz/*.json` and `strings/*.json`.
 
@@ -253,7 +263,7 @@ instead — it is left untouched.
 
 8. **Rebuild**: `./build.sh` or `cmake --build build`
 
-No new QML screen is needed: `ProjectScreen.qml` reads all content for a given `projectId`. Shared UI strings (`test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`) live once in the generic `ProjectScreen.qml` context of `i18n/zowi_*.json`, not per project.
+No new QML screen is needed: `ProjectScreen.qml` reads all content for a given `projectId`. Shared UI strings (`test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`) live once in the generic `ProjectScreen.qml` context of `i18n/zowi_*.json`, not per project. The footer buttons appear in this order: **Learn more** (`learn_more`), **Questions** (`test` — "Preguntas" and translations), and the optional per-project **action button** (`action_target`/`action_label`).
 
 ---
 

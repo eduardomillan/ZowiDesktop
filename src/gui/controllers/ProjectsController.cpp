@@ -134,6 +134,17 @@ QVariant ProjectsController::getProject(const QString &id) const {
     map["hexPath"] = QString::fromStdString(proj->hexPath);
     map["achievementId"] = QString::fromStdString(proj->achievementId);
 
+    // Optional action button: target from project.json ("action_target"),
+    // localized label from strings/<locale>.json ("action_label"). Empty
+    // target = button hidden; missing label falls back to the raw target.
+    map["actionTarget"] = QString::fromStdString(proj->actionTarget);
+    QString actionLabel;
+    if (strings)
+        actionLabel = strings->value(QStringLiteral("action_label")).toString();
+    if (actionLabel.isEmpty())
+        actionLabel = QString::fromStdString(proj->actionTarget);
+    map["actionLabel"] = actionLabel;
+
     // Quiz content is loaded from per-locale quiz/<locale>.json (inline text).
     auto quiz = readJsonObject(id + QStringLiteral("/quiz/") + locale + QStringLiteral(".json"));
     if (!quiz && locale != QLatin1String("en_US"))

@@ -94,6 +94,10 @@ The metadata `project.json` mirrors the Android `com.bq.zowi.models.Project`:
 - `achievement_id` — achievement associated with the project. **Reserved for
   the deferred ACHIEVEMENTS layer** (see decision 2): parsed and stored, but
   not acted upon until the toggle is enabled.
+- `action_target` — optional in-app navigation target for the third footer
+  button (e.g. `"gamepad"` in `move`); empty/absent hides the button. Mapped
+  to a concrete screen in `main.qml`; the localized label is `action_label` in
+  `strings/<locale>.json` (fallback: the raw target).
 
 Quiz and UI strings are **not** keys anymore: `quiz/<locale>.json` holds the
 questions with inline translated text, and `strings/<locale>.json` holds
@@ -148,20 +152,28 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
 `ProjectScreen.qml` is a `ScreenTemplate` subclass showing, for its `projectId`:
 
 - Title, learning description and project image.
-- **Done icon** — `project_done_icon` / `project_not_done_icon` driven by
+- **Done icon** — `project_done_icon` / `project_not_done_outline_icon` driven by
   `<id>_project_completeness`.
-- **Project link** — opens `project_url` in the system browser.
+- **Footer buttons** (in order):
+  1. **Learn more** (`learn_more`) — opens `project_url` in the system browser.
+  2. **Questions** (`test` — "Preguntas" / "Questions" / …) — the project quiz,
+     presented in the same screen via the reusable `QuizComponent` (question /
+     progress / result); disabled and showing `mm:ss` countdown while a quiz
+     blockade is pending (`<id>_project_quiz_blockade`).
+     **Note:** The blockade is *documented and configurable* via `ProjectsPreferencesStore`
+     (`blockade_duration_ms`, default 10 min), but the `mm:ss` countdown UI is not
+     yet displayed in `ProjectScreen` (see [PROJECTS_HOWTO.md](../PROJECTS_HOWTO.md)).
+  3. **Action button** (optional, per project) — visible only when
+     `project.json` sets `action_target`; label = `action_label` from
+     `strings/<locale>.json`. Emits `actionRequested(target)`; `main.qml` pops
+     back to Home and pushes the destination (e.g. `"gamepad"` → PadScreen,
+     via the shared `pushGamepad()` helper). `move` ships with
+     `"gamepad"`; the other projects have no action button yet.
 - **Install firmware** — **design, not yet implemented** (see decision 3).
   Intended only in projects with `project_hex != ""` (Reprogram → Alarm,
   Adivinawi → Adivinawi); conn-gated, 50 % battery check →
   `Robot.restoreFirmware(hex)`. The current generic `ProjectScreen` does not
   yet expose it.
-- **Run Test** — the project quiz, presented in the same screen via the reusable
-  `QuizComponent` (question / progress / result); disabled and showing `mm:ss`
-  countdown while a quiz blockade is pending (`<id>_project_quiz_blockade`).
-  **Note:** The blockade is *documented and configurable* via `ProjectsPreferencesStore`
-  (`blockade_duration_ms`, default 10 min), but the `mm:ss` countdown UI is not
-  yet displayed in `ProjectScreen` (see [PROJECTS_HOWTO.md](../PROJECTS_HOWTO.md)).
 - **Result handling** — all correct → `<id>_project_completeness = true` + done
   icon; wrong answer → blockade + failure feedback.
   No achievement dialog until the toggle in decision 2 is enabled.
@@ -172,6 +184,7 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
 |--------|-----------|-------------|
 | `projectRequested(projectId)` | Home *Projects* tiles | `main.qml`: push→ `ProjectScreen.qml` |
 | `linkClicked(url)` | project link | external browser |
+| `actionRequested(target)` | footer action button (only with `action_target`) | `main.qml`: pop→ Home, push→ destination (`"gamepad"` → `pushGamepad()`) |
 | `installFirmwareClicked(hex)` | Install button (design only, not yet implemented) | `Robot.restoreFirmware(hex)` |
 | `backClicked()` | ScreenTemplate back button | pop |
 | `quizFinished(bool)` / `quizBlocked(int)` | `QuizComponent` (in-screen) | mark completeness / blockade |
@@ -245,7 +258,8 @@ stored in a separate `projects_preferences.json` file via `ProjectsPreferencesSt
 
 - **Per project (in `projects/<id>/`)**: `quiz/<locale>.json` (inline question /
   answer text) and `strings/<locale>.json` (`title`, `url`,
-  `learning_description`). Loaded per locale with `en_US` fallback. The `url` is
+  `learning_description`, optional `action_label`). Loaded per locale with
+  `en_US` fallback. The `url` is
   joined with the global `base_url` from `projects/index.json` (absolute
   `https://…` URLs pass through).
 - **Shared UI (in `i18n/zowi_*.json`)**: one `"ProjectScreen.qml"` context with

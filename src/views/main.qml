@@ -16,6 +16,21 @@ Window {
 
     function tr(source) { return Translator.translate("main.qml", source) }
 
+    // Push the Gamepad (PadScreen) with its standard wiring. Shared by the
+    // Home gamepad tile and the project action button ("gamepad" target).
+    function pushGamepad() {
+        var pad = stack.push("qrc:/src/views/screens/PadScreen.qml")
+        pad.backClicked.connect(function() { stack.pop() })
+        pad.mouthScreenRequested.connect(function() {
+            var mouth = stack.push("qrc:/src/views/screens/MouthScreen.qml")
+            mouth.backClicked.connect(function() { stack.pop() })
+        })
+        pad.gestureScreenRequested.connect(function() {
+            var gesture = stack.push("qrc:/src/views/screens/GestureScreen.qml")
+            gesture.backClicked.connect(function() { stack.pop() })
+        })
+    }
+
     function connectHome(home) {
         home.settingsClicked.connect(function() {
             var settings = stack.push("qrc:/src/views/screens/SettingsScreen.qml")
@@ -24,18 +39,7 @@ Window {
         home.achievementsClicked.connect(function() {
             console.log("Home: achievements")
         })
-        home.gamepadClicked.connect(function() {
-            var pad = stack.push("qrc:/src/views/screens/PadScreen.qml")
-            pad.backClicked.connect(function() { stack.pop() })
-            pad.mouthScreenRequested.connect(function() {
-                var mouth = stack.push("qrc:/src/views/screens/MouthScreen.qml")
-                mouth.backClicked.connect(function() { stack.pop() })
-            })
-            pad.gestureScreenRequested.connect(function() {
-                var gesture = stack.push("qrc:/src/views/screens/GestureScreen.qml")
-                gesture.backClicked.connect(function() { stack.pop() })
-            })
-        })
+        home.gamepadClicked.connect(function() { pushGamepad() })
         home.mouthEditorClicked.connect(function() {
             var editor = stack.push("qrc:/src/views/screens/MouthEditorScreen.qml")
             editor.backClicked.connect(function() { stack.pop() })
@@ -44,6 +48,16 @@ Window {
             var project = stack.push("qrc:/src/views/screens/ProjectScreen.qml",
                                      { projectId: projectId })
             project.backClicked.connect(function() { stack.pop() })
+            project.actionRequested.connect(function(target) {
+                // Third project button: pop back to Home, then open the
+                // destination screen (back from it returns to Home).
+                stack.pop()
+                if (target === "gamepad") {
+                    pushGamepad()
+                } else {
+                    console.warn("main.qml: unknown project action target:", target)
+                }
+            })
         })
         // DEV: temporary navigation
         home.goSplash.connect(function() {

@@ -47,7 +47,8 @@ void test_load_index_bundles_projects() {
             "image_key": "qrc:/images/projects/move_thumb.png",
             "url_key": "url",
             "hex_path": "",
-            "achievement_id": "flapping"
+            "achievement_id": "flapping",
+            "action_target": "gamepad"
         })";
     }
 
@@ -64,6 +65,7 @@ void test_load_index_bundles_projects() {
     assert(proj->urlKey == "url");
     assert(proj->hexPath == "");
     assert(proj->achievementId == "flapping");
+    assert(proj->actionTarget == "gamepad");
 
     fs::remove_all(dir);
     std::cout << "OK" << std::endl;
@@ -209,6 +211,7 @@ void test_load_bio1_project() {
     assert(proj->urlKey == "url");
     assert(proj->hexPath == "");
     assert(proj->achievementId == "wave");
+    assert(proj->actionTarget == ""); // not configured → default empty
 
     fs::remove_all(dir);
     std::cout << "OK" << std::endl;

@@ -18,6 +18,11 @@ ScreenTemplate {
     title: project.title || tr("title")
     subtitle: ""
 
+    // Emitted when the (optional) third footer button is pressed. `target` is
+    // the project's configured action_target (e.g. "gamepad"); main.qml maps
+    // it to a concrete screen (pop to Home first, then push the destination).
+    signal actionRequested(string target)
+
     function tr(source) { return Translator.translate("ProjectScreen.qml", source) }
 
     // Format milliseconds to mm:ss
@@ -152,6 +157,26 @@ ScreenTemplate {
             spacing: 20
 
             Button {
+                id: learnMoreButton
+                implicitWidth: 200
+                height: 56
+                text: projectScreen.tr("learn_more")
+                background: Rectangle {
+                    color: learnMoreButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
+                    radius: 28
+                }
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.pixelSize: 16
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: openLink()
+            }
+
+            Button {
                 id: testButton
                 implicitWidth: 200
                 height: 56
@@ -180,13 +205,17 @@ ScreenTemplate {
                 }
             }
 
+            // Optional third button: shown only when the project configures an
+            // action_target (project.json); label comes from the project's
+            // strings/<locale>.json ("action_label"). Routes through main.qml.
             Button {
-                id: learnMoreButton
+                id: actionButton
+                visible: project.actionTarget && project.actionTarget !== ""
                 implicitWidth: 200
                 height: 56
-                text: projectScreen.tr("learn_more")
+                text: project.actionLabel || project.actionTarget || ""
                 background: Rectangle {
-                    color: learnMoreButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
+                    color: actionButton.pressed ? Config.get("color_primary_pressed") || "#1f4a1f" : Config.get("color_primary") || "#2d5a2d"
                     radius: 28
                 }
                 contentItem: Text {
@@ -197,7 +226,7 @@ ScreenTemplate {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-                onClicked: openLink()
+                onClicked: projectScreen.actionRequested(project.actionTarget)
             }
         }
     }

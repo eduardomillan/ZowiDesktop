@@ -18,6 +18,11 @@ struct Project {
     std::string urlKey;
     std::string hexPath;
     std::string achievementId;
+    // Optional in-app navigation target for the project's action button
+    // (e.g. "gamepad"). Empty = the action button is hidden. The GUI maps the
+    // target to a concrete screen; the localized button label comes from the
+    // project's strings/<locale>.json ("action_label").
+    std::string actionTarget;
 };
 
 std::optional<Project> parseProjectJson(const nlohmann::json &json);

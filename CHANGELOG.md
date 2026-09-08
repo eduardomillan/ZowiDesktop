@@ -7,12 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-09-08
+
 ### Added
 - **Zowi's eyes project (`bio1`):** new Discover lesson ("Los ojos de Zowi" —
   Zowi's eyes and ultrasounds) with localized page/quiz/strings in the 5
   locales, `biology_thumb.jpg` detail image, registered in `projects/index.json`
   + `projects.qrc`, tile enabled in HomeScreen, and a `test_projects_store` case.
   Quiz data ported from ZowiAppReborn's `04_project_bio1.json`.
+- **Configurable project action button:** optional third footer button in
+  `ProjectScreen`, driven by `action_target` in `project.json` + localized
+  `action_label` in `strings/<locale>.json` (core `Project.actionTarget`,
+  exposed by `ProjectsController`). `actionRequested(target)` is routed in
+  `main.qml` (pop back to Home, then push the destination; `"gamepad"` →
+  PadScreen via the new shared `pushGamepad()` helper). The `move` project
+  ships with `"gamepad"`.
+
+### Changed
+- **ProjectScreen footer buttons:** order is now Learn more → Questions →
+  (optional) action button, and the quiz button label `test` changed from
+  "Cuestionario"/"Quiz" to "Preguntas"/"Questions"/"Preguntes"/"Questions"/
+  "Въпроси" in the 5 locales.
 
 ## [0.7.2] - 2026-09-08
 

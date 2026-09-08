@@ -124,6 +124,7 @@ std::optional<Project> parseProjectJson(const nlohmann::json &json) {
         proj.urlKey = json.value("url_key", "");
         proj.hexPath = json.value("hex_path", "");
         proj.achievementId = json.value("achievement_id", "");
+        proj.actionTarget = json.value("action_target", "");
     } catch (...) {
         return std::nullopt;
     }
