@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-09-09
+
+### Added
+- **GestureScreen:** Victory and Fail gestures, completing all 13 protocol
+  gestures (button and pressed images, registered in `images.qrc`).
+- **MouthScreen:** HappyClosed mouth (ID 12), completing the happy mouth pair
+  (button and pressed images, registered in `images.qrc`).
+
 ## [0.7.4] - 2026-09-08
 
 ### Added

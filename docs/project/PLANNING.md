@@ -14,7 +14,7 @@
   - [M5 — Firmware restore GUI + transport selection ✅](#m5--firmware-restore-gui--transport-selection-)
   - [M6 — Transport intelligence + gamepad ✅](#m6--transport-intelligence--gamepad-)
   - [M7 — Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
-  - [M8 — Basic projects 🚧](#m8--basic-projects-)
+  - [M8 — Basic projects ✅](#m8--basic-projects-)
   - [M9 — Advanced projects 🕒](#m9--advanced-projects-)
   - [Future milestones](#future-milestones)
 - [Testing](#testing)
@@ -134,13 +134,13 @@ src/
 - [x] Gamepad gestures control
 - [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
-### M8 — Basic projects 🚧
+### M8 — Basic projects ✅
 - [x] Move objects
 - [x] The shape of a robot 
 - [x] Zowi eyes and ultrasounds
 - [x] The Zowi legs and servos
 - [x] The gravity and calibration
-- [ ] Add all the available mouth and gestures to Gamepad
+- [X] Add all the available mouth and gestures to Gamepad
 
 ### M9 — Advanced projects 🕒
 - [ ] Robot dancing and choreography (sequence programming in home screen)

@@ -23,6 +23,7 @@ ScreenTemplate {
 
     readonly property var mouthIdByName: ({
         "Smile": Commands.MouthSmile, "HappyOpen": Commands.MouthHappyOpen,
+        "HappyClosed": Commands.MouthHappyClosed,
         "Heart": Commands.MouthHeart, "BigSurprise": Commands.MouthBigSurprise,
         "SmallSurprise": Commands.MouthSmallSurprise, "TongueOut": Commands.MouthTongueOut,
         "Vamp1": Commands.MouthVamp1, "Vamp2": Commands.MouthVamp2,
@@ -39,6 +40,7 @@ ScreenTemplate {
     readonly property var mouthOptions: [
         { name: "Smile",         normal: "qrc:/images/android/smile_button.png",         pressed: "qrc:/images/android/pressed_smile_button.png" },
         { name: "HappyOpen",     normal: "qrc:/images/android/happy_open_button.png",     pressed: "qrc:/images/android/pressed_happy_open_button.png" },
+        { name: "HappyClosed",   normal: "qrc:/images/android/happy_closed_button.png",   pressed: "qrc:/images/android/pressed_happy_closed_button.png" },
         { name: "Heart",         normal: "qrc:/images/android/heart_button.png",          pressed: "qrc:/images/android/pressed_heart_button.png" },
         { name: "BigSurprise",   normal: "qrc:/images/android/big_surprise_button.png",   pressed: "qrc:/images/android/pressed_big_surprise_button.png" },
         { name: "SmallSurprise", normal: "qrc:/images/android/small_surprise_button.png", pressed: "qrc:/images/android/pressed_small_surprise_button.png" },
