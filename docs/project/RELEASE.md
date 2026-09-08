@@ -118,8 +118,8 @@ The version lives in a single source of truth, the root `VERSION` file:
    - **Manual**, step by step:
      1. Build the **Linux** artifacts (AppImage + jammy/noble `.deb`) — locally or via the **Linux CI** workflow.
      2. Build or download the **Windows** artifacts (zip + installer) — via the **Windows CI** workflow, or locally.
-     3. `gh auth login` and commit the regenerated `debian/changelog`.
-     4. Run `packaging/create-gh-release.sh` (or with `--with-apt`).
+      3. `gh auth login`.
+      4. Run `packaging/create-gh-release.sh` (or with `--with-apt`).
 
 ## Linux artifacts
 
@@ -216,14 +216,11 @@ packaging\windows\build-portable.bat               :: portable zip
 
 ### Release notes
 
-`create-gh-release.sh` extracts the release notes from `debian/changelog`, which
-`create-deb.sh` regenerates from `CHANGELOG.md` (and then restores via
-`git checkout`). To publish the real changelog bullets as release notes,
-**commit the regenerated `debian/changelog` before running the release script**:
-
-```bash
-git add debian/changelog && git commit -m "docs(debian): regenerate changelog for v<version>"
-```
+`create-gh-release.sh` extracts the release notes directly from `CHANGELOG.md`
+(the block under the `## [<version>]` heading, keeping the full markdown
+including the `### Added` / `### Changed` / `### Fixed` subsections).
+`debian/changelog` is regenerated independently by `create-deb.sh` for the
+`.deb` packages and is not used for GitHub release notes.
 
 If no matching entry is present, the script falls back to the note
 `Release <version>`.
@@ -250,7 +247,7 @@ The script:
 1. Checks `gh` is authenticated.
 2. Reads the version from `VERSION` (`TAG="v<version>"`).
 3. Verifies the mandatory artifacts exist (AppImage + both `.deb`).
-4. Extracts the changelog notes for the version from `debian/changelog`.
+4. Extracts the changelog notes for the version from `CHANGELOG.md`.
 5. Confirms interactively, then creates the annotated tag `v<version>` and
    pushes it.
 6. Creates the GitHub Release (`gh release create`) with the notes and the

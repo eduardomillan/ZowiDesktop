@@ -179,29 +179,27 @@ fi
 
 echo ""
 echo "=== Extracting changelog for $VERSION ==="
-CHANGELOG_FILE="$PROJECT_ROOT/debian/changelog"
+CHANGELOG_FILE="$PROJECT_ROOT/CHANGELOG.md"
 NOTES=""
 if [ -f "$CHANGELOG_FILE" ]; then
     IN_VERSION=0
     while IFS= read -r line; do
-        if echo "$line" | grep -qP "^zowi-desktop \(${VERSION}"; then
+        if echo "$line" | grep -qP "^## \\[${VERSION}\\]"; then
             IN_VERSION=1
             continue
         fi
         if [ "$IN_VERSION" -eq 1 ]; then
-            if echo "$line" | grep -qP '^zowi-desktop \('; then
+            if echo "$line" | grep -qP '^## '; then
                 break
             fi
-            if echo "$line" | grep -qP '^\s+\*'; then
-                NOTES="${NOTES}${line}"$'\n'
-            fi
+            NOTES="${NOTES}${line}"$'\n'
         fi
     done < "$CHANGELOG_FILE"
+    NOTES=$(printf '%s' "$NOTES" | sed '/^$/N;/^\n$/D;')
 fi
 if [ -z "$NOTES" ]; then
     NOTES="Release ${VERSION}"
 fi
-NOTES=$(echo "$NOTES" | sed 's/^\s*\* /- /' | sed '/^$/d')
 echo "$NOTES"
 
 echo ""
