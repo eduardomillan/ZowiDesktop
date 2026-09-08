@@ -76,6 +76,7 @@
         <file>images/android/animation_anxious_icon.png</file>
         <file>images/android/animation_confused_button.png</file>
         <file>images/android/animation_confused_icon.png</file>
+        <file>images/android/animation_fail_button.png</file>
         <file>images/android/animation_fart_button.png</file>
         <file>images/android/animation_fart_icon.png</file>
         <file>images/android/animation_happy_button.png</file>
@@ -90,6 +91,7 @@
         <file>images/android/animation_sleppy_button.png</file>
         <file>images/android/animation_super_happy_button.png</file>
         <file>images/android/animation_super_happy_icon.png</file>
+        <file>images/android/animation_victory_button.png</file>
         <file>images/android/animation_wave_button.png</file>
         <file>images/android/animation_wave_icon.png</file>
         <file>images/android/answer_check.png</file>
@@ -155,6 +157,7 @@
         <file>images/android/flapping_icon.png</file>
         <file>images/android/forget_zowi_button.png</file>
         <file>images/android/gravity_button.png</file>
+        <file>images/android/happy_closed_button.png</file>
         <file>images/android/happy_open_button.png</file>
         <file>images/android/happy_open_icon.png</file>
         <file>images/android/heart_button.png</file>
@@ -232,6 +235,7 @@
         <file>images/android/pressed_animation_angry_button.png</file>
         <file>images/android/pressed_animation_anxious_button.png</file>
         <file>images/android/pressed_animation_confused_button.png</file>
+        <file>images/android/pressed_animation_fail_button.png</file>
         <file>images/android/pressed_animation_fart_button.png</file>
         <file>images/android/pressed_animation_happy_button.png</file>
         <file>images/android/pressed_animation_in_love_button.png</file>
@@ -239,6 +243,7 @@
         <file>images/android/pressed_animation_sad_button.png</file>
         <file>images/android/pressed_animation_sleppy_button.png</file>
         <file>images/android/pressed_animation_super_happy_button.png</file>
+        <file>images/android/pressed_animation_victory_button.png</file>
         <file>images/android/pressed_animation_wave_button.png</file>
         <file>images/android/pressed_answer_check.png</file>
         <file>images/android/pressed_ascending_turn_button.png</file>
@@ -267,6 +272,7 @@
         <file>images/android/pressed_flapping_button.png</file>
         <file>images/android/pressed_forget_zowi_button.png</file>
         <file>images/android/pressed_gravity_button.png</file>
+        <file>images/android/pressed_happy_closed_button.png</file>
         <file>images/android/pressed_happy_open_button.png</file>
         <file>images/android/pressed_heart_button.png</file>
         <file>images/android/pressed_home_button.png</file>

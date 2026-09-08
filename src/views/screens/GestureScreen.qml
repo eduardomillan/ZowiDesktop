@@ -27,7 +27,8 @@ ScreenTemplate {
         "Fart": Commands.GestureFart, "Confused": Commands.GestureConfused,
         "Love": Commands.GestureLove, "Angry": Commands.GestureAngry,
         "Fretful": Commands.GestureFretful, "Magic": Commands.GestureMagic,
-        "Wave": Commands.GestureWave
+        "Wave": Commands.GestureWave,
+        "Victory": Commands.GestureVictory, "Fail": Commands.GestureFail
     })
 
     readonly property var gestureOptions: [
@@ -41,7 +42,9 @@ ScreenTemplate {
         { name: "Angry",      normal: "qrc:/images/android/animation_angry_button.png",        pressed: "qrc:/images/android/pressed_animation_angry_button.png" },
         { name: "Fretful",    normal: "qrc:/images/android/animation_anxious_button.png",      pressed: "qrc:/images/android/pressed_animation_anxious_button.png" },
         { name: "Magic",      normal: "qrc:/images/android/animation_magic_button.png",        pressed: "qrc:/images/android/pressed_animation_magic_button.png" },
-        { name: "Wave",       normal: "qrc:/images/android/animation_wave_button.png",         pressed: "qrc:/images/android/pressed_animation_wave_button.png" }
+        { name: "Wave",       normal: "qrc:/images/android/animation_wave_button.png",         pressed: "qrc:/images/android/pressed_animation_wave_button.png" },
+        { name: "Victory",    normal: "qrc:/images/android/animation_victory_button.png",      pressed: "qrc:/images/android/pressed_animation_victory_button.png" },
+        { name: "Fail",       normal: "qrc:/images/android/animation_fail_button.png",         pressed: "qrc:/images/android/pressed_animation_fail_button.png" }
     ]
 
     function selectGesture(name) {
