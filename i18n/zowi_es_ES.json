@@ -214,13 +214,13 @@
     "run_test": "Ejecutar prueba",
     "correct": "¡Correcto!",
     "incorrect": "Incorrecto.",
-    "quiz_blocked": "Prueba bloqueada. Inténtalo de nuevo en %1."
+    "quiz_blocked": "Cuestionario bloqueado. Inténtalo de nuevo en %1."
   },
   "ProjectScreen.qml": {
-    "test": "Test",
+    "test": "Cuestionario",
     "learn_more": "Saber más",
     "quiz_passed": "¡Enhorabuena! Has completado el proyecto.",
     "quiz_failed": "Respuesta incorrecta. Inténtalo de nuevo en %1.",
-    "quiz_blocked": "Prueba bloqueada. Inténtalo de nuevo en %1."
+    "quiz_blocked": "Cuestionario bloqueado. Inténtalo de nuevo en %1."
   }
 }

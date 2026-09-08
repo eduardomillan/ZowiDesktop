@@ -223,13 +223,13 @@
     "run_test": "Lancer le test",
     "correct": "Correct !",
     "incorrect": "Incorrect.",
-    "quiz_blocked": "Test bloqué. Réessayez dans %1."
+    "quiz_blocked": "Questionnaire bloqué. Réessayez dans %1."
   },
   "ProjectScreen.qml": {
-    "test": "Test",
+    "test": "Questionnaire",
     "learn_more": "En savoir plus",
     "quiz_passed": "Félicitations ! Vous avez terminé le projet.",
     "quiz_failed": "Mauvaise réponse. Réessayez dans %1.",
-    "quiz_blocked": "Test bloqué. Réessayez dans %1."
+    "quiz_blocked": "Questionnaire bloqué. Réessayez dans %1."
   }
 }

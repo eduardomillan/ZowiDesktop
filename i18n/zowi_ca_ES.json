@@ -223,13 +223,13 @@
     "run_test": "Executar prova",
     "correct": "¡Correcte!",
     "incorrect": "Incorrecte.",
-    "quiz_blocked": "Prova bloquejada. Torna a provar-ho en %1."
+    "quiz_blocked": "Qüestionari bloquejat. Torna a provar-ho en %1."
   },
   "ProjectScreen.qml": {
-    "test": "Test",
+    "test": "Qüestionari",
     "learn_more": "Saber-ne més",
     "quiz_passed": "¡Enhorabona! Has completat el projecte.",
     "quiz_failed": "Resposta incorrecta. Torna a provar-ho en %1.",
-    "quiz_blocked": "Prova bloquejada. Torna a provar-ho en %1."
+    "quiz_blocked": "Qüestionari bloquejat. Torna a provar-ho en %1."
   }
 }
