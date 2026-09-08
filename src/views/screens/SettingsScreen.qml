@@ -25,7 +25,7 @@ ScreenTemplate {
     property bool batteryLow: false
     property int restoreProgress: 0
     property string connectionStatus: settings.connectionStatusText()
-    property color connectionStatusColor: settings.connectionStatusColor()
+    property color connectionStatusColor: settings.computeConnectionStatusColor()
 
     function tr(source) { return Translator.translate("SettingsScreen.qml", source) }
 
@@ -63,7 +63,7 @@ ScreenTemplate {
         return withName(tr("status_demo"))
     }
 
-    function connectionStatusColor() {
+    function computeConnectionStatusColor() {
         var s = Robot.situation
         if (s === Robot.SituationConnected)
             return Config.get("color_primary") || "#2d5a2d"
@@ -240,11 +240,11 @@ ScreenTemplate {
         }
         function onSituationChanged() {
             settings.connectionStatus = settings.connectionStatusText()
-            settings.connectionStatusColor = settings.connectionStatusColor()
+            settings.connectionStatusColor = settings.computeConnectionStatusColor()
         }
         function onConnectingChanged() {
             settings.connectionStatus = settings.connectionStatusText()
-            settings.connectionStatusColor = settings.connectionStatusColor()
+            settings.connectionStatusColor = settings.computeConnectionStatusColor()
         }
     }
 
@@ -252,7 +252,7 @@ ScreenTemplate {
         target: Session
         function onSessionChanged() {
             settings.connectionStatus = settings.connectionStatusText()
-            settings.connectionStatusColor = settings.connectionStatusColor()
+            settings.connectionStatusColor = settings.computeConnectionStatusColor()
         }
     }
 
