@@ -10,15 +10,13 @@
 > `ProjectQuizViewActivity` + `assets/projects/*.json`), adapted to the desktop
 > per the decisions below.
 
-- **Status:** ✅ **Move + Zowi's feet (bio3) + Robot form (form) + Zowi's eyes (bio1) + Gravity projects implemented** (v0.7.4); 5 projects remaining (design only).
-  A generic `ProjectScreen.qml` exists, backed by the Qt-free `zowi::projects` core module,
+- **Status:** A generic `ProjectScreen.qml` exists, backed by the Qt-free `zowi::projects` core module,
   `ProjectsController` context, `projects.qrc` resource, and a reusable `QuizComponent.qml`.
-  The other 5 projects are **NOT IMPLEMENTED** — design proposal only.
 - **Implemented files:**
   - Core: `src/core/include/zowi/project_model.h`, `projects_store.h/.cpp`, `projects_preferences_store.h/.cpp`
   - GUI: `src/gui/controllers/ProjectsController.h/.cpp`, `src/views/components/QuizComponent.qml`, `src/views/screens/ProjectScreen.qml`
   - Assets: `projects/index.json`, `projects/move/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio3/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio1/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/form/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/gravity/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `images/projects/bio3_thumb.png`, `images/projects/biology_thumb.jpg`, `images/projects/form_thumb.jpg`, `images/projects/gravity_thumb.png`, `projects.qrc`
-- **Planned files:** data folders under `projects/<id>/` for each remaining project (choreography, reprogram, helloworld, bitbloq2, adivinawi). They do **not** exist yet. No new QML screens needed.
+- **Planned files:** data folders under `projects/<id>/` for each project. No new QML screens needed.
 - **Project-specific i18n** lives in each project's `strings/<locale>.json` (title, url, description) and `quiz/<locale>.json` (inline text). Shared UI strings (`test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`) live once in the generic `"ProjectScreen.qml"` context of `i18n/zowi_*.json`. The 10 tile titles are translated on the Home-screen context (`move_objects`,
   `choreography`, `robot_form`, `robot_eyes`, `robot_feet`, `robot_alarm`,
   `adivinawi`, `gravity`, `hello_world`, `bitbloq_sensors`).
@@ -30,9 +28,6 @@
   `app/src/main/assets/projects/01_project_mueve.json` …
   `10_project_gravity.json`, `app/src/main/java/com/bq/zowi/views/interactive/projects/`
   and `docs/project/VIEWS.md` (§ProjectViewActivity / ProjectQuizViewActivity).
-- **Desktop roadmap:** [docs/project/PLANNING.md](../PLANNING.md) M8 (Basic
-  projects: move objects, robot form, Zowi eyes, Zowi feet, gravity) and M9
-  (Advanced: choreography, alarm, fortune-telling, Bitbloq I/II).
 
 ## Design decisions (agreed, subject to review)
 
@@ -120,8 +115,7 @@ questions with inline translated text, and `strings/<locale>.json` holds
 
 Tile images live under `qrc:/images/android/`. Detail images live under
 `qrc:/images/projects/` and are only assigned once a project's data folder
-exists (the `image_key` is set in its `project.json` — currently `move`, `bio3`,
-`form`, `bio1` and `gravity` are implemented, the rest are "—" until they land). The Android
+exists (the `image_key` is set in its `project.json`. The Android
 counterpart artwork (`qrc:/images/android/project_*.png`) is already bundled
 and can be reused. Achievements are **reserved for the deferred ACHIEVEMENTS
 layer** (see decision 2).
@@ -277,8 +271,6 @@ stored in a separate `projects_preferences.json` file via `ProjectsPreferencesSt
 - ACHIEVEMENTS toggle: currently implemented in `ProjectsPreferencesStore`
   (`isAchievementsEnabled`/`setAchievementsEnabled`), exposed via `Projects`
   context. Not yet wired to UI or CLI.
-- Where exactly the project JSON source files live (`projects/` vs
-  `src/projects/`) — implemented at `projects/` (repo root).
 - Quiz blockade countdown UI: documented and configurable via
   `ProjectsPreferencesStore.blockade_duration_ms`, but not yet displayed in
   `ProjectScreen` (shows a message bar instead). To be completed in a
