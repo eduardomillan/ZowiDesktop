@@ -34,6 +34,7 @@ ScreenTemplate {
     property bool completed: false
     property bool quizStarted: false
     property string contentHtml: ""
+    property real thumbHeight: 120
     footerHeight: 88
 
     property string doneIconSource: completed
@@ -114,7 +115,7 @@ ScreenTemplate {
                     id: projectThumb
                     source: project && project.image ? project.image : ""
                     width: parent.width
-                    height: 220
+                    height: projectScreen.thumbHeight
                     anchors.horizontalCenter: parent.horizontalCenter
                     fillMode: Image.PreserveAspectFit
                 }

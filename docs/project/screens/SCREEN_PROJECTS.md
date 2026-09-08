@@ -122,12 +122,6 @@ counterpart artwork (`qrc:/images/android/project_*.png`) is already bundled
 and can be reused. Achievements are **reserved for the deferred ACHIEVEMENTS
 layer** (see decision 2).
 
-**About `url`:** each project's `strings/<locale>.json` stores the link as a
-**relative** path (e.g. `move/es/`, `bio3/es/`) that `ProjectsController` joins
-with the single global `base_url` in `projects/index.json`. A project that needs
-an external destination can **override** it by putting a full absolute `https://…`
-URL there instead — it passes through untouched. (The old `zowi.bq.com` URLs are
-omitted here; they are dead and will be replaced by the real docs URL.)
 
 **Firmware (design, not yet implemented in `ProjectScreen`):** both HEX files are
 already bundled and flashable on desktop (`src/firmware/`, STK500v1 over BT/USB;
