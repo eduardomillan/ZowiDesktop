@@ -56,6 +56,7 @@ src/
 │   ├── message_parser      # Parses incoming robot stream messages
 │   ├── movement_sequencer  # Drives sequences of timed movements
 │   ├── calibration_session # Servo trim calibration state machine
+│   ├── projects            # Discover lessons data (project_model, projects_store, projects_preferences_store)
 │   ├── bluetooth_api       # Abstract backend interface
 │   ├── protocol            # Firmware framing (&&cmd value%%)
 │   ├── device_info         # Device struct (name, address, rssi)
@@ -67,8 +68,8 @@ src/
 │   └── bt_serial_win/ # Win32 USB/serial backend (Windows only)
 ├── firmware/      # STK500v1 protocol + bundled .hex files
 ├── cli/           # CLI consumer (zowi_cli) — 19 subcommands
-├── gui/           # Qt/QML GUI consumer — 6 controllers
-└── views/         # QML screens (13) + template + components (6)
+├── gui/           # Qt/QML GUI consumer — 7 controllers
+└── views/         # QML screens (14) + template + components (7)
 ```
 
 - `zowi::core` is 100 % Qt-free: it has no Qt dependency at all, and its only
@@ -133,15 +134,15 @@ src/
 - [x] Gamepad gestures control
 - [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
-### M8 - Basic projects
+### M8 — Basic projects 🚧
 - [x] **Move objects** — implemented (generic ProjectScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
 - [ ] The shape of Zowi and biped robots
 - [ ] Zowi eyes and ultrasounds
-- [ ] The Zowi legs and servos
+- [x] **The Zowi legs and servos (Zowi's feet, `bio3`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
 - [ ] The gravity and calibration
 - [ ] **Projects CLI commands** — `project list/show/reset/prefs` (uses core ProjectsStore/ProjectsPreferencesStore, no Qt)
 
-### M9 - Advanced projects
+### M9 — Advanced projects 🕒
 - [ ] Robot dancing and choreography (sequence programming in home screen)
 - [ ] The alarm robot
 - [ ] Fortune-telling robot
@@ -160,8 +161,8 @@ src/
 
 - **Core unit tests** (`src/core/tests/`): `test_session_store`, `test_config_store`,
   `test_translation_engine`, `test_robot_commands`, `test_calibration_session`,
-  `test_movement_sequencer`, `test_message_parser`, `test_robot_state` — link only
-  `zowi::core`, no Qt dependency.
+  `test_movement_sequencer`, `test_message_parser`, `test_robot_state`,
+  `test_projects_store` — link only `zowi::core`, no Qt dependency.
 - **CLI integration tests** (`src/cli/tests/`): Bluetooth (6 scripts) and USB (8 scripts) — require real hardware.
 - **QML preview scripts** (`src/views/tests/`): Shell scripts to launch individual screens.
 - Run tests: `ctest --test-dir build --output-on-failure`
