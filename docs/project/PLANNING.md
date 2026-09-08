@@ -39,7 +39,7 @@ Status:
 | **0.5.0** | M5 | Firmware restore GUI (BT+USB), low-battery confirmation, `adivinawi` CLI, transport selection in GUI | ✅ |
 | **0.6.0** | M6 | Transport situation state machine, automatic transport, persistent preference, DEV overlay, restore feedback | ✅ |
 | **0.7.0** | M7 | Zowi calibration (servo trims via `C`/`G` protocol commands) | ✅ |
-| **0.8.0** | M8 | Basic projects | 🚧 |
+| **0.8.0** | M8 | Basic projects | ✅ |
 | **0.9.0** | M9 | Advanced projects | 🕒 |
 | **0.10.0** | M10 | Design improvements | 🕒 |
 
@@ -134,7 +134,7 @@ src/
 - [x] Gamepad gestures control
 - [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
-### M8 — Basic projects ✅
+### M8 — Basic projects 🚧
 - [x] Move objects
 - [x] The shape of a robot 
 - [x] Zowi eyes and ultrasounds
