@@ -77,7 +77,7 @@ The first implemented project is **Move** (id: `move`, Home tile: `move_objects`
 
 | File | Purpose |
 |------|---------|
-| `src/core/include/zowi/project_model.h` | `Project`, `ProjectQuestion`, `ProjectAnswer` structs + `parseProjectJson()` |
+| `src/core/include/zowi/project_model.h` | `Project` struct + `parseProjectJson()` |
 | `src/core/include/zowi/projects_store.h` | `ProjectsStore` class — loads/parses JSON, provides `getProject(id)`, `getAllProjects()` |
 | `src/core/include/zowi/projects_preferences_store.h` | `ProjectsPreferencesStore` — configurable params (blockade, achievements, quiz) |
 | `src/core/src/projects_store.cpp` | Implementation of `ProjectsStore` |
@@ -85,12 +85,13 @@ The first implemented project is **Move** (id: `move`, Home tile: `move_objects`
 
 ### ProjectsStore
 
-- **Constructor**: `ProjectsStore()` — default loader reads `projects/move.json` from filesystem (dev) or `:/projects/` (release).
+- **Constructor**: `ProjectsStore()` — default loader reads `projects/index.json` from filesystem (dev) or `:/projects/` (release), then bundles every `projects/<id>/project.json` listed there into a single JSON array.
 - **Resource loading**: Call `setResourceBasePath(":/projects")` to point at Qt resource prefix.
-- **Custom loader**: Call `setProjectsLoader(loader)` for platform-specific loading (e.g., Android assets).
+- **Custom loader**: Call `setProjectsLoader(loader)` for platform-specific loading (e.g., Android assets). The GUI's `ProjectsController` uses this and performs its own qrc/disk fallback resolution.
 - **loadAll()**: Parses JSON array or single object, populates `m_projects` vector.
 - **getProject(id)**: Returns `std::optional<Project>`.
 - **getAllProjects()**: Returns all loaded projects.
+- The `Project` model carries only metadata (`id`, translation keys, `hexPath`, `achievementId`). Quiz content is locale-specific and lives in per-project `quiz/<locale>.json` files — see "Adding a new project".
 
 ### ProjectsPreferencesStore
 
@@ -134,19 +135,21 @@ Projects.setQuizEnabled(bool)           // void
 
 **Implementation notes:**
 
-- Uses `TranslatorController` to resolve i18n keys at runtime (context = `Project<Id>Screen.qml`).
+- `getProject(id)` loads metadata from core, then resolves project-specific strings (`title`, `url`, `description`) from `projects/<id>/strings/<locale>.json` and the quiz from `projects/<id>/quiz/<locale>.json`, with fallback to `en_US` when a locale file is missing. The `url` is joined with `base_url` read from `projects/index.json` (relative `url` values), or returned verbatim for absolute URLs. It no longer resolves quiz/strings through the Translator; shared UI strings come from the generic `"ProjectScreen.qml"` context in i18n.
 - Uses `SessionController` generic `saveString/getString` for persistence keys:
   - `<id>_project_completeness` → `"true"` / `""`
   - `<id>_project_quiz_blockade` → epoch millis as string
 - Emits `projectsChanged()` signal when store or prefs change.
 
-### ProjectMoveScreen (`src/views/screens/ProjectMoveScreen.qml`)
+### ProjectScreen (`src/views/screens/ProjectScreen.qml`)
 
-- Inherits `ScreenTemplate` with `showBackButton: true`
-- Uses `Projects.getProject("move")` for all content
-- Embeds `QuizComponent` inline with `projectId: "move"` and `questions: project.questions`
-- Handles `QuizComponent.finished` / `blocked` signals to show `MessageBar` feedback
-- External link via `Qt.openUrlExternally(project.url)`
+- Generic screen for all learning projects. Inherits `ScreenTemplate` with `showBackButton: true`.
+- Has a `projectId` property (set when pushed from `main.qml`); all content is loaded via `Projects` for that id.
+- Uses `Projects.getProject(projectId)` for metadata (title, image, url, quiz questions).
+- Embeds `QuizComponent` inline with `projectId` and `questions: project.questions`.
+- Handles `QuizComponent.finished` / `blocked` signals to show `MessageBar` feedback.
+- External link via `Qt.openUrlExternally(project.url)`.
+- Replaces the former per-project `ProjectMoveScreen.qml`; adding a new project does **not** require a new QML screen.
 
 ### QuizComponent (`src/views/components/QuizComponent.qml`)
 
@@ -174,59 +177,74 @@ Projects.setQuizEnabled(bool)           // void
 
 ## Adding a new project
 
-1. **Create JSON** in `projects/<id>.json`:
+Each project is a self-contained folder under `projects/`:
+
+```
+projects/
+├── index.json                 # { "base_url": "...", "projects": ["move", ...] }
+└── <project_id>/
+    ├── project.json           # metadata (translation keys, hex path, achievement)
+    ├── page/<locale>.html     # localized lesson HTML
+    ├── quiz/<locale>.json     # quiz with INLINE translated text (per locale)
+    └── strings/<locale>.json  # project-specific UI strings (title, url, description)
+```
+
+`projects/index.json` also carries a global `base_url`: project `url` values in the
+strings files are **relative** to it (e.g. `move/es/`), and `ProjectsController`
+joins them at load time (absolute URLs — containing `://` — pass through unchanged).
+
+1. **Create metadata** in `projects/<id>/project.json`:
 
 ```json
 {
   "id": "choreography",
   "title_key": "title",
   "description_key": "learning_description",
-  "image_key": "image",
+  "image_key": "qrc:/images/projects/choreography_thumb.png",
   "url_key": "url",
-  "questions": [
-    {
-      "text_key": "question_1",
-      "answers": [
-        { "text_key": "question_1_answer_1", "correct": false },
-        { "text_key": "question_1_answer_2", "correct": true },
-        { "text_key": "question_1_answer_3", "correct": false }
-      ]
-    },
-    { ... question 2 ... }
-  ],
   "hex_path": "",
   "achievement_id": "choreography_achievement"
 }
 ```
 
-2. **Add to `projects.qrc`**:
+2. **Add page HTML** in `projects/<id>/page/<locale>.html` for each supported locale (fallback to `en_US.html` when a locale is missing).
 
-```xml
-<file alias="choreography.json">projects/choreography.json</file>
+3. **Add quiz** in `projects/<id>/quiz/<locale>.json` with inline translated strings:
+
+```json
+{
+  "questions": [
+    {
+      "text": "Question text in this locale",
+      "answers": [
+        { "text": "Wrong", "correct": false },
+        { "text": "Right", "correct": true },
+        { "text": "Wrong", "correct": false }
+      ]
+    }
+  ]
+}
 ```
 
-3. **Add i18n keys** in all `i18n/zowi_*.json` under `"ProjectChoreographyScreen.qml"` context:
-   - `title`, `learning_description`, `url`, `project_link`, `run_test`, `quiz_passed`, `quiz_failed`, `quiz_blocked`, `correct`, `incorrect`
-   - `question_1`, `question_1_answer_1/2/3`, `question_2`, `question_2_answer_1/2/3`
+4. **Add strings** in `projects/<id>/strings/<locale>.json`. The `url` is
+   **relative** to `base_url` from `projects/index.json` (fall back to `en_US.json`
+   when a locale file is missing):
 
-4. **Create screen** `src/views/screens/ProjectChoreographyScreen.qml` (copy `ProjectMoveScreen.qml`, change `projectId` to `"choreography"`).
+```json
+{ "title": "Choreography", "url": "choreography/es/", "learning_description": "..." }
+```
+If a project needs an external/absolute destination, put a full `https://…` URL
+instead — it is left untouched.
 
-5. **Add to `views.qrc`** under screens section.
+5. **Register in `projects.qrc`**: add `index.json`, the project's `project.json`, every `page/*.html`, `quiz/*.json` and `strings/*.json`.
 
-6. **Enable tile in `HomeScreen.qml`**:
-   - In `projectsData`, set `enabled: true` for the project's entry
-   - Add `signal projectChoreographyClicked()` to `FocusScope`
-   - In the Flow's `MouseArea`, add handler for the tile name
+6. **Add project id to `projects/index.json`** `projects` array.
 
-7. **Wire in `main.qml`** `connectHome()`:
-   ```qml
-   home.projectChoreographyClicked.connect(function() {
-       var screen = stack.push("qrc:/src/views/screens/ProjectChoreographyScreen.qml")
-       screen.backClicked.connect(function() { stack.pop() })
-   })
-   ```
+7. **Enable tile in `HomeScreen.qml`**: in `projectsData`, set `enabled: true` for the project's entry (the navigation already emits `projectRequested(id)` generically).
 
-7. **Rebuild**: `./build.sh` or `cmake --build build`
+8. **Rebuild**: `./build.sh` or `cmake --build build`
+
+No new QML screen is needed: `ProjectScreen.qml` reads all content for a given `projectId`. Shared UI strings (`test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`) live once in the generic `ProjectScreen.qml` context of `i18n/zowi_*.json`, not per project.
 
 ---
 

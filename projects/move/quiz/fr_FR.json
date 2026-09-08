@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Les mouvements de Zowi lui permettent de…",
+      "answers": [
+        {
+          "text": "…tourner en rond.",
+          "correct": false
+        },
+        {
+          "text": "…marcher en avant et en diagonale.",
+          "correct": true
+        },
+        {
+          "text": "…marcher en arrière et en diagonale.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Si j'augmente la vitesse de marche de Zowi, se déplace-t-il toujours plus vite ?",
+      "answers": [
+        {
+          "text": "Non. Il bouge plus vite, mais parfois il n'avance pas plus vite car il glisse.",
+          "correct": true
+        },
+        {
+          "text": "Non. S'il bouge trop vite il peut casser et s'arrêter d'avancer.",
+          "correct": false
+        },
+        {
+          "text": "Oui. Zowi avance toujours plus vite si la vitesse de mouvement est plus élevée.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

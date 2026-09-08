@@ -2,18 +2,23 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import "../components"
 
+// Generic project screen: shared layout for all learning projects. Parametrised
+// by projectId; content (page HTML, quiz, strings) is loaded per project from
+// the Projects controller. Subclassing ScreenTemplate keeps the visual shell
+// (status bar, header, back/right buttons, footer) identical across projects.
 ScreenTemplate {
-    id: moveScreen
-    screenName: "ProjectMoveScreen"
+    id: projectScreen
+    screenName: "ProjectScreen"
     showBackButton: true
     showRightButton: true
     rightButtonSource: doneIconSource
-    onRightClicked: Projects.setCompleted("move", false)
+    onRightClicked: Projects.setCompleted(projectId, false)
 
-    title: tr("title")
+    property string projectId: ""
+    title: project.title || tr("title")
     subtitle: ""
 
-    function tr(source) { return Translator.translate("ProjectMoveScreen.qml", source) }
+    function tr(source) { return Translator.translate("ProjectScreen.qml", source) }
 
     // Format milliseconds to mm:ss
     function formatCountdown(ms) {
@@ -25,7 +30,7 @@ ScreenTemplate {
     }
 
     // Project data from Projects controller
-    readonly property var project: Projects.getProject("move")
+    readonly property var project: Projects.getProject(projectId)
     property bool completed: false
     property bool quizStarted: false
     property string contentHtml: ""
@@ -35,10 +40,10 @@ ScreenTemplate {
         ? "qrc:/images/android/project_done_icon.png"
         : "qrc:/images/android/project_not_done_icon.png"
 
-    function refreshCompleted() { completed = Projects.isCompleted("move") }
+    function refreshCompleted() { completed = Projects.isCompleted(projectId) }
 
     function loadContentHtml() {
-        contentHtml = Projects.loadHtml("move", Translator.currentLocale())
+        contentHtml = Projects.loadHtml(projectId, Translator.currentLocale())
     }
 
     Component.onCompleted: {
@@ -47,25 +52,25 @@ ScreenTemplate {
     }
     Connections {
         target: Projects
-        function onProjectsChanged() { moveScreen.refreshCompleted() }
+        function onProjectsChanged() { projectScreen.refreshCompleted() }
     }
     Connections {
         target: Translator
-        function onLanguageChanged() { moveScreen.loadContentHtml() }
+        function onLanguageChanged() { projectScreen.loadContentHtml() }
     }
 
     function openLink() {
-        Qt.openUrlExternally(tr("url"))
+        Qt.openUrlExternally(project.url || tr("url"))
     }
 
     // Quiz finished handler
     function onQuizFinished(allCorrect) {
         quizStarted = false
         if (allCorrect) {
-            Projects.setCompleted("move")
+            Projects.setCompleted(projectId)
             msgBar.show(tr("quiz_passed"), Config.get("color_primary") || "#2d5a2d")
         } else {
-            var remaining = Projects.getBlockadeRemainingMs("move")
+            var remaining = Projects.getBlockadeRemainingMs(projectId)
             msgBar.show(tr("quiz_failed").arg(formatCountdown(remaining)), Config.get("color_warning") || "#e67e22")
         }
     }
@@ -78,7 +83,7 @@ ScreenTemplate {
     Item {
         id: contentPanel
         anchors.fill: parent
-        visible: !moveScreen.quizStarted
+        visible: !projectScreen.quizStarted
 
         Flickable {
             id: articleFlick
@@ -91,7 +96,7 @@ ScreenTemplate {
             boundsBehavior: Flickable.StopAtBounds
 
             Rectangle {
-                visible: moveScreen.debugBorders
+                visible: projectScreen.debugBorders
                 anchors.fill: articleCol
                 border.color: "lightgray"
                 border.width: 1
@@ -107,7 +112,7 @@ ScreenTemplate {
 
                 Image {
                     id: projectThumb
-                    source: "qrc:/images/projects/move_thumb.png"
+                    source: project && project.image ? project.image : ""
                     anchors.horizontalCenter: parent.horizontalCenter
                     fillMode: Image.PreserveAspectFit
                 }
@@ -115,7 +120,7 @@ ScreenTemplate {
                 Text {
                     id: articleText
                     width: parent.width
-                    text: moveScreen.contentHtml
+                    text: projectScreen.contentHtml
                     textFormat: Text.RichText
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter
@@ -130,8 +135,8 @@ ScreenTemplate {
     QuizComponent {
         id: quizComponent
         anchors.fill: parent
-        visible: moveScreen.quizStarted
-        projectId: "move"
+        visible: projectScreen.quizStarted
+        projectId: projectScreen.projectId
         questions: project.questions
         onFinished: onQuizFinished(allCorrect)
         onBlocked: onQuizBlocked(remainingMs)
@@ -147,8 +152,8 @@ ScreenTemplate {
                 id: testButton
                 implicitWidth: 200
                 height: 56
-                text: moveScreen.tr("test")
-                enabled: !moveScreen.quizStarted && Projects.isQuizEnabled()
+                text: projectScreen.tr("test")
+                enabled: !projectScreen.quizStarted && Projects.isQuizEnabled()
                 background: Rectangle {
                     color: testButton.pressed ? Config.get("color_warning_pressed") || "#d35400" : Config.get("color_warning") || "#e67e22"
                     radius: 28
@@ -167,7 +172,7 @@ ScreenTemplate {
                         onQuizBlocked(quizComponent.blockadeRemainingMs)
                         return
                     }
-                    moveScreen.quizStarted = true
+                    projectScreen.quizStarted = true
                     quizComponent.startQuiz()
                 }
             }
@@ -176,7 +181,7 @@ ScreenTemplate {
                 id: learnMoreButton
                 implicitWidth: 200
                 height: 56
-                text: moveScreen.tr("learn_more")
+                text: projectScreen.tr("learn_more")
                 background: Rectangle {
                     color: learnMoreButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
                     radius: 28

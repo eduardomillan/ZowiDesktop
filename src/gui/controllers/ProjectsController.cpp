@@ -2,9 +2,43 @@
 #include "TranslatorController.h"
 #include "SessionController.h"
 #include <QVariant>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include <QDateTime>
 #include <QFile>
 #include <zowi/project_model.h>
+
+namespace {
+
+// Read a file preferring the on-disk copy (dev / hot-reload) then the compiled
+// Qt resource, mirroring how translations and config are resolved.
+QByteArray readResource(const QString &rel) {
+    QFile disk(rel);
+    if (disk.open(QIODevice::ReadOnly))
+        return disk.readAll();
+    QFile qrc(QStringLiteral(":/projects/") + rel);
+    if (qrc.open(QIODevice::ReadOnly))
+        return qrc.readAll();
+    return {};
+}
+
+QString readText(const QString &rel) {
+    return QString::fromUtf8(readResource(rel));
+}
+
+std::optional<QJsonObject> readJsonObject(const QString &rel) {
+    QByteArray data = readResource(rel);
+    if (data.isEmpty())
+        return std::nullopt;
+    QJsonParseError err;
+    QJsonDocument doc = QJsonDocument::fromJson(data, &err);
+    if (err.error != QJsonParseError::NoError || !doc.isObject())
+        return std::nullopt;
+    return doc.object();
+}
+
+} // namespace
 
 ProjectsController::ProjectsController(TranslatorController *translator, SessionController *session, QObject *parent)
     : QObject(parent), m_translator(translator), m_session(session)
@@ -19,44 +53,111 @@ ProjectsController::ProjectsController(TranslatorController *translator, Session
 
     m_prefsStore.onChanged([this]() { emit projectsChanged(); });
 
-    m_projectsStore.setProjectsLoader([]() {
-        QFile qrc(":/projects/move.json");
-        if (qrc.open(QIODevice::ReadOnly))
-            return QString::fromUtf8(qrc.readAll()).toStdString();
-        QFile disk("projects/move.json");
-        if (disk.open(QIODevice::ReadOnly))
-            return QString::fromUtf8(disk.readAll()).toStdString();
-        return std::string();
-    });
+    if (auto index = readJsonObject(QStringLiteral("index.json")))
+        m_baseUrl = index->value(QStringLiteral("base_url")).toString();
+    qInfo("ProjectsController: base_url = '%s'", qPrintable(m_baseUrl));
+
+    m_projectsStore.setProjectsLoader([this]() { return projectsBundle(); });
     m_projectsStore.loadAll();
+}
+
+// Bundle every enabled project's project.json into a single JSON array, driven
+// by projects/index.json. Core stays Qt-free; resource discovery lives here.
+std::string ProjectsController::projectsBundle() const {
+    auto index = readJsonObject(QStringLiteral("index.json"));
+    if (!index)
+        return {};
+
+    QJsonArray bundle;
+    const QJsonArray ids = index->value(QStringLiteral("projects")).toArray();
+    for (const auto &idVal : ids) {
+        if (!idVal.isString())
+            continue;
+        const QString id = idVal.toString();
+        auto proj = readJsonObject(id + QStringLiteral("/project.json"));
+        if (proj)
+            bundle.append(*proj);
+        else
+            qWarning("ProjectsController: missing project.json for '%s'", qPrintable(id));
+    }
+    return QJsonDocument(bundle).toJson(QJsonDocument::Compact).toStdString();
+}
+
+// Join a project's relative url with the configured base_url, normalising
+// slashes. Absolute URLs (http(s)://, etc.) and empty values pass through.
+QString ProjectsController::resolveUrl(const QString &rel) const {
+    if (m_baseUrl.isEmpty() || rel.isEmpty())
+        return rel;
+    if (rel.contains(QStringLiteral("://")))
+        return rel;
+
+    QString base = m_baseUrl.trimmed();
+    QString path = rel.trimmed();
+    while (base.endsWith(QLatin1Char('/')))
+        base.chop(1);
+    while (path.startsWith(QLatin1Char('/')))
+        path.remove(0, 1);
+    return base + QLatin1Char('/') + path;
 }
 
 QVariant ProjectsController::getProject(const QString &id) const {
     auto proj = m_projectsStore.getProject(id.toStdString());
     if (!proj) return QVariant();
 
+    const QString locale = m_translator->currentLocale();
+
     QVariantMap map;
     map["id"] = QString::fromStdString(proj->id);
-    map["title"] = m_translator->translate("Project" + id.left(1).toUpper() + id.mid(1) + "Screen.qml", QString::fromStdString(proj->titleKey));
-    map["description"] = m_translator->translate("Project" + id.left(1).toUpper() + id.mid(1) + "Screen.qml", QString::fromStdString(proj->descriptionKey));
+
+    auto strings = readJsonObject(id + QStringLiteral("/strings/") + locale + QStringLiteral(".json"));
+    if (!strings && locale != QLatin1String("en_US"))
+        strings = readJsonObject(id + QStringLiteral("/strings/en_US.json"));
+
+    QString titleKey = QString::fromStdString(proj->titleKey);
+    QString descKey = QString::fromStdString(proj->descriptionKey);
+    QString urlKey = QString::fromStdString(proj->urlKey);
+
+    if (strings) {
+        map["title"] = strings->value(QStringLiteral("title")).toString(titleKey);
+        QString desc = strings->value(descKey).toString();
+        if (desc.isEmpty())
+            desc = strings->value(QStringLiteral("learning_description")).toString();
+        map["description"] = desc.isEmpty() ? descKey : desc;
+        map["url"] = resolveUrl(strings->value(QStringLiteral("url")).toString(urlKey));
+    } else {
+        map["title"] = m_translator->translate("Project" + id.left(1).toUpper() + id.mid(1) + "Screen.qml", titleKey);
+        map["description"] = m_translator->translate("Project" + id.left(1).toUpper() + id.mid(1) + "Screen.qml", descKey);
+        map["url"] = resolveUrl(m_translator->translate("Project" + id.left(1).toUpper() + id.mid(1) + "Screen.qml", urlKey));
+    }
+
     map["image"] = QString::fromStdString(proj->imageKey);
-    map["url"] = m_translator->translate("Project" + id.left(1).toUpper() + id.mid(1) + "Screen.qml", QString::fromStdString(proj->urlKey));
     map["hexPath"] = QString::fromStdString(proj->hexPath);
     map["achievementId"] = QString::fromStdString(proj->achievementId);
 
+    // Quiz content is loaded from per-locale quiz/<locale>.json (inline text).
+    auto quiz = readJsonObject(id + QStringLiteral("/quiz/") + locale + QStringLiteral(".json"));
+    if (!quiz && locale != QLatin1String("en_US"))
+        quiz = readJsonObject(id + QStringLiteral("/quiz/en_US.json"));
+
     QVariantList questionsList;
-    for (const auto &q : proj->questions) {
-        QVariantMap qMap;
-        qMap["text"] = m_translator->translate("Project" + id.left(1).toUpper() + id.mid(1) + "Screen.qml", QString::fromStdString(q.textKey));
-        QVariantList answersList;
-        for (const auto &a : q.answers) {
-            QVariantMap aMap;
-            aMap["text"] = m_translator->translate("Project" + id.left(1).toUpper() + id.mid(1) + "Screen.qml", QString::fromStdString(a.textKey));
-            aMap["correct"] = a.correct;
-            answersList.append(aMap);
+    if (quiz) {
+        const QJsonArray qs = quiz->value(QStringLiteral("questions")).toArray();
+        for (const auto &qVal : qs) {
+            QJsonObject q = qVal.toObject();
+            QVariantMap qMap;
+            qMap["text"] = q.value(QStringLiteral("text")).toString();
+            QVariantList answersList;
+            const QJsonArray ans = q.value(QStringLiteral("answers")).toArray();
+            for (const auto &aVal : ans) {
+                QJsonObject a = aVal.toObject();
+                QVariantMap aMap;
+                aMap["text"] = a.value(QStringLiteral("text")).toString();
+                aMap["correct"] = a.value(QStringLiteral("correct")).toBool(false);
+                answersList.append(aMap);
+            }
+            qMap["answers"] = answersList;
+            questionsList.append(qMap);
         }
-        qMap["answers"] = answersList;
-        questionsList.append(qMap);
     }
     map["questions"] = questionsList;
 
@@ -104,16 +205,8 @@ void ProjectsController::setCompleted(const QString &id, bool completed) {
 }
 
 QString ProjectsController::loadHtml(const QString &id, const QString &locale) const {
-    auto read = [](const QString &path) -> QString {
-        QFile f(path);
-        if (!f.open(QIODevice::ReadOnly))
-            return {};
-        return QString::fromUtf8(f.readAll());
-    };
-    const QString rel = QStringLiteral("%1/%2.html").arg(id, locale);
-    QString html = read(QStringLiteral("projects/") + rel);
-    if (html.isEmpty())
-        html = read(QStringLiteral(":/projects/") + rel);
+    const QString rel = QStringLiteral("%1/page/%2.html").arg(id, locale);
+    QString html = readText(rel);
     if (html.isEmpty() && locale != QLatin1String("en_US"))
         return loadHtml(id, QStringLiteral("en_US"));
     return html;

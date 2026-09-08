@@ -1,4 +1,4 @@
-# SCREEN_PROJECT_MOVE — ProjectMoveScreen.qml
+# SCREEN_PROJECT_MOVE — Project "Move" (ProjectScreen)
 
 > Project 01 "Move" — learn to guide Zowi precisely and understand how a
 > two-legged robot moves. Design derived from ZowiAppReborn's
@@ -6,15 +6,17 @@
 > [SCREEN_PROJECTS.md](SCREEN_PROJECTS.md).
 
 - **Status:** ✅ **IMPLEMENTED** (v0.8.0).
-- **File:** `src/views/screens/ProjectMoveScreen.qml` (implemented).
-- **i18n context:** `"ProjectMoveScreen.qml"` (implemented in all locales).
+- **Screen:** generic `src/views/screens/ProjectScreen.qml`, pushed with `projectId: "move"`.
+- **i18n context:** shared UI strings under `"ProjectScreen.qml"` in all locales; project-specific strings in the data folder.
 - **Project id:** `move` — Home tile `move_objects`.
-- **Source JSON:** `projects/move.json` (registered in `projects.qrc`).
+- **Data folder:** `projects/move/` (`project.json`, `page/*.html`, `quiz/*.json`, `strings/*.json`, registered in `projects.qrc`, listed in `projects/index.json`).
 - **Achievement:** `flapping` (reserved for the deferred ACHIEVEMENTS layer).
-- **Firmware:** none (`project_hex` empty) — no install button.
-- **URL:** `http://zowi.bq.com/projects/move-objects/`
+- **Firmware:** none (`hex_path` empty) — no install button.
+- **URL:** `https://eduardomillan.github.io/ZowiDesktop/docs/projects/move/<locale>/`
+  (stored as the relative `move/<locale>/` in `projects/move/strings/<locale>.json`,
+  joined with the global `base_url` from `projects/index.json`).
 - **Images:** tile `qrc:/images/android/move_button.png`; detail
-  `qrc:/images/android/project_move_image.png`.
+  `qrc:/images/projects/move_thumb.png` (via `image_key`).
 - Reached from Home *Projects* page tile → push; back → pop.
 
 ## Contents
@@ -23,9 +25,12 @@
 - Done icon — `move_project_completeness` (done / not-done).
 - Project link — opens the URL in the system browser.
 - **Run Test** — quiz via reusable `QuizComponent`, in-screen; disabled during a quiz blockade.
-- **No firmware install** — this project has no `project_hex`.
+- **No firmware install** — this project has no `hex_path`.
 
 ## Quiz
+
+Quiz source: `projects/move/quiz/<locale>.json` (inline translated text; English
+is the fallback locale).
 
 | Q | Answers (correct in bold) |
 |---|---|
@@ -53,11 +58,12 @@ dialog until the ACHIEVEMENTS toggle is enabled (see SCREEN_PROJECTS.md).
 
 ## Implementation notes
 
-- Core: `zowi::ProjectsStore` loads `:/projects/move.json` (resource) or filesystem (dev).
-- GUI: `ProjectsController` wraps the core store and exposes the QML API.
+- Core: `zowi::ProjectsStore` loads `projects/index.json` + `projects/<id>/project.json` (resource or filesystem).
+- GUI: `ProjectsController` wraps the core store, resolves `strings/<locale>.json` and `quiz/<locale>.json` (fallback `en_US`), and exposes the QML API.
 - Quiz: `QuizComponent.qml` (reusable) handles question flow, answer validation,
   blockade timing, and persistence via `SessionController.saveString/getString`.
 - Preferences: `ProjectsPreferencesStore` stores `blockade_duration_ms`,
   `achievements_enabled`, `quiz_enabled` in `projects_preferences.json`.
-- i18n: All strings in all locales under `"ProjectMoveScreen.qml"` and
-  `"QuizComponent.qml"` contexts.
+- i18n: Shared UI strings once in the `"ProjectScreen.qml"` context of all
+  locales; quiz/strings per locale in the project's data folder; quiz widget
+  strings in the `"QuizComponent.qml"` context.

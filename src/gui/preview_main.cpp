@@ -171,6 +171,7 @@ struct PreviewOptions
     QString locale = QStringLiteral("en_US");
     QString deviceName = QStringLiteral("Zowi Demo");
     QString deviceAddress = QStringLiteral("B4:9D:0B:32:41:0E");
+    QString projectId;
     bool connected = false;
     int step = -1;   // -1 = not specified (screen uses its internal default)
 };
@@ -199,6 +200,10 @@ static PreviewOptions parseOptions(const QStringList &arguments)
             options.step = arg.section(QLatin1Char('='), 1).toInt();
         } else if (arg == QStringLiteral("--step") && i + 1 < arguments.size()) {
             options.step = arguments.at(++i).toInt();
+        } else if (arg.startsWith(QStringLiteral("--project-id="))) {
+            options.projectId = arg.section(QLatin1Char('='), 1);
+        } else if (arg == QStringLiteral("--project-id") && i + 1 < arguments.size()) {
+            options.projectId = arguments.at(++i);
         } else if (!arg.startsWith(QStringLiteral("--")) && options.screenPath.isEmpty()) {
             options.screenPath = arg;
         }
@@ -207,10 +212,17 @@ static PreviewOptions parseOptions(const QStringList &arguments)
     return options;
 }
 
-static void loadScreen(QQuickView &view, const QString &screenPath)
+static void loadScreen(QQuickView &view, const PreviewOptions &options)
 {
-    view.setTitle(QStringLiteral("Zowi Screen Preview - %1").arg(QFileInfo(screenPath).baseName()));
-    view.setSource(QUrl::fromLocalFile(screenPath));
+    view.setTitle(QStringLiteral("Zowi Screen Preview - %1").arg(QFileInfo(options.screenPath).baseName()));
+    if (options.projectId.isEmpty()) {
+        view.setSource(QUrl::fromLocalFile(options.screenPath));
+    } else {
+        // Pass projectId as an initial property so generic screens like
+        // ProjectScreen.qml resolve their per-project data at load time.
+        view.setInitialProperties({{QStringLiteral("projectId"), options.projectId}});
+        view.setSource(QUrl::fromLocalFile(options.screenPath));
+    }
 }
 
 int main(int argc, char *argv[])
@@ -221,7 +233,7 @@ int main(int argc, char *argv[])
 
     const PreviewOptions options = parseOptions(QCoreApplication::arguments());
     if (options.screenPath.isEmpty()) {
-        qCritical("Usage: zowi_screen_preview <screen.qml> [--locale xx_YY] [--connected] [--device-name NAME] [--device-address MAC] [--step N]");
+        qCritical("Usage: zowi_screen_preview <screen.qml> [--locale xx_YY] [--connected] [--device-name NAME] [--device-address MAC] [--step N] [--project-id ID]");
         return 1;
     }
 
@@ -267,10 +279,10 @@ int main(int argc, char *argv[])
     view.setColor(QColor(QStringLiteral("#f4f9f4")));
 
     QObject::connect(&translator, &TranslatorController::languageChanged, [&view, options]() {
-        loadScreen(view, options.screenPath);
+        loadScreen(view, options);
     });
 
-    loadScreen(view, options.screenPath);
+    loadScreen(view, options);
     if (view.status() != QQuickView::Ready)
         return 1;
 

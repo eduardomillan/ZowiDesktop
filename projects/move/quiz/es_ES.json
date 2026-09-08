@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Los movimientos de Zowi le permiten…",
+      "answers": [
+        {
+          "text": "…dar vueltas en círculos.",
+          "correct": false
+        },
+        {
+          "text": "…caminar hacia adelante y en diagonal.",
+          "correct": true
+        },
+        {
+          "text": "…caminar hacia atrás y en diagonal.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Si aumento la velocidad de andar de Zowi, ¿siempre se mueve más rápido?",
+      "answers": [
+        {
+          "text": "No. Se mueve más rápido, pero a veces no avanza más deprisa porque patina.",
+          "correct": true
+        },
+        {
+          "text": "No. Si se mueve demasiado rápido puede romperse y dejar de avanzar.",
+          "correct": false
+        },
+        {
+          "text": "Sí. Zowi siempre avanza más rápido si la velocidad de movimiento es mayor.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

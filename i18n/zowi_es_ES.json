@@ -210,31 +210,17 @@
   "GestureScreen.qml": {
     "gestures_title": "Gestos"
   },
-  "ProjectMoveScreen.qml": {
-    "title": "Mover",
-    "learning_description": "Aprende a guiar a Zowi con precisión y comprende cómo se mueve un robot de dos patas. Descubre los fundamentos de la locomoción robótica y practica controlando los movimientos de Zowi.",
-    "url": "https://eduardomillan.github.io/ZowiDesktop/docs/projects/move/es/",
-    "learn_more": "Saber más",
-    "test": "Test",
-    "run_test": "Ejecutar prueba",
-    "quiz_passed": "¡Enhorabuena! Has completado el proyecto Mover.",
-    "quiz_failed": "Respuesta incorrecta. Inténtalo de nuevo en %1.",
-    "quiz_blocked": "Prueba bloqueada. Inténtalo de nuevo en %1.",
-    "correct": "¡Correcto!",
-    "incorrect": "Incorrecto.",
-    "question_1": "Los movimientos de Zowi le permiten…",
-    "question_1_answer_1": "…dar vueltas en círculos.",
-    "question_1_answer_2": "…caminar hacia adelante y en diagonal.",
-    "question_1_answer_3": "…caminar hacia atrás y en diagonal.",
-    "question_2": "Si aumento la velocidad de andar de Zowi, ¿siempre se mueve más rápido?",
-    "question_2_answer_1": "No. Se mueve más rápido, pero a veces no avanza más deprisa porque patina.",
-    "question_2_answer_2": "No. Si se mueve demasiado rápido puede romperse y dejar de avanzar.",
-    "question_2_answer_3": "Sí. Zowi siempre avanza más rápido si la velocidad de movimiento es mayor."
-  },
   "QuizComponent.qml": {
     "run_test": "Ejecutar prueba",
     "correct": "¡Correcto!",
     "incorrect": "Incorrecto.",
+    "quiz_blocked": "Prueba bloqueada. Inténtalo de nuevo en %1."
+  },
+  "ProjectScreen.qml": {
+    "test": "Test",
+    "learn_more": "Saber más",
+    "quiz_passed": "¡Enhorabuena! Has completado el proyecto.",
+    "quiz_failed": "Respuesta incorrecta. Inténtalo de nuevo en %1.",
     "quiz_blocked": "Prueba bloqueada. Inténtalo de nuevo en %1."
   }
 }

@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "The movements of Zowi allow it to…",
+      "answers": [
+        {
+          "text": "…spin in circles.",
+          "correct": false
+        },
+        {
+          "text": "…walk forward and diagonally.",
+          "correct": true
+        },
+        {
+          "text": "…walk backward and diagonally.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "If I increase the walking speed of Zowi, does it always move faster?",
+      "answers": [
+        {
+          "text": "No. It moves more quickly, but sometimes it does not advance faster because it slips.",
+          "correct": true
+        },
+        {
+          "text": "No. If it moves too fast it can break and stop advancing.",
+          "correct": false
+        },
+        {
+          "text": "Yes. Zowi always advances faster if the movement speed is higher.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

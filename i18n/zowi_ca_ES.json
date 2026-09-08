@@ -219,31 +219,17 @@
   "GestureScreen.qml": {
     "gestures_title": "Gestos"
   },
-  "ProjectMoveScreen.qml": {
-    "title": "Moure",
-    "learning_description": "Aprèn a guiar Zowi amb precisió i entén com es mou un robot de dues potes. Descobreix els fonaments de la locomotió robòtica i practica controlant els moviments de Zowi.",
-    "url": "https://eduardomillan.github.io/ZowiDesktop/docs/projects/move/ca/",
-    "learn_more": "Saber-ne més",
-    "test": "Test",
-    "run_test": "Executar prova",
-    "quiz_passed": "¡Enhorabona! Has completat el projecte Moure.",
-    "quiz_failed": "Resposta incorrecta. Torna a provar-ho en %1.",
-    "quiz_blocked": "Prova bloquejada. Torna a provar-ho en %1.",
-    "correct": "¡Correcte!",
-    "incorrect": "Incorrecte.",
-    "question_1": "Els moviments de Zowi li permeten…",
-    "question_1_answer_1": "…girar en cercles.",
-    "question_1_answer_2": "…caminar cap endavant i en diagonal.",
-    "question_1_answer_3": "…caminar cap enrere i en diagonal.",
-    "question_2": "Si augmento la velocitat de caminar de Zowi, ¿el mou sempre més ràpid?",
-    "question_2_answer_1": "No. Es mou més ràpid, però a vegades no avança més ràpid perquè patina.",
-    "question_2_answer_2": "No. Si es mou massa ràpid es pot trencar i deixar d'avançar.",
-    "question_2_answer_3": "Sí. Zowi sempre avança més ràpid si la velocitat de moviment és més gran."
-  },
   "QuizComponent.qml": {
     "run_test": "Executar prova",
     "correct": "¡Correcte!",
     "incorrect": "Incorrecte.",
+    "quiz_blocked": "Prova bloquejada. Torna a provar-ho en %1."
+  },
+  "ProjectScreen.qml": {
+    "test": "Test",
+    "learn_more": "Saber-ne més",
+    "quiz_passed": "¡Enhorabona! Has completat el projecte.",
+    "quiz_failed": "Resposta incorrecta. Torna a provar-ho en %1.",
     "quiz_blocked": "Prova bloquejada. Torna a provar-ho en %1."
   }
 }

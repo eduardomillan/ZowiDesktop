@@ -40,9 +40,10 @@ Window {
             var editor = stack.push("qrc:/src/views/screens/MouthEditorScreen.qml")
             editor.backClicked.connect(function() { stack.pop() })
         })
-        home.projectMoveClicked.connect(function() {
-            var move = stack.push("qrc:/src/views/screens/ProjectMoveScreen.qml")
-            move.backClicked.connect(function() { stack.pop() })
+        home.projectRequested.connect(function(projectId) {
+            var project = stack.push("qrc:/src/views/screens/ProjectScreen.qml",
+                                     { projectId: projectId })
+            project.backClicked.connect(function() { stack.pop() })
         })
         // DEV: temporary navigation
         home.goSplash.connect(function() {

@@ -1,28 +1,69 @@
 #include <zowi/projects_store.h>
 #include <zowi/project_model.h>
 #include <fstream>
+#include <sstream>
 #include <filesystem>
 
 namespace zowi {
+
+namespace {
+std::string readFile(const std::string &path) {
+    std::ifstream file(path);
+    if (!file.is_open())
+        return {};
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    return ss.str();
+}
+} // namespace
 
 ProjectsStore::ProjectsStore()
     : m_loader([this]() { return defaultLoader(); })
 {
 }
 
+// Default loader: reads projects/index.json (a JSON object with a "projects"
+// array of project ids) and bundles every projects/<id>/project.json into a
+// single JSON array. Falls back gracefully when the index is unavailable.
 std::string ProjectsStore::defaultLoader() const {
-    std::string path = m_resourceBasePath;
-    if (!path.empty() && path.back() != '/')
-        path += '/';
-    path += "projects/move.json";
-    std::ifstream file(path);
-    if (file.is_open()) {
-        std::string content((std::istreambuf_iterator<char>(file)),
-                            std::istreambuf_iterator<char>());
-        return content;
+    std::string base = m_resourceBasePath;
+    if (!base.empty() && base.back() != '/')
+        base += '/';
+    base += "projects/";
+
+    std::string indexContent = readFile(base + "index.json");
+    if (indexContent.empty()) {
+        if (m_log) m_log(LogLevel::Warning, "ProjectsStore: could not open " + base + "index.json");
+        return "";
     }
-    if (m_log) m_log(LogLevel::Warning, "ProjectsStore: could not open " + path);
-    return "";
+
+    nlohmann::json index;
+    try {
+        index = nlohmann::json::parse(indexContent);
+    } catch (const std::exception &) {
+        if (m_log) m_log(LogLevel::Warning, "ProjectsStore: invalid index.json");
+        return "";
+    }
+
+    nlohmann::json bundle = nlohmann::json::array();
+    if (index.is_object() && index.contains("projects") && index["projects"].is_array()) {
+        for (const auto &id : index["projects"]) {
+            if (!id.is_string())
+                continue;
+            const std::string path = base + id.get<std::string>() + "/project.json";
+            std::string content = readFile(path);
+            if (content.empty()) {
+                if (m_log) m_log(LogLevel::Warning, "ProjectsStore: could not open " + path);
+                continue;
+            }
+            try {
+                bundle.push_back(nlohmann::json::parse(content));
+            } catch (const std::exception &) {
+                if (m_log) m_log(LogLevel::Warning, "ProjectsStore: invalid " + path);
+            }
+        }
+    }
+    return bundle.dump();
 }
 
 void ProjectsStore::loadAll() {
@@ -83,22 +124,6 @@ std::optional<Project> parseProjectJson(const nlohmann::json &json) {
         proj.urlKey = json.value("url_key", "");
         proj.hexPath = json.value("hex_path", "");
         proj.achievementId = json.value("achievement_id", "");
-
-        if (json.contains("questions") && json["questions"].is_array()) {
-            for (const auto &q : json["questions"]) {
-                ProjectQuestion question;
-                question.textKey = q.value("text_key", "");
-                if (q.contains("answers") && q["answers"].is_array()) {
-                    for (const auto &a : q["answers"]) {
-                        ProjectAnswer ans;
-                        ans.textKey = a.value("text_key", "");
-                        ans.correct = a.value("correct", false);
-                        question.answers.push_back(std::move(ans));
-                    }
-                }
-                proj.questions.push_back(std::move(question));
-            }
-        }
     } catch (...) {
         return std::nullopt;
     }

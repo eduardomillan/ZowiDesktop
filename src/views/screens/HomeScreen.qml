@@ -13,7 +13,7 @@ FocusScope {
     signal mouthEditorClicked()
     signal goSplash()
     signal goWelcome()
-    signal projectMoveClicked()
+    signal projectRequested(string projectId)
 
     property string screenName: "HomeScreen"
     property real cellSpacing: 60
@@ -291,10 +291,7 @@ FocusScope {
                                 enabled: modelData.enabled
                                 onClicked: {
                                     console.log("HomeScreen: project clicked, id:", modelData.id, "enabled:", modelData.enabled)
-                                    if (modelData.id === "move") {
-                                        console.log("HomeScreen: emitting projectMoveClicked")
-                                        homeScope.projectMoveClicked()
-                                    }
+                                    homeScope.projectRequested(modelData.id)
                                 }
                             }
 

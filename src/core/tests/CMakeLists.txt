@@ -31,3 +31,7 @@ add_test(NAME test_movement_sequencer COMMAND test_movement_sequencer)
 add_executable(test_robot_state test_robot_state.cpp)
 target_link_libraries(test_robot_state PRIVATE Zowi::core)
 add_test(NAME test_robot_state COMMAND test_robot_state)
+
+add_executable(test_projects_store test_projects_store.cpp)
+target_link_libraries(test_projects_store PRIVATE Zowi::core)
+add_test(NAME test_projects_store COMMAND test_projects_store)

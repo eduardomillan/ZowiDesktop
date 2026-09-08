@@ -1,0 +1,9 @@
+{
+  "id": "move",
+  "title_key": "title",
+  "description_key": "learning_description",
+  "image_key": "qrc:/images/projects/move_thumb.png",
+  "url_key": "url",
+  "hex_path": "",
+  "achievement_id": "flapping"
+}

@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QVariant>
+#include <QString>
 #include <zowi/projects_store.h>
 #include <zowi/projects_preferences_store.h>
 #include <zowi/translation_engine.h>
@@ -36,8 +37,12 @@ signals:
     void projectsChanged();
 
 private:
+    std::string projectsBundle() const;
+    QString resolveUrl(const QString &rel) const;
+
     zowi::ProjectsStore m_projectsStore;
     zowi::ProjectsPreferencesStore m_prefsStore;
     TranslatorController *m_translator;
     SessionController *m_session;
+    QString m_baseUrl;
 };

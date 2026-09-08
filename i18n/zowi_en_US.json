@@ -220,31 +220,17 @@
   "GestureScreen.qml": {
     "gestures_title": "Gestures"
   },
-  "ProjectMoveScreen.qml": {
-    "title": "Move",
-    "learning_description": "Learn to guide Zowi precisely and understand how a two-legged robot moves. Discover the basics of robot locomotion and practice controlling Zowi's movements.",
-    "url": "https://eduardomillan.github.io/ZowiDesktop/docs/projects/move/en/",
-    "learn_more": "Learn more",
-    "test": "Test",
-    "run_test": "Run Test",
-    "quiz_passed": "Congratulations! You completed the Move project.",
-    "quiz_failed": "Wrong answer. Try again in %1.",
-    "quiz_blocked": "Quiz blocked. Try again in %1.",
-    "correct": "Correct!",
-    "incorrect": "Incorrect.",
-    "question_1": "The movements of Zowi allow it to…",
-    "question_1_answer_1": "…spin in circles.",
-    "question_1_answer_2": "…walk forward and diagonally.",
-    "question_1_answer_3": "…walk backward and diagonally.",
-    "question_2": "If I increase the walking speed of Zowi, does it always move faster?",
-    "question_2_answer_1": "No. It moves more quickly, but sometimes it does not advance faster because it slips.",
-    "question_2_answer_2": "No. If it moves too fast it can break and stop advancing.",
-    "question_2_answer_3": "Yes. Zowi always advances faster if the movement speed is higher."
-  },
   "QuizComponent.qml": {
     "run_test": "Run Test",
     "correct": "Correct!",
     "incorrect": "Incorrect.",
+    "quiz_blocked": "Quiz blocked. Try again in %1."
+  },
+  "ProjectScreen.qml": {
+    "test": "Test",
+    "learn_more": "Learn more",
+    "quiz_passed": "Congratulations! You completed the project.",
+    "quiz_failed": "Wrong answer. Try again in %1.",
     "quiz_blocked": "Quiz blocked. Try again in %1."
   }
 }

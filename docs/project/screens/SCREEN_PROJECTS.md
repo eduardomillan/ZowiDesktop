@@ -1,27 +1,27 @@
-# SCREEN_PROJECTS — ProjectXXXScreen family
+# SCREEN_PROJECTS — ProjectScreen family
 
-> Educational "Discover" projects: 10 guided lessons. Each project ships as its
-> own `ProjectXXXScreen.qml` pushed from the Home *Projects* page, shows a
-> learning description + external link, offers a "Run Test" quiz, and two of
-> them flash an alternate firmware from the project's own window. Design
-> derived from **ZowiAppReborn** (`ProjectViewActivity` +
+> Educational "Discover" projects: 10 guided lessons. Each project is a
+> self-contained folder under `projects/<id>/` (metadata, localized page HTML,
+> localized quiz, localized strings). A **single generic `ProjectScreen.qml`**
+> is pushed from the Home *Projects* page and drives any project from its
+> `projectId`. It shows a learning page + external link, offers a "Run Test"
+> quiz, and two of them flash an alternate firmware from the project's own
+> window. Design derived from **ZowiAppReborn** (`ProjectViewActivity` +
 > `ProjectQuizViewActivity` + `assets/projects/*.json`), adapted to the desktop
 > per the decisions below.
 
 - **Status:** ✅ **Move project implemented** (v0.8.0); 9 projects remaining (design only).
-  `ProjectMoveScreen.qml` exists, backed by the Qt-free `zowi::projects` core module,
+  A generic `ProjectScreen.qml` exists, backed by the Qt-free `zowi::projects` core module,
   `ProjectsController` context, `projects.qrc` resource, and a reusable `QuizComponent.qml`.
-  The other 9 project screens are **NOT IMPLEMENTED** — design proposal only.
+  The other 9 projects are **NOT IMPLEMENTED** — design proposal only.
 - **Implemented files:**
   - Core: `src/core/include/zowi/project_model.h`, `projects_store.h/.cpp`, `projects_preferences_store.h/.cpp`
-  - GUI: `src/gui/controllers/ProjectsController.h/.cpp`, `src/views/components/QuizComponent.qml`, `src/views/screens/ProjectMoveScreen.qml`
-  - Assets: `projects/move.json`, `projects.qrc`, i18n keys in all locales under `"ProjectMoveScreen.qml"` and `"QuizComponent.qml"` contexts
-- **Planned files:** one `src/views/screens/ProjectXXXScreen.qml` per remaining project (choreography, form, bio1, bio3, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet.
-- **Planned i18n contexts:** `"ProjectXXXScreen.qml"` (one per screen). The 10
-  tile titles are already translated on the Home-screen context (`move_objects`,
+  - GUI: `src/gui/controllers/ProjectsController.h/.cpp`, `src/views/components/QuizComponent.qml`, `src/views/screens/ProjectScreen.qml`
+  - Assets: `projects/index.json`, `projects/move/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects.qrc`
+- **Planned files:** data folders under `projects/<id>/` for each remaining project (choreography, form, bio1, bio3, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet. No new QML screens needed.
+- **Project-specific i18n** lives in each project's `strings/<locale>.json` (title, url, description) and `quiz/<locale>.json` (inline text). Shared UI strings (`test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`) live once in the generic `"ProjectScreen.qml"` context of `i18n/zowi_*.json`. The 10 tile titles are translated on the Home-screen context (`move_objects`,
   `choreography`, `robot_form`, `robot_eyes`, `robot_feet`, `robot_alarm`,
-  `adivinawi`, `gravity`, `hello_world`, `bitbloq_sensors`); descriptions, links
-  and quiz strings for Move are now translated.
+  `adivinawi`, `gravity`, `hello_world`, `bitbloq_sensors`).
 - **Projects data:** all project JSON files live in a dedicated
   `projects.qrc` (new Qt resource), where future projects are appended. Debug
   builds get a filesystem fallback, mirroring how `src/config.json` is both
@@ -36,11 +36,12 @@
 
 ## Design decisions (agreed, subject to review)
 
-1. **One screen per project.** Launching a project opens
-   `ProjectXXXScreen.qml`, dedicated to that project's id. Navigation is
-   **push from HomeScreen** (from the *Projects* page tile) and **pop** back.
-   There is no generic "project detail" screen: each project is its own QML
-   subclass of `ScreenTemplate`.
+1. **One generic screen for all projects.** Launching a project pushes the same
+   `ProjectScreen.qml` with a `projectId` property; all content is loaded from
+   that id's data folder. Navigation is **push from HomeScreen** (from the
+   *Projects* page tile) and **pop** back. There is no per-project QML screen:
+   adding a project is purely adding data under `projects/<id>/` + enabling its
+   tile.
 2. **ACHIEVEMENTS layer is deferred to the end.** The quiz only marks the
    project complete; no achievement unlock is wired yet. The feature is kept
    behind an **enable/disable switch** (a `Config` flag), so the unlock hooks
@@ -50,46 +51,63 @@
    `ZOWI_Adivinawi_v2.hex` from `ProjectAdivinawiScreen`. The hex path comes
    from the project JSON (`project_hex`), so more firmware projects can be
    added in the future without code changes.
-4. **Project JSONs live in `projects.qrc`.** A new domain resource at repo
+4. **Project data lives in `projects.qrc`.** A new domain resource at repo
    root, alongside `views.qrc` / `app.qrc` / `images.qrc` / `i18n.qrc`, and
-   appended to `GUI_QRC_FILES` in `src/gui/CMakeLists.txt`. Adding a project =
-   adding a `.json` + a tile + a screen; no resource restructuring.
+   appended to `GUI_QRC_FILES` in `src/gui/CMakeLists.txt`. Each project is a
+   folder `projects/<id>/` (see "What a Zowi project is"). Adding a project =
+   adding data files + registering them in `projects.qrc` + enabling a tile;
+   no new screens or resource restructuring.
 
 ## What a Zowi project is
 
-Every project is a small self-contained lesson defined in an asset JSON. In the
-Android app this maps 1:1 to the model `com.bq.zowi.models.Project`, which the
-desktop mirrors as a Qt-free core type:
+Every project is a small self-contained lesson stored in its own folder:
 
-- `id` — project id; names the QML screen (`Project<Id>Screen.qml`), the JSON
-  file and the persistence keys.
-- `title_resource_id` / `learning_description_resource_id` — i18n keys
-  (resolved through the TranslationEngine, never literal strings).
-- `image_resource_id` — tile/detail image (desktop already ships the original
-  Android button artwork under `qrc:/images/android/*.png`).
-- `project_url_resource_id` — external link opened in the system browser.
-- `test` — quiz content: 2 questions x 3 answers, one correct each.
-- `achievement` — achievement id associated with the project. **Reserved for
-  the deferred ACHIEVEMENTS layer** (see decision 2): parsed and stored, but
-  not acted upon until the toggle is enabled.
-- `project_hex` — optional firmware to flash from the project's own window;
+```
+projects/
+├── index.json                 # { "base_url": "https://…", "projects": ["move", …] }
+└── <project_id>/
+    ├── project.json           # metadata (mirrors the Android asset JSON)
+    ├── page/<locale>.html     # localized lesson HTML (fallback en_US)
+    ├── quiz/<locale>.json     # quiz with inline translated text
+    └── strings/<locale>.json  # title / url / learning_description per locale
+```
+
+The `url` in each `strings/<locale>.json` is relative to the `base_url` in
+`projects/index.json` (e.g. `move/es/`); `ProjectsController` joins them at
+load time. Absolute URLs (`https://…`) pass through unchanged.
+
+The metadata `project.json` mirrors the Android `com.bq.zowi.models.Project`:
+
+- `id` — project id; drives the data folder path and the persistence keys.
+- `title_key` / `description_key` / `url_key` — translation-key names used when
+  a localized `strings/<locale>.json` entry is missing.
+- `image_key` — detail image resource (desktop ships the original Android
+  button artwork under `qrc:/images/android/*.png` / `qrc:/images/projects/*`).
+- `hex_path` — optional firmware to flash from the project's own window;
   currently only Reprogram (Alarm) and Adivinawi carry a non-empty value, more
   can be added later.
+- `achievement_id` — achievement associated with the project. **Reserved for
+  the deferred ACHIEVEMENTS layer** (see decision 2): parsed and stored, but
+  not acted upon until the toggle is enabled.
 
-### The 10 projects → screens
+Quiz and UI strings are **not** keys anymore: `quiz/<locale>.json` holds the
+questions with inline translated text, and `strings/<locale>.json` holds
+`title` / `url` / `learning_description` per locale.
 
-| # | Android id | JSON file | Desktop i18n key | Screen | Firmware |
-|---|---|---|---|---|---|
-| 01 | `move` | `01_project_mueve.json` | `move_objects` | `ProjectMoveScreen.qml` | — |
-| 02 | `choreography` | `02_project_choreography.json` | `choreography` | `ProjectChoreographyScreen.qml` | — |
-| 03 | `form` | `03_project_forma.json` | `robot_form` | `ProjectFormScreen.qml` | — |
-| 04 | `bio1` | `04_project_bio1.json` | `robot_eyes` | `ProjectBio1Screen.qml` | — |
-| 05 | `bio3` | `05_project_bio3.json` | `robot_feet` | `ProjectBio3Screen.qml` | — |
-| 06 | `reprogram` | `06_project_reprogram.json` | `robot_alarm` | `ProjectReprogramScreen.qml` | `ZOWI_Alarm_v2.hex` |
-| 07 | `helloworld` | `07_project_helloworld.json` | `hello_world` | `ProjectHelloWorldScreen.qml` | — |
-| 08 | `bitbloq2` | `08_project_bitbloq2.json` | `bitbloq_sensors` | `ProjectBitbloq2Screen.qml` | — |
-| 09 | `adivinawi` | `09_project_adivinawi.json` | `adivinawi` | `ProjectAdivinawiScreen.qml` | `ZOWI_Adivinawi_v2.hex` |
-| 10 | `gravity` | `10_project_gravity.json` | `gravity` | `ProjectGravityScreen.qml` | — |
+### The 10 projects → data
+
+| # | Android id | Desktop i18n key | Data folder | Firmware |
+|---|---|---|---|---|
+| 01 | `move` | `move_objects` | `projects/move/` | — |
+| 02 | `choreography` | `choreography` | `projects/choreography/` | — |
+| 03 | `form` | `robot_form` | `projects/form/` | — |
+| 04 | `bio1` | `robot_eyes` | `projects/bio1/` | — |
+| 05 | `bio3` | `robot_feet` | `projects/bio3/` | — |
+| 06 | `reprogram` | `robot_alarm` | `projects/reprogram/` | `ZOWI_Alarm_v2.hex` |
+| 07 | `helloworld` | `hello_world` | `projects/helloworld/` | — |
+| 08 | `bitbloq2` | `bitbloq_sensors` | `projects/bitbloq2/` | — |
+| 09 | `adivinawi` | `adivinawi` | `projects/adivinawi/` | `ZOWI_Adivinawi_v2.hex` |
+| 10 | `gravity` | `gravity` | `projects/gravity/` | — |
 
 Both firmware HEX files are already bundled and flashable on desktop
 (`src/firmware/`, STK500v1 over BT/USB; the CLI exposes `zowi_cli alarm` /
@@ -98,20 +116,20 @@ Both firmware HEX files are already bundled and flashable on desktop
 ## Navigation
 
 ```
-HomeScreen (Projects page, tile "XXX") ──projectXXXClicked()──▶ ProjectXXXScreen
-                                                                │ backClicked → pop
-                                                                └─ runTest → quiz (in-screen)
+HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ ProjectScreen {projectId}
+                                                                   │ backClicked → pop
+                                                                   └─ runTest → quiz (in-screen)
 ```
 
-- **Push:** Home *Projects* tiles become clickable and emit a per-project
-  signal; `main.qml` pushes the matching `ProjectXXXScreen.qml`.
+- **Push:** Home *Projects* tiles emit a single `projectRequested(projectId)`
+  signal; `main.qml` pushes `ProjectScreen.qml` with that id.
 - **Pop:** the `ScreenTemplate` back button pops the stack to Home; the firmware
   install/failure dialogs also return to the project window (not Home).
 - Achievements toasts are **not** part of this cycle yet (deferred layer).
 
-## ProjectXXXScreen.qml — contents
+## ProjectScreen.qml — contents
 
-Each project screen is a `ScreenTemplate` subclass showing, for its project:
+`ProjectScreen.qml` is a `ScreenTemplate` subclass showing, for its `projectId`:
 
 - Title, learning description and project image.
 - **Done icon** — `project_done_icon` / `project_not_done_icon` driven by
@@ -136,7 +154,7 @@ Each project screen is a `ScreenTemplate` subclass showing, for its project:
 
 | Signal | Emitted by | Consumed in |
 |--------|-----------|-------------|
-| `projectMoveClicked()` … `projectGravityClicked()` | Home *Projects* tiles | `main.qml`: push→ `ProjectXXXScreen` |
+| `projectRequested(projectId)` | Home *Projects* tiles | `main.qml`: push→ `ProjectScreen.qml` |
 | `linkClicked(url)` | project link | external browser |
 | `installFirmwareClicked(hex)` | Install button (only if `project_hex != ""`) | `Robot.restoreFirmware(hex)` |
 | `backClicked()` | ScreenTemplate back button | pop |
@@ -166,26 +184,28 @@ Each project screen is a `ScreenTemplate` subclass showing, for its project:
 
 ## projects.qrc
 
-New file `projects.qrc` at the repo root following the split-by-domain resource
-convention:
+`projects.qrc` at the repo root following the split-by-domain resource
+convention, mirroring `projects/index.json` and each project folder:
 
 ```xml
 <RCC>
     <qresource prefix="/projects">
-        <file alias="move.json">projects/move.json</file>
-        <file alias="choreography.json">projects/choreography.json</file>
-        <!-- … one entry per project … -->
-        <file alias="gravity.json">projects/gravity.json</file>
+        <file alias="index.json">projects/index.json</file>
+        <file alias="move/project.json">projects/move/project.json</file>
+        <file alias="move/page/en_US.html">projects/move/page/en_US.html</file>
+        <file alias="move/quiz/en_US.json">projects/move/quiz/en_US.json</file>
+        <file alias="move/strings/en_US.json">projects/move/strings/en_US.json</file>
+        <!-- … one alias per file, per project … -->
     </qresource>
 </RCC>
 ```
 
 - Added to `GUI_QRC_FILES` in `src/gui/CMakeLists.txt`.
-- Source JSON files under `projects/` (next to the other top-level resource
+- Source JSON/HTML files under `projects/` (next to the other top-level resource
   trees). Debug/hot-reload loads them from disk; release loads them from the
   resource, exactly like QML and config today.
-- Future projects: drop a `.json` in `projects/`, add an `<file>` entry,
-  register a tile in HomeScreen and add the matching `ProjectXXXScreen.qml`.
+- Future projects: drop a data folder in `projects/`, add `<file>` entries in
+  `projects.qrc`, register the id in `projects/index.json`, enable a tile.
 
 ## Persistence
 
@@ -203,15 +223,17 @@ stored in a separate `projects_preferences.json` file via `ProjectsPreferencesSt
 
 ## i18n
 
-New keys per project (`<prefix>_title`, `_learning_description`, `_url`,
-`_question_1/2`, `_question_1/2_answer_1..3`) in all desktop locales,
-grouped under each `"ProjectXXXScreen.qml"` context. The Android strings
-(`strings.xml`) and the desktop `i18n/zowi_*.json` naming differ
-(`project_move_title` vs `move_objects`) — the tile titles already exist
-under the Home context; the per-screen keys for Move are now implemented.
-
-The reusable `QuizComponent` uses its own context `"QuizComponent.qml"` with
-keys: `run_test`, `correct`, `incorrect`, `quiz_blocked`.
+- **Per project (in `projects/<id>/`)**: `quiz/<locale>.json` (inline question /
+  answer text) and `strings/<locale>.json` (`title`, `url`,
+  `learning_description`). Loaded per locale with `en_US` fallback. The `url` is
+  joined with the global `base_url` from `projects/index.json` (absolute
+  `https://…` URLs pass through).
+- **Shared UI (in `i18n/zowi_*.json`)**: one `"ProjectScreen.qml"` context with
+  `test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`. The
+  reusable `QuizComponent` uses its own context `"QuizComponent.qml"` with keys:
+  `run_test`, `correct`, `incorrect`, `quiz_blocked`.
+- The tile titles live under the Home context (`move_objects`,
+  `choreography`, …) — unchanged.
 
 ## Open questions (for review)
 
@@ -224,5 +246,5 @@ keys: `run_test`, `correct`, `incorrect`, `quiz_blocked`.
   `src/projects/`) — implemented at `projects/` (repo root).
 - Quiz blockade countdown UI: documented and configurable via
   `ProjectsPreferencesStore.blockade_duration_ms`, but not yet displayed in
-  `ProjectMoveScreen` (shows a message bar instead). To be completed in a
+  `ProjectScreen` (shows a message bar instead). To be completed in a
   follow-up.

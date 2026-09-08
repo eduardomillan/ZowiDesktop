@@ -7,23 +7,15 @@
 
 namespace zowi {
 
-struct ProjectAnswer {
-    std::string textKey;
-    bool correct = false;
-};
-
-struct ProjectQuestion {
-    std::string textKey;
-    std::vector<ProjectAnswer> answers;
-};
-
+// Quiz content is locale-specific and lives outside project.json (per-project
+// quiz/<locale>.json files), so the core Project model carries only the
+// metadata referenced by translation keys and firmware/achievement info.
 struct Project {
     std::string id;
     std::string titleKey;
     std::string descriptionKey;
     std::string imageKey;
     std::string urlKey;
-    std::vector<ProjectQuestion> questions;
     std::string hexPath;
     std::string achievementId;
 };
