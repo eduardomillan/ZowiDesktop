@@ -40,6 +40,7 @@ ScreenTemplate {
         width: root.projectImageWidth
         source: "qrc:/images/android/project_gravity_image.png"
         fillMode: Image.PreserveAspectFit
+        visible: Calibration.step === 0
     }
 
     // Live-update the move via G after a trim change. Core's shouldSend keeps at
@@ -115,8 +116,8 @@ ScreenTemplate {
     StackLayout {
         id: steps
         anchors {
-            top: projectImage.bottom
-            topMargin: 10
+top: Calibration.step === 0 ? projectImage.bottom : parent.top
+                topMargin: 10
             left: parent.left
             right: parent.right
             bottom: parent.bottom
