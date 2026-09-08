@@ -19,6 +19,7 @@ Rectangle {
     property bool showDisconnectButton: false
     property bool showStatusBar: true
     property real footerHeight: 0
+    property real contentTopMargin: 30
     property bool debugBorders: false
     property url rightButtonSource: ""
 
@@ -163,8 +164,8 @@ Rectangle {
             top: header.bottom
             left: parent.left
             right: parent.right
-            bottom: footerArea.top
-            margins: 30
+bottom: footerArea.top
+                topMargin: root.contentTopMargin
         }
         clip: true
     }
