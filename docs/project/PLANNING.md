@@ -14,7 +14,7 @@
   - [M5 — Firmware restore GUI + transport selection ✅](#m5--firmware-restore-gui--transport-selection-)
   - [M6 — Transport intelligence + gamepad ✅](#m6--transport-intelligence--gamepad-)
   - [M7 — Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
-  - [M8 — Basic projects 🚧](#m8--basic-projects-)
+  - [M8 — Basic projects ✅](#m8--basic-projects-)
   - [M9 — Advanced projects 🕒](#m9--advanced-projects-)
   - [Future milestones](#future-milestones)
 - [Testing](#testing)
@@ -39,7 +39,7 @@ Status:
 | **0.5.0** | M5 | Firmware restore GUI (BT+USB), low-battery confirmation, `adivinawi` CLI, transport selection in GUI | ✅ |
 | **0.6.0** | M6 | Transport situation state machine, automatic transport, persistent preference, DEV overlay, restore feedback | ✅ |
 | **0.7.0** | M7 | Zowi calibration (servo trims via `C`/`G` protocol commands) | ✅ |
-| **0.8.0** | M8 | Basic projects | 🚧 |
+| **0.8.0** | M8 | Basic projects | ✅ |
 | **0.9.0** | M9 | Advanced projects | 🕒 |
 | **0.10.0** | M10 | Design improvements | 🕒 |
 
@@ -134,12 +134,12 @@ src/
 - [x] Gamepad gestures control
 - [x] Custom mouth editor (draw/edit arbitrary LED-matrix patterns)
 
-### M8 — Basic projects 🚧
+### M8 — Basic projects ✅
 - [x] **Move objects (`move`)** — implemented (generic ProjectScreen, QuizComponent, ProjectsStore, ProjectsController, ProjectsPreferencesStore, projects.qrc, i18n)
 - [x] **The shape of a robot (`form`)** — implemented (data folder with page/quiz/strings in 5 locales, tile enabled)
 - [x] **Zowi eyes and ultrasounds (Zowi's eyes, `bio1`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
 - [x] **The Zowi legs and servos (Zowi's feet, `bio3`)** — implemented (project JSON + localized page/quiz/strings in 5 locales, tile enabled in HomeScreen)
-- [ ] The gravity and calibration
+- [x] **The gravity and calibration (`gravity`)** — implemented (data folder with page/quiz/strings in 5 locales, tile enabled in HomeScreen, `action_target: "calibration"` pushes CalibrationScreen)
 
 ### M9 — Advanced projects 🕒
 - [ ] Robot dancing and choreography (sequence programming in home screen)

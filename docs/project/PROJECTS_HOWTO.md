@@ -30,8 +30,9 @@ as desktop screens. Each project is a self-contained lesson with:
 
 The implemented projects are **Move** (id: `move`, Home tile: `move_objects`),
 **Zowi's feet** (id: `bio3`, Home tile: `robot_feet`), **Robot form** (id:
-`form`, Home tile: `robot_form`) and **Zowi's eyes** (id: `bio1`, Home tile:
-`robot_eyes`).
+`form`, Home tile: `robot_form`), **Zowi's eyes** (id: `bio1`, Home tile:
+`robot_eyes`) and **Gravity** (id: `gravity`, Home tile: `gravity`, whose
+`action_target: "calibration"` pushes the CalibrationScreen).
 
 
 ---
@@ -393,7 +394,7 @@ Run: `ctest --test-dir build -R test_projects_store --output-on-failure`
 
 1. Launch `ZowiDesktop`
 2. Navigate to Home → Projects page (swipe right)
-3. Verify the enabled project tiles ("Move objects", "Robot form", "Zowi's eyes" (bio1), "Zowi's feet" (bio3)) are enabled (colored, not greyed out)
+3. Verify the enabled project tiles ("Move objects", "Robot form", "Zowi's eyes" (bio1), "Zowi's feet" (bio3), "Gravity") are enabled (colored, not greyed out)
 4. Click a tile → `ProjectScreen` opens (with the matching `projectId`)
 5. Verify title, description, image, link button work
 6. Click "Run Test" → answer questions

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-09-08
+
+### Added
+- **Gravity project (`gravity`):** New Discover lesson ("La gravedad y la
+  calibración" — gravity and calibration) with localized page/quiz/strings in
+  the 5 locales, `gravity_thumb.png` detail image, registered in
+  `projects/index.json` + `projects.qrc`, and the Home tile enabled. It sets
+  `action_target: "calibration"`, so its ProjectScreen action button pushes the
+  CalibrationScreen (new `"calibration"` branch in `main.qml`); the
+  CalibrationScreen now also shows the Gravity project image below its title
+  (width parametrizable via `projectImageWidth`). This completes the M8 *Basic
+  projects* milestone.
+
+### Changed
+- **ProjectScreen footer:** the Learn more / Questions / (optional) action
+  buttons now sit below the scrollable article (inside the content panel)
+  instead of using a fixed footer, with a parametrizable vertical gap
+  (`contentPanel.buttonsTopGap`); the article Flickable fills the space above
+  the button row.
+- **Release tooling:** `create-gh-release.sh` and the `release.yml` workflow
+  gained an optional `--prerelease` input/flag (incompatible with `--with-apt`).
+
 ## [0.7.3] - 2026-09-08
 
 ### Added

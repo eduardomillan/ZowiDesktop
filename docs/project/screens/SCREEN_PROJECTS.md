@@ -10,15 +10,15 @@
 > `ProjectQuizViewActivity` + `assets/projects/*.json`), adapted to the desktop
 > per the decisions below.
 
-- **Status:** ✅ **Move + Zowi's feet (bio3) + Robot form (form) + Zowi's eyes (bio1) projects implemented** (v0.8.0); 6 projects remaining (design only).
+- **Status:** ✅ **Move + Zowi's feet (bio3) + Robot form (form) + Zowi's eyes (bio1) + Gravity projects implemented** (v0.7.4); 5 projects remaining (design only).
   A generic `ProjectScreen.qml` exists, backed by the Qt-free `zowi::projects` core module,
   `ProjectsController` context, `projects.qrc` resource, and a reusable `QuizComponent.qml`.
-  The other 6 projects are **NOT IMPLEMENTED** — design proposal only.
+  The other 5 projects are **NOT IMPLEMENTED** — design proposal only.
 - **Implemented files:**
   - Core: `src/core/include/zowi/project_model.h`, `projects_store.h/.cpp`, `projects_preferences_store.h/.cpp`
   - GUI: `src/gui/controllers/ProjectsController.h/.cpp`, `src/views/components/QuizComponent.qml`, `src/views/screens/ProjectScreen.qml`
-  - Assets: `projects/index.json`, `projects/move/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio3/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio1/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `images/projects/bio3_thumb.png`, `images/projects/biology_thumb.jpg`, `projects.qrc`
-- **Planned files:** data folders under `projects/<id>/` for each remaining project (choreography, reprogram, helloworld, bitbloq2, adivinawi, gravity). They do **not** exist yet. No new QML screens needed.
+  - Assets: `projects/index.json`, `projects/move/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio3/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/bio1/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/form/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `projects/gravity/{project.json,page/*.html,quiz/*.json,strings/*.json}`, `images/projects/bio3_thumb.png`, `images/projects/biology_thumb.jpg`, `images/projects/form_thumb.jpg`, `images/projects/gravity_thumb.png`, `projects.qrc`
+- **Planned files:** data folders under `projects/<id>/` for each remaining project (choreography, reprogram, helloworld, bitbloq2, adivinawi). They do **not** exist yet. No new QML screens needed.
 - **Project-specific i18n** lives in each project's `strings/<locale>.json` (title, url, description) and `quiz/<locale>.json` (inline text). Shared UI strings (`test`, `learn_more`, `quiz_passed`, `quiz_failed`, `quiz_blocked`) live once in the generic `"ProjectScreen.qml"` context of `i18n/zowi_*.json`. The 10 tile titles are translated on the Home-screen context (`move_objects`,
   `choreography`, `robot_form`, `robot_eyes`, `robot_feet`, `robot_alarm`,
   `adivinawi`, `gravity`, `hello_world`, `bitbloq_sensors`).
@@ -116,12 +116,12 @@ questions with inline translated text, and `strings/<locale>.json` holds
 | 07 | `helloworld` | `hello_world` | `projects/helloworld/` | `bitbloq_button.png` | — | `super_happy` | — |
 | 08 | `bitbloq2` | `bitbloq_sensors` | `projects/bitbloq2/` | `bitbloq2_button.png` | — | `tip_toe` | — |
 | 09 | `adivinawi` | `adivinawi` | `projects/adivinawi/` | `adivinawi_button.png` | — | `magic` | `ZOWI_Adivinawi_v2.hex` |
-| 10 | `gravity` | `gravity` | `projects/gravity/` | `gravity_button.png` | — | `sleepy` | — |
+| 10 | `gravity` | `gravity` | `projects/gravity/` | `gravity_button.png` | `gravity_thumb.png` | `sleepy` | — |
 
 Tile images live under `qrc:/images/android/`. Detail images live under
 `qrc:/images/projects/` and are only assigned once a project's data folder
 exists (the `image_key` is set in its `project.json` — currently `move`, `bio3`,
-`form` and `bio1` are implemented, the rest are "—" until they land). The Android
+`form`, `bio1` and `gravity` are implemented, the rest are "—" until they land). The Android
 counterpart artwork (`qrc:/images/android/project_*.png`) is already bundled
 and can be reused. Achievements are **reserved for the deferred ACHIEVEMENTS
 layer** (see decision 2).
@@ -167,8 +167,9 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
      `project.json` sets `action_target`; label = `action_label` from
      `strings/<locale>.json`. Emits `actionRequested(target)`; `main.qml` pops
      back to Home and pushes the destination (e.g. `"gamepad"` → PadScreen,
-     via the shared `pushGamepad()` helper). `move` ships with
-     `"gamepad"`; the other projects have no action button yet.
+     via the shared `pushGamepad()` helper; `"calibration"` →
+     CalibrationScreen). `move` ships with `"gamepad"` and `gravity` with
+     `"calibration"`; the other projects have no action button yet.
 - **Install firmware** — **design, not yet implemented** (see decision 3).
   Intended only in projects with `project_hex != ""` (Reprogram → Alarm,
   Adivinawi → Adivinawi); conn-gated, 50 % battery check →
