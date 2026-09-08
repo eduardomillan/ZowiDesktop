@@ -18,7 +18,11 @@ FocusScope {
     property string screenName: "HomeScreen"
     property real cellSpacing: 60
     property real iconSize: Math.min(home.width * 0.55, 90)
-    property real headerFontSize: 22
+    property real headerFontSize: 26
+    property real appsWidthPercent: 0.9
+    property real appsHeightPercent: 1.0
+    property real projectsWidthPercent: 0.9
+    property real projectsHeightPercent: 1.0
 
     function tr(source) { return Translator.translate("HomeScreen.qml", source) }
 
@@ -180,79 +184,89 @@ FocusScope {
         Item {
             ListModel { id: appsModel }
 
-            Row {
-                id: appsRow
+            Item {
+                id: appsContainer
                 anchors {
-                    left: parent.left
-                    right: parent.right
+                    horizontalCenter: parent.horizontalCenter
                     verticalCenter: parent.verticalCenter
-                    leftMargin: spacing * 2
-                    rightMargin: spacing * 2
                 }
-                spacing: 15
+                width: parent.width * homeScope.appsWidthPercent
+                height: parent.height * homeScope.appsHeightPercent
+                clip: true
 
-                Repeater {
-                    model: appsModel
+                Row {
+                    id: appsRow
+                    anchors {
+                        centerIn: parent
+                        leftMargin: spacing * 2
+                        rightMargin: spacing * 2
+                    }
+                    width: parent.width
+                    spacing: 15
 
-                    delegate: Column {
-                        spacing: 6
-                        width: (appsRow.width - appsRow.spacing * (appsModel.count - 1)) / appsModel.count
+                    Repeater {
+                        model: appsModel
 
-                        readonly property real btnSize: Math.min(width * 0.55, 90)
-                        // Grey-shade buttons that are not yet implemented.
-                        readonly property bool isDisabled: !model.enabled
+                        delegate: Column {
+                            spacing: 6
+                            width: (appsRow.width - appsRow.spacing * (appsModel.count - 1)) / appsModel.count
 
-                        Rectangle {
-                            width: btnSize
-                            height: btnSize
-                            radius: Math.min(btnSize * 0.2, 16)
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            color: isDisabled
-                                   ? (Config.get("color_bg_disabled") || "#e6e6e6")
-                                   : (appMouse.containsMouse && home.robotReady ? Config.get("color_bg_hover") || "#e0f0e0" : "#ffffff")
-                            border.color: isDisabled
-                                          ? (Config.get("color_border_disabled") || "#c8c8c8")
-                                          : (Config.get("color_accent") || "#21a69b")
-                            border.width: 1
-                            opacity: (!home.robotReady || isDisabled) ? 0.4 : 1.0
+                            readonly property real btnSize: Math.min(width * 0.55, 90)
+                            // Grey-shade buttons that are not yet implemented.
+                            readonly property bool isDisabled: !model.enabled
 
-                            Image {
-                                anchors.centerIn: parent
-                                source: icon
-                                sourceSize.width: Math.min(btnSize * 0.6, 50)
-                                sourceSize.height: Math.min(btnSize * 0.6, 50)
-                                fillMode: Image.PreserveAspectFit
-                                opacity: isDisabled ? 0.5 : 1.0
-                            }
+                            Rectangle {
+                                width: btnSize
+                                height: btnSize
+                                radius: Math.min(btnSize * 0.2, 16)
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                color: isDisabled
+                                       ? (Config.get("color_bg_disabled") || "#e6e6e6")
+                                       : (appMouse.containsMouse && home.robotReady ? Config.get("color_bg_hover") || "#e0f0e0" : "#ffffff")
+                                border.color: isDisabled
+                                              ? (Config.get("color_border_disabled") || "#c8c8c8")
+                                              : (Config.get("color_accent") || "#21a69b")
+                                border.width: 1
+                                opacity: (!home.robotReady || isDisabled) ? 0.4 : 1.0
 
-                            MouseArea {
-                                id: appMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: (!home.robotReady || isDisabled) ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-                                enabled: home.robotReady && !isDisabled
-                                onClicked: {
-                                    if (name === tr("gamepad")) {
-                                        homeScope.gamepadClicked()
-                                    } else if (name === tr("mouths_editor")) {
-                                        homeScope.mouthEditorClicked()
-                                    } else {
-                                        console.log("Home: tapped", name)
+                                Image {
+                                    anchors.centerIn: parent
+                                    source: icon
+                                    sourceSize.width: Math.min(btnSize * 0.6, 50)
+                                    sourceSize.height: Math.min(btnSize * 0.6, 50)
+                                    fillMode: Image.PreserveAspectFit
+                                    opacity: isDisabled ? 0.5 : 1.0
+                                }
+
+                                MouseArea {
+                                    id: appMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: (!home.robotReady || isDisabled) ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+                                    enabled: home.robotReady && !isDisabled
+                                    onClicked: {
+                                        if (name === tr("gamepad")) {
+                                            homeScope.gamepadClicked()
+                                        } else if (name === tr("mouths_editor")) {
+                                            homeScope.mouthEditorClicked()
+                                        } else {
+                                            console.log("Home: tapped", name)
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: name
-                            color: isDisabled
-                                   ? (Config.get("color_fg_disabled") || "#9e9e9e")
-                                   : (Config.get("color_primary") || "#2d5a2d")
-                            font.pixelSize: Math.min(parent.width * 0.1, 12)
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            opacity: !home.robotReady ? 0.6 : 1.0
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: name
+                                color: isDisabled
+                                       ? (Config.get("color_fg_disabled") || "#9e9e9e")
+                                       : (Config.get("color_primary") || "#2d5a2d")
+                                font.pixelSize: Math.min(parent.width * 0.1, 12)
+                                font.bold: true
+                                horizontalAlignment: Text.AlignHCenter
+                                opacity: !home.robotReady ? 0.6 : 1.0
+                            }
                         }
                     }
                 }
@@ -267,8 +281,8 @@ FocusScope {
                     horizontalCenter: parent.horizontalCenter
                     verticalCenter: parent.verticalCenter
                 }
-                width: parent.width * 0.8
-                height: parent.height
+                width: parent.width * homeScope.projectsWidthPercent
+                height: parent.height * homeScope.projectsHeightPercent
                 clip: true
 
                 Flow {
