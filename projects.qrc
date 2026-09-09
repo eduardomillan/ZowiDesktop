@@ -1,6 +1,22 @@
 <RCC>
     <qresource prefix="/projects">
         <file alias="index.json">projects/index.json</file>
+        <file alias="choreography/project.json">projects/choreography/project.json</file>
+        <file alias="choreography/page/es_ES.html">projects/choreography/page/es_ES.html</file>
+        <file alias="choreography/page/en_US.html">projects/choreography/page/en_US.html</file>
+        <file alias="choreography/page/ca_ES.html">projects/choreography/page/ca_ES.html</file>
+        <file alias="choreography/page/fr_FR.html">projects/choreography/page/fr_FR.html</file>
+        <file alias="choreography/page/bg_BG.html">projects/choreography/page/bg_BG.html</file>
+        <file alias="choreography/quiz/es_ES.json">projects/choreography/quiz/es_ES.json</file>
+        <file alias="choreography/quiz/en_US.json">projects/choreography/quiz/en_US.json</file>
+        <file alias="choreography/quiz/ca_ES.json">projects/choreography/quiz/ca_ES.json</file>
+        <file alias="choreography/quiz/fr_FR.json">projects/choreography/quiz/fr_FR.json</file>
+        <file alias="choreography/quiz/bg_BG.json">projects/choreography/quiz/bg_BG.json</file>
+        <file alias="choreography/strings/es_ES.json">projects/choreography/strings/es_ES.json</file>
+        <file alias="choreography/strings/en_US.json">projects/choreography/strings/en_US.json</file>
+        <file alias="choreography/strings/ca_ES.json">projects/choreography/strings/ca_ES.json</file>
+        <file alias="choreography/strings/fr_FR.json">projects/choreography/strings/fr_FR.json</file>
+        <file alias="choreography/strings/bg_BG.json">projects/choreography/strings/bg_BG.json</file>
         <file alias="move/project.json">projects/move/project.json</file>
         <file alias="move/page/es_ES.html">projects/move/page/es_ES.html</file>
         <file alias="move/page/en_US.html">projects/move/page/en_US.html</file>

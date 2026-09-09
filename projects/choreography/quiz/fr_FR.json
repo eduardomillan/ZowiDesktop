@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Dans 1, 2, 3... Action ! Il y a plusieurs options pour les mouvements :",
+      "answers": [
+        {
+          "text": "4 vitesses + la direction.",
+          "correct": false
+        },
+        {
+          "text": "5 vitesses + nombre de répétitions.",
+          "correct": false
+        },
+        {
+          "text": "3 vitesses + nombre de répétitions + direction (pour certains mouvements).",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "Les chorégraphies que tu fais avec 1, 2, 3... Action ! :",
+      "answers": [
+        {
+          "text": "Sont limitées à un maximum de 10 mouvements.",
+          "correct": false
+        },
+        {
+          "text": "Peuvent associer mouvements et expressions faciales.",
+          "correct": true
+        },
+        {
+          "text": "Changent si tu mets la main devant Zowi.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

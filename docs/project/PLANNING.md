@@ -142,21 +142,21 @@ src/
 - [x] The gravity and calibration
 - [X] Add all the available mouth and gestures to Gamepad
 
-### M9 — Advanced projects 🕒
-- [ ] Robot dancing and choreography (sequence programming in home screen)
+### M9 — Advanced projects 🚧
+- [X] Robot dancing and choreography (sequence programming in home screen)
 - [ ] The alarm robot
 - [ ] Fortune-telling robot
 - [ ] Bitbloq I: Hello World
 - [ ] Bitbloq II: Sensors
 
-### Future milestones
+### Future milestones 🕒
 - [ ] **Projects CLI commands** — `project list/show/reset/prefs` (uses core ProjectsStore/ProjectsPreferencesStore, no Qt)
 - [ ] Game: Visual block editor
 - [ ] Game: Memory
 - [ ] Game: Draw the mouth
 - [ ] Achievements layer
 
-### Application new features
+### Application new features 🕒
 
 - [ ] Implement the new firmware ZOWI_DESKTOP_FW
 - [ ] Add new feature in mouth editor, showing the current mouth

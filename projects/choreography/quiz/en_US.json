@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "In \"3, 2, 1... Action!\" the movements have several options:",
+      "answers": [
+        {
+          "text": "4 speeds and direction.",
+          "correct": false
+        },
+        {
+          "text": "5 speeds and the number of repetitions.",
+          "correct": false
+        },
+        {
+          "text": "3 speeds, the number of repetitions and, for some of them, direction.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "The choreographies you make with \"3, 2, 1... Action!\":",
+      "answers": [
+        {
+          "text": "Can only reach a maximum of 10 movements.",
+          "correct": false
+        },
+        {
+          "text": "Can combine movements and mouth gestures.",
+          "correct": true
+        },
+        {
+          "text": "Change if you put your hand in front of Zowi.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

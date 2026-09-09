@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "En \"3, 2, 1 ¡Acción!\" los movimientos tienen varias opciones:",
+      "answers": [
+        {
+          "text": "4 velocidades y dirección.",
+          "correct": false
+        },
+        {
+          "text": "5 velocidades y el número de repeticiones.",
+          "correct": false
+        },
+        {
+          "text": "3 velocidades, el número de repeticiones y alguno de ellos, dirección.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "Las coreografías que haces con \"3, 2, 1 ¡Acción!\":",
+      "answers": [
+        {
+          "text": "Sólo pueden llegar a un máximo de 10 movimientos.",
+          "correct": false
+        },
+        {
+          "text": "Pueden combinar movimientos y gestos de boca.",
+          "correct": true
+        },
+        {
+          "text": "Cambian si pones la mano frente a Zowi.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}

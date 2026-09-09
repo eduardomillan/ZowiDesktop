@@ -29,7 +29,7 @@
 - [X] La ventana DEV se puede mostrar/ocultar con Ctrl+D en cualquier screen. Es un panel contenido dentro de la ventana principal, movible y redimensionable en 4 lados/esquinas, con geometría persistente (se centraliza en main.qml, no por pantalla).
 - [ ] Añadir dos funciones de renombrado, según las zowiLibs, que permita indicar el nombre de fábrica ($) o robot sin bautizar (#). Probar si funciona.
 - [ ] Revisar que, en el comando de 'rename', el máximo de caracteres es de 10, según se ha comprobado en zowiLibs.
-- [ ] Acabar la pantalla del proyecto 'mueve objetos'. Poner enlace al 'gamepad'. Revisar el funcionamiento de la estrella 'completado'. Revisar estilo del quiz y dónde poner las preguntas (no en i18n).
+- [ ] Cuando se progame el nuevo firmware, reducir al 20% de batería el proceso con el que el robot se pone en estado de alarma (ahora es al 50%).
 
 
 ## Cambios

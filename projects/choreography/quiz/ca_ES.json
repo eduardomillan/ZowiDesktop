@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "A \"3, 2, 1... Acció!\" els moviments tenen diverses opcions:",
+      "answers": [
+        {
+          "text": "4 velocitats i direcció.",
+          "correct": false
+        },
+        {
+          "text": "5 velocitats i el nombre de repeticions.",
+          "correct": false
+        },
+        {
+          "text": "3 velocitats, el nombre de repeticions i, en alguns, direcció.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "Les coreografies que fas amb \"3, 2, 1... Acció!\":",
+      "answers": [
+        {
+          "text": "Només poden arribar a un màxim de 10 moviments.",
+          "correct": false
+        },
+        {
+          "text": "Poden combinar moviments i gestos de boca.",
+          "correct": true
+        },
+        {
+          "text": "Canvien si poses la mà davant de Zowi.",
+          "correct": false
+        }
+      ]
+    }
+  ]
+}
