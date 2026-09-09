@@ -230,6 +230,14 @@
     "learn_more": "Saber-ne més",
     "quiz_passed": "¡Enhorabona! Has completat el projecte.",
     "quiz_failed": "Resposta incorrecta. Torna a provar-ho en %1.",
-    "quiz_blocked": "Qüestionari bloquejat. Torna a provar-ho en %1."
+    "quiz_blocked": "Qüestionari bloquejat. Torna a provar-ho en %1.",
+    "install_firmware": "Instal·lar alarma",
+    "firmware_started": "Instal·lant el firmware d'alarma…",
+    "firmware_progress": "Alarma %1%",
+    "firmware_success": "Firmware d'alarma instal·lat",
+    "firmware_failed": "No s'ha pogut instal·lar el firmware",
+    "firmware_battery_low": "La bateria està per sota del nivell segur. Continuar amb la instal·lació?",
+    "confirm": "Sí",
+    "cancel": "No"
   }
 }

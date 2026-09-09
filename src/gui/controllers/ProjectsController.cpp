@@ -132,6 +132,11 @@ QVariant ProjectsController::getProject(const QString &id) const {
 
     map["image"] = QString::fromStdString(proj->imageKey);
     map["hexPath"] = QString::fromStdString(proj->hexPath);
+    // Resolve the raw hex filename (mirrors the Android asset) to the resource
+    // path the GUI flashes from (embedded via app.qrc). Empty hexPath keeps the
+    // key empty so ProjectScreen hides the install button.
+    const QString hexPath = QString::fromStdString(proj->hexPath);
+    map["firmwarePath"] = hexPath.isEmpty() ? QString() : QStringLiteral("qrc:/firmware/") + hexPath;
     map["achievementId"] = QString::fromStdString(proj->achievementId);
 
     // Optional action button: target from project.json ("action_target"),

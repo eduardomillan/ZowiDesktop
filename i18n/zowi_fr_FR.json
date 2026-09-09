@@ -230,6 +230,14 @@
     "learn_more": "En savoir plus",
     "quiz_passed": "Félicitations ! Vous avez terminé le projet.",
     "quiz_failed": "Mauvaise réponse. Réessayez dans %1.",
-    "quiz_blocked": "Questionnaire bloqué. Réessayez dans %1."
+    "quiz_blocked": "Questionnaire bloqué. Réessayez dans %1.",
+    "install_firmware": "Installer l'alarme",
+    "firmware_started": "Installation du firmware d'alarme…",
+    "firmware_progress": "Alarme %1 %",
+    "firmware_success": "Firmware d'alarme installé",
+    "firmware_failed": "Impossible d'installer le firmware",
+    "firmware_battery_low": "La batterie est en dessous du niveau de sécurité. Continuer l'installation ?",
+    "confirm": "Oui",
+    "cancel": "Non"
   }
 }

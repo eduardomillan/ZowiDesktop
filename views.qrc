@@ -25,5 +25,6 @@
         <file>src/views/components/ForgetController.qml</file>
         <file>src/views/components/CalibrationTrimColumn.qml</file>
         <file>src/views/components/QuizComponent.qml</file>
+        <file>src/views/components/FirmwareInstallOverlay.qml</file>
     </qresource>
 </RCC>

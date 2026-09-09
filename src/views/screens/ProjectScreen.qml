@@ -24,6 +24,13 @@ ScreenTemplate {
     // it to a concrete screen (pop to Home first, then push the destination).
     signal actionRequested(string target)
 
+    // Firmware-install state (projects carrying a hex_path). The install runs
+    // through Robot.restoreFirmware (STK500v1), which reports progress and
+    // outcome via the restore signals connected below.
+    property bool installing: false
+    property int installProgress: 0
+    property bool installBatteryLow: false
+
     function tr(source) { return Translator.translate("ProjectScreen.qml", source) }
 
     // Format milliseconds to mm:ss
@@ -64,6 +71,33 @@ ScreenTemplate {
     Connections {
         target: Translator
         function onLanguageChanged() { projectScreen.loadContentHtml() }
+    }
+    // Firmware restore progress/outcome (Phase 2/3), same pattern as Settings:
+    // the install state is local, the overlay renders progress + battery dialog.
+    Connections {
+        target: Robot
+        function onFirmwareRestoreStarted() {
+            if (!projectScreen.installing) return
+            installProgress = 0
+        }
+        function onFirmwareRestoreProgress(percent, written, total) {
+            if (!projectScreen.installing) return
+            installProgress = percent
+        }
+        function onFirmwareRestoreFinished(success, message) {
+            if (!projectScreen.installing) return
+            projectScreen.installing = false
+            installBatteryLow = false
+            installProgress = success ? 100 : 0
+            if (success)
+                msgBar.show(tr("firmware_success"))
+            else
+                msgBar.show(tr("firmware_failed"), Config.get("color_error") || "#c0392b")
+        }
+        function onFirmwareRestoreBatteryLow(level) {
+            if (!projectScreen.installing) return
+            installBatteryLow = true
+        }
     }
 
     function openLink() {
@@ -231,6 +265,38 @@ ScreenTemplate {
                 }
                 onClicked: projectScreen.actionRequested(project.actionTarget)
             }
+
+            // Firmware-install button: shown only for projects carrying a hex
+            // (Reprogram → Alarm). Conn-gated like Settings' restore; disabled
+            // while the robot is already flashing. Flashes from this window
+            // (decision 3 in docs/project), not via main.qml navigation.
+            Button {
+                id: installButton
+                visible: project.hexPath && project.hexPath !== ""
+                implicitWidth: 200
+                height: 56
+                text: projectScreen.tr("install_firmware")
+                enabled: Robot.connected && !projectScreen.installing && !projectScreen.quizStarted
+                background: Rectangle {
+                    color: installButton.pressed ? Config.get("color_primary_pressed") || "#1f4a1f" : Config.get("color_primary") || "#2d5a2d"
+                    radius: 28
+                    opacity: installButton.enabled ? 1 : 0.5
+                }
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.pixelSize: 16
+                    font.bold: true
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+                onClicked: {
+                    projectScreen.installing = true
+                    installProgress = 0
+                    msgBar.show(tr("firmware_started"))
+                    Robot.restoreFirmware(project.firmwarePath)
+                }
+            }
         }
     }
 
@@ -246,5 +312,17 @@ ScreenTemplate {
 
     MessageBar {
         id: msgBar
+    }
+
+    FirmwareInstallOverlay {
+        id: installOverlay
+        anchors.fill: parent
+        active: projectScreen.installing
+        progress: installProgress
+        batteryLow: installBatteryLow
+        progressText: tr("firmware_progress")
+        titleText: tr("firmware_battery_low")
+        confirmText: tr("confirm")
+        cancelText: tr("cancel")
     }
 }

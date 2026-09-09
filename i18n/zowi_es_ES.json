@@ -221,6 +221,14 @@
     "learn_more": "Saber más",
     "quiz_passed": "¡Enhorabuena! Has completado el proyecto.",
     "quiz_failed": "Respuesta incorrecta. Inténtalo de nuevo en %1.",
-    "quiz_blocked": "Cuestionario bloqueado. Inténtalo de nuevo en %1."
+    "quiz_blocked": "Cuestionario bloqueado. Inténtalo de nuevo en %1.",
+    "install_firmware": "Instalar alarma",
+    "firmware_started": "Instalando firmware de alarma…",
+    "firmware_progress": "Alarma %1%",
+    "firmware_success": "Firmware de alarma instalado",
+    "firmware_failed": "No se pudo instalar el firmware",
+    "firmware_battery_low": "La batería está por debajo del nivel seguro. ¿Continuar con la instalación?",
+    "confirm": "Sí",
+    "cancel": "No"
   }
 }

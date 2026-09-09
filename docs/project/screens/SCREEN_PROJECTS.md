@@ -41,16 +41,18 @@
    project complete; no achievement unlock is wired yet. The feature is kept
    behind an **enable/disable switch** (a `Config` flag), so the unlock hooks
    can be added later without touching the screens.
-3. **Firmware is flashed from the project's own window (design, not yet
-   implemented).** Reprogram flashes `ZOWI_Alarm_v2.hex`, Adivinawi flashes
-   `ZOWI_Adivinawi_v2.hex` — both from the same generic `ProjectScreen` (there
-   is no per-project screen). The hex path comes from the project JSON
-   (`project_hex`), so more firmware projects can be added in the future
-   without code changes.
-   **⚠️ Pending:** the current `ProjectScreen.qml` / `ProjectsController` do
-   **not** yet expose any firmware-install UI or API; this section remains the
-   target design. Until it lands, the HEX files are flashable via the CLI
-   (`zowi_cli alarm` / `zowi_cli adivinawi`) and via Settings' restore flow.
+3. **Firmware is flashed from the project's own window.** Reprogram flashes
+   `ZOWI_Alarm_v2.hex`, Adivinawi flashes `ZOWI_Adivinawi_v2.hex` — both from
+   the same generic `ProjectScreen` (there is no per-project screen). The hex
+   path comes from the project JSON (`hex_path`), so more firmware projects can
+   be added in the future without code changes: `ProjectsController` resolves
+   it to the embedded resource (`firmwarePath` → `qrc:/firmware/…`) and the
+   generic `ProjectScreen` shows an **Install firmware** button whenever it is
+   non-empty. The flash goes through `Robot.restoreFirmware()` (conn-gated,
+   50 % battery check); progress and the low-battery confirmation render via
+   the shared `FirmwareInstallOverlay` component (also used by Settings'
+   restore flow). The HEX files remain flashable via the CLI
+   (`zowi_cli alarm` / `zowi_cli adivinawi`) and Settings' restore.
 4. **Project data lives in `projects.qrc`.** A new domain resource at repo
    root, alongside `views.qrc` / `app.qrc` / `images.qrc` / `i18n.qrc`, and
    appended to `GUI_QRC_FILES` in `src/gui/CMakeLists.txt`. Each project is a
@@ -164,11 +166,11 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
      via the shared `pushGamepad()` helper; `"calibration"` →
      CalibrationScreen). `move` ships with `"gamepad"` and `gravity` with
      `"calibration"`; the other projects have no action button yet.
-- **Install firmware** — **design, not yet implemented** (see decision 3).
-  Intended only in projects with `project_hex != ""` (Reprogram → Alarm,
-  Adivinawi → Adivinawi); conn-gated, 50 % battery check →
-  `Robot.restoreFirmware(hex)`. The current generic `ProjectScreen` does not
-  yet expose it.
+- **Install firmware** — implemented (see decision 3). Only in projects with
+  `project_hex != ""` (Reprogram → Alarm, Adivinawi → Adivinawi); conn-gated,
+  50 % battery check → `Robot.restoreFirmware(hex)`. Button label is the
+  generic `install_firmware` i18n key; progress and the battery dialog come
+  from the shared `FirmwareInstallOverlay`.
 - **Result handling** — all correct → `<id>_project_completeness = true` + done
   icon; wrong answer → blockade + failure feedback.
   No achievement dialog until the toggle in decision 2 is enabled.
@@ -180,7 +182,7 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
 | `projectRequested(projectId)` | Home *Projects* tiles | `main.qml`: push→ `ProjectScreen.qml` |
 | `linkClicked(url)` | project link | external browser |
 | `actionRequested(target)` | footer action button (only with `action_target`) | `main.qml`: pop→ Home, push→ destination (`"gamepad"` → `pushGamepad()`) |
-| `installFirmwareClicked(hex)` | Install button (design only, not yet implemented) | `Robot.restoreFirmware(hex)` |
+| `installFirmwareClicked(hex)` | Install button (projects with `hex_path`, see decision 3) | `Robot.restoreFirmware(firmwarePath)` |
 | `backClicked()` | ScreenTemplate back button | pop |
 | `quizFinished(bool)` / `quizBlocked(int)` | `QuizComponent` (in-screen) | mark completeness / blockade |
 
@@ -197,18 +199,17 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
 - `Config.get(...)` — theme colors (e.g. `color_primary`, `color_warning`,
   `color_accent`).
 
-**Not used today (deferred firmware design, see decision 3):** `Robot`
-(`connected`, `appId`, battery gating, `restoreFirmware(path)`, firmware
-signals) and `Session` (`loadActiveZowiName()`). They would only come into play
-once the in-screen "Install firmware" flow is implemented.
+`Robot` (`connected`, `restoreFirmware(path)`, firmware signals, battery
+gating) is used by the in-screen "Install firmware" flow (decision 3), exactly
+like Settings' restore. `Session` (`loadActiveZowiName()`) remains unused by
+`ProjectScreen`.
 
 ## Commands sent
 
-- None as raw strings; the robot is not involved in the current
-  `ProjectScreen` (the quiz is local logic).
-- In the deferred firmware design, flashing would go through the existing
-  STK500v1 backend (`Robot.restoreFirmware`), identical to Settings' restore
-  flow (see decision 3).
+- None as raw strings; the robot is not involved in the quiz (local logic).
+- Firmware install goes through the existing STK500v1 backend
+  (`Robot.restoreFirmware`), identical to Settings' restore flow (see
+  decision 3).
 
 ## projects.qrc
 

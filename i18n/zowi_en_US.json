@@ -231,6 +231,14 @@
     "learn_more": "Learn more",
     "quiz_passed": "Congratulations! You completed the project.",
     "quiz_failed": "Wrong answer. Try again in %1.",
-    "quiz_blocked": "Quiz blocked. Try again in %1."
+    "quiz_blocked": "Quiz blocked. Try again in %1.",
+    "install_firmware": "Install alarm",
+    "firmware_started": "Installing alarm firmware…",
+    "firmware_progress": "Alarm %1%",
+    "firmware_success": "Alarm firmware installed",
+    "firmware_failed": "Could not install the firmware",
+    "firmware_battery_low": "The battery is below the safe level. Continue with the install?",
+    "confirm": "Yes",
+    "cancel": "No"
   }
 }

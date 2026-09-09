@@ -412,140 +412,17 @@ ScreenTemplate {
         duration: parseInt(Config.get("message_duration")) || 2000
     }
 
-    // Restore progress (Phase 2): occupies the same bottom position as the
-    // MessageBar while a firmware restore runs, covering it (z above). The
-    // status text (yellow) sits above the progress bar.
-    Rectangle {
-        id: restoreProgressBox
-        visible: settings.restoring
-        z: 1
-        anchors {
-            left: parent.left
-            right: parent.right
-            bottom: parent.bottom
-        }
-        height: 56
-        color: Config.get("color_accent_pressed") || "#17736c"
-
-        Text {
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-                topMargin: 6
-            }
-            horizontalAlignment: Text.AlignHCenter
-            text: tr("restore_progress").arg(settings.restoreProgress)
-            color: Config.get("color_warning_text") || "#f1c40f"
-            font.pixelSize: 13
-            font.bold: true
-        }
-
-        Rectangle {
-            anchors {
-                left: parent.left
-                right: parent.right
-                leftMargin: 40
-                rightMargin: 40
-                bottom: parent.bottom
-                bottomMargin: 10
-            }
-            height: 10
-            radius: 5
-            color: "#0f4f4a"
-
-            Rectangle {
-                anchors {
-                    left: parent.left
-                    top: parent.top
-                    bottom: parent.bottom
-                }
-                width: Math.max(2, parent.width * (settings.restoreProgress / 100.0))
-                radius: 5
-                color: Config.get("color_accent") || "#21a69b"
-            }
-        }
-    }
-
-    // Phase 3: low-battery confirmation dialog shown over the progress bar while
-    // the restore waits for the user's decision. Styled to match the app theme:
-    // light app background, a warning-yellow panel with a dark-green border.
-    Rectangle {
-        id: batteryLowDialog
-        visible: settings.batteryLow
+    // Restore progress (Phase 2) + low-battery confirmation (Phase 3) rendered
+    // by the shared overlay; state comes from the Connections above.
+    FirmwareInstallOverlay {
+        id: restoreOverlay
         anchors.fill: parent
-        color: "transparent"
-
-        Rectangle {
-            anchors.centerIn: parent
-            width: Math.min(parent.width - 48, 360)
-            height: confirmColumn.height + 36
-            radius: 12
-            color: "#fdfbe7"
-            border.color: Config.get("color_primary") || "#2d5a2d"
-            border.width: 2
-
-            Column {
-                id: confirmColumn
-                anchors.centerIn: parent
-                width: parent.width - 36
-                spacing: 14
-
-                Text {
-                    width: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                    text: tr("restore_battery_low")
-                    color: Config.get("color_primary") || "#2d5a2d"
-                    font.pixelSize: 14
-                    font.bold: true
-                }
-
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 16
-
-                    Button {
-                        text: tr("confirm")
-                        background: Rectangle {
-                            color: Config.get("color_accent") || "#21a69b"
-                            radius: 6
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#ffffff"
-                            font.pixelSize: 13
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        onClicked: {
-                            settings.batteryLow = false
-                            Robot.confirmRestoreBattery(true)
-                        }
-                    }
-
-                    Button {
-                        text: tr("cancel")
-                        background: Rectangle {
-                            color: Config.get("color_danger") || "#e74c3c"
-                            radius: 6
-                        }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#ffffff"
-                            font.pixelSize: 13
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
-                        onClicked: {
-                            settings.batteryLow = false
-                            Robot.confirmRestoreBattery(false)
-                        }
-                    }
-                }
-            }
-        }
+        active: settings.restoring
+        progress: settings.restoreProgress
+        batteryLow: settings.batteryLow
+        progressText: tr("restore_progress")
+        titleText: tr("restore_battery_low")
+        confirmText: tr("confirm")
+        cancelText: tr("cancel")
     }
 }
