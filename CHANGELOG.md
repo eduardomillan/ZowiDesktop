@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Adivinawi project (`adivinawi`):** New Discover lesson ("Adivinawi" / "Guess with Zowi") with localized page/quiz/strings in the 5 locales, registered in `projects/index.json` + `projects.qrc`, and the Home tile enabled. It references `ZOWI_Adivinawi_v2.hex`, enabling firmware flashing right from its `ProjectScreen`. This advances the M9 *Advanced projects* milestone.
+
+### Changed
+- **Firmware Installer Refactoring:** Created a unified, thread-safe `FirmwareInstaller` helper class in `src/firmware/` shared between GUI and CLI, eliminating duplicate/global upload buffers, mutexes, and mode variables.
+- **CLI USB Firmware Flashing:** Added explicit `pulseReset()` after opening the serial port and bumped default flashing baud rate to 115200 to fully support Optiboot over USB.
+- **GUI USB Firmware Flashing:** Armed the firmware installer early to block control packet polling, and introduced a brief post-reset settle delay to prevent sending synchronization bytes too early during the bootloader window.
+
 ## [0.7.5] - 2026-09-09
 
 ### Added
