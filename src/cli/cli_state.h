@@ -28,9 +28,8 @@ extern bool g_finalAck;   // final ack (&&F), after EEPROM write
 // Movement orchestration state machine (&&A gating, per-cycle &&F counting,
 // mid-last-cycle stop). Fed from onDataReceived, driven by runMove/shell.
 extern zowi::MovementSequencer g_moveSequencer;
-// When true, incoming bytes are raw bootloader traffic, not the &&/N-U-B protocol.
-extern bool g_uploadMode;
-extern std::string g_stkBuffer;
+// FirmwareInstaller (shared with GUI and future hosts) owns the upload-mode
+// buffer that was previously duplicated here as g_uploadMode / g_stkBuffer.
 extern std::atomic<bool> g_quit;
 extern int g_stdinFd;
 extern bool g_debugLog;  // true when config log_level == "debug"

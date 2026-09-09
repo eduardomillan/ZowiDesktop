@@ -428,11 +428,20 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
 {
     QCoreApplication qtApp(argc, argv);
     zowi::SessionStore session("ZowiDesktop", "ZowiApp");
+    zowi::FirmwareInstaller installer;
     std::string connectTarget, boundTty;
+    // Resolve backend the same way as other commands: explicit --backend wins;
+    // with --backend auto, use the transport registered in session.
+    std::string backend = a.backend;
+    if (backend == "auto") {
+        backend = session.getString("activeZowiTransport");
+        if (backend == "bt") backend = "bluetooth";
+        if (backend.empty()) backend = "bluetooth";
+    }
     const std::string addr = a.address.empty()
                                  ? session.getString("activeZowiDeviceAddress")
                                  : a.address;
-    auto bt = prepareFlashBackend(a.backend, addr, a.tty, a.baud, connectTarget, boundTty);
+    auto bt = prepareFlashBackend(backend, addr, a.tty, a.baud, connectTarget, boundTty);
     if (!bt) return 1;
     // Firmware flashing drives the bootloader explicitly via pulseReset(); do
     // not add the control-connection boot delay.
@@ -447,7 +456,13 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
     }
 #endif
     bt->setAutoReconnect(true, 100);
-    bt->onDataReceived([](const std::string &d) { onDataReceived(d); });
+    bt->onDataReceived([&](const std::string &d) {
+        if (installer.isEnabled()) {
+            installer.feed(d);
+        } else {
+            onDataReceived(d);
+        }
+    });
     bt->onConnectionChanged([](bool c) {
         g_connected = c;
         if (c) g_connectedOnce = true;
@@ -459,9 +474,19 @@ int runFirmware(int argc, char **argv, const FirmwareArgs &a, const std::string 
         if (!boundTty.empty()) [[maybe_unused]] int ret = std::system("rfcomm release 0");
         return 1;
     }
+    // Pulse DTR AFTER the port is open to force the MCU into the bootloader.
+    // The implicit auto-reset on (re)open is not reliable (DTR is usually
+    // already high from the previous session, so there is no edge through
+    // the coupling capacitor).  A fresh reset right before the sync
+    // maximises the bootloader window.  Same approach as the GUI.
+#ifdef ZOWI_HAVE_SERIAL
+    if (auto *serial = dynamic_cast<SerialBackend *>(bt.get()))
+        serial->pulseReset();
+#endif
     const bool ok = installFirmwareToPairedZowi(qtApp,
                                                 *bt,
                                                 session,
+                                                installer,
                                                 actionLabel,
                                                 a.firmwarePath,
                                                 a.batteryTimeout,

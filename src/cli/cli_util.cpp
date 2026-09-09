@@ -19,7 +19,6 @@
 #include <csignal>
 #endif
 
-#include <zowi/stk500v1.h>
 #include <zowi/transport_constants.h>
 #include <zowi/robot_commands.h>
 #include <zowi/protocol.h>
@@ -451,42 +450,6 @@ bool waitForAppId(QCoreApplication &qtApp, zowi::BluetoothApi &bt, int timeoutMs
     }
 }
 
-bool uploadFirmware(zowi::BluetoothApi &bt, QCoreApplication &qtApp,
-                    const std::string &firmwarePath, const std::string &protocol)
-{
-    // Route incoming bytes to the raw bootloader buffer for the upload duration.
-    {
-        std::lock_guard<std::mutex> lock(g_mtx);
-        g_uploadMode = true;
-        g_stkBuffer.clear();
-    }
-
-    zowi::BootloaderTransport transport;
-    transport.send = [&](const std::vector<uint8_t> &data) {
-        return bt.send(std::string(data.begin(), data.end()));
-    };
-    transport.receive = [&](std::vector<uint8_t> &out, std::size_t maxBytes) -> int {
-        std::lock_guard<std::mutex> lock(g_mtx);
-        if (g_stkBuffer.empty()) return 0;
-        const std::size_t n = std::min(g_stkBuffer.size(), maxBytes);
-        out.assign(g_stkBuffer.data(), g_stkBuffer.data() + n);
-        g_stkBuffer.erase(0, static_cast<std::size_t>(n));
-        return static_cast<int>(n);
-    };
-    transport.pump = [&]() { qtApp.processEvents(); };
-
-    const bool ok = (protocol == "stk")
-                        ? zowi::stk500UploadFirmware(transport, firmwarePath)
-                        : zowi::zowiRawHexUploadFirmware(transport, firmwarePath);
-
-    {
-        std::lock_guard<std::mutex> lock(g_mtx);
-        g_uploadMode = false;
-    }
-
-    return ok;
-}
-
 std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
     const std::string &backendName, const std::string &address,
     const std::string &ttyOpt, int baud, std::string &connectTarget,
@@ -553,6 +516,7 @@ std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
 bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
                                  zowi::BluetoothApi &bt,
                                  zowi::SessionStore &session,
+                                 zowi::FirmwareInstaller &installer,
                                  const std::string &actionLabel,
                                  const std::string &firmwarePath,
                                  int batteryTimeoutSeconds,
@@ -575,13 +539,9 @@ bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
     }
 
     // Enable upload mode early so any bootloader response arriving during the
-    // reconnection phase is routed to g_stkBuffer instead of being parsed as a
-    // protocol message.
-    {
-        std::lock_guard<std::mutex> lock(g_mtx);
-        g_uploadMode = true;
-        g_stkBuffer.clear();
-    }
+    // reconnection phase is routed to the FirmwareInstaller buffer instead of
+    // being parsed as a protocol message.
+    installer.enable();
 
     // Wait for a stable connection. On Bluetooth the first SPP connect triggers
     // the STATE-pin reset, which may briefly drop the link while the robot
@@ -637,7 +597,11 @@ bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
         g_dataReceived = false;
     }
 
-    if (!uploadFirmware(bt, qtApp, firmwarePath, protocol)) {
+    if (!installer.upload(firmwarePath, protocol,
+                          [&](const std::vector<uint8_t> &data) {
+                              return bt.send(std::string(data.begin(), data.end()));
+                          },
+                          [&]() { qtApp.processEvents(); })) {
         bt.disconnect();
         return false;
     }

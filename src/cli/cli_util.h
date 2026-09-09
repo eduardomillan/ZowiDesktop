@@ -8,6 +8,7 @@
 #include <QCoreApplication>
 #include <zowi/bluetooth_api.h>
 #include <zowi/session_store.h>
+#include <zowi/firmware_installer.h>
 #ifndef _WIN32
 #include <qt_bluetooth_backend.h>
 #endif
@@ -90,12 +91,6 @@ bool waitForBatteryLevel(QCoreApplication &qtApp, int timeoutMs);
 bool waitForAppId(QCoreApplication &qtApp, zowi::BluetoothApi &bt, int timeoutMs,
                   const std::string &previousAppId);
 
-// ── Firmware upload (delegates to the zowi_firmware library) ──
-// protocol: "raw" streams the Intel HEX file to the device's custom bootloader;
-//           "stk" uses the STK500v1 / Optiboot framing.
-bool uploadFirmware(zowi::BluetoothApi &bt, QCoreApplication &qtApp,
-                    const std::string &firmwarePath, const std::string &protocol);
-
 // Prepare a backend for firmware flashing. Returns either a Qt Bluetooth SPP
 // backend (default, no root needed) or a serial TTY backend.
 // The serial backend is used when:
@@ -118,6 +113,7 @@ std::unique_ptr<zowi::BluetoothApi> prepareFlashBackend(
 bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
                                  zowi::BluetoothApi &bt,
                                  zowi::SessionStore &session,
+                                 zowi::FirmwareInstaller &installer,
                                  const std::string &actionLabel,
                                  const std::string &firmwarePath,
                                  int batteryTimeoutSeconds,

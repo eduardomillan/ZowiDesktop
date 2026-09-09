@@ -276,13 +276,9 @@ void RobotController::wireBackend()
         auto qdata = QString::fromStdString(data);
         QMetaObject::invokeMethod(this, [this, qdata]() {
             auto data = qdata.toStdString();
-            {
-                std::lock_guard<std::mutex> lock(m_uploadMutex);
-                if (m_uploadMode) {
-                    m_stkBuffer += data;
-                }
-            }
-            if (!m_uploadMode) {
+            if (m_firmwareInstaller.isEnabled()) {
+                m_firmwareInstaller.feed(data);
+            } else {
                 m_parser.feed(data);
                 parseIncoming();
             }
@@ -391,7 +387,7 @@ void RobotController::parseIncoming()
 
 void RobotController::requestRobotData()
 {
-    if (!m_connected || m_uploadMode) return;
+    if (!m_connected || m_firmwareInstaller.isEnabled()) return;
     if (!m_backend) return;
     zowi::sendIdentityQueries(*m_backend);
 }
@@ -399,7 +395,7 @@ void RobotController::requestRobotData()
 void RobotController::setDataPollingEnabled(bool enabled)
 {
     if (enabled) {
-        if (m_connected && !m_uploadMode)
+        if (m_connected && !m_firmwareInstaller.isEnabled())
             m_dataPollTimer.start(zowi::kIdentityPollMs);
     } else {
         m_dataPollTimer.stop();
@@ -1115,6 +1111,11 @@ void RobotController::proceedWithRestore()
     const QString target = m_restoreTarget;
     bool stable = false;
 
+    // Arm firmware-upload routing BEFORE any reconnect/reset work so we do not
+    // send control polling frames (&&N/&&A/&&B) into the bootloader window.
+    // This also captures any early bootloader bytes emitted right after reset.
+    m_firmwareInstaller.enable();
+
     if (isUsb) {
         m_backend->disconnect();
         m_backend->setAutoReconnect(false);
@@ -1138,6 +1139,16 @@ void RobotController::proceedWithRestore()
         if (connectOk && m_backend->isConnected()) {
             if (auto *serial = dynamic_cast<SerialBackend *>(m_backend.get()))
                 serial->pulseReset();
+        }
+        // Match the CLI timing: give the MCU a brief moment to land in the
+        // bootloader before sending the first STK_GET_SYNC. If we send too
+        // early (while reset is still in progress), the first sync attempt can
+        // burn most of the bootloader window waiting for a reply timeout.
+        {
+            QElapsedTimer settle;
+            settle.start();
+            while (settle.elapsed() < 300)
+                QCoreApplication::processEvents(QEventLoop::AllEvents, 20);
         }
         // The serial backend opens synchronously; upload immediately to catch
         // the short post-reset bootloader window.
@@ -1185,6 +1196,7 @@ void RobotController::proceedWithRestore()
 
     if (!stable) {
         // Could not reach the bootloader; finish now.
+        m_firmwareInstaller.clear();
         finishRestore(false);
         return;
     }
@@ -1195,41 +1207,17 @@ void RobotController::proceedWithRestore()
     // emits between pages and the pump pumps the event loop, so the progress
     // bar keeps updating and the UI stays responsive for the duration of the
     // upload (this is the same approach that already worked in Phase 2).
-    zowi::BootloaderTransport transport;
-    transport.send = [this](const std::vector<uint8_t> &data) -> bool {
-        return m_backend && m_backend->send(std::string(data.begin(), data.end()));
-    };
-    transport.receive = [this](std::vector<uint8_t> &out, std::size_t maxBytes) -> int {
-        if (!m_backend) return -1;
-        std::lock_guard<std::mutex> lock(m_uploadMutex);
-        if (m_stkBuffer.empty()) return 0;
-        const std::size_t n = std::min(m_stkBuffer.size(), maxBytes);
-        out.assign(m_stkBuffer.data(), m_stkBuffer.data() + n);
-        m_stkBuffer.erase(0, n);
-        return static_cast<int>(n);
-    };
-    transport.pump = []() {
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 5);
-    };
-    transport.progress = [this](int percent, std::size_t written, std::size_t total) {
-        emit firmwareRestoreProgress(percent, static_cast<int>(written), static_cast<int>(total));
-    };
-
-    // Enable upload mode early so any bootloader traffic arriving during the
-    // reset/reconnect cycle is routed to m_stkBuffer instead of the protocol
-    // parser.
-    {
-        std::lock_guard<std::mutex> lock(m_uploadMutex);
-        m_uploadMode = true;
-        m_stkBuffer.clear();
-    }
-
-    const bool ok = zowi::stk500UploadFirmware(transport, m_restoreLocalPath.toStdString());
-
-    {
-        std::lock_guard<std::mutex> lock(m_uploadMutex);
-        m_uploadMode = false;
-    }
+    const bool ok = m_firmwareInstaller.upload(
+        m_restoreLocalPath.toStdString(),
+        "stk",
+        [this](const std::vector<uint8_t> &data) -> bool {
+            return m_backend && m_backend->send(std::string(data.begin(), data.end()));
+        },
+        []() { QCoreApplication::processEvents(QEventLoop::AllEvents, 5); },
+        [this](int percent, std::size_t written, std::size_t total) {
+            emit firmwareRestoreProgress(percent, static_cast<int>(written), static_cast<int>(total));
+        }
+    );
 
     continueAfterUpload(ok);
 }
@@ -1296,4 +1284,3 @@ void RobotController::finishRestore(bool success)
     setRestoring(false);
     emit firmwareRestoreFinished(success, resultMsg);
 }
-

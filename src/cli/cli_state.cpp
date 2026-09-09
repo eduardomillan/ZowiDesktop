@@ -30,8 +30,6 @@ zowi::MovementSequencer g_moveSequencer;
 // Canonical identity/battery state; applyRobotMessageUnlocked mirrors its
 // fields into the globals below.
 static zowi::RobotState s_robotState;
-bool g_uploadMode = false;
-std::string g_stkBuffer;
 std::atomic<bool> g_quit{false};
 #ifdef _WIN32
 int g_stdinFd = _fileno(stdin);
@@ -150,14 +148,6 @@ void parseRobotMessage(const zowi::RobotMessage &msg)
 
 void onDataReceived(const std::string &data)
 {
-    {
-        std::lock_guard<std::mutex> lock(g_mtx);
-        if (g_uploadMode) {
-            g_stkBuffer += data;
-            return;
-        }
-    }
-
     std::lock_guard<std::mutex> lock(g_mtx);
 
     if (g_debugLog) {

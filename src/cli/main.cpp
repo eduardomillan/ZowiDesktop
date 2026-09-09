@@ -102,7 +102,7 @@ int main(int argc, char **argv)
     restoreCmd->add_flag("--force-low-battery", restoreArgs.forceLowBattery, "Continue even if the reported battery level is below 50%");
     restoreCmd->add_option("--protocol", restoreArgs.protocol, "Upload protocol: 'raw' (stream HEX to custom bootloader) or 'stk' (STK500v1)")->default_val("stk");
     restoreCmd->add_option("--tty", restoreArgs.tty, "Serial TTY to use for flashing (e.g. /dev/rfcomm0 or /dev/ttyUSB0). If omitted, one is bound (serial) or auto-picked (usb).")->default_val("");
-    restoreCmd->add_option("--baud", restoreArgs.baud, "Serial baud rate (usb Optiboot is typically 57600 or 115200)")->default_val(9600);
+    restoreCmd->add_option("--baud", restoreArgs.baud, "Serial baud rate (USB Optiboot default: 115200)")->default_val(115200);
     restoreCmd->add_option("--address,-a", restoreArgs.address, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
     restoreCmd->add_option("--backend", restoreArgs.backend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
 
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
     alarmCmd->add_flag("--force-low-battery", alarmArgs.forceLowBattery, "Continue even if the reported battery level is below 50%");
     alarmCmd->add_option("--protocol", alarmArgs.protocol, "Upload protocol: 'raw' (stream HEX to custom bootloader) or 'stk' (STK500v1)")->default_val("stk");
     alarmCmd->add_option("--tty", alarmArgs.tty, "Serial TTY to use for flashing (e.g. /dev/rfcomm0 or /dev/ttyUSB0). If omitted, one is bound (serial) or auto-picked (usb).")->default_val("");
-    alarmCmd->add_option("--baud", alarmArgs.baud, "Serial baud rate (usb Optiboot is typically 57600 or 115200)")->default_val(9600);
+    alarmCmd->add_option("--baud", alarmArgs.baud, "Serial baud rate (USB Optiboot default: 115200)")->default_val(115200);
     alarmCmd->add_option("--address,-a", alarmArgs.address, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
     alarmCmd->add_option("--backend", alarmArgs.backend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
 
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     adivinawiCmd->add_flag("--force-low-battery", adivinawiArgs.forceLowBattery, "Continue even if the reported battery level is below 50%");
     adivinawiCmd->add_option("--protocol", adivinawiArgs.protocol, "Upload protocol: 'raw' (stream HEX to custom bootloader) or 'stk' (STK500v1)")->default_val("stk");
     adivinawiCmd->add_option("--tty", adivinawiArgs.tty, "Serial TTY to use for flashing (e.g. /dev/rfcomm0 or /dev/ttyUSB0). If omitted, one is bound (serial) or auto-picked (usb).")->default_val("");
-    adivinawiCmd->add_option("--baud", adivinawiArgs.baud, "Serial baud rate (usb Optiboot is typically 57600 or 115200)")->default_val(9600);
+    adivinawiCmd->add_option("--baud", adivinawiArgs.baud, "Serial baud rate (USB Optiboot default: 115200)")->default_val(115200);
     adivinawiCmd->add_option("--address,-a", adivinawiArgs.address, "Robot Bluetooth address (overrides the paired device from the session)")->default_val("");
     adivinawiCmd->add_option("--backend", adivinawiArgs.backend, "Backend: 'auto' (default, BlueZ SPP), 'bluetooth' (BlueZ SPP, no root), 'serial' (RFCOMM TTY, needs root/setcap), 'usb' (USB serial, no Bluetooth)")->default_val("auto");
 

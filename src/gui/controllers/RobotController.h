@@ -13,7 +13,7 @@
 #include <zowi/bluetooth_api.h>
 #include <zowi/message_parser.h>
 #include <zowi/robot_state.h>
-#include <zowi/stk500v1.h>
+#include <zowi/firmware_installer.h>
 
 class SessionController;
 
@@ -215,10 +215,8 @@ private:
     void finishRestore(bool success);
     void setRestoring(bool value);
 
-    // Firmware upload state (mirrors CLI's g_uploadMode / g_stkBuffer).
-    bool m_uploadMode = false;
-    std::string m_stkBuffer;
-    std::mutex m_uploadMutex;
+    // Firmware upload orchestrator (shared with CLI and future hosts).
+    zowi::FirmwareInstaller m_firmwareInstaller;
 
     // Battery-confirmation handshake (Phase 3): after a successful upload the
     // GUI checks the reported battery; if it is low it asks the user to confirm

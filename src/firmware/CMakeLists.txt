@@ -1,6 +1,7 @@
 # src/firmware/CMakeLists.txt
 add_library(zowi_firmware STATIC
     src/stk500v1.cpp
+    src/firmware_installer.cpp
 )
 
 target_include_directories(zowi_firmware
