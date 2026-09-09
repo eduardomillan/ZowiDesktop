@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Après avoir reprogrammé Zowi avec le programme Alarme...",
+      "answers": [
+        {
+          "text": "...le bouton marche/arrêt ne marche plus.",
+          "correct": false
+        },
+        {
+          "text": "...rien n'a changé.",
+          "correct": false
+        },
+        {
+          "text": "...les boutons A et B ne marchent plus comme avant.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "Le programme Alarme...",
+      "answers": [
+        {
+          "text": "...transforme Zowi en réveil.",
+          "correct": false
+        },
+        {
+          "text": "...transforme Zowi en détecteur de fumée.",
+          "correct": false
+        },
+        {
+          "text": "...transforme Zowi en garde qui donne l'alerte en cas de mouvement autour de lui.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

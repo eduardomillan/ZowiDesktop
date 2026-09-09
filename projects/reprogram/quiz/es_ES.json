@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Al reprogramar a Zowi con el programa de la Alarma:",
+      "answers": [
+        {
+          "text": "El botón de encendido no funciona.",
+          "correct": false
+        },
+        {
+          "text": "Todo sigue igual.",
+          "correct": false
+        },
+        {
+          "text": "Los botones A y B hacen otra cosa.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "El nuevo programa de Alarma...",
+      "answers": [
+        {
+          "text": "...convierte a Zowi en un despertador.",
+          "correct": false
+        },
+        {
+          "text": "...convierte a Zowi en un detector de humos.",
+          "correct": false
+        },
+        {
+          "text": "...convierte a Zowi en un guardián que avisa de movimientos a su alrededor.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

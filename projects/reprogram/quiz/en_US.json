@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "After reprogramming Zowi with the Alarm program:",
+      "answers": [
+        {
+          "text": "The power button stops working.",
+          "correct": false
+        },
+        {
+          "text": "Everything stays the same.",
+          "correct": false
+        },
+        {
+          "text": "Buttons A and B now do something else.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "The new Alarm program...",
+      "answers": [
+        {
+          "text": "...turns Zowi into an alarm clock.",
+          "correct": false
+        },
+        {
+          "text": "...turns Zowi into a smoke detector.",
+          "correct": false
+        },
+        {
+          "text": "...turns Zowi into a guard that warns about movements around it.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

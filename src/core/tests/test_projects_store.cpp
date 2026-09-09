@@ -259,6 +259,48 @@ void test_load_bio1_project() {
     std::cout << "OK" << std::endl;
 }
 
+void test_load_reprogram_project() {
+    std::cout << "test_load_reprogram_project: " << std::flush;
+
+    std::string dir = tmpBase();
+    fs::create_directories(dir + "/projects/reprogram");
+
+    {
+        std::ofstream f(dir + "/projects/index.json");
+        f << R"({ "projects": ["reprogram"] })";
+    }
+    {
+        std::ofstream f(dir + "/projects/reprogram/project.json");
+        f << R"({
+            "id": "reprogram",
+            "title_key": "title",
+            "description_key": "learning_description",
+            "image_key": "qrc:/images/projects/reprogram.jpg",
+            "url_key": "url",
+            "hex_path": "ZOWI_Alarm_v2.hex",
+            "achievement_id": "angry"
+        })";
+    }
+
+    zowi::ProjectsStore store;
+    store.setResourceBasePath(dir);
+    store.loadAll();
+
+    auto proj = store.getProject("reprogram");
+    assert(proj.has_value());
+    assert(proj->id == "reprogram");
+    assert(proj->titleKey == "title");
+    assert(proj->descriptionKey == "learning_description");
+    assert(proj->imageKey == "qrc:/images/projects/reprogram.jpg");
+    assert(proj->urlKey == "url");
+    assert(proj->hexPath == "ZOWI_Alarm_v2.hex");
+    assert(proj->achievementId == "angry");
+    assert(proj->actionTarget == ""); // not configured → default empty
+
+    fs::remove_all(dir);
+    std::cout << "OK" << std::endl;
+}
+
 int main() {
     test_load_empty_index();
     test_load_index_bundles_projects();
@@ -266,6 +308,7 @@ int main() {
     test_load_form_project();
     test_load_bio1_project();
     test_load_choreography_project();
+    test_load_reprogram_project();
     test_load_missing_project_survives();
 
     std::cout << "\nAll ProjectsStore tests passed!" << std::endl;

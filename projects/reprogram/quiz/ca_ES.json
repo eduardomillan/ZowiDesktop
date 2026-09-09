@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "En reprogramar Zowi amb el programa de l'Alarma:",
+      "answers": [
+        {
+          "text": "El botó d'encesa no funciona.",
+          "correct": false
+        },
+        {
+          "text": "Tot segueix igual.",
+          "correct": false
+        },
+        {
+          "text": "Els botons A i B fan una altra cosa.",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "text": "El nou programa d'Alarma...",
+      "answers": [
+        {
+          "text": "...converteix Zowi en un despertador.",
+          "correct": false
+        },
+        {
+          "text": "...converteix Zowi en un detector de fum.",
+          "correct": false
+        },
+        {
+          "text": "...converteix Zowi en un guardià que avisa dels moviments al seu voltant.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

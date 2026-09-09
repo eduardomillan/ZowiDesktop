@@ -144,7 +144,7 @@ src/
 
 ### M9 — Advanced projects 🚧
 - [X] Robot dancing and choreography (sequence programming in home screen)
-- [ ] The alarm robot
+- [X] The alarm robot
 - [ ] Fortune-telling robot
 - [ ] Bitbloq I: Hello World
 - [ ] Bitbloq II: Sensors
