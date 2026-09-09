@@ -1,0 +1,20 @@
+{
+  "questions": [
+    {
+      "text": "¿Cómo decide Zowi qué responder?",
+      "answers": [
+        { "text": "Sabe las respuestas porque es un robot adivino.", "correct": false },
+        { "text": "Está programado para decidir al azar.", "correct": true },
+        { "text": "Está programado para cambiar de respuesta cada tres golpecitos.", "correct": false }
+      ]
+    },
+    {
+      "text": "¿Es posible que Zowi responda siempre Sí en el modo 1?",
+      "answers": [
+        { "text": "Es muy muy difícil, pero podría pasar.", "correct": true },
+        { "text": "Si queda poca batería, ocurrirá siempre.", "correct": false },
+        { "text": "No, es completamente imposible.", "correct": false }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "questions": [
+    {
+      "text": "Com decideix Zowi què respondre?",
+      "answers": [
+        { "text": "Sap les respostes perquè és un robot endeví.", "correct": false },
+        { "text": "Està programat per decidir a l'atzar.", "correct": true },
+        { "text": "Està programat per canviar de resposta cada tres cops.", "correct": false }
+      ]
+    },
+    {
+      "text": "És possible que Zowi respongui sempre Sí en el mode 1?",
+      "answers": [
+        { "text": "És molt molt difícil, peró podria passar.", "correct": true },
+        { "text": "Si queda poca bateria, passarà sempre.", "correct": false },
+        { "text": "No, és completament impossible.", "correct": false }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "id": "adivinawi",
+  "title_key": "title",
+  "description_key": "learning_description",
+  "image_key": "qrc:/images/projects/adivinawi.png",
+  "url_key": "url",
+  "hex_path": "ZOWI_Adivinawi_v2.hex",
+  "achievement_id": "magic"
+}

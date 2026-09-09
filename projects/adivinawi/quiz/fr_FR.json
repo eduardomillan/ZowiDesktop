@@ -1,0 +1,20 @@
+{
+  "questions": [
+    {
+      "text": "Les réponses de Zowi...",
+      "answers": [
+        { "text": "... sont exactes car c’est un robot devin.", "correct": false },
+        { "text": "... sont choisies au hasard.", "correct": true },
+        { "text": "... changent toutes les trois fois.", "correct": false }
+      ]
+    },
+    {
+      "text": "Est-ce que Zowi peut toujours répondre Oui dans le mode 1 ?",
+      "answers": [
+        { "text": "Ça paraît trèèèès compliqué mais c’est possible.", "correct": true },
+        { "text": "S’il reste peu de batterie... oui !", "correct": false },
+        { "text": "Non, c’est absolument impossible.", "correct": false }
+      ]
+    }
+  ]
+}

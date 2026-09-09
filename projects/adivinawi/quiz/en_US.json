@@ -1,0 +1,20 @@
+{
+  "questions": [
+    {
+      "text": "How does Zowi decide what to answer?",
+      "answers": [
+        { "text": "He knows the answers because he is a fortune-telling robot.", "correct": false },
+        { "text": "He is programmed to decide at random.", "correct": true },
+        { "text": "He is programmed to change his answer every three taps.", "correct": false }
+      ]
+    },
+    {
+      "text": "Is it possible for Zowi to always answer Yes in mode 1?",
+      "answers": [
+        { "text": "It is very, very difficult, but it could happen.", "correct": true },
+        { "text": "If the battery is low, it will always happen.", "correct": false },
+        { "text": "No, it is completely impossible.", "correct": false }
+      ]
+    }
+  ]
+}
