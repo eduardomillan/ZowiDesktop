@@ -37,3 +37,10 @@ In `RobotController::proceedWithRestore()` (USB path): call
 `serial->pulseReset()` **after** `m_backend->connect()` succeeds (port open) so
 the DTR falling edge reliably resets the MCU into the bootloader before the STK
 sync. No structural change.
+
+## Notes (empirical, 2026-09-09)
+
+Flashing works "reasonably well" over Bluetooth, but not over USB — the USB
+path still fails to sync with the bootloader (STK_INSYNC/STK_OK). Root cause
+NOT yet confirmed; postponed. Do not consider this cartridge done until the
+USB case is investigated alongside A/B.

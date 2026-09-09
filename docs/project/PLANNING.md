@@ -155,6 +155,7 @@ src/
 - [ ] Game: Memory
 - [ ] Game: Draw the mouth
 - [ ] Achievements layer
+- [ ] Low battery management
 
 ### Application new features 🕒
 
