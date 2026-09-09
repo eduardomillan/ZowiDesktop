@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-09
+
 ### Added
 - **Adivinawi project (`adivinawi`):** New Discover lesson ("Adivinawi" / "Guess with Zowi") with localized page/quiz/strings in the 5 locales, registered in `projects/index.json` + `projects.qrc`, and the Home tile enabled. It references `ZOWI_Adivinawi_v2.hex`, enabling firmware flashing right from its `ProjectScreen`. This advances the M9 *Advanced projects* milestone.
 

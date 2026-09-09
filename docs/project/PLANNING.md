@@ -15,8 +15,9 @@
   - [M6 — Transport intelligence + gamepad ✅](#m6--transport-intelligence--gamepad-)
   - [M7 — Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
   - [M8 — Basic projects ✅](#m8--basic-projects-)
-  - [M9 — Advanced projects 🕒](#m9--advanced-projects-)
-  - [Future milestones](#future-milestones)
+  - [M9 — Advanced projects 🚧](#m9--advanced-projects-)
+  - [Future milestones 🕒](#future-milestones-)
+  - [Application new features 🕒](#application-new-features-)
 - [Testing](#testing)
 - [Technical notes](#technical-notes)
 - [Repository strategy (monorepo vs. multiple repos)](#repository-strategy-monorepo-vs-multiple-repos)
@@ -153,9 +154,9 @@ src/
 
 ### M9 — Advanced projects 🚧
 
-- [X]  Robot dancing and choreography (sequence programming in home screen)
+- [X]  Robot dancing and choreographyhome screen)
 - [X]  The alarm robot
-- [ ]  Fortune-telling robot
+- [X]  Fortune-telling robot
 - [ ]  Bitbloq I: Hello World
 - [ ]  Bitbloq II: Sensors
 
