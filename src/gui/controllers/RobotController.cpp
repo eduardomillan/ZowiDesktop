@@ -1128,15 +1128,24 @@ void RobotController::proceedWithRestore()
             // add the control-connection boot delay.
             serial->setBootDelayMs(0);
         }
-        // Reset into the bootloader before (re)opening the link so the upload
-        // races the short post-reset window.
-        if (auto *serial = dynamic_cast<SerialBackend *>(m_backend.get()))
-            serial->pulseReset();
-#endif
         const bool connectOk = m_backend->connect(target.toStdString());
+        // The serial backend opens synchronously. Pulse DTR AFTER the port is
+        // open to force the MCU into the bootloader: the implicit auto-reset on
+        // (re)open is not reliable (DTR is usually already high from the previous
+        // session, so there is no edge through the coupling capacitor), and
+        // calling pulseReset() before connect() is a no-op (the fd is closed).
+        // A fresh reset right before the sync maximizes the bootloader window.
+        if (connectOk && m_backend->isConnected()) {
+            if (auto *serial = dynamic_cast<SerialBackend *>(m_backend.get()))
+                serial->pulseReset();
+        }
         // The serial backend opens synchronously; upload immediately to catch
         // the short post-reset bootloader window.
         stable = connectOk && m_backend->isConnected();
+#else
+        const bool connectOk = m_backend->connect(target.toStdString());
+        stable = connectOk && m_backend->isConnected();
+#endif
     } else {
         // First tear down the existing SPP link cleanly. Reconnecting on top of
         // a socket that is still closing triggers BlueZ "Cannot connect to
