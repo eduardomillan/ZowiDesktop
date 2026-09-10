@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and a new `test_load_bitbloq2_project` core test. It has no bundled firmware
   (`achievement_id: tip_toe`). Both Bitbloq pages follow the same fragment-HTML
   layout as the other project lessons.
+- **The mouth project (`mouth`):** New Discover lesson ("La boca") explaining
+  Zowi's 5×6 LED mouth matrix and how mouth patterns work, with localized
+  page/quiz/strings in the 5 locales, registered in `projects/index.json` +
+  `projects.qrc`, placed right after "Los ojos de Zowi" in the Home tiles and
+  a new `test_load_mouth_project` core test. It uses the `smile_button.png`
+  Home icon and the `paint_thumb.png` detail image (`achievement_id: mouth`,
+  new achievement id to be wired up later).
 
 ## [0.8.1] - 2026-09-09
 

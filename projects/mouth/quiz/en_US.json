@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "How many LEDs are there in Zowi's mouth matrix?",
+      "answers": [
+        {
+          "text": "25, arranged in a 5×5 grid.",
+          "correct": false
+        },
+        {
+          "text": "30, arranged in 5 rows and 6 columns.",
+          "correct": true
+        },
+        {
+          "text": "36, arranged in a 6×6 grid.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "How is a mouth pattern represented in the program?",
+      "answers": [
+        {
+          "text": "As an image downloaded from the internet.",
+          "correct": false
+        },
+        {
+          "text": "As a text that describes the mouth with words.",
+          "correct": false
+        },
+        {
+          "text": "As a 32-bit binary number: each bit turns one LED of the matrix on or off.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

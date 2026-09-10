@@ -157,8 +157,10 @@ src/
 - [X]  Robot dancing and choreographyhome screen)
 - [X]  The alarm robot
 - [X]  Fortune-telling robot
-- [ ]  Bitbloq I: Hello World
-- [ ]  Bitbloq II: Sensors
+- [X]  Bitbloq I: Hello World
+- [X]  Bitbloq II: Sensors
+- [X]  New project "Mouth"
+- [X]  Arrange the projects logically
 
 ### Future milestones 🕒
 

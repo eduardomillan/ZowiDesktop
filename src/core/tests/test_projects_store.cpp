@@ -427,6 +427,48 @@ void test_load_bitbloq2_project() {
     std::cout << "OK" << std::endl;
 }
 
+void test_load_mouth_project() {
+    std::cout << "test_load_mouth_project: " << std::flush;
+
+    std::string dir = tmpBase();
+    fs::create_directories(dir + "/projects/mouth");
+
+    {
+        std::ofstream f(dir + "/projects/index.json");
+        f << R"({ "projects": ["mouth"] })";
+    }
+    {
+        std::ofstream f(dir + "/projects/mouth/project.json");
+        f << R"({
+            "id": "mouth",
+            "title_key": "title",
+            "description_key": "learning_description",
+            "image_key": "qrc:/images/projects/paint_thumb.png",
+            "url_key": "url",
+            "hex_path": "",
+            "achievement_id": "mouth"
+        })";
+    }
+
+    zowi::ProjectsStore store;
+    store.setResourceBasePath(dir);
+    store.loadAll();
+
+    auto proj = store.getProject("mouth");
+    assert(proj.has_value());
+    assert(proj->id == "mouth");
+    assert(proj->titleKey == "title");
+    assert(proj->descriptionKey == "learning_description");
+    assert(proj->imageKey == "qrc:/images/projects/paint_thumb.png");
+    assert(proj->urlKey == "url");
+    assert(proj->hexPath == "");
+    assert(proj->achievementId == "mouth");
+    assert(proj->actionTarget == ""); // not configured → default empty
+
+    fs::remove_all(dir);
+    std::cout << "OK" << std::endl;
+}
+
 int main() {
     test_load_empty_index();
     test_load_index_bundles_projects();
@@ -438,6 +480,7 @@ int main() {
     test_load_adivinawi_project();
     test_load_helloworld_project();
     test_load_bitbloq2_project();
+    test_load_mouth_project();
     test_load_missing_project_survives();
 
     std::cout << "\nAll ProjectsStore tests passed!" << std::endl;

@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "¿Cuántos LEDs tiene la matriz de la boca de Zowi?",
+      "answers": [
+        {
+          "text": "25, organizados en una cuadrícula de 5×5.",
+          "correct": false
+        },
+        {
+          "text": "30, organizados en 5 filas y 6 columnas.",
+          "correct": true
+        },
+        {
+          "text": "36, organizados en una cuadrícula de 6×6.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "¿Cómo se representa un patrón de boca en el programa?",
+      "answers": [
+        {
+          "text": "Como una imagen que se descarga de internet.",
+          "correct": false
+        },
+        {
+          "text": "Como un texto que describe la boca con palabras.",
+          "correct": false
+        },
+        {
+          "text": "Como un número binario de 32 bits: cada bit enciende o apaga un LED de la matriz.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

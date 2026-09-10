@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Quants LEDs té la matriu de la boca del Zowi?",
+      "answers": [
+        {
+          "text": "25, organitzats en una graella de 5×5.",
+          "correct": false
+        },
+        {
+          "text": "30, organitzats en 5 files i 6 columnes.",
+          "correct": true
+        },
+        {
+          "text": "36, organitzats en una graella de 6×6.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Com es representa un patró de boca en el programa?",
+      "answers": [
+        {
+          "text": "Com una imatge que es baixa d'internet.",
+          "correct": false
+        },
+        {
+          "text": "Com un text que descriu la boca amb paraules.",
+          "correct": false
+        },
+        {
+          "text": "Com un número binari de 32 bits: cada bit engega o apaga un LED de la matriu.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

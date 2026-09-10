@@ -1,0 +1,5 @@
+{
+  "title": "La boca",
+  "url": "mouth/ca/",
+  "learning_description": "La boca del Zowi és una matriu de 5×6 LED (30 en total). Cada LED s'engega o s'apaga per formar expressions: somriure, cor, cara trista, etc. El Zowi porta 31 boces predefinides (IDs 0-30) i pots crear les teves a l'Editor de boces dibuixant sobre la graella."
+}

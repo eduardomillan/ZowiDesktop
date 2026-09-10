@@ -35,14 +35,15 @@ FocusScope {
 
         property var projectsData: (function() {
             var data = [
+                { id: "form", name: tr("robot_form"),      icon: "qrc:/images/android/robot_form_button.png",   enabled: true },
+                { id: "gravity", name: tr("gravity"),         icon: "qrc:/images/android/gravity_button.png",      enabled: true },
+                { id: "bio1", name: tr("robot_eyes"),      icon: "qrc:/images/android/eyes_button.png",         enabled: true },
+                { id: "mouth", name: tr("mouth"),          icon: "qrc:/images/android/smile_button.png",      enabled: true },
+                { id: "bio3", name: tr("robot_feet"),      icon: "qrc:/images/android/feet_button.png",         enabled: true },
                 { id: "move", name: tr("move_objects"),    icon: "qrc:/images/android/move_button.png",        enabled: true },
                 { id: "choreography", name: tr("choreography"),    icon: "qrc:/images/android/choreography_button.png", enabled: true },
-                { id: "form", name: tr("robot_form"),      icon: "qrc:/images/android/robot_form_button.png",   enabled: true },
-                { id: "bio1", name: tr("robot_eyes"),      icon: "qrc:/images/android/eyes_button.png",         enabled: true },
-                { id: "bio3", name: tr("robot_feet"),      icon: "qrc:/images/android/feet_button.png",         enabled: true },
                 { id: "reprogram", name: tr("robot_alarm"),     icon: "qrc:/images/android/alarm_button.png",        enabled: true },
                 { id: "adivinawi", name: tr("adivinawi"),       icon: "qrc:/images/android/adivinawi_button.png",    enabled: true },
-                { id: "gravity", name: tr("gravity"),         icon: "qrc:/images/android/gravity_button.png",      enabled: true },
                 { id: "helloworld", name: tr("hello_world"),     icon: "qrc:/images/android/bitbloq_button.png",      enabled: true },
                 { id: "bitbloq2", name: tr("bitbloq_sensors"), icon: "qrc:/images/android/bitbloq2_button.png",     enabled: true }
             ];

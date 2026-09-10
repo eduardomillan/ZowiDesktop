@@ -1,0 +1,5 @@
+{
+  "title": "The mouth",
+  "url": "mouth/en/",
+  "learning_description": "Zowi's mouth is a 5×6 LED matrix (30 LEDs in total). Each LED turns on or off to form expressions: smile, heart, sad face, etc. Zowi brings 31 predefined mouths (IDs 0-30) and you can create your own in the Mouth Editor by drawing on the grid."
+}

@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Combien de LED compte la matrice de la bouche de Zowi ?",
+      "answers": [
+        {
+          "text": "25, organisées dans une grille de 5×5.",
+          "correct": false
+        },
+        {
+          "text": "30, organisées en 5 rangées et 6 colonnes.",
+          "correct": true
+        },
+        {
+          "text": "36, organisées dans une grille de 6×6.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Comment un motif de bouche est-il représenté dans le programme ?",
+      "answers": [
+        {
+          "text": "Comme une image téléchargée depuis internet.",
+          "correct": false
+        },
+        {
+          "text": "Comme un texte qui décrit la bouche avec des mots.",
+          "correct": false
+        },
+        {
+          "text": "Comme un nombre binaire de 32 bits : chaque bit allume ou éteint une LED de la matrice.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}
