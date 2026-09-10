@@ -43,8 +43,8 @@ FocusScope {
                 { id: "reprogram", name: tr("robot_alarm"),     icon: "qrc:/images/android/alarm_button.png",        enabled: true },
                 { id: "adivinawi", name: tr("adivinawi"),       icon: "qrc:/images/android/adivinawi_button.png",    enabled: true },
                 { id: "gravity", name: tr("gravity"),         icon: "qrc:/images/android/gravity_button.png",      enabled: true },
-                { id: "helloworld", name: tr("hello_world"),     icon: "qrc:/images/android/bitbloq_button.png",      enabled: false },
-                { id: "bitbloq2", name: tr("bitbloq_sensors"), icon: "qrc:/images/android/bitbloq2_button.png",     enabled: false }
+                { id: "helloworld", name: tr("hello_world"),     icon: "qrc:/images/android/bitbloq_button.png",      enabled: true },
+                { id: "bitbloq2", name: tr("bitbloq_sensors"), icon: "qrc:/images/android/bitbloq2_button.png",     enabled: true }
             ];
             console.log("HomeScreen: projectsData initialized, first item:", data[0].id, data[0].name, data[0].enabled);
             return data;

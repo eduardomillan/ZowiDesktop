@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "When programming a conditional If...Execute block...",
+      "answers": [
+        {
+          "text": "It makes the instruction inside always execute.",
+          "correct": false
+        },
+        {
+          "text": "It makes an instruction execute only when a condition is met.",
+          "correct": true
+        },
+        {
+          "text": "It makes the instruction inside never execute.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Zowi's distance sensor...",
+      "answers": [
+        {
+          "text": "...is a digital component that measures distance.",
+          "correct": false
+        },
+        {
+          "text": "...is an analog component that measures the color of clouds.",
+          "correct": false
+        },
+        {
+          "text": "...is an analog component that measures distance.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

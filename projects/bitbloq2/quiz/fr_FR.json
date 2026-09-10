@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Si tu utilises un bloc de condition Si... exécuter...",
+      "answers": [
+        {
+          "text": "... il exécute en boucle l'instruction qu'il contient.",
+          "correct": false
+        },
+        {
+          "text": "... il exécute l'instruction si la condition est remplie.",
+          "correct": true
+        },
+        {
+          "text": "... il n'exécute jamais l'instruction qu'il contient.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Le capteur de distance de Zowi...",
+      "answers": [
+        {
+          "text": "... est un composant numérique qui permet de mesurer les distances.",
+          "correct": false
+        },
+        {
+          "text": "... est un composant analogique qui permet de connaître la couleur des nuages.",
+          "correct": false
+        },
+        {
+          "text": "... est un composant analogique qui permet de mesurer les distances.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

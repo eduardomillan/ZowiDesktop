@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Al programar un bloc condicional Si...Executar...",
+      "answers": [
+        {
+          "text": "Fa que sempre s'executi la instrucció que tingui dins.",
+          "correct": false
+        },
+        {
+          "text": "Fa que només s'executi una instrucció quan es compleixi una condició.",
+          "correct": true
+        },
+        {
+          "text": "Fa que mai s'executi la instrucció que tingui dins.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "El sensor de distància del Zowi...",
+      "answers": [
+        {
+          "text": "...és un component digital que mesura distància.",
+          "correct": false
+        },
+        {
+          "text": "...és un component analògic que mesura el color dels núvols.",
+          "correct": false
+        },
+        {
+          "text": "...és un component analògic que mesura distància.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

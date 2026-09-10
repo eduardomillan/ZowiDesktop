@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Después de programar a Zowi con Bitbloq y apagar y encender a Zowi...",
+      "answers": [
+        {
+          "text": "...Zowi realiza lo que has programado.",
+          "correct": true
+        },
+        {
+          "text": "...Zowi recuerda las funciones de inicio (modo 1, modo 2 y modo 3).",
+          "correct": false
+        },
+        {
+          "text": "...Zowi se olvida del programa hasta que cargas uno nuevo.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Los programas de Zowi se escriben en:",
+      "answers": [
+        {
+          "text": "Código Morse.",
+          "correct": false
+        },
+        {
+          "text": "Código Morsa.",
+          "correct": false
+        },
+        {
+          "text": "Código Arduino.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

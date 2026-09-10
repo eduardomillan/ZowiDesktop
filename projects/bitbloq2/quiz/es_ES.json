@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Al programar un bloque condicional Si...Ejecutar...",
+      "answers": [
+        {
+          "text": "Hace que siempre se ejecute la instrucción que tenga dentro.",
+          "correct": false
+        },
+        {
+          "text": "Hace que solo se ejecute una instrucción cuando se cumpla una condición.",
+          "correct": true
+        },
+        {
+          "text": "Hace que nunca se ejecute la instrucción que tenga dentro.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "El sensor de distancia de Zowi...",
+      "answers": [
+        {
+          "text": "...es un componente digital que mide distancia.",
+          "correct": false
+        },
+        {
+          "text": "...es un componente analógico que mide el color de las nubes.",
+          "correct": false
+        },
+        {
+          "text": "...es un componente analógico que mide distancia.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Bitbloq I: Hello World project (`helloworld`):** New Discover lesson
+  ("Bitbloq I: Hello World") with localized page/quiz/strings in the 5 locales
+  (Quiz data ported from ZowiAppReborn's `07_project_helloworld.json`),
+  registered in `projects/index.json` + `projects.qrc`, the Home tile enabled
+  and a new `test_load_helloworld_project` core test. It has no bundled
+  firmware (`achievement_id: super_happy`).
+- **Bitbloq II: Sensors project (`bitbloq2`):** New Discover lesson
+  ("Bitbloq II: Sensores") with localized page/quiz/strings in the 5 locales
+  (Quiz data ported from ZowiAppReborn's `08_project_bitbloq2.json`),
+  registered in `projects/index.json` + `projects.qrc`, the Home tile enabled
+  and a new `test_load_bitbloq2_project` core test. It has no bundled firmware
+  (`achievement_id: tip_toe`). Both Bitbloq pages follow the same fragment-HTML
+  layout as the other project lessons.
+
 ## [0.8.1] - 2026-09-09
 
 ### Added

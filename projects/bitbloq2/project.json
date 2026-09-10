@@ -1,0 +1,10 @@
+{
+  "id": "bitbloq2",
+  "title_key": "title",
+  "description_key": "learning_description",
+  "image_key": "qrc:/images/android/project_bitbloq2_image.png",
+  "url_key": "url",
+  "hex_path": "",
+  "achievement_id": "tip_toe",
+  "action_target": ""
+}

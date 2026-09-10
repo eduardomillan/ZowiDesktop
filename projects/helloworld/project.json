@@ -1,0 +1,10 @@
+{
+  "id": "helloworld",
+  "title_key": "title",
+  "description_key": "learning_description",
+  "image_key": "qrc:/images/android/project_helloworld_image.png",
+  "url_key": "url",
+  "hex_path": "",
+  "achievement_id": "super_happy",
+  "action_target": ""
+}

@@ -2,7 +2,7 @@
   "id": "reprogram",
   "title_key": "title",
   "description_key": "learning_description",
-  "image_key": "qrc:/images/projects/reprogram.jpg",
+  "image_key": "qrc:/images/projects/alarm.png",
   "url_key": "url",
   "hex_path": "ZOWI_Alarm_v2.hex",
   "achievement_id": "angry"

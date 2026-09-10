@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "After programming Zowi with Bitbloq and turning it off and on...",
+      "answers": [
+        {
+          "text": "...Zowi performs what you programmed.",
+          "correct": true
+        },
+        {
+          "text": "...Zowi remembers the startup functions (mode 1, mode 2 and mode 3).",
+          "correct": false
+        },
+        {
+          "text": "...Zowi forgets the program until you load a new one.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Zowi programs are written in:",
+      "answers": [
+        {
+          "text": "Morse code.",
+          "correct": false
+        },
+        {
+          "text": "Walrus code.",
+          "correct": false
+        },
+        {
+          "text": "Arduino code.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

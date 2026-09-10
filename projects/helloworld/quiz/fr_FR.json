@@ -1,0 +1,38 @@
+{
+  "questions": [
+    {
+      "text": "Si tu programmes Zowi avec Bitbloq et que tu éteins puis rallumes Zowi...",
+      "answers": [
+        {
+          "text": "... Zowi exécute le programme.",
+          "correct": true
+        },
+        {
+          "text": "... Zowi se souvient de ses fonctions d'origine (mode 1, mode 2 et mode 3).",
+          "correct": false
+        },
+        {
+          "text": "... Zowi a oublié le programme, il faut de nouveau charger le programme.",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "text": "Les programmes pour Zowi s'écrivent en...",
+      "answers": [
+        {
+          "text": "... code morse.",
+          "correct": false
+        },
+        {
+          "text": "... code secret.",
+          "correct": false
+        },
+        {
+          "text": "... code arduino.",
+          "correct": true
+        }
+      ]
+    }
+  ]
+}

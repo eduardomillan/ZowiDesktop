@@ -343,6 +343,90 @@ void test_load_adivinawi_project() {
     std::cout << "OK" << std::endl;
 }
 
+void test_load_helloworld_project() {
+    std::cout << "test_load_helloworld_project: " << std::flush;
+
+    std::string dir = tmpBase();
+    fs::create_directories(dir + "/projects/helloworld");
+
+    {
+        std::ofstream f(dir + "/projects/index.json");
+        f << R"({ "projects": ["helloworld"] })";
+    }
+    {
+        std::ofstream f(dir + "/projects/helloworld/project.json");
+        f << R"({
+            "id": "helloworld",
+            "title_key": "title",
+            "description_key": "learning_description",
+            "image_key": "qrc:/images/android/project_helloworld_image.png",
+            "url_key": "url",
+            "hex_path": "",
+            "achievement_id": "super_happy"
+        })";
+    }
+
+    zowi::ProjectsStore store;
+    store.setResourceBasePath(dir);
+    store.loadAll();
+
+    auto proj = store.getProject("helloworld");
+    assert(proj.has_value());
+    assert(proj->id == "helloworld");
+    assert(proj->titleKey == "title");
+    assert(proj->descriptionKey == "learning_description");
+    assert(proj->imageKey == "qrc:/images/android/project_helloworld_image.png");
+    assert(proj->urlKey == "url");
+    assert(proj->hexPath == "");
+    assert(proj->achievementId == "super_happy");
+    assert(proj->actionTarget == ""); // not configured → default empty
+
+    fs::remove_all(dir);
+    std::cout << "OK" << std::endl;
+}
+
+void test_load_bitbloq2_project() {
+    std::cout << "test_load_bitbloq2_project: " << std::flush;
+
+    std::string dir = tmpBase();
+    fs::create_directories(dir + "/projects/bitbloq2");
+
+    {
+        std::ofstream f(dir + "/projects/index.json");
+        f << R"({ "projects": ["bitbloq2"] })";
+    }
+    {
+        std::ofstream f(dir + "/projects/bitbloq2/project.json");
+        f << R"({
+            "id": "bitbloq2",
+            "title_key": "title",
+            "description_key": "learning_description",
+            "image_key": "qrc:/images/android/project_bitbloq2_image.png",
+            "url_key": "url",
+            "hex_path": "",
+            "achievement_id": "tip_toe"
+        })";
+    }
+
+    zowi::ProjectsStore store;
+    store.setResourceBasePath(dir);
+    store.loadAll();
+
+    auto proj = store.getProject("bitbloq2");
+    assert(proj.has_value());
+    assert(proj->id == "bitbloq2");
+    assert(proj->titleKey == "title");
+    assert(proj->descriptionKey == "learning_description");
+    assert(proj->imageKey == "qrc:/images/android/project_bitbloq2_image.png");
+    assert(proj->urlKey == "url");
+    assert(proj->hexPath == "");
+    assert(proj->achievementId == "tip_toe");
+    assert(proj->actionTarget == ""); // not configured → default empty
+
+    fs::remove_all(dir);
+    std::cout << "OK" << std::endl;
+}
+
 int main() {
     test_load_empty_index();
     test_load_index_bundles_projects();
@@ -352,6 +436,8 @@ int main() {
     test_load_choreography_project();
     test_load_reprogram_project();
     test_load_adivinawi_project();
+    test_load_helloworld_project();
+    test_load_bitbloq2_project();
     test_load_missing_project_survives();
 
     std::cout << "\nAll ProjectsStore tests passed!" << std::endl;
