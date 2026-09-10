@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-09-10
+
 ### Added
 - **Bitbloq I: Hello World project (`helloworld`):** New Discover lesson
   ("Bitbloq I: Hello World") with localized page/quiz/strings in the 5 locales
@@ -26,15 +28,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   page/quiz/strings in the 5 locales, registered in `projects/index.json` +
   `projects.qrc`, placed right after "Los ojos de Zowi" in the Home tiles and
   a new `test_load_mouth_project` core test. It uses the `smile_button.png`
-  Home icon and the `paint_thumb.png` detail image (`achievement_id: mouth`,
-  new achievement id to be wired up later).
+  Home icon and the `mouth_arrow.png` detail image (registered in
+  `images.qrc`), `achievement_id: mouth`, a new achievement id to be wired up
+  later.
 - **Mouth project action → Mouth Editor:** the `mouth` project now ships with
   `action_target: "mouth_editor"` and a localized `action_label` ("Editor" /
   "Éditeur" / "Редактор") in its per-project strings, so its ProjectScreen
   action button pops back to Home and opens the `MouthEditorScreen`
-  (`main.qml` gained the `"mouth_editor"` routing branch). The mouth detail
-  image is now the dedicated `mouth_arrow.png` (registered in `images.qrc`).
-  The `test_load_mouth_project` fixture reflects the new fields.
+  (`main.qml` gained the `"mouth_editor"` routing branch). The
+  `test_load_mouth_project` fixture reflects the new fields.
+
+### Changed
+- **Home tile labels shortened** (mirroring the earlier `robot_form`
+  shortening) in the 5 locales: `robot_eyes` → "Los ojos" / "The eyes" /
+  "Les yeux" / "Els ulls" / "Очите"; `robot_feet` → "Las patas" / "The feet" /
+  "Les pattes" / "Les potes" / "Краката"; and `choreography` →
+  "Coreografía" / "Choreography" / "Chorégraphie" / "Coreografia" /
+  "Хореография".
 
 ## [0.8.1] - 2026-09-09
 

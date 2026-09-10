@@ -15,7 +15,7 @@
   - [M6 — Transport intelligence + gamepad ✅](#m6--transport-intelligence--gamepad-)
   - [M7 — Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
   - [M8 — Basic projects ✅](#m8--basic-projects-)
-  - [M9 — Advanced projects 🚧](#m9--advanced-projects-)
+  - [M9 — Advanced projects ✅](#m9--advanced-projects-)
   - [Future milestones 🕒](#future-milestones-)
   - [Application new features 🕒](#application-new-features-)
 - [Testing](#testing)
@@ -42,7 +42,7 @@ Status:
 | **0.6.0**  | M6        | Transport situation state machine, automatic transport, persistent preference, DEV overlay, restore feedback | ✅     |
 | **0.7.0**  | M7        | Zowi calibration (servo trims via`C`/`G` protocol commands)                                                  | ✅     |
 | **0.8.0**  | M8        | Basic projects                                                                                               | ✅     |
-| **0.9.0**  | M9        | Advanced projects                                                                                            | 🚧     |
+| **0.9.0**  | M9        | Advanced projects                                                                                            | ✅     |
 | **0.10.0** | M10       | Design improvements                                                                                          | 🕒     |
 
 ## Architecture
@@ -154,7 +154,7 @@ src/
 
 ### M9 — Advanced projects 🚧
 
-- [X]  Robot dancing and choreographyhome screen)
+- [X]  Robot choreography
 - [X]  The alarm robot
 - [X]  Fortune-telling robot
 - [X]  Bitbloq I: Hello World
