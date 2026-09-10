@@ -2,8 +2,9 @@
   "id": "mouth",
   "title_key": "title",
   "description_key": "learning_description",
-  "image_key": "qrc:/images/projects/paint_thumb.png",
+  "image_key": "qrc:/images/projects/mouth_arrow.png",
   "url_key": "url",
   "hex_path": "",
-  "achievement_id": "mouth"
+  "achievement_id": "mouth",
+  "action_target": "mouth_editor"
 }

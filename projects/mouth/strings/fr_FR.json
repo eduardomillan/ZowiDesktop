@@ -1,5 +1,6 @@
 {
   "title": "La bouche",
   "url": "mouth/fr/",
-  "learning_description": "La bouche de Zowi est une matrice de 5×6 LED (30 au total). Chaque LED s'allume ou s'éteint pour former des expressions : sourire, cœur, visage triste, etc. Zowi inclut 31 bouches prédéfinies (IDs 0-30) et tu peux créer les tiennes dans l'Éditeur de bouches en dessinant sur la grille."
+  "learning_description": "La bouche de Zowi est une matrice de 5×6 LED (30 au total). Chaque LED s'allume ou s'éteint pour former des expressions : sourire, cœur, visage triste, etc. Zowi inclut 31 bouches prédéfinies (IDs 0-30) et tu peux créer les tiennes dans l'Éditeur de bouches en dessinant sur la grille.",
+  "action_label": "Éditeur"
 }

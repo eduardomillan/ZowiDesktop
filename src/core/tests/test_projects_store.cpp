@@ -443,10 +443,11 @@ void test_load_mouth_project() {
             "id": "mouth",
             "title_key": "title",
             "description_key": "learning_description",
-            "image_key": "qrc:/images/projects/paint_thumb.png",
+            "image_key": "qrc:/images/projects/mouth_arrow.png",
             "url_key": "url",
             "hex_path": "",
-            "achievement_id": "mouth"
+            "achievement_id": "mouth",
+            "action_target": "mouth_editor"
         })";
     }
 
@@ -459,11 +460,11 @@ void test_load_mouth_project() {
     assert(proj->id == "mouth");
     assert(proj->titleKey == "title");
     assert(proj->descriptionKey == "learning_description");
-    assert(proj->imageKey == "qrc:/images/projects/paint_thumb.png");
+    assert(proj->imageKey == "qrc:/images/projects/mouth_arrow.png");
     assert(proj->urlKey == "url");
     assert(proj->hexPath == "");
     assert(proj->achievementId == "mouth");
-    assert(proj->actionTarget == ""); // not configured → default empty
+    assert(proj->actionTarget == "mouth_editor");
 
     fs::remove_all(dir);
     std::cout << "OK" << std::endl;

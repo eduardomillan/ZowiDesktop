@@ -1,5 +1,6 @@
 {
   "title": "La boca",
   "url": "mouth/es/",
-  "learning_description": "La boca de Zowi es una matriz de 5×6 LEDs (30 en total). Cada LED se enciende o apaga para formar expresiones: sonrisa, corazón, cara triste, etc. Zowi trae 31 bocas predefinidas (IDs 0-30) y puedes crear las tuyas en el Editor de bocas dibujando sobre la cuadrícula."
+  "learning_description": "La boca de Zowi es una matriz de 5×6 LEDs (30 en total). Cada LED se enciende o apaga para formar expresiones: sonrisa, corazón, cara triste, etc. Zowi trae 31 bocas predefinidas (IDs 0-30) y puedes crear las tuyas en el Editor de bocas dibujando sobre la cuadrícula.",
+  "action_label": "Editor"
 }

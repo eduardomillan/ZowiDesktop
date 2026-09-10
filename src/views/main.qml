@@ -57,6 +57,9 @@ Window {
                 } else if (target === "calibration") {
                     var calib = stack.push("qrc:/src/views/screens/CalibrationScreen.qml")
                     calib.backClicked.connect(function() { stack.pop() })
+                } else if (target === "mouth_editor") {
+                    var editor = stack.push("qrc:/src/views/screens/MouthEditorScreen.qml")
+                    editor.backClicked.connect(function() { stack.pop() })
                 } else {
                     console.warn("main.qml: unknown project action target:", target)
                 }
