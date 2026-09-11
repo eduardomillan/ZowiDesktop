@@ -28,6 +28,39 @@ sudo apt update && sudo apt install zowi-desktop
 Releases are created manually as GitHub Releases with the AppImage and
 Debian packages attached.
 
+## Qt runtime dependencies (.deb)
+
+Zowi Desktop is a Qt/QML application. When you install the `.deb` with
+`apt`, all Qt dependencies are resolved automatically:
+
+```bash
+sudo apt install ./zowi-desktop_*.deb
+```
+
+If they are not installed yet (for example, because the package was
+installed with `dpkg -i`), install the needed packages first:
+
+```bash
+sudo apt install qt6-base qt6-declarative \
+    qml6-module-qtqml qml6-module-qtquick \
+    qml6-module-qtquick-controls qml6-module-qtquick-window \
+    qml6-module-qtquick-layouts libxkbcommon0 libgl1 bluez
+
+# Only if the desktop runs a native Wayland session (e.g. Lliurex 25):
+sudo apt install qt6-wayland
+```
+
+Or let `apt` fix any missing dependencies afterwards:
+
+```bash
+sudo dpkg -i zowi-desktop_*.deb
+sudo apt install -f
+```
+
+> The `.deb` requires a distribution that ships Qt 6 packages
+> (Ubuntu 22.04+ / Lliurex 23+). On older bases use the **AppImage**,
+> which bundles Qt itself.
+
 ## USB serial access (connecting a robot)
 
 To connect to a Zowi robot over USB the user needs read/write access to the
