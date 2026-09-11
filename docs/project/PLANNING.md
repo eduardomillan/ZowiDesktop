@@ -232,7 +232,7 @@ src/
 
 - [ ] Add more projects (inside Zowi, buttons, etc.)
 
-- [ ] Add a sounds screen (like mouths screen)
+- [x] Add a sounds screen (like mouths screen)
 
 - [ ] Design/create extra games
 

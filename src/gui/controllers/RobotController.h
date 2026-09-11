@@ -158,6 +158,9 @@ signals:
     void batteryChanged();
     void appIdChanged();
     void dataReceived(const QString &data);
+    // Emitted when the robot sends &&F%% (command fully processed), e.g. after
+    // a melody finishes playing.
+    void finalAckReceived();
     void errorOccurred(const QString &message);
     void usbIdentityMismatch();
     void firmwareRestoreStarted();

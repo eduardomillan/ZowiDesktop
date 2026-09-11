@@ -62,6 +62,50 @@
         <file>images/scratch/sprite2.png</file>
     </qresource>
 
+
+    <!-- Melody / sounds buttons -->
+    <qresource prefix="/">
+        <file>images/sounds/melody_button_pushed.png</file>
+        <file>images/sounds/melody_button_pushed_badge.png</file>
+        <file>images/sounds/melody_confused.png</file>
+        <file>images/sounds/melody_confused_badge.png</file>
+        <file>images/sounds/melody_connection.png</file>
+        <file>images/sounds/melody_connection_badge.png</file>
+        <file>images/sounds/melody_cuddly.png</file>
+        <file>images/sounds/melody_cuddly_badge.png</file>
+        <file>images/sounds/melody_disconnection.png</file>
+        <file>images/sounds/melody_disconnection_badge.png</file>
+        <file>images/sounds/melody_fart1.png</file>
+        <file>images/sounds/melody_fart1_badge.png</file>
+        <file>images/sounds/melody_fart2.png</file>
+        <file>images/sounds/melody_fart2_badge.png</file>
+        <file>images/sounds/melody_fart3.png</file>
+        <file>images/sounds/melody_fart3_badge.png</file>
+        <file>images/sounds/melody_happy.png</file>
+        <file>images/sounds/melody_happy_badge.png</file>
+        <file>images/sounds/melody_happy_short.png</file>
+        <file>images/sounds/melody_happy_short_badge.png</file>
+        <file>images/sounds/melody_mode1.png</file>
+        <file>images/sounds/melody_mode1_badge.png</file>
+        <file>images/sounds/melody_mode2.png</file>
+        <file>images/sounds/melody_mode2_badge.png</file>
+        <file>images/sounds/melody_mode3.png</file>
+        <file>images/sounds/melody_mode3_badge.png</file>
+        <file>images/sounds/melody_oh_ooh.png</file>
+        <file>images/sounds/melody_oh_ooh2.png</file>
+        <file>images/sounds/melody_oh_ooh2_badge.png</file>
+        <file>images/sounds/melody_oh_ooh_badge.png</file>
+        <file>images/sounds/melody_sad.png</file>
+        <file>images/sounds/melody_sad_badge.png</file>
+        <file>images/sounds/melody_sleeping.png</file>
+        <file>images/sounds/melody_sleeping_badge.png</file>
+        <file>images/sounds/melody_super_happy.png</file>
+        <file>images/sounds/melody_super_happy_badge.png</file>
+        <file>images/sounds/melody_surprise.png</file>
+        <file>images/sounds/melody_surprise_badge.png</file>
+        <file>images/sounds/sound_button.png</file>
+        <file>images/sounds/sound_button_sing.png</file>
+    </qresource>
     <!-- Legacy Android app assets -->
     <qresource prefix="/">
         <file>images/android/achievements_badge.png</file>

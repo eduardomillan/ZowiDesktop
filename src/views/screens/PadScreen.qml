@@ -29,6 +29,7 @@ ScreenTemplate {
 
     signal mouthScreenRequested()
     signal gestureScreenRequested()
+    signal soundScreenRequested()
 
     Timer {
         id: repeatTimer
@@ -482,6 +483,21 @@ ScreenTemplate {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: pad.gestureScreenRequested()
+                }
+            }
+
+            Image {
+                id: soundsBtn
+                width: buttonExtraSize
+                height: buttonExtraSize
+                source: "qrc:/images/sounds/sound_button_sing.png"
+                sourceSize.width: buttonExtraSize
+                sourceSize.height: buttonExtraSize
+                fillMode: Image.PreserveAspectFit
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: pad.soundScreenRequested()
                 }
             }
 

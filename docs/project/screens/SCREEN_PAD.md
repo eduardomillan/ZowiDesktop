@@ -1,7 +1,7 @@
 # SCREEN_PAD — PadScreen.qml
 
 > Interactive gamepad: movement pad (left), action pad (right) and the central
-> column **mouths → animations → speed**. It is the main live-control screen,
+> column **mouths → animations → sounds → speed**. It is the main live-control screen,
 > equivalent to the Android app's gamepad.
 
 - **File:** `src/views/screens/PadScreen.qml`
@@ -14,6 +14,7 @@
 |--------|-----------|-------------|
 | `mouthScreenRequested()` | mouths button | `main.qml`: push→ Mouth (MouthScreen.qml) |
 | `gestureScreenRequested()` | animations button | `main.qml`: push→ Gesture (GestureScreen.qml) |
+| `soundScreenRequested()` | sounds button | `main.qml`: push→ Sounds (SoundsScreen.qml) |
 | `backClicked()` | inherited from `ScreenTemplate` | `main.qml`: `stack.pop()` |
 
 ## QML context used
@@ -48,7 +49,7 @@ All **hold-repeating**: `startHold()` sends immediately and restarts
 - **Speed modes** (`MovementSpeed`): slow = 2000 ms, medium = 1000 ms, fast =
   700 ms (larger period = slower gait). The speed button is an overlay of three
   images toggled by `visible`.
-- Central column order (top → bottom): **mouthsBtn → animsBtn → speedControl**.
+- Central column order (top → bottom): **mouthsBtn → animsBtn → soundsBtn → speedControl**.
 - `Component.onCompleted`: `Robot.setDataPollingEnabled(true)` (PadScreen
   pauses the poll while a button is held so the `E/I/B` burst never interrupts
   a movement — same pattern as CalibrationScreen).
@@ -57,3 +58,4 @@ All **hold-repeating**: `startHold()` sends immediately and restarts
 
 - Mouths button → [SCREEN_MOUTH.md](SCREEN_MOUTH.md)
 - Animations button → [SCREEN_GESTURE.md](SCREEN_GESTURE.md)
+- Sounds button → [SCREEN_SOUNDS.md](SCREEN_SOUNDS.md)

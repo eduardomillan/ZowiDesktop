@@ -379,7 +379,8 @@ void RobotController::parseIncoming()
                     m_session->saveActiveZowiAppId(m_appId);
             }
         }
-        // &&A / &&F / &&D / &&N / ... : no GUI consumer yet.
+        if (msg.cmd == zowi::toChar(zowi::Command::FinalAck) && !msg.legacy)
+            emit finalAckReceived();
     }
 
     if (updated) emit batteryChanged();

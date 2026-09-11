@@ -221,6 +221,28 @@
   "GestureScreen.qml": {
     "gestures_title": "Gestures"
   },
+  "SoundsScreen.qml": {
+    "sounds_title": "Sounds",
+    "melody_connection": "Connection",
+    "melody_disconnection": "Disconnection",
+    "melody_surprise": "Surprise",
+    "melody_oh_ooh": "Oh-oh",
+    "melody_oh_ooh2": "Oh-oh 2",
+    "melody_cuddly": "Cuddly",
+    "melody_sleeping": "Sleeping",
+    "melody_happy": "Happy",
+    "melody_super_happy": "Super happy",
+    "melody_happy_short": "Happy short",
+    "melody_sad": "Sad",
+    "melody_confused": "Confused",
+    "melody_fart1": "Fart 1",
+    "melody_fart2": "Fart 2",
+    "melody_fart3": "Fart 3",
+    "melody_mode1": "Mode 1",
+    "melody_mode2": "Mode 2",
+    "melody_mode3": "Mode 3",
+    "melody_button_pushed": "Button pushed"
+  },
   "QuizComponent.qml": {
     "run_test": "Run Test",
     "correct": "Correct!",

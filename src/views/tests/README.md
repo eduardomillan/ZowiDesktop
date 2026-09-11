@@ -111,6 +111,7 @@ The preview executable loads the QML screen in isolation, providing mock context
 | `preview-scan.sh` | ScanScreen | — |
 | `preview-home.sh` | HomeScreen | `--connected` |
 | `preview-pad.sh` | PadScreen | `--connected` |
+| `preview-sounds.sh` | SoundsScreen | `--connected` |
 | `preview-calibration.sh` | CalibrationScreen | `--connected` |
 | `preview-moutheditor.sh` | MouthEditorScreen | `--connected` |
 

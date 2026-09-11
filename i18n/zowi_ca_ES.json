@@ -220,6 +220,28 @@
   "GestureScreen.qml": {
     "gestures_title": "Gestos"
   },
+  "SoundsScreen.qml": {
+    "sounds_title": "Sons",
+    "melody_connection": "Connexió",
+    "melody_disconnection": "Desconnexió",
+    "melody_surprise": "Sorpresa",
+    "melody_oh_ooh": "Oh-oh",
+    "melody_oh_ooh2": "Oh-oh 2",
+    "melody_cuddly": "Ternura",
+    "melody_sleeping": "Dormint",
+    "melody_happy": "Feliç",
+    "melody_super_happy": "Súper feliç",
+    "melody_happy_short": "Feliç curt",
+    "melody_sad": "Trist",
+    "melody_confused": "Confós",
+    "melody_fart1": "Pet 1",
+    "melody_fart2": "Pet 2",
+    "melody_fart3": "Pet 3",
+    "melody_mode1": "Mode 1",
+    "melody_mode2": "Mode 2",
+    "melody_mode3": "Mode 3",
+    "melody_button_pushed": "Botó premut"
+  },
   "QuizComponent.qml": {
     "run_test": "Executar prova",
     "correct": "¡Correcte!",

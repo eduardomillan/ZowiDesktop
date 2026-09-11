@@ -220,6 +220,28 @@
   "GestureScreen.qml": {
     "gestures_title": "Жестове"
   },
+  "SoundsScreen.qml": {
+    "sounds_title": "Звуци",
+    "melody_connection": "Връзка",
+    "melody_disconnection": "Изключване",
+    "melody_surprise": "Изненада",
+    "melody_oh_ooh": "Ох-ох",
+    "melody_oh_ooh2": "Ох-ох 2",
+    "melody_cuddly": "Мил",
+    "melody_sleeping": "Спи",
+    "melody_happy": "Щастлив",
+    "melody_super_happy": "Супер щастлив",
+    "melody_happy_short": "Кратко щастие",
+    "melody_sad": "Тъжен",
+    "melody_confused": "Объркан",
+    "melody_fart1": "Пърдене 1",
+    "melody_fart2": "Пърдене 2",
+    "melody_fart3": "Пърдене 3",
+    "melody_mode1": "Режим 1",
+    "melody_mode2": "Режим 2",
+    "melody_mode3": "Режим 3",
+    "melody_button_pushed": "Бутон натиснат"
+  },
   "QuizComponent.qml": {
     "run_test": "Стартирай теста",
     "correct": "Вярно!",

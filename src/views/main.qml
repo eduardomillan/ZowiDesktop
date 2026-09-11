@@ -29,6 +29,10 @@ Window {
             var gesture = stack.push("qrc:/src/views/screens/GestureScreen.qml")
             gesture.backClicked.connect(function() { stack.pop() })
         })
+        pad.soundScreenRequested.connect(function() {
+            var sounds = stack.push("qrc:/src/views/screens/SoundsScreen.qml")
+            sounds.backClicked.connect(function() { stack.pop() })
+        })
     }
 
     function connectHome(home) {

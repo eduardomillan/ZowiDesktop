@@ -134,12 +134,16 @@ public:
         // Simulate the firmware's acknowledge flow for the rename command
         // ("R <name>\r"): it replies with &&A (received) then &&F (final ack
         // after the EEPROM write). Used by the WizardRenameScreen preview.
-        if (data.startsWith(QStringLiteral("R "))) {
+        // Same pattern for melodies ("K <id>\r"): final ack after playback.
+        const bool rename = data.startsWith(QStringLiteral("R "));
+        const bool sing = data.startsWith(QStringLiteral("K "));
+        if (rename || sing) {
             QTimer::singleShot(400, this, [this]() {
                 emit dataReceived(QStringLiteral("&&A%%"));
             });
             QTimer::singleShot(900, this, [this]() {
                 emit dataReceived(QStringLiteral("&&F%%"));
+                emit finalAckReceived();
             });
         }
     }
@@ -155,6 +159,7 @@ signals:
     void scanningChanged();
     void deviceChanged();
     void dataReceived(const QString &data);
+    void finalAckReceived();
     void errorOccurred(const QString &message);
     void unpairFinished(bool success, const QString &message);
 
