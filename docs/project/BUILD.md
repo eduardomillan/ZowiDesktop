@@ -138,7 +138,12 @@ build\src\cli\Release\zowi_cli.exe --help
 ```
 
 `windeployqt` runs automatically after the GUI build to copy Qt DLLs and QML
-files alongside the executable.
+files alongside the executable. If you need to run it manually (e.g. after
+moving the executable or to refresh the deployed files):
+
+```bat
+windeployqt --qmldir src\views build\src\gui\Release\ZowiDesktop.exe
+```
 
 > **Tip**: `build.bat --demo` compiles the CLI and runs a quick demo of the
 > most common commands (session, config, translate, scan).
