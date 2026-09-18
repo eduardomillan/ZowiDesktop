@@ -16,6 +16,7 @@
   - [M7 — Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
   - [M8 — Basic projects ✅](#m8--basic-projects-)
   - [M9 — Advanced projects ✅](#m9--advanced-projects-)
+  - [M10 - Games 🚧](#m10--games-)
   - [Future milestones 🕒](#future-milestones-)
   - [Application new features 🕒](#application-new-features-)
 - [Testing](#testing)
@@ -42,7 +43,8 @@ Status:
 | **0.7.0** | M7 | Zowi calibration (servo trims via`C`/`G` protocol commands) | ✅ |
 | **0.8.0** | M8 | Basic projects | ✅ |
 | **0.9.0** | M9 | Advanced projects | ✅ |
-| **0.10.0** | M10 | Design improvements | 🕒 |
+| **0.10.0** | M10 | Games | 🚧 |
+
 
 ## Architecture
 
@@ -186,7 +188,7 @@ src/
 
 - [x] Add all the available mouth and gestures to Gamepad
 
-### M9 — Advanced projects 🚧
+### M9 — Advanced projects ✅
 
 - [x] Robot choreography
 
@@ -202,25 +204,34 @@ src/
 
 - [x] Arrange the projects logically
 
-- [ ] Enhance renaming, max. lenght, chars allowed
-
-- [ ] Allow renaming with startup names $ and #
-
-### Future milestones 🕒
-
-- [ ] **Projects CLI commands** — `project list/show/reset/prefs` (uses core ProjectsStore/ProjectsPreferencesStore, no Qt)
-
-- [ ] Game: Visual block editor
+### M10 — Games 🚧
 
 - [ ] Game: Memory
 
 - [ ] Game: Draw the mouth
+
+- [ ] Game: Visual block editor
+
+
+### Future milestones 🕒
+
+- [ ] Game: Visual block editor
 
 - [ ] Achievements layer
 
 - [ ] Low battery management
 
 - [ ] Improve the CLI shell with history
+
+- [ ] Enhance renaming, max. lenght, chars allowed
+
+- [ ] Allow renaming with startup names $ and #
+
+- [ ] **Projects CLI commands** — `project list/show/reset/prefs` (uses core ProjectsStore/ProjectsPreferencesStore, no Qt)
+
+- [ ] Design improvements
+
+
 
 ### Application new features 🕒
 

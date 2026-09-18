@@ -262,5 +262,22 @@
     "firmware_battery_low": "La batterie est en dessous du niveau de sécurité. Continuer l'installation ?",
     "confirm": "Oui",
     "cancel": "Non"
+  },
+  "GameZowiDiceScreen.qml": {
+    "title": "Zowi Dice",
+    "subtitle": "Répétez la séquence",
+    "play_button": "Jouer",
+    "help_button": "Comment jouer",
+    "ranking_button": "Classement",
+    "score_prefix": "Score : %1",
+    "walk_forward": "Marcher",
+    "bend_backward": "Se pencher",
+    "jump": "Sauter",
+    "moonwalker_right": "Moonwalker",
+    "how_to_play_text": "Zowi jouera une séquence de mouvements. Observez et répétez-la dans le même ordre. Un nouveau mouvement est ajouté à chaque tour.",
+    "close": "Fermer",
+    "game_over": "Fin de partie",
+    "final_score": "Score final : %1",
+    "new_best": "Nouveau record !"
   }
 }

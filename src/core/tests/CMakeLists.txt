@@ -35,3 +35,7 @@ add_test(NAME test_robot_state COMMAND test_robot_state)
 add_executable(test_projects_store test_projects_store.cpp)
 target_link_libraries(test_projects_store PRIVATE Zowi::core)
 add_test(NAME test_projects_store COMMAND test_projects_store)
+
+add_executable(test_zowi_dice test_zowi_dice.cpp)
+target_link_libraries(test_zowi_dice PRIVATE Zowi::core)
+add_test(NAME test_zowi_dice COMMAND test_zowi_dice)

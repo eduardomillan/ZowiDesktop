@@ -5,6 +5,7 @@ import "screens"
 import "components"
 
 Window {
+    id: main
     visible: true
     // Window size ratio: change 0.6 to desired fraction (e.g., 0.8 for 80%)
     width: Screen.desktopAvailableWidth * 0.6
@@ -35,6 +36,12 @@ Window {
         })
     }
 
+    // Push Zowi Dice game screen
+    function pushZowiDice() {
+        var dice = stack.push("qrc:/src/views/screens/GameZowiDiceScreen.qml")
+        dice.backClicked.connect(function() { stack.pop() })
+    }
+
     function connectHome(home) {
         home.settingsClicked.connect(function() {
             var settings = stack.push("qrc:/src/views/screens/SettingsScreen.qml")
@@ -44,6 +51,7 @@ Window {
             console.log("Home: achievements")
         })
         home.gamepadClicked.connect(function() { pushGamepad() })
+        home.zowiSaysClicked.connect(function() { pushZowiDice() })
         home.mouthEditorClicked.connect(function() {
             var editor = stack.push("qrc:/src/views/screens/MouthEditorScreen.qml")
             editor.backClicked.connect(function() { stack.pop() })

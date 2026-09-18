@@ -18,6 +18,7 @@
         <file>src/views/screens/GestureScreen.qml</file>
         <file>src/views/screens/SoundsScreen.qml</file>
         <file>src/views/screens/ProjectScreen.qml</file>
+        <file>src/views/screens/GameZowiDiceScreen.qml</file>
         <!-- Components -->
         <file>src/views/components/AnimatedZowi.qml</file>
         <file>src/views/components/StatusBar.qml</file>

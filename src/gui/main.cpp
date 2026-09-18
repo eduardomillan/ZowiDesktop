@@ -103,6 +103,7 @@ QString openLogFile()
 #include "controllers/CalibrationSessionController.h"
 #include "controllers/CommandsController.h"
 #include "controllers/ProjectsController.h"
+#include "controllers/ZowiDiceController.h"
 
 static QQmlApplicationEngine *s_engine = nullptr;
 static QString s_qmlPath;
@@ -165,8 +166,14 @@ int main(int argc, char *argv[])
     CalibrationSessionController calibration;
     CommandsController commands;
     ProjectsController projects(&translator, &session);
+    ZowiDiceController zowiDice;
     g_logLevel = logLevelFromName(config.get("log_level"));
     robot.setSessionController(&session);
+
+    // Wire ZowiDiceController
+    zowiDice.setRobotController(&robot);
+    zowiDice.setSessionController(&session);
+    zowiDice.setCommandsController(&commands);
 
     QString locale = session.getString("locale", "");
     if (locale.isEmpty()) {
@@ -191,6 +198,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Calibration", &calibration);
     engine.rootContext()->setContextProperty("Commands", &commands);
     engine.rootContext()->setContextProperty("Projects", &projects);
+    engine.rootContext()->setContextProperty("ZowiDice", &zowiDice);
     engine.rootContext()->setContextProperty("AppVersion", QString(ZOWI_VERSION));
 
     // Live G commands from the calibration screen go through the same write path

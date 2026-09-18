@@ -262,5 +262,22 @@
     "firmware_battery_low": "Батерията е под безопасното ниво. Да се продължи ли с инсталирането?",
     "confirm": "Да",
     "cancel": "Не"
+  },
+  "GameZowiDiceScreen.qml": {
+    "title": "Zowi Dice",
+    "subtitle": "Повторете последователността",
+    "play_button": "Играй",
+    "help_button": "Как да играя",
+    "ranking_button": "Класация",
+    "score_prefix": "Точки: %1",
+    "walk_forward": "Ходене",
+    "bend_backward": "Наклоняване",
+    "jump": "Скачане",
+    "moonwalker_right": "Moonwalker",
+    "how_to_play_text": "Zowi ще изпълни поредица от движения. Наблюдавайте и я повторете в същия ред. На всеки кръг се добавя ново движение.",
+    "close": "Затвори",
+    "game_over": "Край на играта",
+    "final_score": "Крайни точки: %1",
+    "new_best": "Нов рекорд!"
   }
 }

@@ -10,6 +10,7 @@ add_library(zowi_core STATIC
     src/robot_state.cpp
     src/projects_store.cpp
     src/projects_preferences_store.cpp
+    src/zowi_dice.cpp
 )
 
 target_include_directories(zowi_core

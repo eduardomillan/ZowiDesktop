@@ -262,5 +262,22 @@
     "firmware_battery_low": "La bateria està per sota del nivell segur. Continuar amb la instal·lació?",
     "confirm": "Sí",
     "cancel": "No"
+  },
+  "GameZowiDiceScreen.qml": {
+    "title": "Zowi Dice",
+    "subtitle": "Repeteix la seqüència",
+    "play_button": "Jugar",
+    "help_button": "Com jugar",
+    "ranking_button": "Classificació",
+    "score_prefix": "Puntuació: %1",
+    "walk_forward": "Caminar",
+    "bend_backward": "Doblegar",
+    "jump": "Saltar",
+    "moonwalker_right": "Moonwalker",
+    "how_to_play_text": "Zowi farà una seqüència de moviments. Mira'i i repeteix-la en el mateix ordre. Cada ronda s'afegeix un moviment nou.",
+    "close": "Tancar",
+    "game_over": "Fi del joc",
+    "final_score": "Puntuació final: %1",
+    "new_best": "Nou rècord!"
   }
 }
