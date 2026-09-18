@@ -116,7 +116,7 @@
     "projects": "Проекти",
     "gamepad": "Джойстик",
     "timeline": "Хронология",
-    "zowi_says": "Zowi казва",
+    "zowi_says": "Памет",
     "mouths": "Усти",
     "mouths_editor": "Редактор на усти",
     "move_objects": "Премести обекти",
@@ -264,7 +264,7 @@
     "cancel": "Не"
   },
   "GameZowiDiceScreen.qml": {
-    "title": "Zowi Dice",
+    "title": "Памет",
     "subtitle": "Повторете последователността",
     "play_button": "Играй",
     "help_button": "Как да играя",

@@ -1,89 +1,140 @@
-# SCREEN_GAME_ZOWI_SAYS — GameZowiSaysScreen.qml
+# SCREEN_GAME_ZOWI_DICE — GameZowiDiceScreen.qml
 
-> Game 02 — **"Repite con Zowi"** (Memory / *Zowi dice*): Zowi plays a
-> growing random sequence of 4 moves and the player must repeat it from memory.
-> Design derived from ZowiAppReborn's `ZowiSaysMinigameActivity`
-> (`ZowiSaysMinigamePresenterImpl` + `activity_zowi_says_minigame_view.xml`).
-> Intended as a new game alongside [SCREEN_GAME_TIMELINE.md](SCREEN_GAME_TIMELINE.md)
-> and [SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md); future games can be added.
+> Game 02 — **"Zowi Dice"** (Memory / *Zowi dice*): Zowi plays a growing random
+> sequence of 4 moves and the player must repeat it from memory.
+> Logic ported from ZowiAppReborn's `ZowiSaysMinigamePresenterImpl`, adapted to
+> the desktop architecture (Qt-free core + thin GUI adapter). Intended as a new
+> game alongside [SCREEN_GAME_TIMELINE.md](SCREEN_GAME_TIMELINE.md) and
+> [SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md); future games can be added.
 
-- **Status:** ⚠️ **NOT IMPLEMENTED** — design proposal pending review.
-- **File:** `src/views/screens/GameZowiSaysScreen.qml` (does not exist yet).
-- **i18n context:** `"GameZowiSaysScreen.qml"` (planned).
+- **Status:** ✅ **IMPLEMENTED** (core + GUI, v0.10.x M10).
+- **File:** `src/views/screens/GameZowiDiceScreen.qml`.
+- **Core logic (Qt-free):** `src/core/include/zowi/zowi_dice.h` +
+  `src/core/src/zowi_dice.cpp` — pure state machine, unit-tested in
+  `src/core/tests/test_zowi_dice.cpp`.
+- **GUI adapter:** `src/gui/controllers/ZowiDiceController.{h,cpp}`, exposed to
+  QML as the context property `ZowiDice`.
+- **i18n context:** `"GameZowiDiceScreen.qml"`.
 - **Game id:** `zowi_says` — Home tile
-  `qrc:/images/android/simon_game_button.png` (currently `enabled: false` in
-  [SCREEN_HOME.md](SCREEN_HOME.md)).
-- **Source of truth (Android):** GAME_ID `ZOWI_SAYS_GAME_ID`;
-  `ZowiSaysMinigameActivity` / `ZowiSaysMinigamePresenterImpl`,
-  `VIEWS.md` §ZowiSaysMinigameActivity; ranking under `ZOWI_SAYS_GAME_ID`.
-- **Achievement:** `in_love` — **score ≥ 12** at the end of a round.
-  Reserved for the deferred ACHIEVEMENTS layer, exactly like the projects.
-- **Connection:** interactive screen. All 4 action buttons are conn-gated
-  while the round is running (Android enables them only while `isPlaying`).
-  Play/Help/Ranking/Home are always enabled.
-- Reached from Home *Play* tile → push; back → pop.
+  `qrc:/images/android/simon_game_button.png` (now `enabled: true` in
+  [SCREEN_HOME.md](SCREEN_HOME.md); visible label comes from the Home context
+  key `zowi_says`, e.g. *"Memoria"* in es_ES).
+- **Source of truth (Android):** `ZowiSaysMinigamePresenterImpl`
+  (`addRandomCommandToZowiSequence` → one new random move per round; playback as
+  `[move, stop, move, stop, …]` ACK-chained over `"A"`/final ACK).
+- **Connection:** interactive screen. The 4 action buttons are conn-gated
+  (`Robot.connected`) and blocked while Zowi replays
+  (`ZowiDice.blockUserInput`).
+- Reached from Home *Zowi dice* tile → `main.qml` `pushZowiDice()` → push;
+  back → pop.
 
-## Signals (planned)
+## Architecture
 
-| Signal | Emitted by | Consumed in |
-|--------|-----------|-------------|
-| `zowiSaysClicked()` | Home *Play* tile | `main.qml`: push→ `GameZowiSaysScreen.qml` |
-| `playClicked()` | Play button | start a new round (starts sequence of length 1) |
-| `moveClicked(dir)` | one of the 4 action buttons | user repeats the sequence, one step at a time |
-| `tick[duration]` / `gameOver(score)` | round state machine | progress bar / end-of-game dialog |
-| `backClicked()` | inherited from `ScreenTemplate` | `main.qml`: `stack.pop()` |
+State machine lives in core (`zowi::ZowiDiceGame`), fully Qt-free:
 
-## QML context used (planned)
+| State | Meaning |
+|-------|---------|
+| `Idle` | Initial / after `reset()` |
+| `ShowingSequence` | Zowi replays the growing sequence; input blocked |
+| `WaitingForUser` | Zowi finished replaying; player repeats from memory |
+| `GameOver` | Wrong input (or round exceeded); score = len − 1 |
 
-- `Robot`: `connected` (gates the 4 action buttons), `sendData(cmd)`, ACK
-  `"A"` used to know when Zowi finished replaying his turn.
-- `Commands`: the 4 movements + stop (see table).
-- `Config.get(...)`: theme colors; **achievements enabled/disabled flag**.
-- `Session`: last score / ranking gate (`zowi_says_last_score`).
+Command strings are built by core (`robot_commands.h`) and sent by the
+controller through `RobotController::sendData()`. ACK sequencing is driven by
+`RobotController::finalAckReceived`.
+
+## QML context used
+
+- `ZowiDice` (the controller): `state`, `score`, `sequenceLength`, `progress`,
+  `blockUserInput`, `connected`; invokables `startGame()`, `resetGame()`,
+  `onActionTopLeft()`, `onActionTopRight()`, `onActionBottomLeft()`,
+  `onActionBottomRight()`; signal `gameOver(int)`.
+- `Robot`: `connected` (gates the 4 action buttons), `sendData()`,
+  `setDataPollingEnabled()` (paused while the screen is open, like PadScreen),
+  `finalAckReceived` (wired to the controller).
+- `Config.get(...)`: theme colors.
+- `Session` (via controller): persists the last score.
 - `Translator` (via `tr()`).
 
-## Commands sent (planned)
+`CommandsController` is injected into the controller constructor wiring but is
+not used by the game logic — movement strings come from core
+(`ZowiDiceGame::nextRobotCommand()`), matching the layer rules in AGENTS.md.
+
+## Commands sent
+
+Produced by core (`ZowiDiceGame::buildCommandForAction`), default
+`initialSpeedMs = 1000` (`MovementSpeed::Medium`):
 
 | Action | Builder | Wire (medium) |
 |--------|---------|----------------|
-| Top-left | `Commands.walkForward(speed)` | `M 1 <T>\r` |
-| Top-right | `Commands.bendBackward(speed)` | `M 16 <T>\r` |
-| Bottom-left | `Commands.jump(speed)` | `M 14 <T>\r` |
-| Bottom-right | `Commands.moonwalkerRight(speed, 30)` | `M 7 <T> 30\r` |
-| End of turn | `Commands.stop()` | `S\r` |
+| Top-left (Walk) | `commandWalkForward` | `M 1 1000\r` |
+| Top-right (Bend) | `commandBendBackward` | `M 16 1000\r` |
+| Bottom-left (Jump) | `commandJump` | `M 11 1000\r` |
+| Bottom-right (Moonwalker) | `commandMoonwalkerRight` | `M 7 1000 30\r` |
+| End of each move | `commandStop` | `S\r` |
 
-## Gameplay (planned)
+Buttons use the Android ZowiSays assets already shipped in this repo:
+`move1_button.png`/`move2_button.png`/`move3_button.png`/`move4_button.png`
+(and `pressed_*` variants). The help dialog shows `simon_game_button.png`.
 
-- **Round:** Zowi plays a random sequence (starting at length 1, growing by 1
-  per correct repeat) using the 4 moves; each move is delivered as
-  `command + StopCommand`, and `"A"` ack marks the end of each step. While Zowi
-  plays, the 4 buttons are blocked (mirrors Android's `blockUserControls`
-  overlay) and a small progress bar shows the sequence being replayed.
-- **Human turn:** once Zowi finishes, the player repeats the sequence. Each tap
-  appends a command; **longer or wrong** sequence → end of game.
-- **End of game:** `gameOver(score)` with `score = length reached − 1`. If
-  `score ≥ 12` → `in_love` achievement (reserved), else `ANGRY` gesture
-  (`Commands.gestureById(GestureAngry)`). Ranking dialog if
-  `score > 3` and within top-10 (`zowi_says` leaderboard). First play → help
-  overlay.
-- **Turn-taking timing:** Zowi replays on his turn; wait for ACK before
-  re-enabling the buttons (same handshake as Timeline).
+## Gameplay
 
-## Persistence (planned)
+- **Round:** on entering the screen the game auto-starts (`Component.onCompleted`
+  → `ZowiDice.startGame()`). Zowi replays the random sequence (length 1, growing
+  by 1 per correct repeat). Each action is delivered as `[move … ACK] → [stop …
+  ACK]`; the core only advances to the next action after the **Stop** ACK
+  (movement ACK alone does not advance), exactly like the Android timeline.
+  While Zowi plays, the 4 buttons are disabled and a progress bar runs.
+- **Human turn:** once Zowi finishes, the state becomes `WaitingForUser` and the
+  player repeats the sequence with the 4 buttons.
+- **Wrong or extra input** → `GameOver` with `score = sequence length − 1`.
+- **Correct full repeat** → one random move is appended and a new
+  `ShowingSequence` round starts (matching `checkCurrentUserSequece()` in
+  Android). Score displayed via `ZowiDice.score` (`score_prefix`, e.g.
+  *"Puntuación: %1"*).
+- **Game over dialog** (`game_over`, `final_score` `%1`, OK/Retry): Retry →
+  `startGame()`, OK → `resetGame()`. If `score ≥ 12` a *"New best"* toast line
+  is shown (achievement `in_love` reserved — see below).
 
-- `zowi_says_last_score` — latest score (for the ranking gate / toasts).
-- Ranking entries under game id `zowi_says` (in-Session top-10, mirroring
-  `RankingController.saveRankingEntry`). Cleared by "Forget playing history".
+## UI layout
 
-## i18n (planned)
+- 2×2 action grid centered in the content area (uses actual screen
+  `contentArea`, not a `parent.contentArea` lookup).
+- Footer: score text, sequence progress bar (visible only while
+  `ShowingSequence`), and a control row with **Play** (Idle/GameOver), **Help**
+  (Idle) and **Ranking** (Idle, *disabled placeholder*).
+- Dialogs are standard `QtQuick.Controls.Dialog` (non-Android `MakerBoxDialog`)
+  with explicit `width` to avoid implicit-size binding loops.
+- Back button inherited from `ScreenTemplate` (`backClicked` — do **not**
+  redeclare the signal in the screen).
 
-New keys under `"GameZowiSaysScreen.qml"`: `title`, `play_button`, `help`,
-`ranking_button`, `final_score`, current game id already translated on the Home
-context (`"zowi_says": "Zowi dice"`).
+## Persistence
 
-## Open questions (for review)
+- `zowi_says_last_score` — latest score, saved by the controller on game over
+  via `SessionController`.
 
-- Turn pacing: fixed per-move period (e.g. 1000 ms as Android) vs adjustable;
-  tentatively fixed.
-- Score display during the round (Android shows a progress bar only); propose
-  showing current round length + best score.
+## i18n
+
+Keys under `"GameZowiDiceScreen.qml"` with translations in all 5 locales (es,
+en, fr, ca, bg): `title`, `subtitle`, `play_button`, `help_button`,
+`ranking_button`, `score_prefix` (`%1`), `walk_forward`, `bend_backward`,
+`jump`, `moonwalker_right`, `how_to_play_text`, `close`, `game_over`,
+`final_score` (`%1`), `new_best`.
+
+## Tests
+
+Core logic is covered by `test_zowi_dice.cpp` (registered in
+`src/core/tests/CMakeLists.txt`). Regression test 11 drives the exact
+controller flow (`nextRobotCommand()` + `onFinalAck()`) for a 2-action round to
+guarantee `[move, stop, move, stop]` playback.
+
+## Known deviations from the Android original (not yet implemented)
+
+- **Ranking:** no leaderboard. The Ranking button is a disabled placeholder;
+  `rankThreshold` is defined in `ZowiDiceConfig` but unused.
+- **Achievements:** `in_love` (score ≥ 12) is not enforced; the game-over
+  dialog simply shows a *"New best"* line. `achievementThreshold` is reserved.
+- **No `ANGRY` gesture** on game over (Android plays `H8`).
+- **No first-play help overlay** — Help is a manual button.
+- **Speed is fixed** (1000 ms) via `ZowiDiceConfig::initialSpeedMs`; not
+  adjustable in the UI.

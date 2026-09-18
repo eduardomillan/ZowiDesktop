@@ -117,7 +117,7 @@
     "projects": "Projects",
     "gamepad": "Gamepad",
     "timeline": "Timeline",
-    "zowi_says": "Zowi Says",
+    "zowi_says": "Memory",
     "mouths": "Mouths",
     "mouths_editor": "Mouths Editor",
     "move_objects": "Move objects",
@@ -265,7 +265,7 @@
     "cancel": "No"
   },
   "GameZowiDiceScreen.qml": {
-    "title": "Zowi Dice",
+    "title": "Memory",
     "subtitle": "Repeat the sequence",
     "play_button": "Play",
     "help_button": "How to play",

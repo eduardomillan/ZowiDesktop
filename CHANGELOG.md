@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Zowi Dice memory game ("Zowi dice / Memoria"):** New interactive minigame
+  ported from ZowiAppReborn's `ZowiSaysMinigamePresenterImpl` — Zowi plays a
+  growing random sequence of 4 moves (walk, bend, jump, moonwalker) and the
+  player must repeat it from memory. Game logic is a Qt-free state machine in
+  core (`zowi::ZowiDiceGame`, `src/core/src/zowi_dice.cpp`) with a thin GUI
+  adapter (`ZowiDiceController`, exposed to QML as `ZowiDice`). Includes
+  `GameZowiDiceScreen.qml` (2×2 action grid using the Android `move1..4`
+  buttons, score + sequence progress bar, Play/Help/Ranking controls, standard
+  modal dialogs), the Home *Zowi dice* tile enabled, navigation wiring in
+  `main.qml`, last-score persistence under `zowi_says_last_score`, 15 new i18n
+  keys in the 5 locales and a new `test_zowi_dice` core test (11 cases,
+  including the ACK-driven `[move, stop, move, stop…]` playback regression).
+  This starts the M10 *Games* milestone. Design notes in
+  `docs/project/screens/SCREEN_GAME_ZOWI_DICE.md`.
+
 ## [0.8.2] - 2026-09-10
 
 ### Added

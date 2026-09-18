@@ -116,7 +116,7 @@
     "projects": "Projectes",
     "gamepad": "Gamepad",
     "timeline": "Cronologia",
-    "zowi_says": "Zowi Diu",
+    "zowi_says": "Memòria",
     "mouths": "Boques",
     "mouths_editor": "Editor de Boques",
     "move_objects": "Moure objectes",
@@ -264,7 +264,7 @@
     "cancel": "No"
   },
   "GameZowiDiceScreen.qml": {
-    "title": "Zowi Dice",
+    "title": "Memòria",
     "subtitle": "Repeteix la seqüència",
     "play_button": "Jugar",
     "help_button": "Com jugar",

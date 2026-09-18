@@ -13,9 +13,6 @@ ScreenTemplate {
     showDisconnectButton: true
     footerHeight: 140
 
-    property int currentSpeed: 1000
-    property string speedName: tr("speed_medium")
-
     function tr(source) { return Translator.translate("GameZowiDiceScreen.qml", source) }
 
     // Pause identity poll while game is running (like PadScreen does)
