@@ -346,10 +346,8 @@ ScreenTemplate {
         modal: true
         standardButtons: Dialog.Close
         width: 400
-        // A plain Window does not auto-center popups: center explicitly on the
-        // screen (which fills the window) so the dialog is not left-aligned.
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
+        // ApplicationWindow auto-centers popups on its overlay; here only the
+        // rounded background is customized.
         background: Rectangle {
             radius: 16
             color: "#ffffff"
@@ -396,8 +394,6 @@ ScreenTemplate {
         modal: true
         standardButtons: Dialog.Ok | Dialog.Retry
         width: 320
-        x: (parent.width - width) / 2
-        y: (parent.height - height) / 2
         background: Rectangle {
             radius: 16
             color: "#ffffff"

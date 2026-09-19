@@ -119,10 +119,10 @@ Buttons use the Android ZowiSays assets already shipped in this repo:
   prominent **Play** button (Idle/GameOver), **Help** (Idle) and **Ranking**
   (Idle, *disabled placeholder*).
 - Dialogs are standard `QtQuick.Controls.Dialog` (non-Android `MakerBoxDialog`)
-  with explicit `width` to avoid implicit-size binding loops. Because the root
-  is a plain `Window` (no `ApplicationWindow`), popups are **not auto-centered**:
-  both dialogs set `x`/`y` to center on the screen (which fills the window) and
-  use a rounded (`radius: 16`) white background with an accent border.
+  with explicit `width` to avoid implicit-size binding loops. The root window is
+  an `ApplicationWindow`, so popups **auto-center** on its overlay; the dialogs
+  only customize a rounded (`radius: 16`) white background with an accent
+  border.
 - Back button inherited from `ScreenTemplate` (`backClicked` — do **not**
   redeclare the signal in the screen).
 

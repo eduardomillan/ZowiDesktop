@@ -4,7 +4,7 @@ import QtQuick.Window 2.15
 import "screens"
 import "components"
 
-Window {
+ApplicationWindow {
     id: main
     visible: true
     // Window size ratio: change 0.6 to desired fraction (e.g., 0.8 for 80%)

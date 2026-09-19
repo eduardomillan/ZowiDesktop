@@ -31,8 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dialog that auto-opens once and defers the game start until dismissed
   (`zowi_says_help_seen` session flag), and a UI polish pass: 2×2 grid wrapped
   in a rounded "maker box" card with a more prominent Play button. Both game
-  dialogs are now **centered** (the app's plain `Window` does not auto-center
-  popups) and use **rounded corners** (`radius: 16`, accent border).
+  dialogs are now **centered** on the window's `ApplicationWindow` overlay and
+  use **rounded corners** (`radius: 16`, accent border).
 
 ## [0.8.2] - 2026-09-10
 
