@@ -19,6 +19,7 @@ class ZowiDiceController : public QObject
     Q_PROPERTY(int score READ score NOTIFY scoreChanged)
     Q_PROPERTY(int sequenceLength READ sequenceLength NOTIFY sequenceLengthChanged)
     Q_PROPERTY(int progress READ progress NOTIFY progressChanged)
+    Q_PROPERTY(int currentStep READ currentStep NOTIFY stepChanged)
     Q_PROPERTY(bool blockUserInput READ blockUserInput NOTIFY blockUserInputChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
 
@@ -50,6 +51,7 @@ public:
     int score() const;
     int sequenceLength() const;
     int progress() const;
+    int currentStep() const;
     bool blockUserInput() const;
     bool connected() const;
 
@@ -65,14 +67,17 @@ signals:
     void scoreChanged();
     void sequenceLengthChanged();
     void progressChanged();
+    void stepChanged();
     void blockUserInputChanged();
     void connectedChanged();
     void gameOver(int score);
     void sendCommand(const QString& cmd);
 
 private:
+    void handleUserAction(zowi::ZowiDiceAction action);
     void onRobotFinalAck();
     void sendNextRobotCommand();
+    void sendGameOverGesture();
     void updateFromGame();
     void saveLastScore();
 

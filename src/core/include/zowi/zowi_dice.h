@@ -43,6 +43,10 @@ public:
     std::string nextRobotCommand();
     bool shouldBlockUserInput() const;
     int progressPercent() const;
+    // 0-based step currently in progress: during replay the index of the move
+    // Zowi is executing; during the user's turn the number of moves repeated so
+    // far. Used for the "X / Y" progress readout.
+    int currentStep() const;
 
 private:
     void addRandomAction();

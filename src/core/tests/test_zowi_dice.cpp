@@ -223,6 +223,40 @@ int main() {
         check(game.state() == ZowiDiceState::WaitingForUser, true, "r2 waiting for user");
     }
 
+    // Test 12: currentStep tracks replay and user progress ("X / Y" readout)
+    {
+        ZowiDiceGame game;
+        game.startGame(); // round 1: 1 action
+        check(game.currentStep() == 0, true, "currentStep 0 before replay");
+
+        // Replay: move -> stop -> advance to user turn
+        game.nextRobotCommand();
+        game.onFinalAck(); // movement ACK: must NOT advance step
+        check(game.currentStep() == 0, true, "currentStep stays 0 during first action");
+        game.nextRobotCommand();
+        game.onFinalAck(); // stop ACK: advance -> waiting for user
+        check(game.currentStep() == 0, true, "currentStep 0 at start of user turn");
+
+        // User repeats correctly -> round 2 with 2 actions
+        game.onUserAction(game.zowiSequence()[0]);
+        check(game.sequenceLength() == 2, true, "round 2 sequence length 2");
+        check(game.currentStep() == 0, true, "currentStep 0 at start of round 2 replay");
+
+        // Replay second round: move/stop for action 1, then move/stop for action 2
+        game.nextRobotCommand(); game.onFinalAck();
+        game.nextRobotCommand(); game.onFinalAck(); // -> index 1
+        check(game.currentStep() == 1, true, "currentStep 1 during second replay action");
+        game.nextRobotCommand(); game.onFinalAck();
+        game.nextRobotCommand(); game.onFinalAck(); // -> waiting for user
+        check(game.currentStep() == 0, true, "currentStep resets at start of user turn");
+
+        // User presses: step grows with each correct move
+        game.onUserAction(game.zowiSequence()[0]);
+        check(game.currentStep() == 1, true, "currentStep 1 after first user move");
+        game.onUserAction(game.zowiSequence()[1]);
+        check(game.currentStep() == 0, true, "currentStep resets on new round");
+    }
+
     if (failures == 0) {
         std::cout << "\nAll zowi_dice tests passed.\n";
         return 0;

@@ -138,4 +138,10 @@ int ZowiDiceGame::progressPercent() const {
     return 0;
 }
 
+int ZowiDiceGame::currentStep() const {
+    if (m_state == ZowiDiceState::ShowingSequence) return m_zowiSequenceIndex;
+    if (m_state == ZowiDiceState::WaitingForUser) return static_cast<int>(m_userSequence.size());
+    return 0;
+}
+
 } // namespace zowi

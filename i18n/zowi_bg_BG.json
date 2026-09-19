@@ -266,6 +266,7 @@
   "GameZowiDiceScreen.qml": {
     "title": "Памет",
     "subtitle": "Повторете последователността",
+    "look_at_zowi_text": "Гледай Зоуи! Запомни неговата последователност от движения.",
     "play_button": "Играй",
     "help_button": "Как да играя",
     "ranking_button": "Класация",

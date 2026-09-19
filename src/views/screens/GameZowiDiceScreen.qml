@@ -15,110 +15,129 @@ ScreenTemplate {
 
     function tr(source) { return Translator.translate("GameZowiDiceScreen.qml", source) }
 
-    // Pause identity poll while game is running (like PadScreen does)
+    // When true, the game starts as soon as the help dialog is dismissed
+    // (used by the first-play help flow).
+    property bool pendingAutoStart: false
+
+    // Pause identity poll while game is running (like PadScreen does).
+    // First time the game is opened, show the help dialog before starting.
     Component.onCompleted: {
         Robot.setDataPollingEnabled(false)
-        ZowiDice.startGame()
+        var helpSeen = Session.getString("zowi_says_help_seen", "false") === "true"
+        if (!helpSeen) {
+            Session.saveString("zowi_says_help_seen", "true")
+            pendingAutoStart = true
+            helpDialog.open()
+        } else {
+            ZowiDice.startGame()
+        }
     }
     Component.onDestruction: Robot.setDataPollingEnabled(true)
 
-    // ─── Action Buttons (2×2 grid) ──────────────────────────────────────────
-    Item {
-        id: actionGrid
-        anchors {
-            centerIn: parent
-            margins: 20
-        }
-        width: Math.min(parent.width, parent.height) * 0.85
+    // ─── Board: 2×2 action buttons inside a rounded "maker box" card ────────
+    Rectangle {
+        id: board
+        anchors.centerIn: parent
+        width: Math.min(parent.width, parent.height) * 0.9
         height: width
+        radius: 24
+        color: Config.get("color_bg_connected") || "#e8f5e8"
+        border.color: Config.get("color_accent") || "#21a69b"
+        border.width: 2
 
-        property real btnSize: width / 2 - 10
+        Item {
+            id: actionGrid
+            anchors.fill: parent
+            anchors.margins: 18
 
-        // Top-Left: Walk Forward
-        Image {
-            id: btnWalkForward
-            x: 0
-            y: 0
-            width: parent.btnSize
-            height: parent.btnSize
-            source: "qrc:/images/android/move1_button.png"
-            sourceSize.width: parent.btnSize
-            sourceSize.height: parent.btnSize
-            fillMode: Image.PreserveAspectFit
-            opacity: ZowiDice.blockUserInput || !Robot.connected ? 0.4 : 1.0
+            property real btnSize: (width - 24) / 2    // 24 px gap between buttons
 
-            MouseArea {
-                anchors.fill: parent
-                enabled: !ZowiDice.blockUserInput && Robot.connected
-                onPressed: parent.source = "qrc:/images/android/pressed_move1_button.png"
-                onReleased: parent.source = "qrc:/images/android/move1_button.png"
-                onClicked: ZowiDice.onActionTopLeft()
+            // Top-Left: Walk Forward
+            Image {
+                id: btnWalkForward
+                x: 0
+                y: 0
+                width: parent.btnSize
+                height: parent.btnSize
+                source: "qrc:/images/android/move1_button.png"
+                sourceSize.width: parent.btnSize
+                sourceSize.height: parent.btnSize
+                fillMode: Image.PreserveAspectFit
+                opacity: ZowiDice.blockUserInput || !Robot.connected ? 0.4 : 1.0
+
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: !ZowiDice.blockUserInput && Robot.connected
+                    onPressed: parent.source = "qrc:/images/android/pressed_move1_button.png"
+                    onReleased: parent.source = "qrc:/images/android/move1_button.png"
+                    onClicked: ZowiDice.onActionTopLeft()
+                }
             }
-        }
 
-        // Top-Right: Bend Backward
-        Image {
-            id: btnBendBackward
-            x: parent.btnSize + 20
-            y: 0
-            width: parent.btnSize
-            height: parent.btnSize
-            source: "qrc:/images/android/move2_button.png"
-            sourceSize.width: parent.btnSize
-            sourceSize.height: parent.btnSize
-            fillMode: Image.PreserveAspectFit
-            opacity: ZowiDice.blockUserInput || !Robot.connected ? 0.4 : 1.0
+            // Top-Right: Bend Backward
+            Image {
+                id: btnBendBackward
+                x: parent.btnSize + 24
+                y: 0
+                width: parent.btnSize
+                height: parent.btnSize
+                source: "qrc:/images/android/move2_button.png"
+                sourceSize.width: parent.btnSize
+                sourceSize.height: parent.btnSize
+                fillMode: Image.PreserveAspectFit
+                opacity: ZowiDice.blockUserInput || !Robot.connected ? 0.4 : 1.0
 
-            MouseArea {
-                anchors.fill: parent
-                enabled: !ZowiDice.blockUserInput && Robot.connected
-                onPressed: parent.source = "qrc:/images/android/pressed_move2_button.png"
-                onReleased: parent.source = "qrc:/images/android/move2_button.png"
-                onClicked: ZowiDice.onActionTopRight()
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: !ZowiDice.blockUserInput && Robot.connected
+                    onPressed: parent.source = "qrc:/images/android/pressed_move2_button.png"
+                    onReleased: parent.source = "qrc:/images/android/move2_button.png"
+                    onClicked: ZowiDice.onActionTopRight()
+                }
             }
-        }
 
-        // Bottom-Left: Jump
-        Image {
-            id: btnJump
-            x: 0
-            y: parent.btnSize + 20
-            width: parent.btnSize
-            height: parent.btnSize
-            source: "qrc:/images/android/move3_button.png"
-            sourceSize.width: parent.btnSize
-            sourceSize.height: parent.btnSize
-            fillMode: Image.PreserveAspectFit
-            opacity: ZowiDice.blockUserInput || !Robot.connected ? 0.4 : 1.0
+            // Bottom-Left: Jump
+            Image {
+                id: btnJump
+                x: 0
+                y: parent.btnSize + 24
+                width: parent.btnSize
+                height: parent.btnSize
+                source: "qrc:/images/android/move3_button.png"
+                sourceSize.width: parent.btnSize
+                sourceSize.height: parent.btnSize
+                fillMode: Image.PreserveAspectFit
+                opacity: ZowiDice.blockUserInput || !Robot.connected ? 0.4 : 1.0
 
-            MouseArea {
-                anchors.fill: parent
-                enabled: !ZowiDice.blockUserInput && Robot.connected
-                onPressed: parent.source = "qrc:/images/android/pressed_move3_button.png"
-                onReleased: parent.source = "qrc:/images/android/move3_button.png"
-                onClicked: ZowiDice.onActionBottomLeft()
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: !ZowiDice.blockUserInput && Robot.connected
+                    onPressed: parent.source = "qrc:/images/android/pressed_move3_button.png"
+                    onReleased: parent.source = "qrc:/images/android/move3_button.png"
+                    onClicked: ZowiDice.onActionBottomLeft()
+                }
             }
-        }
 
-        // Bottom-Right: Moonwalker Right
-        Image {
-            id: btnMoonwalkerRight
-            x: parent.btnSize + 20
-            y: parent.btnSize + 20
-            width: parent.btnSize
-            height: parent.btnSize
-            source: "qrc:/images/android/move4_button.png"
-            sourceSize.width: parent.btnSize
-            sourceSize.height: parent.btnSize
-            fillMode: Image.PreserveAspectFit
-            opacity: ZowiDice.blockUserInput || !Robot.connected ? 0.4 : 1.0
+            // Bottom-Right: Moonwalker Right
+            Image {
+                id: btnMoonwalkerRight
+                x: parent.btnSize + 24
+                y: parent.btnSize + 24
+                width: parent.btnSize
+                height: parent.btnSize
+                source: "qrc:/images/android/move4_button.png"
+                sourceSize.width: parent.btnSize
+                sourceSize.height: parent.btnSize
+                fillMode: Image.PreserveAspectFit
+                opacity: ZowiDice.blockUserInput || !Robot.connected ? 0.4 : 1.0
 
-            MouseArea {
-                anchors.fill: parent
-                enabled: !ZowiDice.blockUserInput && Robot.connected
-                onPressed: parent.source = "qrc:/images/android/pressed_move4_button.png"
-                onReleased: parent.source = "qrc:/images/android/move4_button.png"
-                onClicked: ZowiDice.onActionBottomRight()
+                MouseArea {
+                    anchors.fill: parent
+                    enabled: !ZowiDice.blockUserInput && Robot.connected
+                    onPressed: parent.source = "qrc:/images/android/pressed_move4_button.png"
+                    onReleased: parent.source = "qrc:/images/android/move4_button.png"
+                    onClicked: ZowiDice.onActionBottomRight()
+                }
             }
         }
     }
@@ -147,7 +166,9 @@ ScreenTemplate {
             font.bold: true
         }
 
-        // Progress bar (visible only during sequence playback)
+        // Progress bar: shown while Zowi replays AND while the user repeats.
+        // The "X / Y" readout tracks the current step (1-based while replaying,
+        // moves repeated so far during the user's turn).
         Rectangle {
             id: progressContainer
             anchors {
@@ -156,9 +177,10 @@ ScreenTemplate {
                 topMargin: 10
             }
             visible: ZowiDice.state === ZowiDice.State.ShowingSequence
+                     || ZowiDice.state === ZowiDice.State.WaitingForUser
             width: parent.width * 0.7
-            height: 12
-            radius: 6
+            height: 14
+            radius: 7
             color: Config.get("color_bg_disabled") || "#e6e6e6"
             border.color: Config.get("color_accent") || "#21a69b"
             border.width: 1
@@ -170,10 +192,25 @@ ScreenTemplate {
                     verticalCenter: parent.verticalCenter
                 }
                 height: parent.height
-                radius: 5
+                radius: 6
                 color: Config.get("color_accent") || "#21a69b"
                 width: progressContainer.width * ZowiDice.progress / 100
                 Behavior on width { NumberAnimation { duration: 100 } }
+            }
+
+            Text {
+                id: progressText
+                anchors.centerIn: parent
+                text: {
+                    var total = ZowiDice.sequenceLength
+                    var step = ZowiDice.currentStep
+                    if (ZowiDice.state === ZowiDice.State.ShowingSequence)
+                        step = step + 1
+                    return "%1 / %2".arg(step).arg(total)
+                }
+                color: "#ffffff"
+                font.pixelSize: 11
+                font.bold: true
             }
         }
 
@@ -191,11 +228,11 @@ ScreenTemplate {
             Button {
                 id: playBtn
                 visible: ZowiDice.state === ZowiDice.State.Idle || ZowiDice.state === ZowiDice.State.GameOver
-                implicitWidth: 120
-                height: 44
+                implicitWidth: 170
+                height: 52
                 text: tr("play_button")
                 font.bold: true
-                font.pixelSize: 14
+                font.pixelSize: 16
 
                 contentItem: Text {
                     text: parent.text
@@ -205,8 +242,10 @@ ScreenTemplate {
                 }
 
                 background: Rectangle {
-                    radius: 22
+                    radius: 26
                     color: playBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : (Config.get("color_accent") || "#21a69b")
+                    border.color: "#ffffff"
+                    border.width: 2
                 }
 
                 onClicked: ZowiDice.startGame()
@@ -216,10 +255,10 @@ ScreenTemplate {
             Button {
                 id: helpBtn
                 visible: ZowiDice.state === ZowiDice.State.Idle
-                implicitWidth: 100
-                height: 44
+                implicitWidth: 110
+                height: 52
                 text: tr("help_button")
-                font.pixelSize: 14
+                font.pixelSize: 15
 
                 contentItem: Text {
                     text: parent.text
@@ -229,7 +268,7 @@ ScreenTemplate {
                 }
 
                 background: Rectangle {
-                    radius: 22
+                    radius: 26
                     color: helpBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
                     border.color: Config.get("color_accent") || "#21a69b"
                     border.width: 1
@@ -242,10 +281,10 @@ ScreenTemplate {
             Button {
                 id: rankingBtn
                 visible: ZowiDice.state === ZowiDice.State.Idle
-                implicitWidth: 100
-                height: 44
+                implicitWidth: 110
+                height: 52
                 text: tr("ranking_button")
-                font.pixelSize: 14
+                font.pixelSize: 15
                 enabled: false
 
                 contentItem: Text {
@@ -256,11 +295,46 @@ ScreenTemplate {
                 }
 
                 background: Rectangle {
-                    radius: 22
+                    radius: 26
                     color: "transparent"
                     border.color: Config.get("color_border_disabled") || "#c8c8c8"
                     border.width: 1
                 }
+            }
+        }
+    }
+
+    // ─── "Look at Zowi" overlay while the robot replays the sequence ────────
+    Item {
+        id: lookAtZowiOverlay
+        anchors.fill: parent
+        visible: ZowiDice.blockUserInput
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#000000"
+            opacity: 0.55
+        }
+
+        Column {
+            anchors.centerIn: parent
+            width: Math.min(root.width * 0.7, 420)
+            spacing: 20
+
+            AnimatedZowi {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 170
+                height: 170
+            }
+
+            Text {
+                width: parent.width
+                text: tr("look_at_zowi_text")
+                color: "#ffffff"
+                font.pixelSize: 22
+                font.bold: true
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
             }
         }
     }
@@ -272,7 +346,23 @@ ScreenTemplate {
         modal: true
         standardButtons: Dialog.Close
         width: 400
+        // A plain Window does not auto-center popups: center explicitly on the
+        // screen (which fills the window) so the dialog is not left-aligned.
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        background: Rectangle {
+            radius: 16
+            color: "#ffffff"
+            border.color: Config.get("color_accent") || "#21a69b"
+            border.width: 2
+        }
         onAccepted: close()
+        onClosed: {
+            if (pendingAutoStart) {
+                pendingAutoStart = false
+                ZowiDice.startGame()
+            }
+        }
 
         contentItem: Column {
             spacing: 16
@@ -306,6 +396,14 @@ ScreenTemplate {
         modal: true
         standardButtons: Dialog.Ok | Dialog.Retry
         width: 320
+        x: (parent.width - width) / 2
+        y: (parent.height - height) / 2
+        background: Rectangle {
+            radius: 16
+            color: "#ffffff"
+            border.color: Config.get("color_accent") || "#21a69b"
+            border.width: 2
+        }
         onAccepted: {
             if (gameOverDialog.clickedButton === Dialog.Retry) {
                 ZowiDice.startGame()

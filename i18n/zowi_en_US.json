@@ -267,6 +267,7 @@
   "GameZowiDiceScreen.qml": {
     "title": "Memory",
     "subtitle": "Repeat the sequence",
+    "look_at_zowi_text": "Watch Zowi! Memorize its sequence of moves.",
     "play_button": "Play",
     "help_button": "How to play",
     "ranking_button": "Ranking",

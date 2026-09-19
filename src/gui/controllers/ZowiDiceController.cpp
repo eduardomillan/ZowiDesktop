@@ -3,6 +3,8 @@
 #include "SessionController.h"
 #include "CommandsController.h"
 
+#include <zowi/robot_commands.h>
+
 #include <QDebug>
 
 ZowiDiceController::ZowiDiceController(QObject* parent)
@@ -49,6 +51,10 @@ int ZowiDiceController::progress() const {
     return m_game->progressPercent();
 }
 
+int ZowiDiceController::currentStep() const {
+    return m_game->currentStep();
+}
+
 bool ZowiDiceController::blockUserInput() const {
     return m_game->shouldBlockUserInput();
 }
@@ -69,49 +75,27 @@ void ZowiDiceController::resetGame() {
 }
 
 void ZowiDiceController::onActionTopLeft() {
-    if (m_game->state() == zowi::ZowiDiceState::WaitingForUser) {
-        m_game->onUserAction(zowi::ZowiDiceAction::WalkForward);
-        updateFromGame();
-        if (m_game->state() == zowi::ZowiDiceState::GameOver) {
-            saveLastScore();
-            emit gameOver(m_game->currentScore());
-        } else if (m_game->state() == zowi::ZowiDiceState::ShowingSequence) {
-            sendNextRobotCommand();
-        }
-    }
+    handleUserAction(zowi::ZowiDiceAction::WalkForward);
 }
 
 void ZowiDiceController::onActionTopRight() {
-    if (m_game->state() == zowi::ZowiDiceState::WaitingForUser) {
-        m_game->onUserAction(zowi::ZowiDiceAction::BendBackward);
-        updateFromGame();
-        if (m_game->state() == zowi::ZowiDiceState::GameOver) {
-            saveLastScore();
-            emit gameOver(m_game->currentScore());
-        } else if (m_game->state() == zowi::ZowiDiceState::ShowingSequence) {
-            sendNextRobotCommand();
-        }
-    }
+    handleUserAction(zowi::ZowiDiceAction::BendBackward);
 }
 
 void ZowiDiceController::onActionBottomLeft() {
-    if (m_game->state() == zowi::ZowiDiceState::WaitingForUser) {
-        m_game->onUserAction(zowi::ZowiDiceAction::Jump);
-        updateFromGame();
-        if (m_game->state() == zowi::ZowiDiceState::GameOver) {
-            saveLastScore();
-            emit gameOver(m_game->currentScore());
-        } else if (m_game->state() == zowi::ZowiDiceState::ShowingSequence) {
-            sendNextRobotCommand();
-        }
-    }
+    handleUserAction(zowi::ZowiDiceAction::Jump);
 }
 
 void ZowiDiceController::onActionBottomRight() {
+    handleUserAction(zowi::ZowiDiceAction::MoonwalkerRight);
+}
+
+void ZowiDiceController::handleUserAction(zowi::ZowiDiceAction action) {
     if (m_game->state() == zowi::ZowiDiceState::WaitingForUser) {
-        m_game->onUserAction(zowi::ZowiDiceAction::MoonwalkerRight);
+        m_game->onUserAction(action);
         updateFromGame();
         if (m_game->state() == zowi::ZowiDiceState::GameOver) {
+            sendGameOverGesture();
             saveLastScore();
             emit gameOver(m_game->currentScore());
         } else if (m_game->state() == zowi::ZowiDiceState::ShowingSequence) {
@@ -137,11 +121,21 @@ void ZowiDiceController::sendNextRobotCommand() {
     }
 }
 
+// The robot reacts with an angry gesture when the player loses a round,
+// mirroring ZowiAppReborn (which plays the ANGRY animation on game over).
+void ZowiDiceController::sendGameOverGesture() {
+    if (!m_robot || !m_robot->isConnected()) return;
+    const QString cmd = QString::fromStdString(zowi::commandGesture(zowi::GestureId::Angry));
+    m_robot->sendData(cmd);
+    qDebug() << "[ZowiDice] Game over gesture:" << cmd.trimmed();
+}
+
 void ZowiDiceController::updateFromGame() {
     emit stateChanged();
     emit scoreChanged();
     emit sequenceLengthChanged();
     emit progressChanged();
+    emit stepChanged();
     emit blockUserInputChanged();
 }
 
