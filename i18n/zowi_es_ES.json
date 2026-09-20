@@ -270,6 +270,7 @@
     "close": "Cerrar",
     "game_over": "Fin del juego",
     "final_score": "Puntuación final: %1",
-    "new_best": "¡Nuevo récord!"
+    "new_best": "¡Nuevo récord!",
+    "retry_button": "Reintentar"
   }
 }

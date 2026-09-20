@@ -118,9 +118,11 @@ the original behavior.
   `ShowingSequence` round starts (matching `checkCurrentUserSequece()` in
   Android). Score displayed via `ZowiDice.score` (`score_prefix`, e.g.
   *"Puntuación: %1"*).
-- **Game over dialog** (`game_over`, `final_score` `%1`, OK/Retry): Retry →
-  `startGame()`, OK → `resetGame()`. If `score ≥ 12` a *"New best"* toast line
-  is shown (achievement `in_love` reserved — see below).
+- **Game over dialog** (`game_over`, `final_score` `%1`, *"New best"* line for
+  `score ≥ 12`): custom content like the help dialog — bold title, big final
+  score, a **"Cerrar"** (outlined, → `resetGame()`) and a **"Reintentar"**
+  accent pill (→ `startGame()`) button. The achievement `in_love` stays
+  reserved — see below.
 
 ## UI layout
 
@@ -167,13 +169,21 @@ the original behavior.
   `simon_game_button.png` image at 130 px, `how_to_play_text` (wrapped), and an
   accent pill **"Cerrar"** button (`close`, already translated in all 5
   locales) that closes the dialog. Sized `width: 460`, `radius: 20`, accent
-  border — taller/wider than before so text + image fit comfortably. It opens
-  directly in `Component.onCompleted` (no `Timer` deferral — centering is
-  anchor-based, so timing is irrelevant) according to `zowi_dice_help`:
-  `"always"` → every entry, `"once"` → only the first time
-  (`zowi_says_help_seen`).
-- **Game over dialog:** `width: 320`, `radius: 16`, accent border, OK/Retry
-  buttons (`Dialog.Ok | Dialog.Retry`), also `anchors.centerIn: parent`.
+  border. **Height is content-driven**: `Math.ceil(contentH) + 48 + 5%`, where
+  `contentH` = title + image + wrapped text + button + spacing — the wrapped
+  text is measured (`implicitHeight`) so the dialog always fits its content, and
+  the **Close button sits ~5% of the content height above the bottom edge**
+  (never on the border, whatever the locale text length). It opens directly in
+  `Component.onCompleted` (no `Timer` deferral — centering is anchor-based, so
+  timing is irrelevant) according to `zowi_dice_help`: `"always"` → every
+  entry, `"once"` → only the first time (`zowi_says_help_seen`).
+- **Game over dialog:** same custom treatment so the corners show — no default
+  header/footer, `width: 360`, `radius: 20`, accent border,
+  `anchors.centerIn: parent`, and the same content-driven height with 5%
+  clearance. Content: `game_over` title, `final_score` (big, bold), the
+  `new_best` line (when `score ≥ 12`), and a button row with an outlined
+  **"Cerrar"** (→ `resetGame()`) and an accent pill **"Reintentar"**
+  (`retry_button`, → `startGame()`).
 - Back button inherited from `ScreenTemplate` (`backClicked` — do **not**
   redeclare the signal in the screen).
 
@@ -190,7 +200,7 @@ Keys under `"GameZowiDiceScreen.qml"` with translations in all 5 locales (es,
 en, fr, ca, bg): `title`, `subtitle`, `look_at_zowi_text`, `play_button`,
 `help_button`, `ranking_button`, `score_prefix` (`%1`), `walk_forward`,
 `bend_backward`, `jump`, `moonwalker_right`, `how_to_play_text`, `close`,
-`game_over`, `final_score` (`%1`), `new_best`.
+`retry_button`, `game_over`, `final_score` (`%1`), `new_best`.
 
 ## Tests
 

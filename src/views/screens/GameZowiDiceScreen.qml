@@ -342,11 +342,19 @@ ScreenTemplate {
     // rectangles over the corners, hiding the radius). Centered on its parent
     // (the content area) with anchors.centerIn, which QQC2 supports for the
     // immediate parent; without it the popup lands at the parent's top-left.
+    // The height is driven by the actual content (wrapped text included) plus
+    // margins plus a ~5% breathing room below the Close button, so the button
+    // never sits on the border whatever the locale text length.
     Dialog {
         id: helpDialog
         modal: true
         width: 460
         anchors.centerIn: parent
+
+        property real helpContentH: helpTitle.height + helpImg.height
+                                    + helpText.implicitHeight + helpCloseBtn.height
+                                    + 3 * helpCol.spacing
+        height: Math.ceil(helpContentH) + 48 + Math.round(helpContentH * 0.05)
 
         background: Rectangle {
             radius: 20
@@ -356,11 +364,17 @@ ScreenTemplate {
         }
 
         contentItem: Column {
+            id: helpCol
             spacing: 18
-            anchors.fill: parent
-            anchors.margins: 24
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+                margins: 24
+            }
 
             Text {
+                id: helpTitle
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: tr("help_button")
                 font.pixelSize: 20
@@ -369,7 +383,10 @@ ScreenTemplate {
             }
 
             Image {
+                id: helpImg
                 anchors.horizontalCenter: parent.horizontalCenter
+                width: 130
+                height: 130
                 source: "qrc:/images/android/simon_game_button.png"
                 sourceSize.width: 130
                 sourceSize.height: 130
@@ -377,6 +394,7 @@ ScreenTemplate {
             }
 
             Text {
+                id: helpText
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width
                 text: tr("how_to_play_text")
@@ -413,33 +431,49 @@ ScreenTemplate {
     }
 
     // ─── Game Over Dialog ───────────────────────────────────────────────────
+    // Same treatment as the help dialog: fully custom content with no default
+    // header/footer (whose square white rectangles covered the rounded
+    // corners), so the radius shows. Height is content-driven like the help
+    // dialog, keeping the rounded corners and the button clearance in sync.
     Dialog {
         id: gameOverDialog
-        title: tr("game_over")
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Retry
-        width: 320
+        width: 360
         anchors.centerIn: parent
+
+        property real gameOverContentH: gameOverTitle.height + gameOverScore.height
+                                        + gameOverBest.height + gameOverBtns.height
+                                        + 3 * gameOverCol.spacing
+        height: Math.ceil(gameOverContentH) + 48 + Math.round(gameOverContentH * 0.05)
+
         background: Rectangle {
-            radius: 16
+            radius: 20
             color: "#ffffff"
             border.color: Config.get("color_accent") || "#21a69b"
             border.width: 2
         }
-        onAccepted: {
-            if (gameOverDialog.clickedButton === Dialog.Retry) {
-                ZowiDice.startGame()
-            } else {
-                ZowiDice.resetGame()
-            }
-        }
 
         contentItem: Column {
-            spacing: 16
-            anchors.fill: parent
-            anchors.margins: 20
+            id: gameOverCol
+            spacing: 18
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+                margins: 24
+            }
 
             Text {
+                id: gameOverTitle
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: tr("game_over")
+                font.pixelSize: 20
+                font.bold: true
+                color: Config.get("color_primary") || "#2d5a2d"
+            }
+
+            Text {
+                id: gameOverScore
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: tr("final_score").arg(ZowiDice.score)
                 font.pixelSize: 24
@@ -448,10 +482,73 @@ ScreenTemplate {
             }
 
             Text {
+                id: gameOverBest
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: (ZowiDice.score >= 12) ? tr("new_best") : ""
                 font.pixelSize: 14
                 color: Config.get("color_accent") || "#21a69b"
+            }
+
+            Row {
+                id: gameOverBtns
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 14
+
+                // Close: back to Idle with the Play button (resetGame).
+                Button {
+                    id: gameOverCloseBtn
+                    implicitWidth: 130
+                    implicitHeight: 44
+                    text: tr("close")
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: Config.get("color_primary") || "#2d5a2d"
+                        font.bold: true
+                        font.pixelSize: 16
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    background: Rectangle {
+                        radius: 22
+                        color: gameOverCloseBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+                        border.color: Config.get("color_accent") || "#21a69b"
+                        border.width: 2
+                    }
+
+                    onClicked: {
+                        gameOverDialog.close()
+                        ZowiDice.resetGame()
+                    }
+                }
+
+                // Retry: start a new game immediately.
+                Button {
+                    id: gameOverRetryBtn
+                    implicitWidth: 130
+                    implicitHeight: 44
+                    text: tr("retry_button")
+
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#ffffff"
+                        font.bold: true
+                        font.pixelSize: 16
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    background: Rectangle {
+                        radius: 22
+                        color: gameOverRetryBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
+                    }
+
+                    onClicked: {
+                        gameOverDialog.close()
+                        ZowiDice.startGame()
+                    }
+                }
             }
         }
     }

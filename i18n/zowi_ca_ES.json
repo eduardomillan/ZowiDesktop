@@ -279,6 +279,7 @@
     "close": "Tancar",
     "game_over": "Fi del joc",
     "final_score": "Puntuació final: %1",
-    "new_best": "Nou rècord!"
+    "new_best": "Nou rècord!",
+    "retry_button": "Reintentar"
   }
 }

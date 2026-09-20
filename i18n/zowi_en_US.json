@@ -280,6 +280,7 @@
     "close": "Close",
     "game_over": "Game over",
     "final_score": "Final score: %1",
-    "new_best": "New best!"
+    "new_best": "New best!",
+    "retry_button": "Retry"
   }
 }

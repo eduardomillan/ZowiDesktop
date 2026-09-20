@@ -75,6 +75,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rectangles were covering the rounded corners. Now `width: 460`, `radius: 20`
   (taller/wider than the previous 400 / `radius: 16`) so text + image fit
   comfortably.
+- **Help & Game over dialogs (lot 2):** both dialogs now size themselves from
+  their content (`Math.ceil(contentH) + 48 + 5%`, measuring the wrapped text
+  via `implicitHeight`), so nothing can overflow the rounded border and the
+  **Close button floats ~5% of the content height above the bottom edge**
+  instead of sitting on it. The **game over dialog** was converted to the same
+  fully custom layout as the help dialog (no default header/footer), so its
+  `radius: 20` corners finally show: `game_over` title, big `final_score`
+  (`%1`), the `new_best` line (score ≥ 12), and a button row with an outlined
+  **"Cerrar"** (→ `resetGame()`) plus an accent pill **"Reintentar"** (new
+  `retry_button` key translated to the 5 locales, → `startGame()`), replacing
+  the old `Dialog.Ok | Dialog.Retry` standard buttons.
 - **Help dialog centering (root cause):** QQC2 popups are **never**
   auto-centered — `QQuickPopupPositioner` drops an unanchored popup at its
   parent's top-left, so opening timing was never the issue. Both dialogs now
