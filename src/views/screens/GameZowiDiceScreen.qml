@@ -2,6 +2,7 @@
 // Zowi plays a growing random sequence of 4 moves; player must repeat from memory.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 import "../components"
 
 ScreenTemplate {
@@ -10,35 +11,88 @@ ScreenTemplate {
     title: tr("title")
     subtitle: tr("subtitle")
     showBackButton: true
-    showDisconnectButton: true
     footerHeight: 140
 
     function tr(source) { return Translator.translate("GameZowiDiceScreen.qml", source) }
 
-    // When true, the game starts as soon as the help dialog is dismissed
-    // (used by the first-play help flow).
-    property bool pendingAutoStart: false
-
     // Pause identity poll while game is running (like PadScreen does).
-    // First time the game is opened, show the help dialog before starting.
+    // The game does NOT auto-start: the Play button in the footer starts it,
+    // so the user can begin when they want or go back. The help dialog opens
+    // on entry according to config "zowi_dice_help": "always" → every time,
+    // "once" → only the first time (zowi_says_help_seen session flag).
+    // No deferral is needed: the dialog is centered with anchors.centerIn,
+    // so it stays centered regardless of when layout settles.
     Component.onCompleted: {
         Robot.setDataPollingEnabled(false)
+        var helpMode = Config.get("zowi_dice_help") || "once"
         var helpSeen = Session.getString("zowi_says_help_seen", "false") === "true"
-        if (!helpSeen) {
-            Session.saveString("zowi_says_help_seen", "true")
-            pendingAutoStart = true
+        if (helpMode === "always") {
             helpDialog.open()
-        } else {
-            ZowiDice.startGame()
+        } else if (!helpSeen) {
+            Session.saveString("zowi_says_help_seen", "true")
+            helpDialog.open()
         }
     }
     Component.onDestruction: Robot.setDataPollingEnabled(true)
 
+    // ─── Corner buttons: Help + Ranking (top-right, like ZowiAppReborn) ─────
+    // Assigned to ScreenTemplate's corner slot (below the StatusBar, outside
+    // the clipped contentArea) — the same spot the achievements button uses on
+    // other screens. Mirrors activity_zowi_says_minigame_view.xml, where the
+    // how-to-play and ranking icon buttons sit top-right.
+    corner: Row {
+        spacing: -10
+
+        // Ranking (placeholder for the future top-10 list)
+        Button {
+            id: rankingBtn
+            width: 88
+            height: 88
+            enabled: false
+
+            contentItem: Image {
+                source: "qrc:/images/android/ranking_button.png"
+                sourceSize.width: 56
+                sourceSize.height: 56
+                fillMode: Image.PreserveAspectFit
+            }
+
+            background: Rectangle {
+                radius: 44
+                color: rankingBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+            }
+        }
+
+        // Help ("Cómo jugar")
+        Button {
+            id: helpBtn
+            width: 88
+            height: 88
+
+            contentItem: Image {
+                source: "qrc:/images/android/how_to_play_button.png"
+                sourceSize.width: 56
+                sourceSize.height: 56
+                fillMode: Image.PreserveAspectFit
+            }
+
+            background: Rectangle {
+                radius: 44
+                color: helpBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+            }
+
+            onClicked: helpDialog.open()
+        }
+
+    }
+
     // ─── Board: 2×2 action buttons inside a rounded "maker box" card ────────
+    // Reserves ~56 px at the bottom of the content area for the score strip
+    // (centered between the board and the footer).
     Rectangle {
         id: board
         anchors.centerIn: parent
-        width: Math.min(parent.width, parent.height) * 0.9
+        width: Math.min(parent.width, parent.height - 56) * 0.9
         height: width
         radius: 24
         color: Config.get("color_bg_connected") || "#e8f5e8"
@@ -142,44 +196,48 @@ ScreenTemplate {
         }
     }
 
-    // ─── Footer: Score, Progress, Play/Help/Ranking ─────────────────────────
-    Item {
-        id: footer
+    // ─── Score: centered in the strip between the board and the footer ──────
+    // Lives in the content area (not the footer), bottom-centered above the
+    // footer. The board reserves a ~56 px band at the bottom so they never
+    // overlap, whatever the window size.
+    Text {
+        id: scoreText
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            bottom: parent.bottom
+            bottomMargin: 6
+        }
+        text: tr("score_prefix").arg(ZowiDice.score)
+        color: Config.get("color_primary") || "#2d5a2d"
+        font.pixelSize: 16
+        font.bold: true
+    }
+
+    // ─── Footer: Progress, Play (in ScreenTemplate's footer area) ───────────
+    // Lives in the real footer (below the board area) so nothing overlaps the
+    // action grid. The score sits between the board and this footer; the
+    // progress bar shows while playing (hidden otherwise), and the Play
+    // button sits at the bottom of the window. Hidden children take no space,
+    // so during a round only the progress bar is visible.
+    footer: ColumnLayout {
+        id: footerColumn
         anchors {
             left: parent.left
             right: parent.right
             bottom: parent.bottom
         }
-        height: root.footerHeight
-
-        // Score display
-        Text {
-            id: scoreText
-            anchors {
-                top: parent.top
-                horizontalCenter: parent.horizontalCenter
-                topMargin: 10
-            }
-            text: tr("score_prefix").arg(ZowiDice.score)
-            color: Config.get("color_primary") || "#2d5a2d"
-            font.pixelSize: 20
-            font.bold: true
-        }
+        spacing: 10
 
         // Progress bar: shown while Zowi replays AND while the user repeats.
         // The "X / Y" readout tracks the current step (1-based while replaying,
         // moves repeated so far during the user's turn).
         Rectangle {
             id: progressContainer
-            anchors {
-                top: scoreText.bottom
-                horizontalCenter: parent.horizontalCenter
-                topMargin: 10
-            }
-            visible: ZowiDice.state === ZowiDice.State.ShowingSequence
-                     || ZowiDice.state === ZowiDice.State.WaitingForUser
-            width: parent.width * 0.7
-            height: 14
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: parent.width * 0.7
+            Layout.preferredHeight: 14
+            visible: ZowiDice.state === ZowiDice.stateShowingSequence
+                     || ZowiDice.state === ZowiDice.stateWaitingForUser
             radius: 7
             color: Config.get("color_bg_disabled") || "#e6e6e6"
             border.color: Config.get("color_accent") || "#21a69b"
@@ -204,7 +262,7 @@ ScreenTemplate {
                 text: {
                     var total = ZowiDice.sequenceLength
                     var step = ZowiDice.currentStep
-                    if (ZowiDice.state === ZowiDice.State.ShowingSequence)
+                    if (ZowiDice.state === ZowiDice.stateShowingSequence)
                         step = step + 1
                     return "%1 / %2".arg(step).arg(total)
                 }
@@ -214,93 +272,33 @@ ScreenTemplate {
             }
         }
 
-        // Control buttons row
-        Row {
-            id: controlRow
-            anchors {
-                bottom: parent.bottom
-                horizontalCenter: parent.horizontalCenter
-                bottomMargin: 15
-            }
-            spacing: 20
+        // Play button (bottom of the window), styled like the splash
+        // "Continuar" button: same size and font.
+        Button {
+            id: playBtn
+            Layout.alignment: Qt.AlignHCenter
+            Layout.bottomMargin: 12
+            visible: ZowiDice.state === ZowiDice.stateIdle
+                     || ZowiDice.state === ZowiDice.stateGameOver
+            implicitWidth: 200
+            Layout.preferredHeight: 50
+            text: tr("play_button")
 
-            // Play button
-            Button {
-                id: playBtn
-                visible: ZowiDice.state === ZowiDice.State.Idle || ZowiDice.state === ZowiDice.State.GameOver
-                implicitWidth: 170
-                height: 52
-                text: tr("play_button")
+            contentItem: Text {
+                text: parent.text
+                color: "#ffffff"
                 font.bold: true
-                font.pixelSize: 16
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "#ffffff"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                background: Rectangle {
-                    radius: 26
-                    color: playBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : (Config.get("color_accent") || "#21a69b")
-                    border.color: "#ffffff"
-                    border.width: 2
-                }
-
-                onClicked: ZowiDice.startGame()
+                font.pixelSize: 18
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
 
-            // Help button
-            Button {
-                id: helpBtn
-                visible: ZowiDice.state === ZowiDice.State.Idle
-                implicitWidth: 110
-                height: 52
-                text: tr("help_button")
-                font.pixelSize: 15
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Config.get("color_primary") || "#2d5a2d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                background: Rectangle {
-                    radius: 26
-                    color: helpBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
-                    border.color: Config.get("color_accent") || "#21a69b"
-                    border.width: 1
-                }
-
-                onClicked: helpDialog.open()
+            background: Rectangle {
+                radius: 25
+                color: playBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
             }
 
-            // Ranking button (placeholder for future)
-            Button {
-                id: rankingBtn
-                visible: ZowiDice.state === ZowiDice.State.Idle
-                implicitWidth: 110
-                height: 52
-                text: tr("ranking_button")
-                font.pixelSize: 15
-                enabled: false
-
-                contentItem: Text {
-                    text: parent.text
-                    color: Config.get("color_fg_disabled") || "#9e9e9e"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                background: Rectangle {
-                    radius: 26
-                    color: "transparent"
-                    border.color: Config.get("color_border_disabled") || "#c8c8c8"
-                    border.width: 1
-                }
-            }
+            onClicked: ZowiDice.startGame()
         }
     }
 
@@ -340,49 +338,76 @@ ScreenTemplate {
     }
 
     // ─── Help Dialog ────────────────────────────────────────────────────────
+    // Fully custom content (no default header/footer — those draw square white
+    // rectangles over the corners, hiding the radius). Centered on its parent
+    // (the content area) with anchors.centerIn, which QQC2 supports for the
+    // immediate parent; without it the popup lands at the parent's top-left.
     Dialog {
         id: helpDialog
-        title: tr("help_button")
         modal: true
-        standardButtons: Dialog.Close
-        width: 400
-        // ApplicationWindow auto-centers popups on its overlay; here only the
-        // rounded background is customized.
+        width: 460
+        anchors.centerIn: parent
+
         background: Rectangle {
-            radius: 16
+            radius: 20
             color: "#ffffff"
             border.color: Config.get("color_accent") || "#21a69b"
             border.width: 2
         }
-        onAccepted: close()
-        onClosed: {
-            if (pendingAutoStart) {
-                pendingAutoStart = false
-                ZowiDice.startGame()
-            }
-        }
 
         contentItem: Column {
-            spacing: 16
+            spacing: 18
             anchors.fill: parent
-            anchors.margins: 20
+            anchors.margins: 24
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: tr("help_button")
+                font.pixelSize: 20
+                font.bold: true
+                color: Config.get("color_primary") || "#2d5a2d"
+            }
 
             Image {
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: "qrc:/images/android/simon_game_button.png"
-                sourceSize.width: 120
-                sourceSize.height: 120
+                sourceSize.width: 130
+                sourceSize.height: 130
                 fillMode: Image.PreserveAspectFit
             }
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width - 40
+                width: parent.width
                 text: tr("how_to_play_text")
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
                 font.pixelSize: 14
                 color: Config.get("color_primary") || "#2d5a2d"
+            }
+
+            Button {
+                id: helpCloseBtn
+                anchors.horizontalCenter: parent.horizontalCenter
+                implicitWidth: 160
+                implicitHeight: 44
+                text: tr("close")
+
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.bold: true
+                    font.pixelSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: 22
+                    color: helpCloseBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
+                }
+
+                onClicked: helpDialog.close()
             }
         }
     }
@@ -394,6 +419,7 @@ ScreenTemplate {
         modal: true
         standardButtons: Dialog.Ok | Dialog.Retry
         width: 320
+        anchors.centerIn: parent
         background: Rectangle {
             radius: 16
             color: "#ffffff"

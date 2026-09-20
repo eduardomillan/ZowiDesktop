@@ -46,9 +46,13 @@ controller through `RobotController::sendData()`. ACK sequencing is driven by
 ## QML context used
 
 - `ZowiDice` (the controller): `state`, `score`, `sequenceLength`, `progress`,
-  `currentStep`, `blockUserInput`, `connected`; invokables `startGame()`,
-  `resetGame()`, `onActionTopLeft()`, `onActionTopRight()`,
-  `onActionBottomLeft()`, `onActionBottomRight()`; signal `gameOver(int)`.
+  `currentStep`, `blockUserInput`, `connected`; **named state constants**
+  `stateIdle`, `stateShowingSequence`, `stateWaitingForUser`, `stateGameOver`
+  (QML enum lookups like `ZowiDice.State.Idle` do not resolve for
+  context-property instances, so comparisons use these value properties;
+  invokables `startGame()`, `resetGame()`, `onActionTopLeft()`,
+  `onActionTopRight()`, `onActionBottomLeft()`, `onActionBottomRight()`;
+  signal `gameOver(int)`.
 - `Robot`: `connected` (gates the 4 action buttons), `sendData()`,
   `setDataPollingEnabled()` (paused while the screen is open, like PadScreen),
   `finalAckReceived` (wired to the controller).
@@ -78,17 +82,30 @@ Buttons use the Android ZowiSays assets already shipped in this repo:
 `move1_button.png`/`move2_button.png`/`move3_button.png`/`move4_button.png`
 (and `pressed_*` variants). The help dialog shows `simon_game_button.png`.
 
+**Verified against the original:** `ZowiAppReborn`'s `ZowiSaysMinigamePresenterImpl`
+(`playButtonPressed()`) builds exactly this command set — `WALK FORWARD`,
+`BEND` + direction `RIGHT`, `JUMP`, `MOONWALKER` + direction `RIGHT` — and
+`MovementCommand.getCommandValue()` serializes them as `M 1`/`M 16`/`M 11`/
+`M 7 <dur> 30`, i.e. byte-for-byte the wire strings above. Note the Android
+naming is `BEND RIGHT` for `M 16`, which the firmware calls *bend backward*
+(`zowi.bend(1,T,-1)`); both refer to the same MoveID, so our `BendBackward`
+label is the same physical gesture. WALK FORWARD is one of the four random
+moves (`addRandomCommandToZowiSequence()`), so the robot walking forward is
+the original behavior.
+
 ## Gameplay
 
-- **Round:** on entering the screen the game auto-starts (`Component.onCompleted`
-  → `ZowiDice.startGame()`). First time the game is ever opened, the **help
-  dialog opens first** and the game starts when it is dismissed
-  (`zowi_says_help_seen` flag in Session). Zowi replays the random sequence
-  (length 1, growing by 1 per correct repeat). Each action is delivered as
-  `[move … ACK] → [stop … ACK]`; the core only advances to the next action after
-  the **Stop** ACK (movement ACK alone does not advance), exactly like the
-  Android timeline. While Zowi plays, the 4 buttons are disabled, a full-screen
-  **"Look at Zowi"** overlay shows an animated robot +
+- **Round:** the game does **not** auto-start on entry — the state is `Idle` and
+  a prominent **Play** button is shown so the user can start when they want
+  (or go back). The **help dialog** opens on entry according to the config key
+  `zowi_dice_help` in `config.json`: `"always"` opens it every time and
+  `"once"` only the first time (`zowi_says_help_seen` flag in Session); in
+  both cases dismissing it does **not** start the game. Zowi replays the random
+  sequence (length 1, growing by 1 per correct repeat). Each action is
+  delivered as `[move … ACK] → [stop … ACK]`; the core only advances to the
+  next action after the **Stop** ACK (movement ACK alone does not advance),
+  exactly like the Android timeline. While Zowi plays, the 4 buttons are
+  disabled, a full-screen **"Look at Zowi"** overlay shows an animated robot +
   `look_at_zowi_text`, and a progress bar runs.
 - **Human turn:** once Zowi finishes, the state becomes `WaitingForUser` and the
   player repeats the sequence with the 4 buttons. The progress bar stays
@@ -114,15 +131,49 @@ Buttons use the Android ZowiSays assets already shipped in this repo:
   (`lookAtZowiOverlay`, visible while `ZowiDice.blockUserInput`) with an
   `AnimatedZowi` sprite and the `look_at_zowi_text` message, mirroring Android's
   `blockUserControls`/`showUserControls`.
-- Footer: score text, progress bar with **"X / Y"** readout (visible during
-  `ShowingSequence` **and** `WaitingForUser`), and a control row with a
-  prominent **Play** button (Idle/GameOver), **Help** (Idle) and **Ranking**
-  (Idle, *disabled placeholder*).
-- Dialogs are standard `QtQuick.Controls.Dialog` (non-Android `MakerBoxDialog`)
-  with explicit `width` to avoid implicit-size binding loops. The root window is
-  an `ApplicationWindow`, so popups **auto-center** on its overlay; the dialogs
-  only customize a rounded (`radius: 16`) white background with an accent
-  border.
+- Footer (inside `ScreenTemplate`'s real footer area, so it **never overlaps
+  the board**): the progress bar with **"X / Y"** readout (visible during
+  `ShowingSequence` **and** `WaitingForUser`) plus, at the **bottom of the
+  window**, a single prominent **Play** button (Idle/GameOver), styled like the
+  splash *"Continuar"* button (200×50, bold 18 px, accent pill). The score does
+  **not** live in the footer anymore.
+- **Score strip:** the score sits in the content area, horizontally centered in
+  the band between the board and the footer (`score_prefix`, bottom-anchored
+  with a 6 px margin). The board sizes itself to
+  `Math.min(parent.width, parent.height - 56) * 0.9`, reserving ~56 px at the
+  bottom of the content area so the score can never overlap the 2×2 grid at any
+  window size.
+- **Help** ("Cómo jugar") and **Ranking** are **icon buttons top-right** (88×88,
+  same slot/pattern as the achievements button on other screens), mirroring
+  `activity_zowi_says_minigame_view.xml` where `minigame_help_button` +
+  `minigame_ranking_button` sit top-right. They are assigned to the new
+  `corner` slot of `ScreenTemplate` (a Row below the StatusBar, outside the
+  clipped `contentArea`; hidden when no screen uses it). The two sit **adjacent**
+  (`spacing: -10` in the corner Row, slightly overlapping): **Ranking first,
+  Help immediately to its right**, so the pair stays close together like the
+  Android original (tweak helps if it ever needs to widen/shrink). Ranking is
+  a disabled placeholder.
+  The disconnect button is **not** shown on this screen (back stays top-left;
+  forget lives in Settings).
+- Dialogs are standard `QtQuick.Controls.Dialog` (non-Android `MakerBoxDialog`).
+  QQC2 popups are **never auto-centered**: `QQuickPopupPositioner` drops an
+  unanchored popup at its parent's top-left, and the `ApplicationWindow` overlay
+  centering never applied to these popups. Both dialogs therefore use
+  `anchors.centerIn: parent` (their immediate parent — the screen `contentArea`,
+  the only parent QQC2 permits centering within) and are `modal`.
+- **Help dialog:** fully custom content — no default `title`/`standardButtons`
+  (the Basic style draws square white header/footer rectangles that cover the
+  rounded corners). It shows a bold title (`help_button`), the
+  `simon_game_button.png` image at 130 px, `how_to_play_text` (wrapped), and an
+  accent pill **"Cerrar"** button (`close`, already translated in all 5
+  locales) that closes the dialog. Sized `width: 460`, `radius: 20`, accent
+  border — taller/wider than before so text + image fit comfortably. It opens
+  directly in `Component.onCompleted` (no `Timer` deferral — centering is
+  anchor-based, so timing is irrelevant) according to `zowi_dice_help`:
+  `"always"` → every entry, `"once"` → only the first time
+  (`zowi_says_help_seen`).
+- **Game over dialog:** `width: 320`, `radius: 16`, accent border, OK/Retry
+  buttons (`Dialog.Ok | Dialog.Retry`), also `anchors.centerIn: parent`.
 - Back button inherited from `ScreenTemplate` (`backClicked` — do **not**
   redeclare the signal in the screen).
 

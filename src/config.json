@@ -34,6 +34,7 @@
     "connect_timeout": "10000",
     "rename_lock_ms": "3000",
     "dev_mode": "false",
+    "zowi_dice_help": "always",
     "message_duration": 2000,
     "button_scan_visible": "false",
     "button_quit_visible": "false",

@@ -22,6 +22,13 @@ class ZowiDiceController : public QObject
     Q_PROPERTY(int currentStep READ currentStep NOTIFY stepChanged)
     Q_PROPERTY(bool blockUserInput READ blockUserInput NOTIFY blockUserInputChanged)
     Q_PROPERTY(bool connected READ connected NOTIFY connectedChanged)
+    // Named state constants: QML enum lookups like `ZowiDice.State.Idle` do
+    // NOT resolve for context-property instances, so comparisons must use
+    // these value properties instead (e.g. `ZowiDice.state === ZowiDice.stateIdle`).
+    Q_PROPERTY(int stateIdle READ stateIdle CONSTANT)
+    Q_PROPERTY(int stateShowingSequence READ stateShowingSequence CONSTANT)
+    Q_PROPERTY(int stateWaitingForUser READ stateWaitingForUser CONSTANT)
+    Q_PROPERTY(int stateGameOver READ stateGameOver CONSTANT)
 
 public:
     enum State {
@@ -54,6 +61,10 @@ public:
     int currentStep() const;
     bool blockUserInput() const;
     bool connected() const;
+    int stateIdle() const { return static_cast<int>(State::Idle); }
+    int stateShowingSequence() const { return static_cast<int>(State::ShowingSequence); }
+    int stateWaitingForUser() const { return static_cast<int>(State::WaitingForUser); }
+    int stateGameOver() const { return static_cast<int>(State::GameOver); }
 
     Q_INVOKABLE void startGame();
     Q_INVOKABLE void onActionTopLeft();

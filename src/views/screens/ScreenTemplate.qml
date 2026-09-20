@@ -34,6 +34,11 @@ Rectangle {
 
     property alias footer: footerArea.data
 
+    // Optional top-right corner area (below the StatusBar, outside the clipped
+    // contentArea). Screens that need corner icon buttons (help, ranking,
+    // achievements, …) assign a Row here, mirroring the footer pattern.
+    property alias corner: cornerRow.data
+
     function tr(source) { return Translator.translate("ScreenTemplate.qml", source) }
 
     StatusBar {
@@ -128,6 +133,20 @@ Rectangle {
         }
 
         onClicked: root.disconnectClicked()
+    }
+
+    // Top-right corner slot for screens (hidden when empty): sits below the
+    // StatusBar, same band as the back/disconnect buttons, so it is never
+    // clipped by contentArea.
+    Row {
+        id: cornerRow
+        anchors {
+            top: statusBar.bottom
+            right: parent.right
+            margins: 12
+        }
+        spacing: 8
+        visible: cornerRow.data.length > 0
     }
 
     Column {
