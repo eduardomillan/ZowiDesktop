@@ -37,8 +37,9 @@
 
 - Auto-connect on `Component.onCompleted`: USB wins when it is the registered
   transport and available; otherwise reconnect to the saved Bluetooth address.
-- The apps model only enables `gamepad` and `mouths_editor`; the rest
-  (timeline, zowi_says, mouths) are placeholders.
+- The apps model enables `gamepad`, `mouths_editor` and `zowi_says` (Memory
+  game — `SCREEN_GAME_ZOWI_DICE.md`); `timeline` and `mouths` are still
+  placeholders (Draw the mouth is planned — `SCREEN_GAME_MOUTHS.md`).
 - App buttons are gated by `home.robotReady`
   (`Robot.connected && appId !== "" && battery >= 0`); disabled cards are
   grayed out.

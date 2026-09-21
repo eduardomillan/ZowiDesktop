@@ -247,3 +247,17 @@ player can retry.
   adjustable in the UI.
 - **Help text does not mention the Zowi's name** (Android interpolates
   `%1$s` with the registered name).
+
+## Planned work (week tracker)
+
+Remaining items scheduled for implementation this week (see PLANNING.md M10).
+Status is kept here until each item lands; implemented items move to the
+relevant section (with a CHANGELOG entry) and are ticked off.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| **Ranking top-10** | 🚧 Planned | The top-right Ranking button is a **disabled placeholder** and there is **no `RankingController` in the repo yet**. Plan: a *shared* ranking layer (core top-10 + Session-backed persistence, keyed by game id) reused by Zowi Dice **and** Draw the mouth (see `SCREEN_GAME_MOUTHS.md`). `rankThreshold = 3` is defined in `ZowiDiceConfig` but unused until then. |
+| **Achievement `in_love`** (score ≥ 12) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). Today the game-over dialog only shows the *"New best"* line; `achievementThreshold` stays reserved. |
+| **Adjustable speed** | 🚧 Planned | `ZowiDiceConfig::initialSpeedMs = 1000` is fixed; add a UI speed selector mapping to `MovementSpeed`. |
+| **Help text with the Zowi's name** | 🚧 Planned | Android interpolates `%1$s` with the registered name; ours doesn't. Needs i18n work across the 5 locales. |
+| **Dead i18n keys cleanup** | 🧹 Cleanup | `walk_forward`, `bend_backward`, `jump`, `moonwalker_right` under `"GameZowiDiceScreen.qml"` (5 locales) are unused (image-only buttons). Kept as documented legacy for now; remove during cleanup. |

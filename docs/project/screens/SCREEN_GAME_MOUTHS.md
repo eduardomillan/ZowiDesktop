@@ -6,9 +6,10 @@
 > (`MouthsMinigamePresenterImpl` + `activity_mouths_minigame_view.xml`).
 > Intended as a new game alongside
 > [SCREEN_GAME_TIMELINE.md](SCREEN_GAME_TIMELINE.md) and
-> [SCREEN_GAME_ZOWI_SAYS.md](SCREEN_GAME_ZOWI_SAYS.md); future games can be added.
+> [SCREEN_GAME_ZOWI_DICE.md](SCREEN_GAME_ZOWI_DICE.md); future games can be added.
 
-- **Status:** ⚠️ **NOT IMPLEMENTED** — design proposal pending review.
+- **Status:** ⚠️ **NOT IMPLEMENTED** — design reviewed; implementation planned
+  (see [Implementation plan](#implementation-plan-week)).
 - **File:** `src/views/screens/GameMouthsScreen.qml` (does not exist yet).
 - **i18n context:** `"GameMouthsScreen.qml"` (planned).
 - **Game id:** `mouths` — Home tile `qrc:/images/android/mouths_game_button.png`
@@ -73,8 +74,11 @@
 ## Persistence (planned)
 
 - `mouths_last_score` — latest score (for the ranking gate / toasts).
+- `mouths_help_seen` — first-play help flag (mirrors `zowi_says_help_seen`),
+  driven by the `mouths_help` config key (`"always"` / `"once"`).
 - Ranking entries under game id `mouths` (in-Session top-10, mirroring
-  `RankingController.saveRankingEntry`). Cleared by "Forget playing history".
+  `RankingController.saveRankingEntry` — shared layer planned with Zowi Dice).
+  Cleared by "Forget playing history".
 
 ## i18n (planned)
 
@@ -82,10 +86,39 @@ New keys under `"GameMouthsScreen.qml"`: `title`, `play_button`, `help`,
 `ranking_button`, `final_score`, `you_drew`, current game id already translated
 on the Home context (`"mouths": "Bocas"`).
 
-## Open questions (for review)
+## Decisions taken (design review)
 
-- Which 4 built-in matrices to ship (Android hard-codes 4; confirm with the
-  editor set or reuse `MouthId` presets).
-- Countdown feel on desktop: timer bar vs numeric counter; tentatively a bar.
-- Should the target mouth remain on Zowi while the player draws, or hide after
-  a preview window (Android shows it once at level start)?
+- **4 built-in matrices:** taken from the core `MouthId` presets
+  (`src/core/include/zowi/robot_commands.h`, patterns in
+  `zowi::kMouthPatterns`) — tentative set: **Smile, HappyOpen, Heart,
+  TongueOut**. Trivially changeable in the game's config.
+- **Countdown:** a **timer bar** (styled like the Zowi Dice progress bar),
+  10 s on levels 1–3, −1 s every 4th level thereafter.
+- **Target mouth while drawing:** shown **both on Zowi (if connected) and as an
+  on-screen miniature** for the whole round — intentional desktop deviation
+  from Android (which shows it once at level start), friendlier without a
+  hardware round-trip.
+- **Ranking:** a **shared layer** with Zowi Dice — one ranking module (core
+  top-10 + Session persistence, keyed by game id) planned; until it exists the
+  Ranking button stays a disabled placeholder (see `SCREEN_GAME_ZOWI_DICE.md`
+  week tracker).
+
+## Implementation plan (week)
+
+Mirrors the Zowi Dice layering (Qt-free core + thin GUI adapter, per AGENTS.md):
+
+| Piece | File | Content |
+|-------|------|---------|
+| Core game (Qt-free) | `src/core/include/zowi/mouths_game.h` + `src/core/src/mouths_game.cpp` | `MouthsGame` state machine: Idle / RoundActive / GameOver; round = target matrix (from `MouthId` presets) + 30-bit draw compare; `score = level − 1`; `score ≥ 8` → `mouths_editor` achievement (reserved); no Qt. |
+| Core tests | `src/core/tests/test_mouths_game.cpp` (register in CMakeLists) | Matrix compare, level progression, timeout, score thresholds. |
+| GUI adapter | `src/gui/controllers/MouthsGameController.{h,cpp}` → `MouthsGame` | `state`/`level`/`score`/`matrix`, `startGame()`, `onCellToggled(x,y)`, `submitDraw()`; QTimer countdown (GUI thread); commands `L 00<30bits>\r` (target), `K victory`, `K angry`, `S`; pauses data polling while open. |
+| Shared grid | `src/views/components/MouthGrid.qml` | 6×5 LED grid extracted from `MouthEditorScreen.qml` (single `MouseArea` press/drag with `preventStealing`), reused by the game. |
+| Screen | `src/views/screens/GameMouthsScreen.qml` (i18n context `"GameMouthsScreen.qml"`) | Grid, countdown bar, score, Play button, help overlay, game-over dialog, Ranking button. Playable offline (commands are no-ops when `!Robot.connected`). |
+| Navigation | `main.qml` + `HomeScreen.qml` | `pushMouths()` (pattern `pushZowiDice`); enable Home tile `mouths` (`enabled: true`). |
+| Config / session | `src/config.json` + Session | `mouths_help` (`"once"`/`"always"`); `mouths_last_score`, `mouths_help_seen`. |
+| i18n | 5 locale files | New keys under `"GameMouthsScreen.qml"` (`title`, `play_button`, `help`, `final_score`, `you_drew`, …); `"mouths": "Bocas"` already on the Home context. |
+
+### Open during implementation
+
+- Exact wording of the new i18n keys (5 locales).
+- Whether the shared ranking lands in this game's PR or a separate one.

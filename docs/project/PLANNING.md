@@ -206,7 +206,9 @@ src/
 
 ### M10 — Games 🚧
 
-- [ ] Game: Memory
+- [x] Game: Memory — implemented (core + tests + GUI + i18n; see
+  `SCREEN_GAME_ZOWI_DICE.md`). Outstanding: the shared ranking layer,
+  tracked in that doc.
 
 - [ ] Game: Draw the mouth
 
