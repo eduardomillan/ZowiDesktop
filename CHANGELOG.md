@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-09-22
+
+> **Prerelease.** `VERSION` is `0.9.1`; this release is published as a GitHub
+> *pre-release* (`--prerelease` — never combined with `--with-apt`, the signed
+> apt repo is the stable channel). Tag: `v0.9.1`.
+
 ### Added
 - **Zowi Dice memory game ("Zowi dice / Memoria"):** New interactive minigame
   ported from ZowiAppReborn's `ZowiSaysMinigamePresenterImpl` — Zowi plays a
