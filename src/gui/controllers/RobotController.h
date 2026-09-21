@@ -158,6 +158,9 @@ signals:
     void batteryChanged();
     void appIdChanged();
     void dataReceived(const QString &data);
+    // Emitted when the robot sends &&A%% (command accepted, not yet processed),
+    // e.g. right after a movement command starts being handled.
+    void softwareAckReceived();
     // Emitted when the robot sends &&F%% (command fully processed), e.g. after
     // a melody finishes playing.
     void finalAckReceived();

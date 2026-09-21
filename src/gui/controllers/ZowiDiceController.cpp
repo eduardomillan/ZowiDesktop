@@ -6,11 +6,27 @@
 #include <zowi/robot_commands.h>
 
 #include <QDebug>
+#include <QTimer>
+
+// Matches zowi::MovementSequencer::startTimeoutMs() (the CLI driver uses the
+// same value as its &&A wait timeout).
+namespace {
+constexpr int kMoveStartTimeoutMs = 20000;
+} // namespace
 
 ZowiDiceController::ZowiDiceController(QObject* parent)
     : QObject(parent)
     , m_game(std::make_unique<zowi::ZowiDiceGame>())
 {
+    m_moveStartTimeout.setSingleShot(true);
+    m_moveStartTimeout.setInterval(kMoveStartTimeoutMs);
+    connect(&m_moveStartTimeout, &QTimer::timeout, this, [this]() {
+        qWarning() << "[ZowiDice] Movement &&A not received within"
+                   << kMoveStartTimeoutMs << "ms; stopping the robot and resetting the game.";
+        if (m_robot && m_robot->isConnected())
+            m_robot->sendData(QString::fromStdString(zowi::commandStop()));
+        resetGame();
+    });
 }
 
 ZowiDiceController::~ZowiDiceController() = default;
@@ -23,6 +39,7 @@ void ZowiDiceController::setRobotController(RobotController* robot) {
             m_connected = m_robot->isConnected();
             emit connectedChanged();
         });
+        connect(m_robot, &RobotController::softwareAckReceived, this, &ZowiDiceController::onRobotSoftwareAck);
         connect(m_robot, &RobotController::finalAckReceived, this, &ZowiDiceController::onRobotFinalAck);
     }
 }
@@ -65,17 +82,19 @@ bool ZowiDiceController::connected() const {
 
 void ZowiDiceController::startGame() {
     m_game->startGame();
+    m_moveStartTimeout.stop();
     updateFromGame();
     sendNextRobotCommand();
 }
 
 void ZowiDiceController::resetGame() {
     m_game->reset();
+    m_moveStartTimeout.stop();
     updateFromGame();
 }
 
 void ZowiDiceController::onActionTopLeft() {
-    handleUserAction(zowi::ZowiDiceAction::WalkForward);
+    handleUserAction(zowi::ZowiDiceAction::TiptoeSwing);
 }
 
 void ZowiDiceController::onActionTopRight() {
@@ -104,6 +123,17 @@ void ZowiDiceController::handleUserAction(zowi::ZowiDiceAction action) {
     }
 }
 
+void ZowiDiceController::onRobotSoftwareAck() {
+    // The move just got accepted (&&A): the game now asks for the Stop so it
+    // lands mid-cycle-1 and the movement runs exactly once.
+    m_moveStartTimeout.stop();
+    m_game->onSoftwareAck();
+    updateFromGame();
+    if (m_game->state() == zowi::ZowiDiceState::ShowingSequence) {
+        sendNextRobotCommand();
+    }
+}
+
 void ZowiDiceController::onRobotFinalAck() {
     m_game->onFinalAck();
     updateFromGame();
@@ -118,6 +148,9 @@ void ZowiDiceController::sendNextRobotCommand() {
         QString qcmd = QString::fromStdString(cmd);
         m_robot->sendData(qcmd);
         qDebug() << "[ZowiDice] Sending:" << qcmd.trimmed();
+        // Arm the guard waiting for the move's &&A (restarts on each move).
+        if (!qcmd.isEmpty() && qcmd[0] == QLatin1Char('M'))
+            m_moveStartTimeout.start();
     }
 }
 

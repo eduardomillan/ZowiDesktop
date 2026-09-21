@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QTimer>
 #include <QVector>
 #include <memory>
 
@@ -40,7 +41,7 @@ public:
     Q_ENUM(State)
 
     enum Action {
-        WalkForward = 0,
+        TiptoeSwing = 0,
         BendBackward = 1,
         Jump = 2,
         MoonwalkerRight = 3
@@ -86,6 +87,7 @@ signals:
 
 private:
     void handleUserAction(zowi::ZowiDiceAction action);
+    void onRobotSoftwareAck();
     void onRobotFinalAck();
     void sendNextRobotCommand();
     void sendGameOverGesture();
@@ -97,4 +99,8 @@ private:
     SessionController* m_session = nullptr;
     CommandsController* m_commands = nullptr;
     bool m_connected = false;
+    // Safety net: if the robot never acknowledges a movement (no &&A), the
+    // game would wait forever. Mirrors the CLI's 20 s start timeout; on fire it
+    // stops the robot and returns the game to Idle.
+    QTimer m_moveStartTimeout;
 };

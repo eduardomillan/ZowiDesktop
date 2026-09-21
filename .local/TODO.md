@@ -35,11 +35,7 @@
 
 ## Cambios
 - [X] Sustituir la flecha "atrás" por el botón "back" (imagen de flecha izquierda) que se utiliza en la app Android original
-
-
-## Pruebas automatizadas
-- [ ] Smoke test de la GUI headless (arranque/cierre con `QT_QPA_PLATFORM=offscreen`), fuera del alcance de la fase inicial de pruebas de caja negra del CLI.
-
+- [ ] En settings, añadir opción para cambiar idioma (que se vuelva a la pantalla de splash)
 
 
 ## Windows

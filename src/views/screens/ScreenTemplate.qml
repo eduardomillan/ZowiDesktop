@@ -137,7 +137,9 @@ Rectangle {
 
     // Top-right corner slot for screens (hidden when empty): sits below the
     // StatusBar, same band as the back/disconnect buttons, so it is never
-    // clipped by contentArea.
+    // clipped by contentArea. `implicitWidth` (notifyable when children are
+    // added) is used instead of `data.length` — `data` is a non-NOTIFYable
+    // default property, which would emit a binding warning on every load.
     Row {
         id: cornerRow
         anchors {
@@ -146,7 +148,7 @@ Rectangle {
             margins: 12
         }
         spacing: 8
-        visible: cornerRow.data.length > 0
+        visible: cornerRow.implicitWidth > 0
     }
 
     Column {

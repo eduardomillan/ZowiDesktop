@@ -101,7 +101,8 @@ Item {
             if (!_waitingAck) return
             // Robot did not ACK the rename: forget anyway.
             _waitingAck = false
-            statusMessage(tr("rename_skipped").arg(defaultName))
+            // rename_skipped has no placeholder in any locale, so no .arg().
+            statusMessage(tr("rename_skipped"))
             doUnpair()
         }
     }

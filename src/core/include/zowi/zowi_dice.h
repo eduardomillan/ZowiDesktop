@@ -3,10 +3,12 @@
 #include <vector>
 #include <string>
 
+#include <zowi/movement_sequencer.h>
+
 namespace zowi {
 
 enum class ZowiDiceAction {
-    WalkForward,
+    TiptoeSwing,
     BendBackward,
     Jump,
     MoonwalkerRight
@@ -32,6 +34,11 @@ public:
 
     void startGame();
     void onUserAction(ZowiDiceAction action);
+    // Robot ack hooks, fed by the controller (mirrors the CLI's ack plumbing):
+    //   onSoftwareAck()  — robot sent &&A%% (command accepted, not processed)
+    //   onFinalAck()     — robot sent &&F%% (command fully processed / one gait
+    //                      cycle completed)
+    void onSoftwareAck();
     void onFinalAck();
     void reset();
 
@@ -54,6 +61,7 @@ private:
     void advanceToNextZowiAction();
     void checkGameOver();
     std::string buildCommandForAction(ZowiDiceAction action) const;
+    void resetActionMachine();
 
     ZowiDiceConfig m_config;
     ZowiDiceState m_state = ZowiDiceState::Idle;
@@ -61,8 +69,16 @@ private:
     std::vector<ZowiDiceAction> m_userSequence;
     int m_zowiSequenceIndex = 0;
     int m_score = 0;
-    bool m_waitingForAck = false;
-    bool m_needToSendStop = false;
+
+    // Per-action ACK machine (only meaningful while ShowingSequence). The
+    // firmware repeats the last `M` for one gait cycle per loop pass and only
+    // reads serial between cycles, so a single move must be stopped DURING its
+    // first cycle. Per action: M → &&A → S → &&F(move) → &&A(stop) → &&F(stop).
+    enum class ActionPhase { Idle, MoveQueued, MoveRunning, AwaitingStopAcks };
+    ActionPhase m_phase = ActionPhase::Idle;
+    bool m_stopQueued = false;  // the Stop has been handed to the driver
+    bool m_stopAckSeen = false; // the Stop's own &&A received (drain)
+    MovementSequencer m_moveSeq;
 };
 
 } // namespace zowi

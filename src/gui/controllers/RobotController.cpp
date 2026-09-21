@@ -379,6 +379,8 @@ void RobotController::parseIncoming()
                     m_session->saveActiveZowiAppId(m_appId);
             }
         }
+        if (msg.cmd == zowi::toChar(zowi::Command::Ack) && !msg.legacy)
+            emit softwareAckReceived();
         if (msg.cmd == zowi::toChar(zowi::Command::FinalAck) && !msg.legacy)
             emit finalAckReceived();
     }

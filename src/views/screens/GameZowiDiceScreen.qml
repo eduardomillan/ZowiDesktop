@@ -106,9 +106,9 @@ ScreenTemplate {
 
             property real btnSize: (width - 24) / 2    // 24 px gap between buttons
 
-            // Top-Left: Walk Forward
+            // Top-Left: Tiptoe Swing
             Image {
-                id: btnWalkForward
+                id: btnTiptoeSwing
                 x: 0
                 y: 0
                 width: parent.btnSize
@@ -395,8 +395,13 @@ ScreenTemplate {
 
             Text {
                 id: helpText
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width
+                // Width from anchors (not a `width:` binding) so the wrapped
+                // text cannot feed a width binding loop through the Column's
+                // implicit sizing. Text is centered via horizontalAlignment.
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
                 text: tr("how_to_play_text")
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter

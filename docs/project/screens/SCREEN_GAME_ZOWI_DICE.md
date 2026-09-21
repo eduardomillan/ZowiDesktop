@@ -2,6 +2,8 @@
 
 > Game 02 — **"Zowi Dice"** (Memory / *Zowi dice*): Zowi plays a growing random
 > sequence of 4 moves and the player must repeat it from memory.
+> The four moves are **tiptoe-swing**, **bend backward**, **jump** and
+> **moonwalker right**.
 > Logic ported from ZowiAppReborn's `ZowiSaysMinigamePresenterImpl`, adapted to
 > the desktop architecture (Qt-free core + thin GUI adapter). Intended as a new
 > game alongside [SCREEN_GAME_TIMELINE.md](SCREEN_GAME_TIMELINE.md) and
@@ -41,21 +43,25 @@ State machine lives in core (`zowi::ZowiDiceGame`), fully Qt-free:
 
 Command strings are built by core (`robot_commands.h`) and sent by the
 controller through `RobotController::sendData()`. ACK sequencing is driven by
-`RobotController::finalAckReceived`.
+`RobotController::softwareAckReceived` (`&&A`) + `finalAckReceived` (`&&F`)
+and implemented in core by a per-action machine built on the shared
+`zowi::MovementSequencer` (the same component the CLI uses for its
+`runMovementCycles`).
 
 ## QML context used
 
 - `ZowiDice` (the controller): `state`, `score`, `sequenceLength`, `progress`,
-  `currentStep`, `blockUserInput`, `connected`; **named state constants**
+  `currentStep`, `blockUserInput`, `connected`; named state constants
   `stateIdle`, `stateShowingSequence`, `stateWaitingForUser`, `stateGameOver`
-  (QML enum lookups like `ZowiDice.State.Idle` do not resolve for
-  context-property instances, so comparisons use these value properties;
-  invokables `startGame()`, `resetGame()`, `onActionTopLeft()`,
-  `onActionTopRight()`, `onActionBottomLeft()`, `onActionBottomRight()`;
-  signal `gameOver(int)`.
+  (exposed as value properties, since QML enum lookups do not resolve for
+  context-property instances); invokables `startGame()`, `resetGame()`,
+  `onActionTopLeft()`, `onActionTopRight()`, `onActionBottomLeft()`,
+  `onActionBottomRight()`; signal `gameOver(int)`.
 - `Robot`: `connected` (gates the 4 action buttons), `sendData()`,
   `setDataPollingEnabled()` (paused while the screen is open, like PadScreen),
-  `finalAckReceived` (wired to the controller).
+  `softwareAckReceived` + `finalAckReceived` (both wired to the controller —
+  the game reacts to the movement's `&&A` to queue the Stop, and to the
+  Stop's `&&F` to advance).
 - `Config.get(...)`: theme colors.
 - `Session`: persists the last score (via controller) and the first-play help
   flag (`zowi_says_help_seen`, read/written from QML for the auto-help).
@@ -72,26 +78,26 @@ Produced by core (`ZowiDiceGame::buildCommandForAction`), default
 
 | Action | Builder | Wire (medium) |
 |--------|---------|----------------|
-| Top-left (Walk) | `commandWalkForward` | `M 1 1000\r` |
+| Top-left (Tiptoe swing) | `commandTiptoeSwing` | `M 14 1000 15\r` |
 | Top-right (Bend) | `commandBendBackward` | `M 16 1000\r` |
 | Bottom-left (Jump) | `commandJump` | `M 11 1000\r` |
 | Bottom-right (Moonwalker) | `commandMoonwalkerRight` | `M 7 1000 30\r` |
 | End of each move | `commandStop` | `S\r` |
 
-Buttons use the Android ZowiSays assets already shipped in this repo:
-`move1_button.png`/`move2_button.png`/`move3_button.png`/`move4_button.png`
-(and `pressed_*` variants). The help dialog shows `simon_game_button.png`.
+Buttons use the Android assets already shipped in this repo: the top-left
+(now tiptoe-swing) uses `swing_button.png` (and `pressed_swing_button.png`),
+the other three use `move2_button.png`/`move3_button.png`/`move4_button.png`
+(with their `pressed_*` variants). The help dialog shows `simon_game_button.png`.
 
 **Verified against the original:** `ZowiAppReborn`'s `ZowiSaysMinigamePresenterImpl`
-(`playButtonPressed()`) builds exactly this command set — `WALK FORWARD`,
-`BEND` + direction `RIGHT`, `JUMP`, `MOONWALKER` + direction `RIGHT` — and
-`MovementCommand.getCommandValue()` serializes them as `M 1`/`M 16`/`M 11`/
-`M 7 <dur> 30`, i.e. byte-for-byte the wire strings above. Note the Android
-naming is `BEND RIGHT` for `M 16`, which the firmware calls *bend backward*
-(`zowi.bend(1,T,-1)`); both refer to the same MoveID, so our `BendBackward`
-label is the same physical gesture. WALK FORWARD is one of the four random
-moves (`addRandomCommandToZowiSequence()`), so the robot walking forward is
-the original behavior.
+(`playButtonPressed()`) builds three of the four moves with the same command
+strings: `BEND` + direction `RIGHT` (`M 16`), `JUMP` (`M 11`) and `MOONWALKER` +
+direction `RIGHT` (`M 7 <dur> 30`) — byte-for-byte the wire strings above. The
+**top-left move is a deliberate deviation**: the Android original plays
+`WALK FORWARD` (`M 1`), and this desktop version uses **tiptoe-swing** (`M 14`)
+instead. Note the Android naming is `BEND RIGHT` for `M 16`, which the firmware
+calls *bend backward* (`zowi.bend(1,T,-1)`); both refer to the same MoveID, so
+our `BendBackward` label is the same physical gesture.
 
 ## Gameplay
 
@@ -102,9 +108,16 @@ the original behavior.
   `"once"` only the first time (`zowi_says_help_seen` flag in Session); in
   both cases dismissing it does **not** start the game. Zowi replays the random
   sequence (length 1, growing by 1 per correct repeat). Each action is
-  delivered as `[move … ACK] → [stop … ACK]`; the core only advances to the
-  next action after the **Stop** ACK (movement ACK alone does not advance),
-  exactly like the Android timeline. While Zowi plays, the 4 buttons are
+  delivered as `[move … &&A] → [stop] → [&&F(move)] → [&&A(stop)] → [&&F(stop)]`:
+  the Stop is queued as soon as the move's software ack (`&&A`) arrives, so it
+  lands **mid-move**; only the Stop's final ack advances to the next action.
+  This is the `MovementSequencer` protocol the CLI uses: the firmware repeats
+  the last movement for one gait cycle per loop pass and reads serial only
+  between cycles, so a Stop sent after the move's final ack would let an extra
+  cycle slip in (the movement would visibly run twice). The game therefore
+  waits for the move's `&&A` to queue the Stop, and — like the CLI — drains the
+  Stop's own `&&A`/`&&F` before sending the next move, so stale acks never leak
+  into the next action. While Zowi plays, the 4 buttons are
   disabled, a full-screen **"Look at Zowi"** overlay shows an animated robot +
   `look_at_zowi_text`, and a progress bar runs.
 - **Human turn:** once Zowi finishes, the state becomes `WaitingForUser` and the
@@ -157,30 +170,22 @@ the original behavior.
   a disabled placeholder.
   The disconnect button is **not** shown on this screen (back stays top-left;
   forget lives in Settings).
-- Dialogs are standard `QtQuick.Controls.Dialog` (non-Android `MakerBoxDialog`).
-  QQC2 popups are **never auto-centered**: `QQuickPopupPositioner` drops an
-  unanchored popup at its parent's top-left, and the `ApplicationWindow` overlay
-  centering never applied to these popups. Both dialogs therefore use
-  `anchors.centerIn: parent` (their immediate parent — the screen `contentArea`,
-  the only parent QQC2 permits centering within) and are `modal`.
-- **Help dialog:** fully custom content — no default `title`/`standardButtons`
-  (the Basic style draws square white header/footer rectangles that cover the
-  rounded corners). It shows a bold title (`help_button`), the
+- Dialogs are standard `QtQuick.Controls.Dialog` (not the Android-native
+  `MakerBoxDialog`), `modal` and centered on their parent with
+  `anchors.centerIn` (QQC2 popups are not auto-centered).
+- **Help dialog:** fully custom content (no default header/footer, so the
+  rounded corners show). It shows a bold title (`help_button`), the
   `simon_game_button.png` image at 130 px, `how_to_play_text` (wrapped), and an
   accent pill **"Cerrar"** button (`close`, already translated in all 5
   locales) that closes the dialog. Sized `width: 460`, `radius: 20`, accent
-  border. **Height is content-driven**: `Math.ceil(contentH) + 48 + 5%`, where
-  `contentH` = title + image + wrapped text + button + spacing — the wrapped
-  text is measured (`implicitHeight`) so the dialog always fits its content, and
-  the **Close button sits ~5% of the content height above the bottom edge**
-  (never on the border, whatever the locale text length). It opens directly in
-  `Component.onCompleted` (no `Timer` deferral — centering is anchor-based, so
-  timing is irrelevant) according to `zowi_dice_help`: `"always"` → every
-  entry, `"once"` → only the first time (`zowi_says_help_seen`).
-- **Game over dialog:** same custom treatment so the corners show — no default
-  header/footer, `width: 360`, `radius: 20`, accent border,
-  `anchors.centerIn: parent`, and the same content-driven height with 5%
-  clearance. Content: `game_over` title, `final_score` (big, bold), the
+  border. Its **height is content-driven** so it always fits the wrapped text
+  and the Close button never sits on the border, whatever the locale text
+  length. It opens directly in `Component.onCompleted` according to
+  `zowi_dice_help`: `"always"` → every entry, `"once"` → only the first time
+  (`zowi_says_help_seen`).
+- **Game over dialog:** same custom treatment, `width: 360`, `radius: 20`,
+  accent border, `anchors.centerIn: parent`, and the same content-driven height
+  with 5% clearance. Content: `game_over` title, `final_score` (big, bold), the
   `new_best` line (when `score ≥ 12`), and a button row with an outlined
   **"Cerrar"** (→ `resetGame()`) and an accent pill **"Reintentar"**
   (`retry_button`, → `startGame()`).
@@ -198,20 +203,42 @@ the original behavior.
 
 Keys under `"GameZowiDiceScreen.qml"` with translations in all 5 locales (es,
 en, fr, ca, bg): `title`, `subtitle`, `look_at_zowi_text`, `play_button`,
-`help_button`, `ranking_button`, `score_prefix` (`%1`), `walk_forward`,
-`bend_backward`, `jump`, `moonwalker_right`, `how_to_play_text`, `close`,
-`retry_button`, `game_over`, `final_score` (`%1`), `new_best`.
+`help_button`, `ranking_button`, `score_prefix` (`%1`), `how_to_play_text`,
+`close`, `retry_button`, `game_over`, `final_score` (`%1`), `new_best`.
+
+The move-name keys (`walk_forward`, `bend_backward`, `jump`,
+`moonwalker_right` — legacy leftovers) also exist in the same context, but are
+**not used by the QML**: the four action buttons are image-only, so move names
+are never shown on screen.
 
 ## Tests
 
 Core logic is covered by `test_zowi_dice.cpp` (registered in
-`src/core/tests/CMakeLists.txt`). Regression test 11 drives the exact
-controller flow (`nextRobotCommand()` + `onFinalAck()`) for a 2-action round to
-guarantee `[move, stop, move, stop]` playback. Test 12 covers `currentStep()`
-(the "X / Y" readout) across replay, user turn and round transitions.
+`src/core/tests/CMakeLists.txt`). A shared `replayAction()` helper drives one
+action through the full robot ACK chain (`M → &&A → S → &&F(move) → &&A(stop)
+→ &&F(stop)`); Tests 3–12 use it for the game flow (rounds, scores, progress,
+`currentStep`). Regression test 11 asserts the exact controller flow for a
+2-action round, including that the move's `&&F` alone does **not** advance and
+nothing is sent while the Stop is drained. Test 14 covers **stale acks** (a
+`&&A`/`&&F` from a previous Stop arriving before the next move's `&&A` must be
+ignored and must not skip or repeat a move). Test 13 asserts the tiptoe-swing
+command is `M 14 1000 15\r` (MoveID 14, the swap for the Android's walk
+forward `M 1`).
 
-## Known deviations from the Android original (not yet implemented)
+## Reliability
 
+The controller arms a 20-second safety timer (same value as the CLI's
+`MovementSequencer::startTimeoutMs()`) whenever a movement is sent. If the
+move's `&&A` never arrives (e.g. the robot is busy or the transport dropped
+it), the game would otherwise wait forever with the robot possibly still
+moving: the timer stops the robot (`S`) and returns the game to `Idle` so the
+player can retry.
+
+## Known deviations from the Android original
+
+- **Top-left move (implemented):** the Android original plays `WALK FORWARD`
+  (`M 1`) as one of the four random moves; this desktop version swaps it for
+  **tiptoe-swing** (`M 14`). Same gameplay, different move.
 - **Ranking:** no leaderboard. The Ranking button is a disabled placeholder;
   `rankThreshold` is defined in `ZowiDiceConfig` but unused.
 - **Achievements:** `in_love` (score ≥ 12) is not enforced; the game-over
