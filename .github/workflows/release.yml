@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -100,7 +100,7 @@ jobs:
 
       - name: Download Linux artifacts
         if: ${{ needs.build-linux.result == 'success' }}
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: linux-*
           path: dist
@@ -108,7 +108,7 @@ jobs:
 
       - name: Download Windows artifacts
         if: ${{ needs.build-windows.result == 'success' }}
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: windows-*
           path: dist

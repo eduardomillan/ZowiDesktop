@@ -41,7 +41,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Extract version
         id: ver
@@ -124,14 +124,14 @@ jobs:
 
       - name: Upload portable zip
         if: ${{ inputs.build_zip != false }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: windows-portable
           path: dist/ZowiDesktop-${{ steps.ver.outputs.version }}-windows-x86_64.zip
 
       - name: Upload installer
         if: ${{ inputs.build_installer != false }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: windows-installer
           path: dist/ZowiDesktop-${{ steps.ver.outputs.version }}-setup-x64.exe
