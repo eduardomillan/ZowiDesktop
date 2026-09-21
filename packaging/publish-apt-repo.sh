@@ -1,17 +1,41 @@
 #!/usr/bin/env bash
 set -e
 
-# Publica el repositorio apt firmado (jammy + noble) en la rama gh-pages bajo
-# docs/ preservando el website (keep_files). Solo debe ejecutarse de forma
-# local/manual, ya que el repo se firma con las claves GPG del mantenedor.
-#
-# Uso:
-#   packaging/publish-apt-repo.sh <VERSION> <BUILD_DIR>
-#
-# Requisitos:
-#   - aptly y gnupg instalados:  sudo apt-get install aptly gnupg
-#   - La clave GPG privada importada en tu keyring local
-#   - Passphrase disponible via GPG_PASSPHRASE (o APTLY_GPG_PASSPHRASE)
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") <VERSION> <BUILD_DIR>
+
+Publish the signed apt repository (jammy + noble) to the gh-pages branch
+under docs/, preserving the website (keep_files). Local/manual only: the
+repo is signed with the maintainer's GPG keys.
+
+Arguments:
+  VERSION     Version to publish (matches zowi-desktop_<VERSION>-1+jammy/noble .deb)
+  BUILD_DIR   Directory containing the jammy and noble .deb files (e.g. dist/)
+
+Environment:
+  GPG_PASSPHRASE           Passphrase to unlock the signing key
+  APTLY_GPG_PASSPHRASE     Fallback for the same passphrase
+
+Requirements:
+  aptly and gnupg installed: sudo apt-get install aptly gnupg
+  Private GPG key imported in the local keyring
+  Passphrase available via GPG_PASSPHRASE (or APTLY_GPG_PASSPHRASE)
+
+Example:
+  GPG_PASSPHRASE=secret bash packaging/publish-apt-repo.sh 1.2.3 dist
+EOF
+    exit 0
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help|--usage) usage ;;
+    esac
+done
+
+# Publishes the signed apt repo (jammy + noble) to gh-pages/docs preserving the
+# website. Manual/local only: the repo is signed with the maintainer's GPG keys.
 
 set -o pipefail
 

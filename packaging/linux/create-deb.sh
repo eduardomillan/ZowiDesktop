@@ -1,6 +1,33 @@
 #!/usr/bin/env bash
 set -e
 
+usage() {
+    cat <<EOF
+Usage: $(basename "$0")
+
+Build the Debian package for the current VERSION and place it in dist/.
+
+Environment:
+  DISTRO_SUFFIX  Ubuntu suite suffix (default: unstable)
+                 Use jammy on Ubuntu 22.04 and noble on Ubuntu 24.04
+
+Requirements:
+  dpkg-buildpackage and the Debian packaging tooling, run on the matching
+  Ubuntu release so Qt/C++ runtime dependencies resolve correctly
+
+Examples:
+  DISTRO_SUFFIX=jammy bash packaging/linux/create-deb.sh   # on Ubuntu 22.04
+  DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04
+EOF
+    exit 0
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help) usage ;;
+    esac
+done
+
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
 VERSION=$(tr -d '\r\n' < "$PROJECT_ROOT/VERSION")

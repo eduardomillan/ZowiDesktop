@@ -44,7 +44,15 @@ release process end to end in a single manual run. Full details, all inputs,
 and examples:
 **[WORKFLOWS_HOWTO.md](WORKFLOWS_HOWTO.md#release)**.
 
-Go to **Actions → Release → Run workflow** to start it.
+Go to **Actions → Release → Run workflow** to start it. You can also launch
+the same workflow from a terminal:
+
+```bash
+# Build + release entirely in CI, and wait for the result
+bash packaging/create-gh-release.sh --release --watch
+```
+
+Full details: [Run from the CLI](WORKFLOWS_HOWTO.md#run-from-the-cli).
 
 This does **not** turn releases into an automatic-on-tag process — it still
 requires a human to click "Run workflow" — it just collapses the manual
@@ -115,6 +123,8 @@ The version lives in a single source of truth, the root `VERSION` file:
 3. Either:
    - **One button**: go to **Actions → Release → Run workflow** (see
      [One-button release](#one-button-release-recommended)); or
+   - **One command**: `bash packaging/create-gh-release.sh --release --watch`
+     (dispatches the Release workflow from the CLI and waits for the result); or
    - **Manual**, step by step:
      1. Build the **Linux** artifacts (AppImage + jammy/noble `.deb`) — locally or via the **Linux CI** workflow.
      2. Build or download the **Windows** artifacts (zip + installer) — via the **Windows CI** workflow, or locally.
@@ -261,6 +271,30 @@ The script prints the release URL when it finishes:
 ```
 https://github.com/<owner>/ZowiDesktop/releases/tag/v<version>
 ```
+
+### Create the release in CI (one command)
+
+Instead of building/downloading artifacts locally, dispatch the **Release**
+workflow from the CLI and let CI build them and publish the release:
+
+```bash
+# Build + release entirely in CI, and wait for the result (default: all artifacts)
+bash packaging/create-gh-release.sh --release --watch
+
+# Dispatch without waiting (track it later with --watch)
+bash packaging/create-gh-release.sh --release --with-apt
+
+# Print the dispatch command without launching the workflow
+bash packaging/create-gh-release.sh --release --dry-run
+```
+
+- `--release` runs `gh workflow run release.yml` with the script flags mapped to
+  the workflow inputs; `--watch` follows the run until it finishes and prints
+  the failed-step logs if it fails. See
+  [Run from the CLI](WORKFLOWS_HOWTO.md#run-from-the-cli).
+- `VERSION` and `CHANGELOG.md` must already be committed and pushed to `main`:
+  the workflow checks out that branch, so CI builds the version and release
+  notes that are on the remote (the script warns otherwise).
 
 ## Publish the signed apt repository (`--with-apt`)
 

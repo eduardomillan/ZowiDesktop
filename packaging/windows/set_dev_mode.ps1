@@ -1,7 +1,51 @@
+<#
+.SYNOPSIS
+Set the dev_mode value in a JSON config file for packaging.
+
+.DESCRIPTION
+Invoked from the packaging .bat scripts; a separate script avoids cmd
+escaping issues. Packaged builds ship with dev mode OFF; it can be
+re-enabled at runtime via the DEV_MODE environment variable.
+
+.PARAMETER Value
+New dev_mode value: 'true' or 'false'.
+
+.PARAMETER Path
+Path to the JSON config file (e.g. src\config.json).
+
+.EXAMPLE
+powershell -ExecutionPolicy Bypass -File set_dev_mode.ps1 false "src\config.json"
+#>
+
 param(
-    [Parameter(Mandatory = $true)][string]$Value,
-    [Parameter(Mandatory = $true)][string]$Path
+    [string]$Value,
+    [string]$Path
 )
+
+function Show-Usage {
+    Write-Output "Usage: set_dev_mode.ps1 <Value> <Path>"
+    Write-Output ""
+    Write-Output "Set the dev_mode value in a JSON config file for packaging."
+    Write-Output ""
+    Write-Output "Arguments:"
+    Write-Output "  Value   New dev_mode value: 'true' or 'false'"
+    Write-Output "  Path    Path to the JSON config file (e.g. src\config.json)"
+    Write-Output ""
+    Write-Output "Example:"
+    Write-Output "  powershell -ExecutionPolicy Bypass -File set_dev_mode.ps1 false src\config.json"
+}
+
+# Minimal help: -h / --help / -? . The .bat scripts always pass both arguments,
+# so missing arguments only happen when the script is invoked manually.
+$helpTokens = @('-h', '--help', '-?')
+if ($helpTokens -contains $Value -or $helpTokens -contains $Path) {
+    Show-Usage
+    exit 0
+}
+if ([string]::IsNullOrEmpty($Value) -or [string]::IsNullOrEmpty($Path)) {
+    Write-Error "set_dev_mode.ps1: Value and Path are required. Run 'set_dev_mode.ps1 -h' for usage."
+    exit 1
+}
 
 # Set the dev_mode value in a JSON config file for packaging.
 # Invoked from .bat scripts; a separate script avoids cmd escaping issues.

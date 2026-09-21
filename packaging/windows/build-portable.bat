@@ -7,6 +7,13 @@ REM ======================================================
 
 setlocal
 
+REM --- Show help when requested ---
+if /i "%~1"=="-h"     goto :usage
+if /i "%~1"=="-?"     goto :usage
+if /i "%~1"=="/h"     goto :usage
+if /i "%~1"=="/?"     goto :usage
+if /i "%~1"=="--help" goto :usage
+
 set APP_NAME=ZowiDesktop
 set BUILD_DIR=build-win-portable
 
@@ -78,3 +85,27 @@ copy /y "%TEMP%\zowi_config_backup.json" src\config.json >nul
 del "%TEMP%\zowi_config_backup.json" >nul 2>nul
 
 pause
+exit /b 0
+
+:usage
+echo Usage: build-portable.bat [options]
+echo.
+echo Build the Zowi Desktop portable .zip for Windows.
+echo.
+echo Options:
+echo   -h, --help   Show this help message
+echo.
+echo Environment:
+echo   QT_PATH      Qt installation path (default: C:\Qt\6.11.1\msvc2022_64)
+echo   CMAKE_PATH   CMake bin directory     (default: C:\Qt\Tools\CMake_64\bin)
+echo.
+echo Output:
+echo   dist\ZowiDesktop-%%VERSION%%-windows-x86_64.zip
+echo.
+echo Prerequisites:
+echo   Run from a Developer Command Prompt (MSVC), with Qt and CMake
+echo   available on PATH, or set QT_PATH / CMAKE_PATH above.
+echo.
+echo Example:
+echo   build-portable.bat
+exit /b 0

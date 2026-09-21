@@ -10,6 +10,13 @@ REM ======================================================
 
 setlocal enabledelayedexpansion
 
+REM --- Show help when requested ---
+if /i "%~1"=="-h"     goto :usage
+if /i "%~1"=="-?"     goto :usage
+if /i "%~1"=="/h"     goto :usage
+if /i "%~1"=="/?"     goto :usage
+if /i "%~1"=="--help" goto :usage
+
 set APP_NAME=ZowiDesktop
 
 REM --- Resolve absolute paths (avoids issues when launched from PowerShell) ---
@@ -86,3 +93,29 @@ echo.
 echo === Done ===
 dir /b "%DIST_INST%\*.exe"
 pause
+exit /b 0
+
+:usage
+echo Usage: build-installer.bat [options]
+echo.
+echo Build the Zowi Desktop Windows installer (.exe) with Inno Setup.
+echo The version is read from the VERSION file in the repo root.
+echo.
+echo Options:
+echo   -h, --help   Show this help message
+echo.
+echo Environment:
+echo   QT_PATH      Qt installation path (default: C:\Qt\6.11.1\msvc2022_64)
+echo   CMAKE_PATH   CMake bin directory     (default: C:\Qt\Tools\CMake_64\bin)
+echo   ISCC_PATH    Inno Setup 6 directory (default: C:\Program Files (x86)\Inno Setup 6)
+echo.
+echo Output:
+echo   dist\ZowiDesktop-%%VERSION%%-setup-x64.exe
+echo.
+echo Prerequisites:
+echo   Inno Setup 6+ and a Developer Command Prompt (MSVC) with Qt and CMake
+echo   on PATH, or set QT_PATH / CMAKE_PATH / ISCC_PATH above.
+echo.
+echo Example:
+echo   build-installer.bat
+exit /b 0

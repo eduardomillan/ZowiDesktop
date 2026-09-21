@@ -201,6 +201,48 @@ apt repository to `gh-pages`.
 | `overwrite` | boolean | `false` | Overwrite existing release and tag if they exist |
 | `prerelease` | boolean | `false` | Mark the GitHub Release as a pre-release (not *latest*) |
 
+### Run from the CLI
+
+`packaging/create-gh-release.sh` can dispatch this workflow from a terminal
+instead of the Actions UI: `--release` runs `gh workflow run release.yml`
+(with the inputs mapped from the script flags below) and `--watch` follows the
+run until it finishes, printing the failed-step logs if it fails.
+
+```bash
+# Build + release entirely in CI, and wait for the result
+bash packaging/create-gh-release.sh --release --watch
+
+# Same, but do not wait (track it later with --watch)
+bash packaging/create-gh-release.sh --release --with-apt
+
+# Follow the most recent run of the Release workflow
+bash packaging/create-gh-release.sh --watch
+
+# Print the dispatch command without launching the workflow
+bash packaging/create-gh-release.sh --release --dry-run
+```
+
+Before dispatching, `VERSION` and `CHANGELOG.md` (the release notes) must be
+committed and pushed to the default branch (`main`): the workflow checks out
+that branch, so CI builds the version and notes already on the remote. The
+script warns (and asks for confirmation) when the local tree is not in sync.
+
+Script flag → workflow input mapping (inputs not listed keep their defaults):
+
+| Script flag | Workflow input |
+|-------------|----------------|
+| `--skip-appimage` | `include_appimage=false` |
+| `--skip-deb-jammy` | `include_deb_jammy=false` |
+| `--skip-deb-noble` | `include_deb_noble=false` |
+| `--skip-windows-zip` | `include_windows_zip=false` |
+| `--skip-windows-installer` | `include_windows_installer=false` |
+| `--with-apt` | `publish_apt=true` |
+| `--overwrite` | `overwrite=true` |
+| `--prerelease` | `prerelease=true` |
+
+The flag/input semantics (e.g. `--prerelease` cannot be combined with
+`--with-apt`) are identical to the manual/UI path described below.
+
 ### What it does
 
 Three sequential phases:

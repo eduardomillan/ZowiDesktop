@@ -18,6 +18,58 @@ INCLUDE_DEB_NOBLE=1
 INCLUDE_WIN_ZIP=1
 INCLUDE_WIN_INSTALLER=1
 
+# Workflow front-end (--release / --watch / --dry-run)
+RELEASE=0
+WATCH=0
+DRY_RUN=0
+
+usage() {
+    cat <<EOF
+Usage: $(basename "$0") [options]
+
+Create a GitHub Release for the current VERSION and attach the artifacts
+found in dist/ (Linux AppImage, jammy/noble .deb, Windows portable zip and
+installer). Optionally publishes the signed apt repo to gh-pages.
+
+Options:
+  --with-apt                  Publish signed apt repo to gh-pages
+  --overwrite                 Delete and recreate existing release and tag
+  --prerelease                Mark the GitHub Release as a pre-release (not latest)
+  --skip-appimage             Do not include Linux AppImage
+  --skip-deb-jammy            Do not include Ubuntu 22.04 (Jammy) .deb
+  --skip-deb-noble            Do not include Ubuntu 24.04 (Noble) .deb
+  --skip-windows-zip          Do not include Windows portable .zip
+  --skip-windows-installer    Do not include Windows setup .exe installer
+
+  --release                   Dispatch the 'Release' workflow (release.yml) instead of
+                              creating the release from local dist/ artifacts; the CI
+                              builds them and runs this script inside the runner
+  --watch                     Follow the 'Release' workflow run until it finishes. With
+                              --release: the run just dispatched; alone: the most recent
+                              run. Prints the failed-step logs if the run fails
+  --dry-run                   With --release: print the dispatch command without running
+                              the workflow (no CI is launched)
+  -h, --help                  Show this help message
+
+Requirements:
+  gh CLI installed and authenticated (https://cli.github.com/)
+  Local mode: release artifacts present in dist/ (see packaging/linux and the
+  Windows CI workflow); --with-apt additionally needs aptly + the GPG key
+  Workflow mode (--release/--watch): VERSION and CHANGELOG.md must be committed
+  and pushed to the default branch first: CI builds whatever is on that branch
+
+Examples:
+  bash packaging/create-gh-release.sh                  # all artifacts (local dist/)
+  bash packaging/create-gh-release.sh --with-apt       # also publish apt repo
+  bash packaging/create-gh-release.sh --prerelease --skip-windows-installer
+  bash packaging/create-gh-release.sh --release        # build + release entirely in CI
+  bash packaging/create-gh-release.sh --release --watch   # same, wait for the result
+  bash packaging/create-gh-release.sh --watch          # follow the most recent run
+  bash packaging/create-gh-release.sh --release --dry-run  # preview the dispatch
+EOF
+    exit 0
+}
+
 for arg in "$@"; do
     case "$arg" in
         --with-apt)
@@ -28,6 +80,15 @@ for arg in "$@"; do
             ;;
         --prerelease)
             PRERELEASE=1
+            ;;
+        --release)
+            RELEASE=1
+            ;;
+        --watch)
+            WATCH=1
+            ;;
+        --dry-run)
+            DRY_RUN=1
             ;;
         --skip-appimage|--without-appimage)
             INCLUDE_APPIMAGE=0
@@ -45,17 +106,7 @@ for arg in "$@"; do
             INCLUDE_WIN_INSTALLER=0
             ;;
         --help|-h)
-            echo "Usage: $0 [options]"
-            echo "Options:"
-            echo "  --with-apt                  Publish signed apt repo to gh-pages"
-            echo "  --overwrite                 Delete and recreate existing release and tag"
-            echo "  --prerelease                Mark the GitHub Release as a pre-release (not latest)"
-            echo "  --skip-appimage             Do not include Linux AppImage"
-            echo "  --skip-deb-jammy            Do not include Ubuntu 22.04 (Jammy) .deb"
-            echo "  --skip-deb-noble            Do not include Ubuntu 24.04 (Noble) .deb"
-            echo "  --skip-windows-zip          Do not include Windows portable .zip"
-            echo "  --skip-windows-installer    Do not include Windows setup .exe installer"
-            exit 0
+            usage
             ;;
         *)
             echo "WARNING: unknown option: $arg" >&2
@@ -81,6 +132,151 @@ fi
 if ! gh auth status &>/dev/null; then
     echo "ERROR: gh is not authenticated. Run: gh auth login" >&2
     exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Workflow front-end (--release / --watch)
+# ---------------------------------------------------------------------------
+# Locate a run of the "Release" workflow and watch it live until it finishes.
+#   mode "dispatched" -> find the workflow_dispatch run just created for the
+#                        local HEAD (retried, then falls back to the latest run)
+#   mode "latest"     -> use the most recent run of the workflow
+# Returns 0 on success, 1 on failure (printing the failed-step logs).
+watch_release_run() {
+    local mode="$1"
+    local run_id=""
+    if [ "$mode" = "dispatched" ]; then
+        local sha
+        sha="$(git -C "$PROJECT_ROOT" rev-parse HEAD 2>/dev/null || true)"
+        echo ">> Locating the run just dispatched for local HEAD $sha ..."
+        local jq_expr=".[] | select(.headSha==\"$sha\") | .databaseId"
+        for _ in $(seq 1 10); do
+            run_id="$(gh run list -w release.yml --event workflow_dispatch --branch "$DEFAULT_BRANCH" \
+                --limit 5 --json databaseId,headSha --jq "$jq_expr" 2>/dev/null | head -1)"
+            if [ -n "$run_id" ]; then
+                break
+            fi
+            sleep 3
+        done
+        if [ -z "$run_id" ]; then
+            echo ">> No run with the local HEAD found yet; following the most recent run instead."
+        fi
+    fi
+    if [ -z "$run_id" ]; then
+        run_id="$(gh run list -w release.yml --limit 1 --json databaseId --jq '.[0].databaseId' 2>/dev/null)"
+    fi
+    if [ -z "$run_id" ]; then
+        echo "ERROR: no run of the 'Release' workflow (release.yml) found" >&2
+        return 1
+    fi
+    echo ">> Following run $run_id live (gh run watch). Ctrl+C to stop waiting."
+    if ! gh run watch "$run_id" --exit-status; then
+        echo ">> The 'Release' workflow failed. Logs of the failed step:"
+        gh run view "$run_id" --log-failed || true
+        echo "ERROR: the 'Release' workflow finished with a failure" >&2
+        return 1
+    fi
+    echo ">> 'Release' workflow completed successfully."
+    return 0
+}
+
+# Resolve the default branch (origin/HEAD, falling back to main).
+DEFAULT_BRANCH="$(git -C "$PROJECT_ROOT" symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null | sed 's|refs/remotes/origin/||' || true)"
+DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
+
+# --release: dispatch release.yml instead of creating the release from local
+# dist/ artifacts. The workflow builds them in CI and then runs this script in
+# the runner (local mode), keeping this file the single source of truth.
+if [ "$RELEASE" -eq 1 ]; then
+    echo "=== Release workflow mode (--release) ==="
+
+    # The workflow checks out the default branch, so VERSION and CHANGELOG.md
+    # (the release notes) must already be committed and pushed there.
+    git -C "$PROJECT_ROOT" fetch origin "$DEFAULT_BRANCH" >/dev/null 2>&1 || true
+    REMOTE_HEAD="$(git -C "$PROJECT_ROOT" rev-parse "origin/$DEFAULT_BRANCH" 2>/dev/null || true)"
+    LOCAL_HEAD="$(git -C "$PROJECT_ROOT" rev-parse HEAD)"
+    OUT_OF_SYNC=0
+    if [ -z "$REMOTE_HEAD" ] || [ "$REMOTE_HEAD" != "$LOCAL_HEAD" ]; then
+        OUT_OF_SYNC=1
+    fi
+    DIRTY_DOCS=0
+    if git -C "$PROJECT_ROOT" status --porcelain -- VERSION CHANGELOG.md | grep -q .; then
+        DIRTY_DOCS=1
+    fi
+    if [ "$OUT_OF_SYNC" -eq 1 ] || [ "$DIRTY_DOCS" -eq 1 ]; then
+        echo "WARNING: the CI builds from origin/$DEFAULT_BRANCH, so VERSION and"
+        echo "         CHANGELOG.md (release notes) must be committed and pushed first."
+        if [ "$OUT_OF_SYNC" -eq 1 ]; then
+            echo "         Local HEAD differs from origin/$DEFAULT_BRANCH."
+        fi
+        if [ "$DIRTY_DOCS" -eq 1 ]; then
+            echo "         Uncommitted changes to VERSION or CHANGELOG.md."
+        fi
+        if [ "$DRY_RUN" -eq 0 ]; then
+            if [ -t 0 ]; then
+                read -rp "Continue dispatching anyway? [y/N] " confirm
+                if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+                    echo "Aborted."
+                    exit 0
+                fi
+            else
+                echo "ERROR: non-interactive shell and local state is not ready. Push" >&2
+                echo "       VERSION + CHANGELOG.md to origin/$DEFAULT_BRANCH first." >&2
+                exit 1
+            fi
+        fi
+    fi
+
+    if ! gh workflow view release.yml >/dev/null 2>&1; then
+        echo "ERROR: could not find the 'Release' workflow (release.yml) on origin/$DEFAULT_BRANCH." >&2
+        exit 1
+    fi
+
+    # Map the script flags to the release.yml inputs (all boolean; only inputs
+    # that differ from the workflow defaults are passed).
+    WF_ARGS=(workflow run release.yml --ref "$DEFAULT_BRANCH")
+    [ "$INCLUDE_APPIMAGE" -eq 0 ] && WF_ARGS+=(-F include_appimage=false)
+    [ "$INCLUDE_DEB_JAMMY" -eq 0 ] && WF_ARGS+=(-F include_deb_jammy=false)
+    [ "$INCLUDE_DEB_NOBLE" -eq 0 ] && WF_ARGS+=(-F include_deb_noble=false)
+    [ "$INCLUDE_WIN_ZIP" -eq 0 ] && WF_ARGS+=(-F include_windows_zip=false)
+    [ "$INCLUDE_WIN_INSTALLER" -eq 0 ] && WF_ARGS+=(-F include_windows_installer=false)
+    [ "$PUBLISH_APT" -eq 1 ] && WF_ARGS+=(-F publish_apt=true)
+    [ "$OVERWRITE" -eq 1 ] && WF_ARGS+=(-F overwrite=true)
+    [ "$PRERELEASE" -eq 1 ] && WF_ARGS+=(-F prerelease=true)
+
+    echo ""
+    echo "Workflow dispatch command:"
+    echo "  gh ${WF_ARGS[*]}"
+    if [ "$DRY_RUN" -eq 1 ]; then
+        echo ""
+        echo "=== --dry-run: workflow NOT dispatched. Remove --dry-run to launch it. ==="
+        exit 0
+    fi
+
+    echo ""
+    echo "=== Dispatching the 'Release' workflow (release.yml @ $DEFAULT_BRANCH) ==="
+    (cd "$PROJECT_ROOT" && gh "${WF_ARGS[@]}")
+
+    if [ "$WATCH" -eq 1 ]; then
+        if ! watch_release_run "dispatched"; then
+            exit 1
+        fi
+    else
+        echo ""
+        echo "Workflow 'Release' launched. Track it with:"
+        echo "  bash packaging/create-gh-release.sh --watch"
+        echo "  https://github.com/$(cd "$PROJECT_ROOT" && gh repo view --json nameWithOwner -q .nameWithOwner)/actions/workflows/release.yml"
+    fi
+    exit 0
+fi
+
+# --watch alone: follow the most recent run of the 'Release' workflow.
+if [ "$WATCH" -eq 1 ]; then
+    echo "=== Watching the most recent 'Release' workflow run ==="
+    if ! watch_release_run "latest"; then
+        exit 1
+    fi
+    exit 0
 fi
 
 if [ -f "$PROJECT_ROOT/VERSION" ]; then

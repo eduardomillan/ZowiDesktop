@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 set -e
 
+usage() {
+    cat <<EOF
+Usage: $(basename "$0")
+
+Build the Linux AppImage for the current VERSION and place it in dist/.
+
+Environment:
+  QT_ROOT_DIR    Qt 6 installation path (default: /home/eduardo/Qt/6.5.2/gcc_64)
+  APPIMAGE_NAME  Output AppImage name (default: ZowiDesktop-<VERSION>-x86_64.AppImage)
+
+Requirements:
+  Qt 6, CMake and wget (to fetch linuxdeploy on first run)
+
+Example:
+  QT_ROOT_DIR=~/Qt/6.5.2/gcc_64 bash packaging/linux/create-appimage.sh
+EOF
+    exit 0
+}
+
+for arg in "$@"; do
+    case "$arg" in
+        -h|--help) usage ;;
+    esac
+done
+
 PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BUILD_DIR="$PROJECT_ROOT/build"
 APPDIR="$PROJECT_ROOT/build/AppDir"
