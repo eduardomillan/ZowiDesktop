@@ -267,7 +267,7 @@ ScreenTemplate {
 
             // --- Connection status + contextual actions ---
             // The transport is no longer chosen manually: the controller's
-            // situation state machine (see .local/transport_thoughts.md) decides
+            // situation state machine (see docs/project/TRANSPORT_HOWTO.md) decides
             // it and we surface the state plus the actions that make sense now.
             Rectangle {
                 width: optionCol.width

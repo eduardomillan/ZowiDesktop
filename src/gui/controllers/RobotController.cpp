@@ -143,6 +143,12 @@ RobotController::RobotController(QObject *parent)
             m_bluetoothAvailable = m_btAvailLast = m_btCheckState->result.load();
     }
 
+    // refreshTransports() above ran its selection while the Bluetooth probe
+    // was still in flight, so a Zowi registered to Bluetooth may have been
+    // left on the USB fallback. The probe has now settled: re-run the
+    // selection so the registered transport wins before the window is shown.
+    applyTransportSelection();
+
     m_situation = computeSituation();
 }
 
@@ -344,9 +350,19 @@ void RobotController::parseIncoming()
         if (!m_verifyPending) return false;
         m_verifyPending = false;
         if (m_deviceName == m_verifyExpectedName) {
-            if (m_session)
-                m_session->saveActiveZowiDeviceAddress(m_deviceAddress);
-            persistRegistrationTransport(Usb);
+            // The USB robot reports the registered Zowi's name. Keep the
+            // registered address in sync (the serial port can change between
+            // sessions), but never migrate the registered transport: it is
+            // bound to the registration, changing it requires forgetting the
+            // Zowi (see docs/project/TRANSPORT_HOWTO.md). A Bluetooth-
+            // registered Zowi only ever gets a transient USB link here.
+            const Transport regT = transportFromString(
+                m_session ? m_session->loadActiveZowiTransport() : QString());
+            if (regT != Bluetooth) {
+                if (m_session)
+                    m_session->saveActiveZowiDeviceAddress(m_deviceAddress);
+                persistRegistrationTransport(Usb);
+            }
         } else {
             m_verifyExpectedName.clear();
             if (m_backend)
@@ -689,6 +705,12 @@ void RobotController::persistRegistrationTransport(Transport t)
 {
     if (!m_session) return;
     if (t != Bluetooth && t != Usb) return;
+    // The registered transport is bound to the registration: it must never be
+    // silently migrated by a reconnect on the other transport (the USB
+    // identity check or a transient link). Only write when there is no
+    // registered transport yet (legacy session) or the value already matches.
+    const Transport stored = transportFromString(m_session->loadActiveZowiTransport());
+    if (stored != Auto && stored != t) return;
     m_session->saveActiveZowiTransport(t == Usb ? zowi::kTransportUsb : zowi::kTransportBt);
     maybeEmitSituation();
 }
@@ -706,7 +728,11 @@ QStringList RobotController::listUsbPorts() const
 void RobotController::refreshTransports()
 {
     pollTransports();
+    applyTransportSelection();
+}
 
+void RobotController::applyTransportSelection()
+{
     // Auto mode: Bluetooth is preferred. USB is only used as fallback when
     // no Bluetooth adapter is present.  However, if a Zowi is already
     // registered, honour its registered transport so we don't switch away
@@ -815,6 +841,15 @@ void RobotController::pollTransports()
         emit transportsChanged();
         if (usbAvail && btAvail)
             emit bothTransportsAvailable();
+
+        // Availability changed (hotplug, including a late Bluetooth probe
+        // result). While idle, re-run the transport selection so the backend
+        // follows the registered Zowi's transport instead of staying on the
+        // one a startup race happened to pick. Skipped while connecting,
+        // connecting-verified, or in the post-timeout recovery below so the
+        // selection never yanks a live attempt.
+        if (!m_connecting && !isConnected() && !m_verifyPending && !m_connectTimedOut)
+            applyTransportSelection();
     }
 
     // Post-timeout recovery. Bluetooth: probe the saved address silently

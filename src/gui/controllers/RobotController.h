@@ -21,8 +21,10 @@ class SessionController;
 // agnostic: it can talk to the robot either over Bluetooth SPP (the Qt/BlueZ
 // backend) or over a USB/serial TTY (the serial backend). The active transport
 // is selected automatically (Bluetooth preferred when available; USB is only
-// used as fallback when no Bluetooth adapter is present) but the user can
-// override it from the UI. See docs/project for the design.
+// used as fallback when no Bluetooth adapter is present). Once a Zowi is
+// registered, its registered transport (`activeZowiTransport`) is honoured —
+// changing it requires forgetting the Zowi. See docs/project/TRANSPORT_HOWTO.md
+// for the design.
 
 // Result carrier for the background Bluetooth-adapter probe (see
 // RobotController::pollTransports). Shared with the worker thread so a probe
@@ -42,7 +44,7 @@ public:
     Q_ENUM(Transport)
 
     // High-level connection situation derived from the transport state machine
-    // (see .local/transport_thoughts.md). The UI reacts to this instead of
+    // (see docs/project/TRANSPORT_HOWTO.md). The UI reacts to this instead of
     // letting the user pick a transport manually.
     enum Situation {
         Demo = 0,          // no transport available: demo mode
@@ -206,6 +208,11 @@ private:
 
     // Hotplug / detection.
     void pollTransports();
+    // Picks the backend from availability + registration + (legacy) preference.
+    // Called by refreshTransports() and re-run whenever availability changes
+    // while idle, so the connection is never left on a non-registered
+    // transport once a transport appears/disappears.
+    void applyTransportSelection();
     // Try to identify a real Zowi on `port` with a short I\r handshake. The
     // probe opens the port (which resets the robot via DTR) so it is only run
     // once per newly-seen port while disconnected. Returns the port if a Zowi

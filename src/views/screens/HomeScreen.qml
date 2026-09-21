@@ -443,14 +443,22 @@ FocusScope {
 
     Component.onCompleted: {
         // Auto-connect on launch (mirrors ZowiAppReborn's onResume ->
-        // manageConnection). Prefer USB when the auto-detector selected it and
-        // a robot is present on a port; otherwise reconnect to the saved
-        // Bluetooth device. The BT backend auto-reconnects every 3s.
+        // manageConnection). Registration binds the transport
+        // (docs/project/TRANSPORT_HOWTO.md): reconnect over the registered
+        // transport, not over whatever backend the startup probe happened to
+        // pick (a Bluetooth-registered Zowi must not be pulled onto USB just
+        // because the USB cable is plugged in).
         if (!Robot.connected && Robot.situation !== Robot.SituationTransportLost) {
-            if (Robot.activeTransport === Robot.TransportUsb && Robot.usbAvailable)
+            var regTransport = Session.loadActiveZowiTransport()
+            if (regTransport === "usb" && Robot.usbAvailable)
                 Robot.connectUsb()
+            else if ((regTransport === "bt" || regTransport === "bluetooth")
+                     && Session.loadActiveZowiDeviceAddress() !== "")
+                Robot.connectToDevice(Session.loadActiveZowiDeviceAddress())
             else if (Session.loadActiveZowiDeviceAddress() !== "")
                 Robot.connectToDevice(Session.loadActiveZowiDeviceAddress())
+            else if (Robot.activeTransport === Robot.TransportUsb && Robot.usbAvailable)
+                Robot.connectUsb()
         }
 
         var apps = [

@@ -103,6 +103,7 @@ START
 - **Registered transport is fixed** — changing it requires *Forget Zowi*.
 - **Bt priority when both present without registration** — warn if same robot on both.
 - **Hotplug awareness** — any change in `btAvail`/`usbAvail`/`connected` re-evaluates state and updates UI without app restart.
+- **No silent migration** — a transient link on the other transport (e.g. USB while registered to BT) never rewrites `activeZowiTransport`; a hotplug change while idle re-selects the backend so the connection returns to the registered transport.
 
 ---
 
@@ -258,7 +259,7 @@ ctest --test-dir build --output-on-failure
 
 ---
 
-## 9. CLI Integration
+## 10. CLI Integration
 
 The CLI (`zowi_cli`) uses the same `SessionStore` and transport backends.
 Commands that flash firmware (`restore`, `alarm`, `adivinawi`) respect the
@@ -274,7 +275,7 @@ zowi_cli restore       # Flashes over registered transport
 
 ---
 
-## 10. Implementation Pointers
+## 11. Implementation Pointers
 
 | Component | File |
 |-----------|------|
@@ -290,7 +291,7 @@ zowi_cli restore       # Flashes over registered transport
 
 ---
 
-## 11. Adding a New Transport
+## 12. Adding a New Transport
 
 To add a transport (e.g., Wi-Fi, BLE):
 

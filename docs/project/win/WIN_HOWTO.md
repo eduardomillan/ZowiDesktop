@@ -183,4 +183,4 @@ sudo setcap cap_net_admin+ep build/src/cli/zowi_cli.exe
 - [ZOWI_CLI_HOWTO.md](../ZOWI_CLI_HOWTO.md) — CLI usage (cross-platform)
 - [BUILD.md](../BUILD.md) — Build system overview
 - [ARCHITECTURE.md](../ARCHITECTURE.md) — Project architecture (backend polymorphism)
-- `.local/transport_thoughts.md` — Transport state machine design notes
+- [TRANSPORT_HOWTO.md](../TRANSPORT_HOWTO.md) — Transport state machine design notes
