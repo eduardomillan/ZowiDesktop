@@ -36,6 +36,8 @@
 ## Cambios
 - [X] Sustituir la flecha "atrás" por el botón "back" (imagen de flecha izquierda) que se utiliza en la app Android original
 - [ ] En settings, añadir opción para cambiar idioma (que se vuelva a la pantalla de splash)
+- [ ] Añadir ayuda de la línea de comandos (help) a los scripts disponibles
+- [ ] Revisar los scripts actuales (carpetas /scripts y /packaging) y ver si tenemos todos los necesarios, por ejemplo, para ejecutar el Release.
 
 
 ## Windows
