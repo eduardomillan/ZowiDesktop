@@ -17,6 +17,10 @@
 
 class SessionController;
 
+// State of the in-flight USB identification probe (see startUsbProbe).
+// Defined in the .cpp so the backend alias stays private.
+struct UsbProbeSession;
+
 // Robot connection controller. Despite its historical name it is transport
 // agnostic: it can talk to the robot either over Bluetooth SPP (the Qt/BlueZ
 // backend) or over a USB/serial TTY (the serial backend). The active transport
@@ -213,11 +217,18 @@ private:
     // while idle, so the connection is never left on a non-registered
     // transport once a transport appears/disappears.
     void applyTransportSelection();
-    // Try to identify a real Zowi on `port` with a short I\r handshake. The
-    // probe opens the port (which resets the robot via DTR) so it is only run
-    // once per newly-seen port while disconnected. Returns the port if a Zowi
-    // replied, or an empty string otherwise.
-    QString probeZowiOnPort(const QString &port);
+    // Non-blocking USB identification probe (see connectUsb). When no port is
+    // known, the candidate ports are probed one by one on the GUI thread,
+    // driven by m_usbProbeTimer: the serial backend's QSocketNotifier delivers
+    // bytes through the event loop, so probing never blocks the GUI. It used
+    // to spin synchronously for up to kProbeTimeoutMs per port, which froze
+    // the splash→home transition for USB-registered devices.
+    void startUsbProbe(const QStringList &ports);
+    void probeNextUsbPort();
+    void usbProbeTick();
+    // The port is taken by value: it may alias the in-flight probe session,
+    // which the implementation destroys before the port is used.
+    void finishUsbProbe(QString port);
 
     // Firmware restore. The reset/reconnect and the post-upload battery check
     // run on the GUI thread (they touch the backend's QSocketNotifier, which is
@@ -263,7 +274,10 @@ private:
     zowi::RobotState m_robotState; // mirror of the robot's name/appId/battery
 
     QStringList m_knownUsbPorts;   // ports currently present
-    QStringList m_probedUsbPorts;  // ports already handshake-probed this session
+    // In-flight USB identification probe (see startUsbProbe). Owned as a
+    // unique_ptr so tearing the controller down stops the timer and closes the
+    // probe port before the backends are destroyed.
+    std::unique_ptr<UsbProbeSession> m_usbProbe;
     bool m_bluetoothAvailable = false;
     bool m_usbAvailable = false;
     QTimer m_pollTimer;
@@ -274,6 +288,7 @@ private:
     // Max time (ms) for any connection attempt before falling back to Demo.
     QTimer m_connectTimer;             // single-shot, armed by setConnecting(true)
     bool m_connectTimedOut = false;    // last attempt timed out: pin situation to Demo
+    QTimer m_usbProbeTimer;            // repeating: drives the USB identity probe
     int m_connectTimeoutMs = 10000;
     // True while a background demo-mode retry is in flight (no UI state).
     bool m_silentRetryPending = false;

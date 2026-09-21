@@ -261,8 +261,9 @@ ApplicationWindow {
     }
 
     // Wait-cursor state. True while the app cannot respond: a connection
-    // attempt (incl. the blocking USB probe), a firmware restore, the pairing
-    // attempt of the wizard, or the short home transition.
+    // attempt (the USB identity probe runs on a timer now, so it no longer
+    // blocks the GUI), a firmware restore, the pairing attempt of the wizard,
+    // or the short home transition.
     property bool wizardBusy: false
     property bool busy: Robot.connecting || Robot.restoring
                         || homeTransitionTimer.running

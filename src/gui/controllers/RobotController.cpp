@@ -51,6 +51,9 @@ namespace {
 constexpr int kPollIntervalMs = 2500;
 // How long (ms) to wait for a Zowi to answer the identification handshake.
 constexpr int kProbeTimeoutMs = 6000;
+// Tick rate of the non-blocking USB identity probe (startUsbProbe): granular
+// enough for the 500 ms GetProgramId cadence and the per-port timeout.
+constexpr int kUsbProbeTickMs = 100;
 // Max time (ms) to wait at startup for the first Bluetooth-adapter probe
 // (runs before the window is shown; the cap covers hung platform queries).
 constexpr int kBtProbeWaitMs = 1000;
@@ -63,6 +66,23 @@ RobotController::Transport transportFromString(const QString &s)
     return RobotController::Auto;
 }
 } // namespace
+
+#ifdef ZOWI_HAVE_SERIAL
+// State for the non-blocking USB identification probe (see
+// RobotController::startUsbProbe). Driven by m_usbProbeTimer on the GUI
+// thread: the serial backend's QSocketNotifier dispatches incoming bytes
+// through the event loop, so the probe never pumps processEvents itself.
+// Lives at global scope so the header's forward declaration matches.
+struct UsbProbeSession {
+    std::string rx;
+    QStringList pendingPorts;
+    QString currentPort;
+    std::unique_ptr<SerialBackend> backend;
+    QElapsedTimer timer;
+    bool identified = false;
+    int lastSendMs = 0;
+};
+#endif
 
 RobotController::RobotController(QObject *parent)
     : QObject(parent)
@@ -124,6 +144,13 @@ RobotController::RobotController(QObject *parent)
     m_connectTimer.setInterval(m_connectTimeoutMs);
     connect(&m_connectTimer, &QTimer::timeout, this, &RobotController::onConnectTimeout);
 
+    // USB identity probe driver (see startUsbProbe). Ticks while a probe is
+    // in flight so the 500 ms GetProgramId cadence and the per-port
+    // kProbeTimeoutMs deadline stay accurate; the GUI thread never blocks.
+    m_usbProbeTimer.setInterval(kUsbProbeTickMs);
+    connect(&m_usbProbeTimer, &QTimer::timeout,
+            this, &RobotController::usbProbeTick);
+
     // Initial availability snapshot + auto-detection.
     refreshTransports();
 
@@ -155,6 +182,10 @@ RobotController::RobotController(QObject *parent)
 RobotController::~RobotController()
 {
     m_pollTimer.stop();
+    // Abort an in-flight USB identity probe: stop the driver timer and close
+    // the probe port before the backends are torn down.
+    m_usbProbeTimer.stop();
+    m_usbProbe.reset();
     // m_btCheckState is intentionally left untouched: dropping our shared_ptr
     // reference lets a still-running (detached) probe own its state and finish
     // without ever touching a destroyed controller.
@@ -788,10 +819,6 @@ void RobotController::pollTransports()
     QStringList ports = listUsbPorts();
     bool usbChanged = (ports != m_knownUsbPorts);
     m_knownUsbPorts = ports;
-    // Forget probe results for ports that went away so a re-plug is re-probed.
-    for (int i = m_probedUsbPorts.size() - 1; i >= 0; --i)
-        if (!ports.contains(m_probedUsbPorts.at(i)))
-            m_probedUsbPorts.removeAt(i);
 
     if (m_backendKind == Usb && m_connected && !m_usbPort.isEmpty()
         && !ports.contains(m_usbPort)) {
@@ -872,63 +899,141 @@ void RobotController::pollTransports()
     maybeEmitSituation();
 }
 
-QString RobotController::probeZowiOnPort(const QString &port)
+void RobotController::startUsbProbe(const QStringList &ports)
 {
 #ifndef ZOWI_HAVE_SERIAL
-    Q_UNUSED(port)
-    return QString();
+    Q_UNUSED(ports)
+    setConnecting(false);
+    emit errorOccurred(tr("No USB robot detected"));
+    return;
 #else
-    if (port.isEmpty()) return QString();
-    // Only handshake a given port once per session (DTR is disabled so the
-    // robot does not reset, but opening/closing is still wasteful to repeat).
-    if (m_probedUsbPorts.contains(port)) return QString();
-    m_probedUsbPorts << port;
+    // One in-flight probe at a time: repeat calls (e.g. a wizard retry) are
+    // no-ops while the previous attempt is still identifying the robot.
+    if (m_usbProbe) return;
+    if (ports.isEmpty()) {
+        // No USB ports at all: fail immediately instead of spinning the timer.
+        setConnecting(false);
+        emit errorOccurred(tr("No USB robot detected"));
+        return;
+    }
+    m_usbProbe = std::make_unique<UsbProbeSession>();
+    m_usbProbe->pendingPorts = ports;
+    m_usbProbeTimer.start();
+    probeNextUsbPort();
+#endif
+}
 
-    SerialBackend probe;
-    probe.setBaudRate(m_usbBaud);
+void RobotController::probeNextUsbPort()
+{
+#ifndef ZOWI_HAVE_SERIAL
+    return;
+#else
+    if (!m_usbProbe) return;
+    // Close the previous port (if any) and reset the receive state.
+    m_usbProbe->backend.reset();
+    m_usbProbe->rx.clear();
+    m_usbProbe->identified = false;
+    m_usbProbe->lastSendMs = 0;
+
+    if (m_usbProbe->pendingPorts.isEmpty()) {
+        m_usbProbeTimer.stop();
+        finishUsbProbe(QString());
+        return;
+    }
+
+    m_usbProbe->currentPort = m_usbProbe->pendingPorts.takeFirst();
+    auto backend = std::make_unique<SerialBackend>();
+    backend->setBaudRate(m_usbBaud);
     // Disable DTR so opening the port does not reset the robot (on Windows
     // the port default asserts DTR, which triggers the Arduino auto-reset).
     // The running firmware stays available and responds to commands right away.
 #ifdef _WIN32
-    probe.setDtrEnabled(false);
+    backend->setDtrEnabled(false);
 #endif
-    probe.setBootDelayMs(0);
-
-    std::string rx;
-    bool identified = false;
-    probe.onDataReceived([&](const std::string &data) {
-        rx += data;
+    backend->setBootDelayMs(0);
+    backend->onDataReceived([this](const std::string &data) {
+        // The session may be torn down right after the notifier fires; guard
+        // against it (callbacks fire on the GUI thread, never concurrently).
+        if (!m_usbProbe) return;
+        m_usbProbe->rx += data;
         // Accept the &&I <appId>%% framed reply or the legacy "U " line form.
-        if (rx.find("&&I ") != std::string::npos ||
-            rx.find("\nU ") != std::string::npos ||
-            rx.rfind("U ", 0) == 0) {
-            identified = true;
+        if (m_usbProbe->rx.find("&&I ") != std::string::npos ||
+            m_usbProbe->rx.find("\nU ") != std::string::npos ||
+            m_usbProbe->rx.rfind("U ", 0) == 0) {
+            m_usbProbe->identified = true;
         }
     });
 
-    if (!probe.connect(port.toStdString()))
-        return QString();
+    if (!backend->connect(m_usbProbe->currentPort.toStdString())) {
+        // Port could not be opened: move straight to the next candidate.
+        probeNextUsbPort();
+        return;
+    }
+    m_usbProbe->backend = std::move(backend);
+    m_usbProbe->timer.restart();
+#endif
+}
+
+void RobotController::usbProbeTick()
+{
+#ifndef ZOWI_HAVE_SERIAL
+    return;
+#else
+    if (!m_usbProbe || !m_usbProbe->backend) return;
+    UsbProbeSession &s = *m_usbProbe;
 
     // Request the program id. DTR is disabled so the robot stays running, but
     // retry periodically in case the port was just opened and the firmware
     // hasn't finished its startup sequence yet.
-    QElapsedTimer timer;
-    timer.start();
-    int lastSendMs = 0;
-    while (timer.elapsed() < kProbeTimeoutMs && !identified) {
-        int elapsed = static_cast<int>(timer.elapsed());
-        if (elapsed > 300 && elapsed - lastSendMs >= 500) {
-            probe.send(zowi::makeCommand(zowi::Command::GetProgramId));
-            lastSendMs = elapsed;
-        }
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
+    const int elapsed = static_cast<int>(s.timer.elapsed());
+    if (!s.identified && elapsed > 300 && elapsed - s.lastSendMs >= 500) {
+        s.backend->send(zowi::makeCommand(zowi::Command::GetProgramId));
+        s.lastSendMs = elapsed;
     }
-    probe.disconnect();
-    // Drain any queued callbacks from the reader thread that captured
-    // references to local variables before the probe goes out of scope.
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-    return identified ? port : QString();
+
+    if (s.identified) {
+        m_usbProbeTimer.stop();
+        finishUsbProbe(s.currentPort);
+    } else if (elapsed >= kProbeTimeoutMs) {
+        probeNextUsbPort();
+    }
 #endif
+}
+
+void RobotController::finishUsbProbe(QString port)
+{
+    m_usbProbeTimer.stop();
+    // Close the probe port before routing the result so a late callback can
+    // never observe state that is being torn down. `port` is deliberately a
+    // by-value copy: when called from usbProbeTick it aliases the session's
+    // currentPort, which reset() would free before the port is used below.
+    m_usbProbe.reset();
+
+    if (port.isEmpty()) {
+        if (m_connecting) {
+            setConnecting(false);
+            emit errorOccurred(tr("No USB robot detected"));
+        }
+        return;
+    }
+    // The connection watchdog may have fired while the probe was identifying
+    // the robot (up to kProbeTimeoutMs per port): never connect back under a
+    // Demo situation; pollTransports() will retry later.
+    if (!m_connecting) return;
+
+    m_connectTimedOut = false;
+    if (m_backendKind != Usb) useSerialBackend();
+    m_usbPort = port;
+    m_deviceAddress = port;
+    // The serial backend opens the TTY synchronously and reports failure by
+    // return value only (no callback), so handle it here: otherwise
+    // m_connecting would stay true until the watchdog fires.
+    if (!m_backend->connect(port.toStdString())) {
+        emit errorOccurred(tr("Could not open the USB connection"));
+        setConnecting(false);
+        return;
+    }
+    emit deviceChanged();
 }
 
 // --- Connection actions -----------------------------------------------------
@@ -966,27 +1071,15 @@ void RobotController::connectToDevice(const QString &address)
 void RobotController::connectUsb(const QString &port)
 {
     // Enter the "connecting" state *before* probing: when no port is known,
-    // auto-detection runs probeZowiOnPort(), which can block for up to
-    // kProbeTimeoutMs (6 s) while pumping events. `connecting` must already be
-    // true so the UI shows the wait cursor during that window.
+    // auto-detection runs an asynchronous probe (startUsbProbe) so the UI —
+    // e.g. the splash→home transition — is never blocked. `connecting` must
+    // already be true so the UI shows the wait cursor during that window.
     setConnecting(true);
     QString target = port;
     if (target.isEmpty()) target = m_usbPort;
     if (target.isEmpty()) {
         // Snapshot to guard against reentrancy (same reason as refreshTransports).
-        const auto ports = m_knownUsbPorts;
-        for (const auto &p : ports) {
-            // User-initiated action: allow re-probe even if already probed in
-            // background polling (e.g. the previous probe may have failed due
-            // to the robot still being in the bootloader after DTR reset).
-            m_probedUsbPorts.removeAll(p);
-            target = probeZowiOnPort(p);
-            if (!target.isEmpty()) break;
-        }
-    }
-    if (target.isEmpty()) {
-        setConnecting(false);
-        emit errorOccurred(tr("No USB robot detected"));
+        startUsbProbe(m_knownUsbPorts);
         return;
     }
     // A fresh attempt leaves demo-after-timeout and re-arms the watchdog.

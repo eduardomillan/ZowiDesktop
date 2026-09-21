@@ -371,6 +371,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Auto-transport refinements.** Auto mode honours the registered transport,
   forces the USB backend when Bluetooth is unavailable, and shows the USB
   disconnect hint only for a confirmed Zowi over USB.
+- **Non-blocking USB identity probe.** The USB identification handshake no
+  longer blocks the GUI thread while waiting for the robot to answer (up to
+  6 s per port): `connectUsb()` now probes candidate ports asynchronously,
+  driven by a QTimer on the event loop, so the splash→home transition for
+  USB-registered devices is as immediate as Bluetooth's. The per-port "probe
+  once per session" bookkeeping was dropped along with the blocking loop.
 - **Semantic colors unified** in `config.json`; transport values are normalised
   to the `bt` / `usb` constants shared by core.
 - **ScanScreen** hides the device list until a scan starts and appends the robot
