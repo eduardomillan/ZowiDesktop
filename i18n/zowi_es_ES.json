@@ -254,7 +254,7 @@
     "confirm": "Sí",
     "cancel": "No"
   },
-  "GameZowiDiceScreen.qml": {
+  "GameMemoryScreen.qml": {
     "title": "Memoria",
     "subtitle": "Repite la secuencia",
     "look_at_zowi_text": "¡Mira a Zowi! Memoriza su secuencia de movimientos.",

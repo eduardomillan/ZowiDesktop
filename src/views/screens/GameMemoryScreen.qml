@@ -1,4 +1,4 @@
-// GameZowiDiceScreen: "Zowi Dice" (Simon-like memory game)
+// GameMemoryScreen: "Memory" (Simon-like memory game, ex "Zowi Dice")
 // Zowi plays a growing random sequence of 4 moves; player must repeat from memory.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
@@ -7,13 +7,13 @@ import "../components"
 
 ScreenTemplate {
     id: root
-    screenName: "GameZowiDiceScreen"
+    screenName: "GameMemoryScreen"
     title: tr("title")
     subtitle: tr("subtitle")
     showBackButton: true
     footerHeight: 140
 
-    function tr(source) { return Translator.translate("GameZowiDiceScreen.qml", source) }
+    function tr(source) { return Translator.translate("GameMemoryScreen.qml", source) }
 
     // Pause identity poll while game is running (like PadScreen does).
     // The game does NOT auto-start: the Play button in the footer starts it,

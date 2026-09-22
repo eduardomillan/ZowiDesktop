@@ -38,7 +38,7 @@ ApplicationWindow {
 
     // Push Zowi Dice game screen
     function pushZowiDice() {
-        var dice = stack.push("qrc:/src/views/screens/GameZowiDiceScreen.qml")
+        var dice = stack.push("qrc:/src/views/screens/GameMemoryScreen.qml")
         dice.backClicked.connect(function() { stack.pop() })
     }
 

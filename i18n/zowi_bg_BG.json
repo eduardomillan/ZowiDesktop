@@ -263,7 +263,7 @@
     "confirm": "Да",
     "cancel": "Не"
   },
-  "GameZowiDiceScreen.qml": {
+  "GameMemoryScreen.qml": {
     "title": "Памет",
     "subtitle": "Повторете последователността",
     "look_at_zowi_text": "Гледай Зоуи! Запомни неговата последователност от движения.",
