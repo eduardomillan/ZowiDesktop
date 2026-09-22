@@ -58,11 +58,11 @@ ScreenTemplate {
 
     MouthGrid {
         id: grid
+        cellSize: root.drawCellSize
         anchors {
             horizontalCenter: parent.horizontalCenter
             verticalCenter: parent.verticalCenter
             verticalCenterOffset: -75
-            cellSize: root.drawCellSize
         }
         onPatternChanged: sendGrid()
     }
