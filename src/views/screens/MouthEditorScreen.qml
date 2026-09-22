@@ -21,6 +21,19 @@ ScreenTemplate {
     Component.onCompleted: Robot.setDataPollingEnabled(false)
     Component.onDestruction: Robot.setDataPollingEnabled(true)
 
+    // Responsive grid size – similar to the Pintabocas game.
+    // The cell size is derived from the content area (parent) so the 6×5 grid
+    // always fits the window without overlapping other UI elements.
+    // Clamped between 26 px and 50 px, the same limits used in the game.
+    readonly property real drawCellSize: {
+        // Horizontal: leave ~128 px total margin (left+right+spacing).
+        var cFromWidth = (parent.width - 128) / 6
+        // Vertical: reserve space for title/subtitle, pattern column and
+        // buttons (approximately 200 px). Adjust as needed for exact layout.
+        var cFromHeight = (parent.height - 200) / 5
+        return Math.round(Math.max(26, Math.min(50, Math.min(cFromWidth, cFromHeight))))
+    }
+
     function tr(source) { return Translator.translate("MouthEditorScreen.qml", source) }
 
     // Live-send: every grid change (patternChanged) rebuilds the 32-bit mouth
@@ -49,6 +62,7 @@ ScreenTemplate {
             horizontalCenter: parent.horizontalCenter
             verticalCenter: parent.verticalCenter
             verticalCenterOffset: -75
+            cellSize: root.drawCellSize
         }
         onPatternChanged: sendGrid()
     }
