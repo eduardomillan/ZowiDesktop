@@ -296,5 +296,22 @@
     "game_over": "Край на играта",
     "final_score": "Крайни точки: %1",
     "retry_button": "Опитай отново"
+  },
+  "GameTimelineScreen.qml": {
+    "title": "Времева линия",
+    "play_button": "Пусни",
+    "stop_button": "Спри",
+    "add_movement": "Добави движение",
+    "add_animation": "Добави анимация",
+    "add_mouth": "Добави уста",
+    "help": "Помощ",
+    "empty_timeline": "Времевата линия е празна. Добавете команди, за да започнете!",
+    "repetitions": "ПОВТ",
+    "duration": "Продълж.",
+    "dir": "Посока"
+  },
+  "MovementSelector.qml": {
+    "title": "Изберете движение",
+    "subtitle": "Докоснете движение, за да го добавите към времевата линия"
   }
 }

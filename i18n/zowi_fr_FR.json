@@ -296,5 +296,22 @@
     "game_over": "Fin de partie",
     "final_score": "Score final : %1",
     "retry_button": "Réessayer"
+  },
+  "GameTimelineScreen.qml": {
+    "title": "Ligne de temps",
+    "play_button": "Lire",
+    "stop_button": "Arrêter",
+    "add_movement": "Ajouter mouvement",
+    "add_animation": "Ajouter animation",
+    "add_mouth": "Ajouter bouche",
+    "help": "Aide",
+    "empty_timeline": "Votre ligne de temps est vide. Ajoutez des commandes pour commencer!",
+    "repetitions": "Reps",
+    "duration": "Durée",
+    "dir": "Dir"
+  },
+  "MovementSelector.qml": {
+    "title": "Choisissez un mouvement",
+    "subtitle": "Touchez un mouvement pour l'ajouter à votre ligne de temps"
   }
 }

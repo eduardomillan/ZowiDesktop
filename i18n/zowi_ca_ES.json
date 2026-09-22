@@ -296,5 +296,22 @@
     "game_over": "Fi del joc",
     "final_score": "Puntuació final: %1",
     "retry_button": "Reintentar"
+  },
+  "GameTimelineScreen.qml": {
+    "title": "Línia de temps",
+    "play_button": "Reproduir",
+    "stop_button": "Aturar",
+    "add_movement": "Afegeix moviment",
+    "add_animation": "Afegeix animació",
+    "add_mouth": "Afegeix boca",
+    "help": "Ajuda",
+    "empty_timeline": "La teva línia de temps està buida. Afegeix alguns comandaments per començar!",
+    "repetitions": "Reps",
+    "duration": "Duració",
+    "dir": "Dir"
+  },
+  "MovementSelector.qml": {
+    "title": "Triïa un moviment",
+    "subtitle": "Toca un moviment per afegir-lo a la teva línia de temps"
   }
 }

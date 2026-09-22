@@ -11,6 +11,7 @@ FocusScope {
     signal achievementsClicked()
     signal gamepadClicked()
     signal zowiSaysClicked()
+    signal timelineClicked()
     signal mouthsClicked()
     signal mouthEditorClicked()
     signal goSplash()
@@ -230,7 +231,7 @@ FocusScope {
                                               ? (Config.get("color_border_disabled") || "#c8c8c8")
                                               : (Config.get("color_accent") || "#21a69b")
                                 border.width: 1
-                                opacity: (isDisabled || (name !== tr("mouths") && !home.robotReady)) ? 0.4 : 1.0
+                                opacity: (isDisabled || (name !== tr("mouths") && name !== tr("timeline") && !home.robotReady)) ? 0.4 : 1.0
 
                                 Image {
                                     anchors.centerIn: parent
@@ -245,13 +246,15 @@ FocusScope {
                                     id: appMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    cursorShape: (isDisabled || (name !== tr("mouths") && !home.robotReady)) ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-                                    enabled: !isDisabled && (name === tr("mouths") ? true : home.robotReady)
+                                    cursorShape: (isDisabled || (name !== tr("mouths") && name !== tr("timeline") && !home.robotReady)) ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+                                    enabled: !isDisabled && (name === tr("mouths") || name === tr("timeline") ? true : home.robotReady)
                                     onClicked: {
                                         if (name === tr("gamepad")) {
                                             homeScope.gamepadClicked()
                                         } else if (name === tr("zowi_says")) {
                                             homeScope.zowiSaysClicked()
+                                        } else if (name === tr("timeline")) {
+                                            homeScope.timelineClicked()
                                         } else if (name === tr("mouths")) {
                                             homeScope.mouthsClicked()
                                         } else if (name === tr("mouths_editor")) {
@@ -466,7 +469,7 @@ FocusScope {
 
         var apps = [
             { name: tr("gamepad"), icon: "qrc:/images/android/pad_button.png", enabled: true },
-            { name: tr("timeline"), icon: "qrc:/images/android/timeline_button.png", enabled: false },
+            { name: tr("timeline"), icon: "qrc:/images/android/timeline_button.png", enabled: true },
             { name: tr("zowi_says"), icon: "qrc:/images/android/simon_game_button.png", enabled: true },
             { name: tr("mouths"), icon: "qrc:/images/android/mouths_game_button.png", enabled: true },
             { name: tr("mouths_editor"), icon: "qrc:/images/android/mouths_editor_game_button.png", enabled: true }

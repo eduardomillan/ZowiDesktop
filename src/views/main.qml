@@ -36,6 +36,48 @@ ApplicationWindow {
         })
     }
 
+    function pushTimeline() {
+        var timeline = stack.push("qrc:/src/views/screens/GameTimelineScreen.qml")
+        timeline.backClicked.connect(function() { stack.pop() })
+
+        // GUI-phase feedback: playback core (MovementSequencer) comes later.
+        timeline.playClicked.connect(function(count) {
+            console.log("[Timeline] Play pressed (" + count + " commands) — backend pending")
+        })
+        timeline.stopClicked.connect(function() {
+            console.log("[Timeline] Stop pressed — backend pending")
+        })
+
+        timeline.movementSelectorRequested.connect(function() {
+            var selector = stack.push("qrc:/src/views/screens/MovementSelector.qml")
+            selector.backClicked.connect(function() { stack.pop() })
+            selector.movementSelected.connect(function(name, type) {
+                timeline.onMovementSelected(name, type)
+                stack.pop()
+            })
+        })
+        
+        timeline.animationSelectorRequested.connect(function() {
+            var gesture = stack.push("qrc:/src/views/screens/GestureScreen.qml")
+            gesture.backClicked.connect(function() { stack.pop() })
+            // GestureScreen emits gestureSelected(name) when a gesture is picked.
+            gesture.gestureSelected.connect(function(name) {
+                timeline.addCommand("animation", name)
+                stack.pop()
+            })
+        })
+
+        timeline.mouthSelectorRequested.connect(function() {
+            var mouth = stack.push("qrc:/src/views/screens/MouthScreen.qml")
+            mouth.backClicked.connect(function() { stack.pop() })
+            // MouthScreen emits mouthSelected(name) when a mouth is picked.
+            mouth.mouthSelected.connect(function(name) {
+                timeline.addCommand("mouth", name)
+                stack.pop()
+            })
+        })
+    }
+
     // Push Zowi Dice game screen
     function pushZowiDice() {
         var dice = stack.push("qrc:/src/views/screens/GameMemoryScreen.qml")
@@ -58,6 +100,7 @@ ApplicationWindow {
         })
         home.gamepadClicked.connect(function() { pushGamepad() })
         home.zowiSaysClicked.connect(function() { pushZowiDice() })
+        home.timelineClicked.connect(function() { pushTimeline() })
         home.mouthsClicked.connect(function() { pushMouths() })
         home.mouthEditorClicked.connect(function() {
             var editor = stack.push("qrc:/src/views/screens/MouthEditorScreen.qml")

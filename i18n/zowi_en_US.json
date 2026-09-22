@@ -297,5 +297,22 @@
     "game_over": "Game over",
     "final_score": "Final score: %1",
     "retry_button": "Retry"
+  },
+  "GameTimelineScreen.qml": {
+    "title": "Timeline",
+    "play_button": "Play",
+    "stop_button": "Stop",
+    "add_movement": "Add Movement",
+    "add_animation": "Add Animation",
+    "add_mouth": "Add Mouth",
+    "help": "Help",
+    "empty_timeline": "Your timeline is empty. Add some commands to start!",
+    "repetitions": "Reps",
+    "duration": "Duration",
+    "dir": "Dir"
+  },
+  "MovementSelector.qml": {
+    "title": "Select a movement",
+    "subtitle": "Tap a movement to add it to your timeline"
   }
 }

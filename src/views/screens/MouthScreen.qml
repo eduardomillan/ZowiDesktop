@@ -10,6 +10,8 @@ ScreenTemplate {
     title: tr("mouths_title")
     showBackButton: true
 
+    signal mouthSelected(string name)
+
     function tr(source) { return Translator.translate("MouthScreen.qml", source) }
     function send(cmd) { if (Robot.connected) Robot.sendData(cmd) }
 
@@ -74,6 +76,7 @@ ScreenTemplate {
         selectedMouth = name
         send(cmd)
         console.log("[MouthScreen] " + name + " -> L command sent")
+        mouthSelected(name)
     }
 
     Item {

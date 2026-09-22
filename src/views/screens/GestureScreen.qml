@@ -10,6 +10,8 @@ ScreenTemplate {
     title: tr("gestures_title")
     showBackButton: true
 
+    signal gestureSelected(string name)
+
     function tr(source) { return Translator.translate("GestureScreen.qml", source) }
     function send(cmd) { if (Robot.connected) Robot.sendData(cmd) }
 
@@ -53,6 +55,7 @@ ScreenTemplate {
         selectedGesture = name
         send(Commands.gestureById(id))
         console.log("[GestureScreen] " + name + " -> H command sent")
+        gestureSelected(name)
     }
 
     Item {
