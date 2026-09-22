@@ -90,6 +90,11 @@ std::string commandMouth(unsigned long matrix);
 // Build "L <binary>\r" for a named mouth ID (looks up the pattern).
 std::string commandMouthById(MouthId id);
 
+// Raw 32-bit pattern for a named mouth ID (0=Zero..30=Angry); 0 when the id
+// is out of range. Games/editors that need the pattern as a number (e.g. the
+// mouths game's target compare) use this instead of parsing a command string.
+unsigned long mouthPatternForId(MouthId id);
+
 // Build "L <binary>\r" from a raw binary token ("0101..."). The token is
 // interpreted as a binary VALUE — leading zeros are optional and missing
 // digits are implicitly zeros, exactly like the firmware's

@@ -218,6 +218,13 @@ std::string commandMouthById(MouthId id)
     return commandMouth(kMouthPatterns[idx]);
 }
 
+unsigned long mouthPatternForId(MouthId id)
+{
+    const int idx = static_cast<int>(id);
+    if (idx < 0 || idx > 30) return 0;
+    return kMouthPatterns[idx];
+}
+
 // Raw binary token → canonical "L <32 bits>\r". Value semantics: missing
 // digits are leading zeros, matching the firmware's strtoul(..., 2) parse.
 bool commandMouthFromBinary(const std::string &bits, std::string &cmd)

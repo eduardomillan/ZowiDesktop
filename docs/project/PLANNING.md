@@ -217,7 +217,7 @@ src/
 
 ### Future milestones 🕒
 
-- [ ] Game: Visual block editor
+- [ ] Ranking in games
 
 - [ ] Achievements layer
 
