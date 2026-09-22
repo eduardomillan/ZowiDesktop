@@ -274,9 +274,9 @@ ScreenTemplate {
         id: scoreText
         anchors {
             horizontalCenter: card.horizontalCenter
-            horizontalCenterOffset: root.showTargetOnScreen ? (root.miniW + 22) / 2 : 0
-            bottom: parent.bottom
-            bottomMargin: 6
+            horizontalCenterOffset: 0
+            bottom: card.bottom
+            bottomMargin: -50
         }
         text: root.tr("score_prefix").arg(Mouths.score)
         color: Config.get("color_primary") || "#2d5a2d"
@@ -292,8 +292,8 @@ ScreenTemplate {
             id: playBtn
             anchors {
                 horizontalCenter: parent.horizontalCenter
-                bottom: parent.bottom
-                bottomMargin: 12
+                top: scoreText.bottom
+                topMargin: 12
             }
             visible: Mouths.state === Mouths.stateIdle
                      || Mouths.state === Mouths.stateGameOver
