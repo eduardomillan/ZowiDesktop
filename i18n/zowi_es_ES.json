@@ -108,7 +108,7 @@
     "gamepad": "Gamepad",
     "timeline": "Línea de tiempo",
     "zowi_says": "Memoria",
-    "mouths": "Bocas",
+    "mouths": "Pintabocas",
     "mouths_editor": "Editor de Bocas",
     "move_objects": "Mueve objetos",
     "choreography": "Coreografía",
@@ -271,6 +271,21 @@
     "game_over": "Fin del juego",
     "final_score": "Puntuación final: %1",
     "new_best": "¡Nuevo récord!",
+    "retry_button": "Reintentar"
+  },
+  "GameMouthsScreen.qml": {
+    "title": "Pinta bocas",
+    "subtitle": "Dibuja la boca que muestra Zowi",
+    "play_button": "Jugar",
+    "help_button": "Cómo jugar",
+    "ranking_button": "Ranking",
+    "score_prefix": "Puntuación: %1",
+    "level_prefix": "Nivel %1",
+    "target_label": "Dibuja esta boca:",
+    "how_to_play_text": "Zowi te enseñará una boca. Dibújala en la cuadrícula con el dedo o el ratón antes de que acabe el tiempo. Cuando tu dibujo coincida con el objetivo, ganarás un punto y pasaremos al siguiente nivel.",
+    "close": "Cerrar",
+    "game_over": "Fin del juego",
+    "final_score": "Puntuación final: %1",
     "retry_button": "Reintentar"
   }
 }

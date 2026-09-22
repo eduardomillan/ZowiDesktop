@@ -11,6 +11,7 @@ FocusScope {
     signal achievementsClicked()
     signal gamepadClicked()
     signal zowiSaysClicked()
+    signal mouthsClicked()
     signal mouthEditorClicked()
     signal goSplash()
     signal goWelcome()
@@ -251,6 +252,8 @@ FocusScope {
                                             homeScope.gamepadClicked()
                                         } else if (name === tr("zowi_says")) {
                                             homeScope.zowiSaysClicked()
+                                        } else if (name === tr("mouths")) {
+                                            homeScope.mouthsClicked()
                                         } else if (name === tr("mouths_editor")) {
                                             homeScope.mouthEditorClicked()
                                         } else {
@@ -465,7 +468,7 @@ FocusScope {
             { name: tr("gamepad"), icon: "qrc:/images/android/pad_button.png", enabled: true },
             { name: tr("timeline"), icon: "qrc:/images/android/timeline_button.png", enabled: false },
             { name: tr("zowi_says"), icon: "qrc:/images/android/simon_game_button.png", enabled: true },
-            { name: tr("mouths"), icon: "qrc:/images/android/mouths_game_button.png", enabled: false },
+            { name: tr("mouths"), icon: "qrc:/images/android/mouths_game_button.png", enabled: true },
             { name: tr("mouths_editor"), icon: "qrc:/images/android/mouths_editor_game_button.png", enabled: true }
         ]
         for (var i = 0; i < apps.length; i++)

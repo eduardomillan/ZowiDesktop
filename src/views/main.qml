@@ -42,6 +42,12 @@ ApplicationWindow {
         dice.backClicked.connect(function() { stack.pop() })
     }
 
+    // Push Draw-the-mouths ("Pintabocas") game screen
+    function pushMouths() {
+        var mouths = stack.push("qrc:/src/views/screens/GameMouthsScreen.qml")
+        mouths.backClicked.connect(function() { stack.pop() })
+    }
+
     function connectHome(home) {
         home.settingsClicked.connect(function() {
             var settings = stack.push("qrc:/src/views/screens/SettingsScreen.qml")
@@ -52,6 +58,7 @@ ApplicationWindow {
         })
         home.gamepadClicked.connect(function() { pushGamepad() })
         home.zowiSaysClicked.connect(function() { pushZowiDice() })
+        home.mouthsClicked.connect(function() { pushMouths() })
         home.mouthEditorClicked.connect(function() {
             var editor = stack.push("qrc:/src/views/screens/MouthEditorScreen.qml")
             editor.backClicked.connect(function() { stack.pop() })

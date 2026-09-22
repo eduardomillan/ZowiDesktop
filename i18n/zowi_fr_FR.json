@@ -117,7 +117,7 @@
     "gamepad": "Manette",
     "timeline": "Chronologie",
     "zowi_says": "Mémoire",
-    "mouths": "Bouches",
+    "mouths": "Dessine-bouches",
     "mouths_editor": "Éditeur de bouches",
     "move_objects": "Bouger des objets",
     "choreography": "Chorégraphie",
@@ -280,6 +280,21 @@
     "game_over": "Fin de partie",
     "final_score": "Score final : %1",
     "new_best": "Nouveau record !",
+    "retry_button": "Réessayer"
+  },
+  "GameMouthsScreen.qml": {
+    "title": "Dessine les bouches",
+    "subtitle": "Dessinez la bouche que montre Zowi",
+    "play_button": "Jouer",
+    "help_button": "Comment jouer",
+    "ranking_button": "Classement",
+    "score_prefix": "Score : %1",
+    "level_prefix": "Niveau %1",
+    "target_label": "Dessinez cette bouche :",
+    "how_to_play_text": "Zowi va vous montrer une bouche. Dessinez-la sur la grille avec le doigt ou la souris avant la fin du temps. Quand votre dessin correspond à l'objectif, vous gagnez un point et passez au niveau suivant !",
+    "close": "Fermer",
+    "game_over": "Fin de partie",
+    "final_score": "Score final : %1",
     "retry_button": "Réessayer"
   }
 }

@@ -118,7 +118,7 @@
     "gamepad": "Gamepad",
     "timeline": "Timeline",
     "zowi_says": "Memory",
-    "mouths": "Mouths",
+    "mouths": "Draw-mouths",
     "mouths_editor": "Mouths Editor",
     "move_objects": "Move objects",
     "choreography": "Choreography",
@@ -281,6 +281,21 @@
     "game_over": "Game over",
     "final_score": "Final score: %1",
     "new_best": "New best!",
+    "retry_button": "Retry"
+  },
+  "GameMouthsScreen.qml": {
+    "title": "Draw the mouths",
+    "subtitle": "Draw the mouth Zowi shows",
+    "play_button": "Play",
+    "help_button": "How to play",
+    "ranking_button": "Ranking",
+    "score_prefix": "Score: %1",
+    "level_prefix": "Level %1",
+    "target_label": "Draw this mouth:",
+    "how_to_play_text": "Zowi will show you a mouth. Draw it on the grid with your finger or the mouse before the timer runs out. When your drawing matches the target, you earn a point and move to the next level!",
+    "close": "Close",
+    "game_over": "Game over",
+    "final_score": "Final score: %1",
     "retry_button": "Retry"
   }
 }

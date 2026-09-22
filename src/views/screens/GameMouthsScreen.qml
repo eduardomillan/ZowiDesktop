@@ -4,8 +4,9 @@
 // matches the target the round is solved (mirrors Android's
 // MouthGridLayoutTouchListener → checkLedMouth). Fully playable offline — the
 // mouth and gesture commands are cosmetics that are simply not sent when the
-// robot is not connected. Intentional desktop deviation from Android: the
-// target mouth is also shown as an on-screen miniature for the whole round.
+// robot is not connected. Desktop deviation from Android: the target mouth is
+// mirrored as an on-screen miniature — hidden while the robot is connected
+// (its own matrix shows it) unless config "mouths_target_onscreen" forces it.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -19,6 +20,42 @@ ScreenTemplate {
     showBackButton: true
     footerHeight: 110
 
+    // Target-miniature policy, config "mouths_target_onscreen":
+    //   "auto"   (default) → shown only while the robot is NOT connected
+    //   "always"            → always shown
+    //   "never"             → never shown
+    readonly property bool showTargetOnScreen: {
+        var mode = Config.get("mouths_target_onscreen") || "auto"
+        if (mode === "always")
+            return true
+        if (mode === "never")
+            return false
+        return !Robot.connected
+    }
+
+    // Width actually occupied by the target miniature (0 when hidden). One
+    // source of truth used by the grid size, the card width and the score
+    // offset, so the card exactly wraps the mini+grid row and the score stays
+    // perfectly centered under the drawing grid in both states.
+    readonly property real miniW: root.showTargetOnScreen ? targetColumn.width : 0
+
+    // Resizable grid, like the Memory board: the cell size derives from the
+    // CONTENT area (not from the card or the grid itself, which would make a
+    // circular binding). Both dimensions are considered — the height reserves
+    // the level/countdown band on top and the score strip at the bottom, the
+    // width the target miniature (when shown), the mini↔grid spacing and the
+    // card padding — and the grid uses the smaller of the two, so it always
+    // fits the window and never covers the progress bar.
+    readonly property real drawCellSize: {
+        var cFromWidth = (card.contentW - 128 - root.miniW) / 6   // grid 6 cells + 5×6 spacing
+        var cFromHeight = (card.contentH - 156) / 5               // −(top band 48, score 56, padding 52)
+        return Math.round(Math.max(26, Math.min(50, Math.min(cFromWidth, cFromHeight))))
+    }
+    // Explicit card size so the box is derived from the container first
+    // (Memory pattern); the grid then fills it via `drawCellSize`.
+    readonly property real cardW: root.miniW + 22 + 6 * root.drawCellSize + 5 * 6 + 28
+    readonly property real cardH: 5 * root.drawCellSize + 4 * 6 + 28
+
     function tr(source) { return Translator.translate("GameMouthsScreen.qml", source) }
 
     // Pause the identity poll while the game is open (the mouth/gesture
@@ -28,6 +65,11 @@ ScreenTemplate {
     // It never starts the game — the Play button does.
     Component.onCompleted: {
         Robot.setDataPollingEnabled(false)
+        // TEMP-VERIFY ground truth (removed once verified)
+        console.log("[Mouths] verify mode=" + (Config.get("mouths_target_onscreen") || "auto")
+                    + " connected=" + Robot.connected
+                    + " showTarget=" + root.showTargetOnScreen
+                    + " cell=" + root.drawCellSize)
         var helpMode = Config.get("mouths_help") || "always"
         var helpSeen = Session.getString("mouths_help_seen", "false") === "true"
         if (helpMode === "always") {
@@ -36,6 +78,11 @@ ScreenTemplate {
             Session.saveString("mouths_help_seen", "true")
             helpDialog.open()
         }
+        // DEV preview hook: --step 1 starts a round so the in-game layout
+        // (level, countdown bar, target miniature) can be iterated headlessly,
+        // mirroring the calibration screen's PreviewStep hook.
+        if (typeof PreviewStep !== "undefined" && PreviewStep >= 0)
+            Mouths.startGame()
     }
     Component.onDestruction: Robot.setDataPollingEnabled(true)
 
@@ -94,7 +141,7 @@ ScreenTemplate {
             top: parent.top
             topMargin: 4
         }
-        width: Math.min(parent.width * 0.7, 460)
+        width: Math.min(parent.width * 0.7, root.cardW)
         spacing: 6
         visible: Mouths.state === Mouths.stateRoundActive
                  || Mouths.state === Mouths.stateRoundSolved
@@ -134,28 +181,37 @@ ScreenTemplate {
     }
 
     // ─── Card: target miniature + drawing grid ──────────────────────────────
-    // Mirrors the Android layout (grid in a rounded "maker box"); the desktop
-    // adds the always-visible target miniature next to the drawing grid.
+    // Mirrors the Android layout (grid in a rounded "maker box") and follows
+    // the Memory-board pattern: the card box is derived from the content area
+    // first (root.cardW/cardH via the responsive cell size), keeping clear of
+    // the level/countdown band on top and the score strip at the bottom. The
+    // desktop adds the configurable target miniature next to the drawing grid.
     Rectangle {
         id: card
         anchors.centerIn: parent
-        // Reserve ~34 px at the bottom of the content area for the score.
-        anchors.verticalCenterOffset: -14
         radius: 24
         color: Config.get("color_bg_connected") || "#e8f5e8"
         border.color: Config.get("color_accent") || "#21a69b"
         border.width: 2
-        width: cardRow.width + 28
-        height: cardRow.height + 28
+        width: root.cardW
+        height: root.cardH
+
+        // Geometry of the content area this card lives in (parent IS the
+        // ScreenTemplate content area). Drive the responsive grid size.
+        readonly property real contentW: parent ? parent.width : 728
+        readonly property real contentH: parent ? parent.height : 399
 
         Row {
             id: cardRow
             anchors.centerIn: parent
             spacing: 22
 
-            // Target mouth, always visible while drawing (desktop deviation).
+            // Target mouth miniature: mirrors the mouth shown on the robot
+            // (hidden while the robot is connected — its own matrix shows it —
+            // unless config "mouths_target_onscreen" forces "always").
             Column {
                 id: targetColumn
+                visible: root.showTargetOnScreen
                 spacing: 8
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -197,6 +253,10 @@ ScreenTemplate {
             // change is compared live against the target; a match solves it.
             MouthGrid {
                 id: drawGrid
+                // Resizable like the Memory board: cell size = min(width and
+                // height constraints) of the content area, recomputed live on
+                // window resize / connection changes (target miniature hides).
+                cellSize: root.drawCellSize
                 onPatternChanged: {
                     if (Mouths.state === Mouths.stateRoundActive)
                         Mouths.submitDraw(drawGrid.matrix)
@@ -206,10 +266,15 @@ ScreenTemplate {
     }
 
     // ─── Score: strip between the card and the footer ───────────────────────
+    // Anchored to the card (a sibling, so the anchor is valid) with an offset
+    // equal to half the miniature+spacing when it is shown: the score stays
+    // centered under the drawing grid in both states, whatever the window
+    // size. Bottom strip, like the Memory screen.
     Text {
         id: scoreText
         anchors {
-            horizontalCenter: parent.horizontalCenter
+            horizontalCenter: card.horizontalCenter
+            horizontalCenterOffset: root.showTargetOnScreen ? (root.miniW + 22) / 2 : 0
             bottom: parent.bottom
             bottomMargin: 6
         }

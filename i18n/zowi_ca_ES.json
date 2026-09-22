@@ -117,7 +117,7 @@
     "gamepad": "Gamepad",
     "timeline": "Cronologia",
     "zowi_says": "Memòria",
-    "mouths": "Boques",
+    "mouths": "Pintaboques",
     "mouths_editor": "Editor de Boques",
     "move_objects": "Moure objectes",
     "choreography": "Coreografia",
@@ -280,6 +280,21 @@
     "game_over": "Fi del joc",
     "final_score": "Puntuació final: %1",
     "new_best": "Nou rècord!",
+    "retry_button": "Reintentar"
+  },
+  "GameMouthsScreen.qml": {
+    "title": "Pinta boques",
+    "subtitle": "Dibuixa la boca que mostra en Zowi",
+    "play_button": "Jugar",
+    "help_button": "Com jugar",
+    "ranking_button": "Classificació",
+    "score_prefix": "Puntuació: %1",
+    "level_prefix": "Nivell %1",
+    "target_label": "Dibuixa aquesta boca:",
+    "how_to_play_text": "En Zowi et mostrarà una boca. Dibuixa-la a la graella amb el dit o el ratolí abans que s'acabi el temps. Quan el teu dibuix coincideixi amb l'objectiu, guanyaràs un punt i passarem al següent nivell.",
+    "close": "Tancar",
+    "game_over": "Fi del joc",
+    "final_score": "Puntuació final: %1",
     "retry_button": "Reintentar"
   }
 }
