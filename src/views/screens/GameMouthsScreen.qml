@@ -18,7 +18,7 @@ ScreenTemplate {
     title: tr("title")
     subtitle: tr("subtitle")
     showBackButton: true
-    footerHeight: 110
+    footerHeight: 50
 
     // Target-miniature policy, config "mouths_target_onscreen":
     //   "auto"   (default) → shown only while the robot is NOT connected
@@ -47,9 +47,9 @@ ScreenTemplate {
     // card padding — and the grid uses the smaller of the two, so it always
     // fits the window and never covers the progress bar.
     readonly property real drawCellSize: {
-        var cFromWidth = (card.contentW - 128 - root.miniW) / 6   // grid 6 cells + 5×6 spacing
-        var cFromHeight = (card.contentH - 156) / 5               // −(top band 48, score 56, padding 52)
-        return Math.round(Math.max(26, Math.min(50, Math.min(cFromWidth, cFromHeight))))
+        var cFromWidth = (card.contentW - 250 - root.miniW) / 6   // grid 6 cells + 5×6 spacing
+        var cFromHeight = (card.contentH - 250) / 5               // −(top band 48, score 56, padding 52)
+        return Math.round(Math.max(30, Math.min(50, Math.min(cFromWidth, cFromHeight))))
     }
     // Explicit card size so the box is derived from the container first
     // (Memory pattern); the grid then fills it via `drawCellSize`.
@@ -138,8 +138,8 @@ ScreenTemplate {
         id: topColumn
         anchors {
             horizontalCenter: parent.horizontalCenter
-            top: parent.top
-            topMargin: 4
+            bottom: card.top
+            bottomMargin: 20
         }
         width: Math.min(parent.width * 0.7, root.cardW)
         spacing: 6
@@ -188,7 +188,15 @@ ScreenTemplate {
     // desktop adds the configurable target miniature next to the drawing grid.
     Rectangle {
         id: card
-        anchors.centerIn: parent
+        anchors {
+            horizontalCenter: topColumn.horizontalCenter
+            verticalCenter: parent.verticalCenter
+            verticalCenterOffset: -30
+            horizontalCenterOffset: 0
+            //top: topColumn.top
+            //topMargin: 20
+        }
+
         radius: 24
         color: Config.get("color_bg_connected") || "#e8f5e8"
         border.color: Config.get("color_accent") || "#21a69b"
@@ -276,47 +284,49 @@ ScreenTemplate {
             horizontalCenter: card.horizontalCenter
             horizontalCenterOffset: 0
             bottom: card.bottom
-            bottomMargin: -50
+            bottomMargin: -30
         }
         text: root.tr("score_prefix").arg(Mouths.score)
         color: Config.get("color_primary") || "#2d5a2d"
         font.pixelSize: 16
         font.bold: true
     }
+        
+    Button {
+        id: playBtn
+        anchors {
+            horizontalCenter: scoreText.horizontalCenter
+            bottom: scoreText.bottom
+            bottomMargin: -75
+        }
+        visible: Mouths.state === Mouths.stateIdle
+                    || Mouths.state === Mouths.stateGameOver
+        implicitWidth: 200
+        height: 50
+        text: root.tr("play_button")
+
+        contentItem: Text {
+            text: parent.text
+            color: "#ffffff"
+            font.bold: true
+            font.pixelSize: 18
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+
+        background: Rectangle {
+            radius: 25
+            color: playBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
+        }
+
+        onClicked: Mouths.startGame()
+    }
+
 
     // ─── Footer: Play button (Idle / GameOver) ──────────────────────────────
     footer: Item {
         anchors.fill: parent
 
-        Button {
-            id: playBtn
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                top: scoreText.bottom
-                topMargin: 12
-            }
-            visible: Mouths.state === Mouths.stateIdle
-                     || Mouths.state === Mouths.stateGameOver
-            implicitWidth: 200
-            height: 50
-            text: root.tr("play_button")
-
-            contentItem: Text {
-                text: parent.text
-                color: "#ffffff"
-                font.bold: true
-                font.pixelSize: 18
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            background: Rectangle {
-                radius: 25
-                color: playBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
-            }
-
-            onClicked: Mouths.startGame()
-        }
     }
 
     // ─── Help Dialog ────────────────────────────────────────────────────────
