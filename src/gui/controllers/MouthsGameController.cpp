@@ -1,5 +1,4 @@
 #include "MouthsGameController.h"
-#include "RobotController.h"
 #include "SessionController.h"
 
 #include <zowi/robot_commands.h>
@@ -26,10 +25,6 @@ MouthsGameController::MouthsGameController(QObject* parent)
 }
 
 MouthsGameController::~MouthsGameController() = default;
-
-void MouthsGameController::setRobotController(RobotController* robot) {
-    m_robot = robot;
-}
 
 void MouthsGameController::setSessionController(SessionController* session) {
     m_session = session;
@@ -123,30 +118,27 @@ void MouthsGameController::onVictoryPauseElapsed() {
     startRound();
 }
 
-// ── Robot cosmetics (no-ops when not connected) ────────────────────────────
+// ── Robot cosmetics (forwarded to the robot by main.cpp) ───────────────────
 
 void MouthsGameController::sendTargetMouth() {
-    if (!m_robot || !m_robot->isConnected()) return;
     const QString cmd = QString::fromStdString(zowi::commandMouth(m_game->targetPattern()));
-    m_robot->sendData(cmd);
+    emit sendCommand(cmd);
     qDebug() << "[Mouths] Showing target mouth:" << cmd.trimmed();
 }
 
 void MouthsGameController::sendVictory() {
-    if (!m_robot || !m_robot->isConnected()) return;
     const QString victory = QString::fromStdString(zowi::commandGesture(zowi::GestureId::Victory));
-    m_robot->sendData(victory);
+    emit sendCommand(victory);
     const QString stop = QString::fromStdString(zowi::commandStop());
-    m_robot->sendData(stop);
+    emit sendCommand(stop);
     qDebug() << "[Mouths] Round solved:" << victory.trimmed() << "+" << stop.trimmed();
 }
 
 void MouthsGameController::sendAngryAndStop() {
-    if (!m_robot || !m_robot->isConnected()) return;
     const QString angry = QString::fromStdString(zowi::commandGesture(zowi::GestureId::Angry));
-    m_robot->sendData(angry);
+    emit sendCommand(angry);
     const QString stop = QString::fromStdString(zowi::commandStop());
-    m_robot->sendData(stop);
+    emit sendCommand(stop);
     qDebug() << "[Mouths] Game over:" << angry.trimmed() << "+" << stop.trimmed();
 }
 

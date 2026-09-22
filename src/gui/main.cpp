@@ -177,8 +177,13 @@ int main(int argc, char *argv[])
     zowiDice.setSessionController(&session);
     zowiDice.setCommandsController(&commands);
 
-    // Wire MouthsGameController (Draw the mouths / Pintabocas)
-    mouths.setRobotController(&robot);
+    // Wire MouthsGameController (Draw the mouths / Pintabocas). Cosmetics are
+    // forwarded to the robot only while connected (game logic works offline).
+    QObject::connect(&mouths, &MouthsGameController::sendCommand, &robot,
+                     [&robot](const QString &data) {
+        if (robot.isConnected())
+            robot.sendData(data);
+    });
     mouths.setSessionController(&session);
 
     QString locale = session.getString("locale", "");

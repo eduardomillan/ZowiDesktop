@@ -6,7 +6,6 @@
 
 #include <zowi/mouths_game.h>
 
-class RobotController;
 class SessionController;
 
 // Thin Qt adapter over zowi::MouthsGame (Qt-free core), exposed to QML as the
@@ -50,7 +49,6 @@ public:
     explicit MouthsGameController(QObject* parent = nullptr);
     ~MouthsGameController();
 
-    void setRobotController(RobotController* robot);
     void setSessionController(SessionController* session);
 
     int state() const;
@@ -80,6 +78,10 @@ signals:
     void targetChanged();
     void countdownMsChanged();
     void gameOver(int score);
+    // Robot cosmetics are emitted as raw commands so the controller does not
+    // depend on the concrete robot type: main.cpp (and the screen preview)
+    // forwards them to the active robot, gated by its connection state.
+    void sendCommand(const QString &data);
 
 private:
     void startRound();
@@ -92,7 +94,6 @@ private:
     void saveLastScore();
 
     std::unique_ptr<zowi::MouthsGame> m_game;
-    RobotController* m_robot = nullptr;
     SessionController* m_session = nullptr;
 
     // Round countdown: ticks every 100 ms while a round is active.
