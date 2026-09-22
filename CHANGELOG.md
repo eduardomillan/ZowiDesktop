@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-09-23
+
+### Added
+- **"1, 2, 3 ¡Acción!" sequence editor — GUI phase (`timeline`).** Game 01 of
+  the *Games* milestone: a new timeline game in which the player drafts a
+  multi-step routine from movements, animations and mouths and then plays it
+  back on Zowi. This phase ships the full editor UI mirroring ZowiAppReborn's
+  `TimelineActivity`:
+  - New `GameTimelineScreen` with the sequence list: per-item repetitions and
+    duration edits, drag-to-reorder via a left handle and per-row delete, plus
+    an empty state and Play/Stop controls (Play gated by the connection).
+  - New `MovementSelector` grid of the 13 movements; "Add animation" and "Add
+    mouth" reuse the shared gesture/mouth pickers, which now emit
+    `gestureSelected` / `mouthSelected` selection signals.
+  - The Home *Cronología* tile is enabled and navigates to the screen (editing
+    is ungated; the achievement gating and connection-gated playback arrive
+    with the backend phase, which also brings `MovementSequencer` wiring,
+    `timeline_sequence` persistence and the `anxious` achievement).
+  - Full i18n support in the 5 locales for `GameTimelineScreen.qml` and
+    `MovementSelector.qml`, and the new QML files registered in `views.qrc`.
+
 ## [0.9.2] - 2026-09-22
 
 ### Added
