@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Better help for the Windows build command.** `build.bat -h` / `--help`
+  now prints a complete summary of what the command does, its options and
+  examples.
+
+### Fixed
+- **Windows builds now produce an app you can run straight away.** After a
+  successful build, everything the app needs to launch (supporting libraries
+  and its interface files) is automatically placed next to the executable.
+  Previously this step could fail silently, leaving the app without its
+  dependencies; any problem is now reported clearly and stops the build.
+- **More honest build messages.** The build only says it is downloading extra
+  libraries when it actually is; when a previously downloaded copy is reused,
+  it now says so instead of claiming to download on every build.
+
 ## [0.9.1] - 2026-09-22
 
 > **Prerelease.** `VERSION` is `0.9.1`; this release is published as a GitHub
@@ -14,94 +29,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 > apt repo is the stable channel). Tag: `v0.9.1`.
 
 ### Added
-- **Zowi Dice memory game ("Zowi dice / Memoria"):** New interactive minigame
-  ported from ZowiAppReborn's `ZowiSaysMinigamePresenterImpl` — Zowi plays a
-  growing random sequence of 4 moves (walk, bend, jump, moonwalker) and the
-  player must repeat it from memory. Game logic is a Qt-free state machine in
-  core (`zowi::ZowiDiceGame`, `src/core/src/zowi_dice.cpp`) with a thin GUI
-  adapter (`ZowiDiceController`, exposed to QML as `ZowiDice`). Includes
-  `GameZowiDiceScreen.qml` (2×2 action grid using the Android `move1..4`
-  buttons, score + sequence progress bar, Play/Help/Ranking controls, standard
-  modal dialogs), the Home *Zowi dice* tile enabled, navigation wiring in
-  `main.qml`, last-score persistence under `zowi_says_last_score`, 15 new i18n
-  keys in the 5 locales and a new `test_zowi_dice` core test (11 cases,
-  including the ACK-driven `[move, stop, move, stop…]` playback regression).
-  This starts the M10 *Games* milestone. Design notes in
-  `docs/project/screens/SCREEN_GAME_ZOWI_DICE.md`.
-- **Zowi Dice UX pass (lot 1):** game screen improvements mirroring the Android
-  original — full-screen **"Look at Zowi"** replay overlay with an animated
-  robot + `look_at_zowi_text` (i18n in 5 locales), progress bar now shown
-  during the **user turn** too with an **"X / Y"** step readout (new core
-  `currentStep()` getter + `ZowiDice.currentStep`), **ANGRY gesture** (`H 8`)
-  sent to the robot on game over (`sendGameOverGesture()`), **first-play help**
-  dialog that auto-opens once (`zowi_says_help_seen` session flag), and a UI
-  polish pass: 2×2 grid wrapped in a rounded "maker box" card with a more
-  prominent Play button. Both game dialogs are now **centered**
-  (`anchors.centerIn: parent` on the screen's content area — the only parent
-  QQC2 permits) and use **rounded corners** with accent borders (help:
-  `radius: 20`, `width: 460`; game over: `radius: 16`, `width: 320`).
+- **"Zowi dice" memory game.** A new minigame in which Zowi plays a growing
+  random sequence of four moves (walk, bend, jump, moonwalker) and the player
+  must repeat it from memory. Includes a dedicated screen with the move grid,
+  score and progress bar, Play/Help/Ranking controls and standard dialogs, a
+  Home tile for the game, your best score remembered between sessions, and
+  full support for all 5 languages. This starts the *Games* milestone.
+- **Gameplay and presentation refinements.** A full-screen "watch Zowi" replay
+  with an animated robot before each round, a progress indicator that also
+  shows during the player's turn (with an "X of Y" step readout), an angry Zowi
+  animation when the game is lost, an automatic help dialog on first play, and
+  a UI polish pass: the move grid sits in a rounded card with a more prominent
+  Play button, and both dialogs are centred with rounded corners and accent
+  borders.
 
 ### Changed
-- **Memoria (Zowi Dice) start flow:** the game no longer auto-starts on entry.
-  The screen opens in `Idle` with a prominent **Play** button — the player
-  starts the game when they want or goes back.
-- **Fixed the Play button / progress visibility:** QML comparisons used
-  `ZowiDice.State.X` enum lookups, which do not resolve for context-property
-  instances, so the Play/Help/Ranking row and the "X / Y" progress bar never
-  showed. The controller now exposes named state constants (`stateIdle`,
-  `stateShowingSequence`, `stateWaitingForUser`, `stateGameOver`) that the
-  screen compares against.
-- **Help dialog toggle:** new `zowi_dice_help` key in `config.json`
-  (`"always"` opens the help on every entry, `"once"` only the first time via
-  the `zowi_says_help_seen` session flag); dismissing it never starts the game.
-- **Footer layout:** the footer now lives in `ScreenTemplate`'s real footer
-  area (below the board, so it no longer overlaps the 2×2 action buttons), and
-  keeps only the **progress bar** (with "X / Y") plus a single **Play** button
-  at the very bottom of the window. The **score moved out of the footer** into
-  a strip in the content area — horizontally centered between the board and the
-  footer — and the board now reserves a ~56 px band
-  (`Math.min(parent.width, parent.height - 56) * 0.9`) at the bottom of the
-  content area so the score can never overlap the grid at any window size.
-- **Help/Ranking moved to top-right corner icons:** like the original
-  `activity_zowi_says_minigame_view.xml`, the **"Cómo jugar"** and **Ranking**
-  buttons are now 88×88 icon buttons top-right (same slot/pattern as the
-  achievements button on other screens), instead of text buttons in the footer.
-  `ScreenTemplate` gains a generic `corner` slot (a Row below the StatusBar,
-  outside the clipped `contentArea`, hidden when unused) that the game screen
-  fills. The pair sits **adjacent** (`spacing: -10`, slightly overlapping):
-  **Ranking first, Help immediately to its right**. The footer keeps only the
-  Play button, which is now **styled like the splash "Continuar"** (200×50,
-  bold 18 px, accent pill
-  with `color_accent_pressed`). The disconnect button is no longer shown on
-  this screen (back stays top-left; forget lives in Settings).
-- **Help dialog redesign:** fully custom content (bold `help_button` title,
-  130 px `simon_game_button.png`, wrapped `how_to_play_text`, accent pill
-  **"Cerrar"** button reusing the existing `close` key in the 5 locales) with
-  no default header/footer — the Basic-style square white header/footer
-  rectangles were covering the rounded corners. Now `width: 460`, `radius: 20`
-  (taller/wider than the previous 400 / `radius: 16`) so text + image fit
-  comfortably.
-- **Help & Game over dialogs (lot 2):** both dialogs now size themselves from
-  their content (`Math.ceil(contentH) + 48 + 5%`, measuring the wrapped text
-  via `implicitHeight`), so nothing can overflow the rounded border and the
-  **Close button floats ~5% of the content height above the bottom edge**
-  instead of sitting on it. The **game over dialog** was converted to the same
-  fully custom layout as the help dialog (no default header/footer), so its
-  `radius: 20` corners finally show: `game_over` title, big `final_score`
-  (`%1`), the `new_best` line (score ≥ 12), and a button row with an outlined
-  **"Cerrar"** (→ `resetGame()`) plus an accent pill **"Reintentar"** (new
-  `retry_button` key translated to the 5 locales, → `startGame()`), replacing
-  the old `Dialog.Ok | Dialog.Retry` standard buttons.
-- **Help dialog centering (root cause):** QQC2 popups are **never**
-  auto-centered — `QQuickPopupPositioner` drops an unanchored popup at its
-  parent's top-left, so opening timing was never the issue. Both dialogs now
-  use `anchors.centerIn: parent` (immediate parent = the screen content area),
-  the deferral `Timer` was removed, and the help dialog opens directly in
-  `Component.onCompleted` (keeps the `zowi_dice_help` always/once logic).
-- **Gestures verified against the original:** `ZowiAppReborn`'s
-  `ZowiSaysMinigamePresenterImpl` + `MovementCommand` confirm the same four
-  moves on the wire (`M 1`, `M 16`, `M 11`, `M 7 <dur> 30`) — walk forward is
-  indeed one of the four random moves of the original game.
+- **The game no longer starts by itself.** The screen opens in an idle state
+  with a prominent Play button; the player decides when to start or can go
+  back.
+- **Play button and progress bar now always appear** — several controls were
+  previously invisible.
+- **Help dialog behaviour is configurable:** it can open on every entry or only
+  the first time; closing it never starts the game.
+- **Layout improvements.** The footer now sits below the board (it no longer
+  overlaps the action buttons) and keeps only the progress bar and a single
+  Play button; the score moved into its own strip between the board and the
+  footer and can no longer be covered by the grid at any window size. "How to
+  play" and Ranking became icon buttons in the top-right corner (Ranking first,
+  Help right next to it).
+- **Help and game-over dialogs redesigned** with custom content, rounded
+  corners and no default header/footer. The game-over dialog shows the final
+  score, a "new best" message, and clear buttons: "Close" and "Try again".
+  Both dialogs now size themselves to their content and centre correctly — a
+  long-standing centring issue is fixed for good.
+- **The game's moves match the original Android version exactly**, verified
+  against it — walking forward is indeed one of the four random moves of the
+  original game.
 
 ## [0.8.2] - 2026-09-10
 

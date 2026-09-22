@@ -1,4 +1,33 @@
 @echo off
+rem ============================================================================
+rem  build.bat - Build Zowi Desktop on Windows (MSVC)
+rem
+rem  Builds the Qt GUI (ZowiDesktop.exe), the CLI (zowi_cli.exe), or both,
+rem  using CMake + the MSVC toolchain. After a GUI build it runs windeployqt
+rem  to bundle Qt DLLs and QML files alongside the executable so the app can
+rem  be run directly from build\src\gui\Release\ZowiDesktop.exe.
+rem
+rem  Options:
+rem    -5            Build against Qt 5 (default: Qt 6)
+rem    -6            Build against Qt 6 (default)
+rem    --gui         Build GUI only (ZowiDesktop)
+rem    --cli         Build CLI only (zowi_cli)
+rem    --demo        Build CLI and run demo commands
+rem    --all         Build everything (default: GUI + CLI)
+rem    --clean       Remove the build\ directory before building (combinable)
+rem    -h, --help    Show this help message
+rem
+rem  Environment:
+rem    QT_PATH       Path to Qt installation (e.g. C:\Qt\6.5.2\msvc2022_64)
+rem
+rem  Examples:
+rem    build.bat                    Build GUI + CLI with Qt 6
+rem    build.bat --gui              Build only the GUI
+rem    build.bat -5 --cli           Build CLI with Qt 5
+rem    build.bat --clean --gui      Wipe build\ and build only the GUI
+rem
+rem  Requires a Visual Studio 2022 developer prompt (vcvarsall), CMake and Qt.
+rem ============================================================================
 setlocal enabledelayedexpansion
 
 set "SCRIPT_DIR=%~dp0"
@@ -86,7 +115,7 @@ echo   --cli         Build CLI only (zowi_cli)
 echo   --demo        Build CLI and run demo commands
 echo   --all         Build everything (default)
 echo   --clean       Remove the build\ directory before building (combinable)
-echo   -h            Show this help message
+echo   -h, --help    Show this help message
 echo.
 echo Environment:
 echo   QT_PATH       Path to Qt installation (e.g. C:\Qt\6.5.2\msvc2022_64)
@@ -145,12 +174,20 @@ if "%BUILD_GUI%"=="ON" (
     if defined QT_PATH (
         if exist "%QT_PATH%\bin\windeployqt.exe" set "WINDEPLOYQT=%QT_PATH%\bin\windeployqt.exe"
     )
+    if not defined WINDEPLOYQT for /f "delims=" %%i in ('where windeployqt 2^>nul') do if not defined WINDEPLOYQT set "WINDEPLOYQT=%%i"
     if not defined WINDEPLOYQT if exist "C:\Qt\6.11.1\msvc2022_64\bin\windeployqt.exe" set "WINDEPLOYQT=C:\Qt\6.11.1\msvc2022_64\bin\windeployqt.exe"
     if not defined WINDEPLOYQT if exist "C:\Qt\6.5.2\msvc2022_64\bin\windeployqt.exe" set "WINDEPLOYQT=C:\Qt\6.5.2\msvc2022_64\bin\windeployqt.exe"
     if not defined WINDEPLOYQT if exist "C:\Qt\5.15.2\msvc2019_64\bin\windeployqt.exe" set "WINDEPLOYQT=C:\Qt\5.15.2\msvc2019_64\bin\windeployqt.exe"
     if defined WINDEPLOYQT (
         echo Deploying Qt runtime to build output...
-        "%WINDEPLOYQT%" "%BUILD_DIR%\src\gui\Release\ZowiDesktop.exe" >nul 2>&1
+        "!WINDEPLOYQT!" --qmldir "%SCRIPT_DIR%\src\views" "%BUILD_DIR%\src\gui\Release\ZowiDesktop.exe"
+        if errorlevel 1 (
+            echo windeployqt failed, check the output above.
+            exit /b 1
+        )
+    ) else (
+        echo WARNING: windeployqt not found. Skipping Qt deployment; the GUI may not run.
+        echo Set QT_PATH to your Qt installation to enable deployment.
     )
 )
 

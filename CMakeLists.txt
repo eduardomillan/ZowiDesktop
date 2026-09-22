@@ -7,7 +7,7 @@ project(ZowiDesktop VERSION ${ZOWI_VERSION_STRING} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
-set(FETCHLIBRARIES CACHE BOOL HELP "fetch libraries from external repos if not present in system")
+option(FETCHLIBRARIES "Fetch nlohmann_json and CLI11 from GitHub when not found in the system" ON)
 
 # ── Qt version selection ──────────────────────────────────────────
 set(ZOWI_QT_VERSION 6 CACHE STRING "Qt version to build against (5 or 6)")
@@ -42,8 +42,12 @@ if(NOT nlohmann_json_FOUND)
         message(FATAL_ERROR "nlohmann_json not found! Install it or execute again with -DFETCHLIBRARIES:BOOL=TRUE option")
     else()
         message(STATUS "NOT FOUND")
-        message(STATUS "fetching nlohmann_json from: https://github.com/nlohmann/json...")
         include(FetchContent)
+        if(NOT EXISTS "${FETCHCONTENT_BASE_DIR}/json-src")
+            message(STATUS "fetching nlohmann_json from: https://github.com/nlohmann/json...")
+        else()
+            message(STATUS "using cached nlohmann_json copy in ${FETCHCONTENT_BASE_DIR}/json-src")
+        endif()
         FetchContent_Declare(
             json
             GIT_REPOSITORY https://github.com/nlohmann/json
@@ -62,8 +66,12 @@ if(NOT CLI11_FOUND)
         message(FATAL_ERROR "CLI11 not found! Install it or execute again with -DFETCHLIBRARIES:BOOL=TRUE option")
     else()
         message(STATUS "NOT FOUND")
-        message(STATUS "fetching CLI11 from: https://github.com/CLIUtils/CLI11...")
         include(FetchContent)
+        if(NOT EXISTS "${FETCHCONTENT_BASE_DIR}/cli11-src")
+            message(STATUS "fetching CLI11 from: https://github.com/CLIUtils/CLI11...")
+        else()
+            message(STATUS "using cached CLI11 copy in ${FETCHCONTENT_BASE_DIR}/cli11-src")
+        endif()
         FetchContent_Declare(
             cli11
             GIT_REPOSITORY https://github.com/CLIUtils/CLI11
