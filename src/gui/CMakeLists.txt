@@ -28,6 +28,7 @@ add_executable(ZowiDesktop WIN32
     controllers/CommandsController.cpp
     controllers/ProjectsController.cpp
     controllers/ZowiDiceController.cpp
+    controllers/MouthsGameController.cpp
     ${GUI_RESOURCES}
 )
 

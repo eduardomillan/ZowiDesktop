@@ -104,6 +104,7 @@ QString openLogFile()
 #include "controllers/CommandsController.h"
 #include "controllers/ProjectsController.h"
 #include "controllers/ZowiDiceController.h"
+#include "controllers/MouthsGameController.h"
 
 static QQmlApplicationEngine *s_engine = nullptr;
 static QString s_qmlPath;
@@ -167,6 +168,7 @@ int main(int argc, char *argv[])
     CommandsController commands;
     ProjectsController projects(&translator, &session);
     ZowiDiceController zowiDice;
+    MouthsGameController mouths;
     g_logLevel = logLevelFromName(config.get("log_level"));
     robot.setSessionController(&session);
 
@@ -174,6 +176,10 @@ int main(int argc, char *argv[])
     zowiDice.setRobotController(&robot);
     zowiDice.setSessionController(&session);
     zowiDice.setCommandsController(&commands);
+
+    // Wire MouthsGameController (Draw the mouths / Pintabocas)
+    mouths.setRobotController(&robot);
+    mouths.setSessionController(&session);
 
     QString locale = session.getString("locale", "");
     if (locale.isEmpty()) {
@@ -199,6 +205,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Commands", &commands);
     engine.rootContext()->setContextProperty("Projects", &projects);
     engine.rootContext()->setContextProperty("ZowiDice", &zowiDice);
+    engine.rootContext()->setContextProperty("Mouths", &mouths);
     engine.rootContext()->setContextProperty("AppVersion", QString(ZOWI_VERSION));
 
     // Live G commands from the calibration screen go through the same write path
