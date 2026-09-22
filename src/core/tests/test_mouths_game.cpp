@@ -52,6 +52,20 @@ static MouthsGameConfig testConfig() {
     return cfg;
 }
 
+// Multi-mouth band config: several mouths per band so no-repeat rules can
+// be exercised (testConfig above has one mouth per band, where repeats are
+// unavoidable).
+static MouthsGameConfig multiMouthConfig() {
+    MouthsGameConfig cfg;
+    cfg.band0 = { MouthId::Smile, MouthId::HappyOpen, MouthId::Ok, MouthId::Sad };
+    cfg.band1 = {};
+    cfg.band2 = {};
+    cfg.band3 = {};
+    cfg.band4 = {};
+    cfg.bandUnlockLevels = { 1 };
+    return cfg;
+}
+
 int main() {
     // Basic flow
     {
@@ -148,6 +162,59 @@ int main() {
         g.reset();
         check(g.state() == MouthsGameState::Idle, true, "reset -> Idle");
         checkEqual(g.level(), 0, "reset level 0");
+    }
+
+    // No two consecutive rounds show the same mouth within a single game
+    {
+        MouthsGame g(multiMouthConfig());
+        g.startGame();
+        check(g.target() == MouthId::Smile || g.target() == MouthId::HappyOpen
+              || g.target() == MouthId::Ok || g.target() == MouthId::Sad, true,
+              "first target comes from band 0");
+        MouthId prev = g.target();
+        bool neverRepeated = true;
+        for (int i = 0; i < 200; ++i) {
+            g.submitDraw(g.targetPattern());
+            g.advanceLevel();
+            if (g.target() == prev) {
+                neverRepeated = false;
+                break;
+            }
+            prev = g.target();
+        }
+        check(neverRepeated, true, "no consecutive repeats over 200 rounds");
+    }
+
+    // Two consecutive games never start with the same mouth
+    {
+        MouthsGame g(multiMouthConfig());
+        g.startGame();
+        MouthId first = g.target();
+        bool neverSameFirst = true;
+        for (int i = 0; i < 50; ++i) {
+            g.onTimeout(); // finish the game
+            g.reset();     // back to Idle
+            g.startGame(); // new game
+            if (g.target() == first) {
+                neverSameFirst = false;
+                break;
+            }
+            first = g.target();
+        }
+        check(neverSameFirst, true, "no repeated first target over 50 games");
+    }
+
+    // Single-mouth bands: exclusion is impossible, so repeats are allowed and
+    // the game must not hang.
+    {
+        MouthsGame g(testConfig());
+        g.startGame();
+        check(g.target() == MouthId::Smile, true, "single-mouth band picks its only mouth");
+        g.onTimeout();
+        g.reset();
+        g.startGame();
+        check(g.target() == MouthId::Smile, true, "single-mouth band repeats when unavoidable");
+        checkEqual(g.level(), 1, "restarted game is level 1");
     }
 
     if (failures == 0) {

@@ -20,7 +20,13 @@ void MouthsGame::startGame() {
     m_level = 1;
     m_score = 0;
     m_state = MouthsGameState::RoundActive;
-    pickTarget();
+    // Two consecutive games never start with the same mouth.
+    std::vector<MouthId> forbidden;
+    if (m_hasPreviousGame)
+        forbidden.push_back(m_previousFirstTarget);
+    pickTarget(forbidden);
+    m_previousFirstTarget = m_target;
+    m_hasPreviousGame = true;
 }
 
 void MouthsGame::reset() {
@@ -44,7 +50,9 @@ void MouthsGame::advanceLevel() {
         return;
     ++m_level;
     m_state = MouthsGameState::RoundActive;
-    pickTarget();
+    // No two consecutive rounds show the same mouth: forbid the one just solved.
+    std::vector<MouthId> forbidden = { m_target };
+    pickTarget(forbidden);
 }
 
 void MouthsGame::onTimeout() {
@@ -85,7 +93,7 @@ int MouthsGame::unlockedBandCount(int level) const {
     return count > 0 ? count : 1; // never lock every band, even below the first gate
 }
 
-void MouthsGame::pickTarget() {
+void MouthsGame::pickTarget(const std::vector<MouthId>& forbidden) {
     const std::vector<std::vector<MouthId>> bands = {
         m_config.band0, m_config.band1, m_config.band2, m_config.band3, m_config.band4
     };
@@ -100,8 +108,18 @@ void MouthsGame::pickTarget() {
             continue;
         ++seen;
         if (seen == unlocked) {
-            std::uniform_int_distribution<size_t> dist(0, bands[b].size() - 1);
-            m_target = bands[b][dist(rng())];
+            const std::vector<MouthId>& band = bands[b];
+            // Preferred pool: band mouths minus the forbidden ones. When that
+            // leaves nothing (e.g. single-mouth bands in tests), fall back to
+            // the full band — a repeat is unavoidable then.
+            std::vector<MouthId> allowed;
+            for (const MouthId mouth : band) {
+                if (std::find(forbidden.begin(), forbidden.end(), mouth) == forbidden.end())
+                    allowed.push_back(mouth);
+            }
+            const std::vector<MouthId>& pool = allowed.empty() ? band : allowed;
+            std::uniform_int_distribution<size_t> dist(0, pool.size() - 1);
+            m_target = pool[dist(rng())];
             m_targetPattern = mouthPatternForId(m_target);
             return;
         }

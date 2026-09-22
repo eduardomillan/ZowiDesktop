@@ -65,13 +65,16 @@ public:
     ~MouthsGame() = default;
 
     void startGame();   // fresh game: level 1, RoundActive, random target
+    // (never the previous *game's* first target)
     void reset();       // → Idle, level 0
     // Live draw comparison. `matrix` is the 32-bit mouth pattern built from
     // the 6×5 grid (bit 29−i for cell i); only the lower 30 bits are used.
     // True when it matches the target → RoundSolved. False while Idle,
     // GameOver, already solved, or on mismatch.
     bool submitDraw(unsigned long matrix);
-    // RoundSolved → next round: level+1, new random target, RoundActive.
+    // RoundSolved → next round: level+1, new random target (never equal to the
+    // one just solved — no two consecutive rounds show the same mouth),
+    // RoundActive.
     void advanceLevel();
     void onTimeout();   // RoundActive → GameOver; score = level − 1
 
@@ -87,7 +90,11 @@ public:
     bool qualifiesForRanking() const { return m_score >= m_config.rankScoreThreshold; }
 
 private:
-    void pickTarget();
+    // Picks the round target from the band unlocking at the current level,
+    // avoiding every mouth in `forbidden`. When the whole band is forbidden
+    // (single-mouth bands make exclusion impossible) it falls back to any
+    // mouth of the band.
+    void pickTarget(const std::vector<MouthId>& forbidden);
     int unlockedBandCount(int level) const;
 
     MouthsGameConfig m_config;
@@ -96,6 +103,10 @@ private:
     int m_score = 0;
     MouthId m_target = MouthId::Smile;
     unsigned long m_targetPattern = 0;
+    // First target of the previous game (so two consecutive games never start
+    // with the same mouth) — persisted for the lifetime of this instance.
+    MouthId m_previousFirstTarget = MouthId::Smile;
+    bool m_hasPreviousGame = false;
     unsigned long m_seedState = 0x9e3779b9UL;
 };
 
