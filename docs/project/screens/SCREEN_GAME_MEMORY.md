@@ -1,4 +1,4 @@
-# SCREEN_GAME_ZOWI_DICE — GameZowiDiceScreen.qml
+# SCREEN_GAME_MEMORY — GameMemoryScreen.qml
 
 > Game 02 — **"Zowi Dice"** (Memory / *Zowi dice*): Zowi plays a growing random
 > sequence of 4 moves and the player must repeat it from memory.
@@ -10,13 +10,13 @@
 > [SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md); future games can be added.
 
 - **Status:** ✅ **IMPLEMENTED** (core + GUI, v0.10.x M10).
-- **File:** `src/views/screens/GameZowiDiceScreen.qml`.
+- **File:** `src/views/screens/GameMemoryScreen.qml`.
 - **Core logic (Qt-free):** `src/core/include/zowi/zowi_dice.h` +
   `src/core/src/zowi_dice.cpp` — pure state machine, unit-tested in
   `src/core/tests/test_zowi_dice.cpp`.
 - **GUI adapter:** `src/gui/controllers/ZowiDiceController.{h,cpp}`, exposed to
   QML as the context property `ZowiDice`.
-- **i18n context:** `"GameZowiDiceScreen.qml"`.
+- **i18n context:** `"GameMemoryScreen.qml"`.
 - **Game id:** `zowi_says` — Home tile
   `qrc:/images/android/simon_game_button.png` (now `enabled: true` in
   [SCREEN_HOME.md](SCREEN_HOME.md); visible label comes from the Home context
@@ -201,7 +201,7 @@ our `BendBackward` label is the same physical gesture.
 
 ## i18n
 
-Keys under `"GameZowiDiceScreen.qml"` with translations in all 5 locales (es,
+Keys under `"GameMemoryScreen.qml"` with translations in all 5 locales (es,
 en, fr, ca, bg): `title`, `subtitle`, `look_at_zowi_text`, `play_button`,
 `help_button`, `ranking_button`, `score_prefix` (`%1`), `how_to_play_text`,
 `close`, `retry_button`, `game_over`, `final_score` (`%1`), `new_best`.
@@ -256,8 +256,8 @@ relevant section (with a CHANGELOG entry) and are ticked off.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Ranking top-10** | 🚧 Planned | The top-right Ranking button is a **disabled placeholder** and there is **no `RankingController` in the repo yet**. Plan: a *shared* ranking layer (core top-10 + Session-backed persistence, keyed by game id) reused by Zowi Dice **and** Draw the mouth (see `SCREEN_GAME_MOUTHS.md`). `rankThreshold = 3` is defined in `ZowiDiceConfig` but unused until then. |
+| **Ranking top-10** | 🚧 Planned | The top-right Ranking button is a **disabled placeholder** and there is **no `RankingController` in the repo yet**. Plan: a *shared* ranking layer (core top-10 + Session-backed persistence, keyed by game id) reused by Memory **and** Pintabocas (see `SCREEN_GAME_MOUTHS.md`). `rankThreshold = 3` is defined in `ZowiDiceConfig` but unused until then. |
 | **Achievement `in_love`** (score ≥ 12) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). Today the game-over dialog only shows the *"New best"* line; `achievementThreshold` stays reserved. |
 | **Adjustable speed** | 🚧 Planned | `ZowiDiceConfig::initialSpeedMs = 1000` is fixed; add a UI speed selector mapping to `MovementSpeed`. |
 | **Help text with the Zowi's name** | 🚧 Planned | Android interpolates `%1$s` with the registered name; ours doesn't. Needs i18n work across the 5 locales. |
-| **Dead i18n keys cleanup** | 🧹 Cleanup | `walk_forward`, `bend_backward`, `jump`, `moonwalker_right` under `"GameZowiDiceScreen.qml"` (5 locales) are unused (image-only buttons). Kept as documented legacy for now; remove during cleanup. |
+| **Dead i18n keys cleanup** | 🧹 Cleanup | `walk_forward`, `bend_backward`, `jump`, `moonwalker_right` under `"GameMemoryScreen.qml"` (5 locales) are unused (image-only buttons). Kept as documented legacy for now; remove during cleanup. |

@@ -15,6 +15,8 @@
 | `settingsClicked()` | Settings button | `main.qml`: push→ Settings |
 | `achievementsClicked()` | Achievements button | currently a stub (`console.log`) |
 | `gamepadClicked()` | Gamepad app card | `main.qml`: push→ Pad |
+| `zowiSaysClicked()` | Memory app card | `main.qml`: push→ Memory (`pushZowiDice`) |
+| `mouthsClicked()` | Pintabocas app card | `main.qml`: push→ GameMouths (`pushMouths`) |
 | `mouthEditorClicked()` | Mouths editor app card | `main.qml`: push→ MouthEditor |
 | `goSplash()` / `goWelcome()` | DEV nav buttons | `main.qml`: replace→ Splash/Welcome |
 
@@ -37,9 +39,9 @@
 
 - Auto-connect on `Component.onCompleted`: USB wins when it is the registered
   transport and available; otherwise reconnect to the saved Bluetooth address.
-- The apps model enables `gamepad`, `mouths_editor` and `zowi_says` (Memory
-  game — `SCREEN_GAME_ZOWI_DICE.md`); `timeline` and `mouths` are still
-  placeholders (Draw the mouth is planned — `SCREEN_GAME_MOUTHS.md`).
+- The apps model enables `gamepad`, `mouths_editor`, `zowi_says` (Memory
+  game — `SCREEN_GAME_MEMORY.md`) and `mouths` (Pintabocas game —
+  `SCREEN_GAME_MOUTHS.md`); only `timeline` is still a placeholder.
 - App buttons are gated by `home.robotReady`
   (`Robot.connected && appId !== "" && battery >= 0`); disabled cards are
   grayed out.

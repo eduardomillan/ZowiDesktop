@@ -20,6 +20,7 @@
 | Settings | `src/views/screens/SettingsScreen.qml` | [SCREEN_SETTINGS.md](SCREEN_SETTINGS.md) |
 | Calibration | `src/views/screens/CalibrationScreen.qml` | [SCREEN_CALIBRATION.md](SCREEN_CALIBRATION.md) |
 | Mouth editor (pintabocas) | `src/views/screens/MouthEditorScreen.qml` | [SCREEN_MOUTH_EDITOR.md](SCREEN_MOUTH_EDITOR.md) |
+| Draw the mouths (pintabocas game) | `src/views/screens/GameMouthsScreen.qml` | [SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md) |
 | Pad (gamepad) | `src/views/screens/PadScreen.qml` | [SCREEN_PAD.md](SCREEN_PAD.md) |
 | Mouth picker | `src/views/screens/MouthScreen.qml` | [SCREEN_MOUTH.md](SCREEN_MOUTH.md) |
 | Gesture picker | `src/views/screens/GestureScreen.qml` | [SCREEN_GESTURE.md](SCREEN_GESTURE.md) |
@@ -57,6 +58,7 @@ SplashScreen ──(hasDismissedWizard || hasDevice)──▶ HomeScreen
 | Pad | `mouthScreenRequested` / `gestureScreenRequested` / `soundScreenRequested` | Mouth / Gesture / Sounds |
 | Home | `projectRequested(projectId)` | Project (any Discover lesson) |
 | Home | `mouthEditorClicked` | MouthEditor |
+| Home | `mouthsClicked` | GameMouths |
 | Home | `settingsClicked` | Settings |
 | Settings | `calibrationRequested` | Calibration |
 | Settings | `forgetCompleted` | Welcome (replace) |
@@ -71,12 +73,13 @@ with **Ctrl+D** (window-level `Shortcut` in `main.qml`).
   `i18n/zowi_<locale>.json` (all locales: `es_ES`, `ca_ES`, `en_US`, `fr_FR`,
   `bg_BG`).
 - **Context objects** registered in `src/gui/main.cpp`: `Session`, `Translator`,
-  `Robot`, `Config`, `Calibration`, `Commands`, `AppVersion`.
+  `Robot`, `Config`, `Calibration`, `Commands`, `AppVersion`, `Mouths` (Draw the
+  mouths game), `ZowiDice` (Memory game).
 - **Back button** comes from `ScreenTemplate` (`backClicked` signal).
 - **Command builders** are the `Commands` object (`CommandsController`), which
   wraps the Qt-free `zowi::robot_commands` core module.
 - **Data polling**: screens that stream commands continuously
-  (Calibration, MouthEditor, Pad while a button is held) pause the robot
+  (Calibration, MouthEditor, GameMouths, Pad while a button is held) pause the robot
   identity poll via `Robot.setDataPollingEnabled(false)` and re-enable it on
   destruction, so the `E/I/B` identity burst never interrupts the queue.
 

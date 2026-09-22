@@ -207,10 +207,12 @@ src/
 ### M10 — Games 🚧
 
 - [x] Game: Memory — implemented (core + tests + GUI + i18n; see
-  `SCREEN_GAME_ZOWI_DICE.md`). Outstanding: the shared ranking layer,
-  tracked in that doc.
+  `SCREEN_GAME_MEMORY.md`). Outstanding: the shared ranking layer,
+  tracked in that doc (shared with Draw the mouth).
 
-- [ ] Game: Draw the mouth
+- [x] Game: Draw the mouth — implemented (core + tests + GUI + i18n; see
+  `SCREEN_GAME_MOUTHS.md`). Outstanding: the shared ranking layer,
+  tracked in that doc (shared with Memory).
 
 - [ ] Game: Visual block editor
 

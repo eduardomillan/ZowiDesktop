@@ -6,6 +6,9 @@
 - **File:** `src/views/screens/MouthEditorScreen.qml`
 - **i18n context:** `"MouthEditorScreen.qml"`
 - Pushed by `HomeScreen.mouthEditorClicked`. Not part of the PadScreen flow.
+- The 6×5 drawing grid is the shared `MouthGrid` component, also used by the
+  Pintabocas game ([SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md)); this screen
+  only adds the live-send behaviour on top of it.
 
 ## Signals
 

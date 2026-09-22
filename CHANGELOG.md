@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **"Pintabocas" draw-the-mouths game.** A new minigame in which Zowi shows a
+  random mouth and the player must draw it on the shared 6×5 LED grid before
+  the countdown expires, with live draw comparison, a progressive 5-band
+  difficulty pool (no consecutive repeats), a configurable on-screen target
+  miniature, level/countdown bar and score strip, Play/Help/Ranking controls
+  and standard dialogs, a Home tile for the game, the last score remembered
+  between sessions, and full support for all 5 languages.
+
 ### Changed
 - **Better help for the Windows build command.** `build.bat -h` / `--help`
   now prints a complete summary of what the command does, its options and
