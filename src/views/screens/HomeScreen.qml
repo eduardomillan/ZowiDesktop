@@ -230,7 +230,7 @@ FocusScope {
                                               ? (Config.get("color_border_disabled") || "#c8c8c8")
                                               : (Config.get("color_accent") || "#21a69b")
                                 border.width: 1
-                                opacity: (!home.robotReady || isDisabled) ? 0.4 : 1.0
+                                opacity: (isDisabled || (name !== tr("mouths") && !home.robotReady)) ? 0.4 : 1.0
 
                                 Image {
                                     anchors.centerIn: parent
@@ -245,8 +245,8 @@ FocusScope {
                                     id: appMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
-                                    cursorShape: (!home.robotReady || isDisabled) ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-                                    enabled: home.robotReady && !isDisabled
+                                    cursorShape: (isDisabled || (name !== tr("mouths") && !home.robotReady)) ? Qt.ForbiddenCursor : Qt.PointingHandCursor
+                                    enabled: !isDisabled && (name === tr("mouths") ? true : home.robotReady)
                                     onClicked: {
                                         if (name === tr("gamepad")) {
                                             homeScope.gamepadClicked()
