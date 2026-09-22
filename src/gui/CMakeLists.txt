@@ -74,6 +74,7 @@ add_executable(zowi_screen_preview
     controllers/ConfigController.cpp
     controllers/CalibrationSessionController.cpp
     controllers/CommandsController.cpp
+    controllers/MouthsGameController.cpp
     controllers/ProjectsController.cpp
     controllers/SessionController.cpp
     ${GUI_RESOURCES}
@@ -84,6 +85,7 @@ target_compile_definitions(zowi_screen_preview PRIVATE ZOWI_VERSION="${PROJECT_V
 
 target_link_libraries(zowi_screen_preview PRIVATE
     Zowi::core
+    Zowi::firmware
     Qt${ZOWI_QT_VERSION}::Core
     Qt${ZOWI_QT_VERSION}::Gui
     Qt${ZOWI_QT_VERSION}::Qml

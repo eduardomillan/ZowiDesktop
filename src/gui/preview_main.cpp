@@ -14,6 +14,7 @@
 #include "controllers/TranslatorController.h"
 #include "controllers/CalibrationSessionController.h"
 #include "controllers/CommandsController.h"
+#include "controllers/MouthsGameController.h"
 #include "controllers/ProjectsController.h"
 #include "controllers/SessionController.h"
 
@@ -34,6 +35,9 @@ public:
 
     Q_INVOKABLE QStringList keys() const { return m_values.keys(); }
     Q_INVOKABLE QString getRaw(const QString &key) const { return m_values.value(key).toString(); }
+    Q_INVOKABLE QString getString(const QString &key, const QString &defaultValue = QString()) const
+    { return m_values.value(key, defaultValue).toString(); }
+    Q_INVOKABLE void saveString(const QString &key, const QString &value) { m_values.insert(key, value); }
     Q_INVOKABLE void clearActive() {
         QStringList toRemove;
         for (const auto &key : m_values.keys())
@@ -252,6 +256,15 @@ int main(int argc, char *argv[])
     CommandsController commands;
     SessionController sessionStore;
     ProjectsController projects(&translator, &sessionStore);
+    MouthsGameController mouths;
+
+    // Forward the game's cosmetic commands (mouth/gesture) to the preview
+    // robot mock, gated by its connection state.
+    QObject::connect(&mouths, &MouthsGameController::sendCommand, &robot,
+                     [&robot](const QString &data) {
+        if (robot.isConnected())
+            robot.sendData(data);
+    });
 
     if (options.connected) {
         session.saveActiveZowiDeviceAddress(options.deviceAddress);
@@ -272,6 +285,7 @@ int main(int argc, char *argv[])
     view.rootContext()->setContextProperty(QStringLiteral("Robot"), &robot);
     view.rootContext()->setContextProperty(QStringLiteral("Calibration"), &calibration);
     view.rootContext()->setContextProperty(QStringLiteral("Commands"), &commands);
+    view.rootContext()->setContextProperty(QStringLiteral("Mouths"), &mouths);
     view.rootContext()->setContextProperty(QStringLiteral("Projects"), &projects);
     view.rootContext()->setContextProperty(QStringLiteral("AppVersion"), QString(ZOWI_VERSION));
     // Optional: let a screen open on an internal step (e.g. calibration steps
