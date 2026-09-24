@@ -32,6 +32,7 @@
         <file>src/views/components/CalibrationTrimColumn.qml</file>
         <file>src/views/components/QuizComponent.qml</file>
         <file>src/views/components/FirmwareInstallOverlay.qml</file>
-        <file>src/views/components/TimelineItem.qml</file>
+        <file>src/views/components/TimelineChip.qml</file>
+        <file>src/views/components/CycleIconButton.qml</file>
     </qresource>
 </RCC>
