@@ -7,9 +7,11 @@ import "components"
 ApplicationWindow {
     id: main
     visible: true
-    // Window size ratio: change 0.6 to desired fraction (e.g., 0.8 for 80%)
-    width: Screen.desktopAvailableWidth * 0.6
-    height: Screen.desktopAvailableHeight * 0.65
+    // Window size ratio: change 0.85 to desired fraction (e.g., 0.8 for 80%)
+    width: Screen.desktopAvailableWidth * 0.85
+    height: Screen.desktopAvailableHeight * 0.85
+    x: (Screen.desktopAvailableWidth - width) / 2
+    y: (Screen.desktopAvailableHeight - height) / 2
     title: "ZowiDesktop - " + AppVersion + (stack.currentItem && stack.currentItem.screenName ? " - " + stack.currentItem.screenName : "")
     color: Config.get("color_bg_app") || "#f4f9f4"
 
