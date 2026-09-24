@@ -17,19 +17,6 @@ ScreenTemplate {
 
     signal movementSelected(string name, string type)
 
-    readonly property var actionPadOptions: [
-        { name: "Bend Forward",  icon: "qrc:/images/android/pad_bend_button.png" },
-        { name: "Shake Leg",     icon: "qrc:/images/android/pad_shake_leg_button.png" },
-        { name: "Up/Down",       icon: "qrc:/images/android/pad_updown_button.png" },
-        { name: "Jitter",        icon: "qrc:/images/android/pad_jitter_button.png" },
-        { name: "Swing",         icon: "qrc:/images/android/pad_swing_button.png" },
-        { name: "Flapping",      icon: "qrc:/images/android/pad_flapping_button.png" },
-        { name: "Crusaito",      icon: "qrc:/images/android/pad_crusaito_button.png" }
-    ]
-
-    property real buttonSize: 80        // Configurable button size
-    property real cellSpacing: 14
-    property int padColumns: 2           // Columns per pad grid
     property real padSpacing: 60         // Separation between movementPad and actionPad
 
     // movementPad D-pad layout (exact replica of PadScreen.qml)
@@ -41,52 +28,10 @@ ScreenTemplate {
     property real dpadVerticalOffset: 40    // Walk F/B offset toward center
     property real dpadHorizontalOffset: 10  // Moonwalker L/R offset toward center
 
-    Component {
-        id: tileDelegate
-        Column {
-            width: root.buttonSize + 8
-            spacing: 4
-
-            Rectangle {
-                width: root.buttonSize
-                height: root.buttonSize
-                radius: Math.min(root.buttonSize * 0.2, 16)
-                color: mvMouse.containsMouse
-                       ? (Config.get("color_bg_hover") || "#e0f0e0")
-                       : "#ffffff"
-                border.color: Config.get("color_accent") || "#21a69b"
-                border.width: 1
-
-                Image {
-                    anchors.centerIn: parent
-                    width: root.buttonSize * 0.7
-                    height: root.buttonSize * 0.7
-                    source: modelData.icon
-                    sourceSize: Qt.size(root.buttonSize * 2, root.buttonSize * 2)
-                    fillMode: Image.PreserveAspectFit
-                }
-
-                MouseArea {
-                    id: mvMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.movementSelected(modelData.name, "movement")
-                }
-            }
-
-            Text {
-                text: modelData.name
-                anchors.horizontalCenter: parent.horizontalCenter
-                font.pixelSize: Math.max(9, root.buttonSize * 0.16)
-                font.bold: true
-                color: Config.get("color_primary") || "#2d5a2d"
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.WordWrap
-                width: root.buttonSize + 8
-            }
-        }
-    }
+    // actionPad layout (exact replica of PadScreen.qml)
+    property real actionPadSize: 290      // Fixed panel size (matches PadScreen's rectangleWidth)
+    property real actionButtonSize: 80    // Action button size (matches PadScreen)
+    property real actionRowSpacing: 5     // Spacing between/within action rows (matches PadScreen)
 
     Flickable {
         anchors.fill: parent
@@ -273,19 +218,192 @@ ScreenTemplate {
             Rectangle {
                 id: actionPad
                 Layout.alignment: Qt.AlignVCenter
-                width: actionGrid.implicitWidth + 30
-                height: actionGrid.implicitHeight + 30
+                width: root.actionPadSize
+                height: root.actionPadSize
                 color: Config.get("color_bg_connected") || "#e8f5e8"
                 radius: 15
                 border.color: Config.get("color_primary") || "#2d5a2d"
                 border.width: 2
 
-                Grid {
-                    id: actionGrid
+                Column {
                     anchors.centerIn: parent
-                    columns: root.padColumns
-                    spacing: root.cellSpacing
-                    Repeater { model: root.actionPadOptions; delegate: tileDelegate }
+                    spacing: root.actionRowSpacing
+
+                    Row {
+                        spacing: root.actionRowSpacing
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        Image {
+                            id: bendBtn
+                            width: root.actionButtonSize
+                            height: root.actionButtonSize
+                            source: "qrc:/images/android/pad_bend_button.png"
+                            sourceSize.width: root.actionButtonSize
+                            sourceSize.height: root.actionButtonSize
+                            fillMode: Image.PreserveAspectFit
+
+                            MouseArea {
+                                id: bendArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onPressed: bendBtn.source = "qrc:/images/android/pressed_pad_bend_button.png"
+                                onReleased: {
+                                    bendBtn.source = "qrc:/images/android/pad_bend_button.png"
+                                    root.movementSelected("Bend Forward", "movement")
+                                }
+                            }
+                            ToolTip.visible: bendArea.containsMouse
+                            ToolTip.text: "Bend Forward"
+                        }
+
+                        Image {
+                            id: shakeLegBtn
+                            width: root.actionButtonSize
+                            height: root.actionButtonSize
+                            source: "qrc:/images/android/pad_shake_leg_button.png"
+                            sourceSize.width: root.actionButtonSize
+                            sourceSize.height: root.actionButtonSize
+                            fillMode: Image.PreserveAspectFit
+
+                            MouseArea {
+                                id: shakeLegArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onPressed: shakeLegBtn.source = "qrc:/images/android/pressed_pad_shake_leg_button.png"
+                                onReleased: {
+                                    shakeLegBtn.source = "qrc:/images/android/pad_shake_leg_button.png"
+                                    root.movementSelected("Shake Leg", "movement")
+                                }
+                            }
+                            ToolTip.visible: shakeLegArea.containsMouse
+                            ToolTip.text: "Shake Leg"
+                        }
+                    }
+
+                    Row {
+                        spacing: root.actionRowSpacing
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        Image {
+                            id: updownBtn
+                            width: root.actionButtonSize
+                            height: root.actionButtonSize
+                            source: "qrc:/images/android/pad_updown_button.png"
+                            sourceSize.width: root.actionButtonSize
+                            sourceSize.height: root.actionButtonSize
+                            fillMode: Image.PreserveAspectFit
+
+                            MouseArea {
+                                id: updownArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onPressed: updownBtn.source = "qrc:/images/android/pressed_pad_updown_button.png"
+                                onReleased: {
+                                    updownBtn.source = "qrc:/images/android/pad_updown_button.png"
+                                    root.movementSelected("Up/Down", "movement")
+                                }
+                            }
+                            ToolTip.visible: updownArea.containsMouse
+                            ToolTip.text: "Up/Down"
+                        }
+
+                        Image {
+                            id: jitterBtn
+                            width: root.actionButtonSize
+                            height: root.actionButtonSize
+                            source: "qrc:/images/android/pad_jitter_button.png"
+                            sourceSize.width: root.actionButtonSize
+                            sourceSize.height: root.actionButtonSize
+                            fillMode: Image.PreserveAspectFit
+
+                            MouseArea {
+                                id: jitterArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onPressed: jitterBtn.source = "qrc:/images/android/pressed_pad_jitter_button.png"
+                                onReleased: {
+                                    jitterBtn.source = "qrc:/images/android/pad_jitter_button.png"
+                                    root.movementSelected("Jitter", "movement")
+                                }
+                            }
+                            ToolTip.visible: jitterArea.containsMouse
+                            ToolTip.text: "Jitter"
+                        }
+
+                        Image {
+                            id: swingBtn
+                            width: root.actionButtonSize
+                            height: root.actionButtonSize
+                            source: "qrc:/images/android/pad_swing_button.png"
+                            sourceSize.width: root.actionButtonSize
+                            sourceSize.height: root.actionButtonSize
+                            fillMode: Image.PreserveAspectFit
+
+                            MouseArea {
+                                id: swingArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onPressed: swingBtn.source = "qrc:/images/android/pressed_pad_swing_button.png"
+                                onReleased: {
+                                    swingBtn.source = "qrc:/images/android/pad_swing_button.png"
+                                    root.movementSelected("Swing", "movement")
+                                }
+                            }
+                            ToolTip.visible: swingArea.containsMouse
+                            ToolTip.text: "Swing"
+                        }
+                    }
+
+                    Row {
+                        spacing: root.actionRowSpacing
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        Image {
+                            id: flappingBtn
+                            width: root.actionButtonSize
+                            height: root.actionButtonSize
+                            source: "qrc:/images/android/pad_flapping_button.png"
+                            sourceSize.width: root.actionButtonSize
+                            sourceSize.height: root.actionButtonSize
+                            fillMode: Image.PreserveAspectFit
+
+                            MouseArea {
+                                id: flappingArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onPressed: flappingBtn.source = "qrc:/images/android/pressed_pad_flapping_button.png"
+                                onReleased: {
+                                    flappingBtn.source = "qrc:/images/android/pad_flapping_button.png"
+                                    root.movementSelected("Flapping", "movement")
+                                }
+                            }
+                            ToolTip.visible: flappingArea.containsMouse
+                            ToolTip.text: "Flapping"
+                        }
+
+                        Image {
+                            id: crusaitoBtn
+                            width: root.actionButtonSize
+                            height: root.actionButtonSize
+                            source: "qrc:/images/android/pad_crusaito_button.png"
+                            sourceSize.width: root.actionButtonSize
+                            sourceSize.height: root.actionButtonSize
+                            fillMode: Image.PreserveAspectFit
+
+                            MouseArea {
+                                id: crusaitoArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onPressed: crusaitoBtn.source = "qrc:/images/android/pressed_pad_crusaito_button.png"
+                                onReleased: {
+                                    crusaitoBtn.source = "qrc:/images/android/pad_crusaito_button.png"
+                                    root.movementSelected("Crusaito", "movement")
+                                }
+                            }
+                            ToolTip.visible: crusaitoArea.containsMouse
+                            ToolTip.text: "Crusaito"
+                        }
+                    }
                 }
             }
         }
