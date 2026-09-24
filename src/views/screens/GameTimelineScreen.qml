@@ -60,6 +60,7 @@ ScreenTemplate {
     }
 
     property bool isPlayingTimeline: false
+    readonly property int addButtonSize: 80
 
     Item {
         anchors.fill: parent
@@ -155,20 +156,71 @@ ScreenTemplate {
             // Add buttons, fixed order: Mouth, Animation, Movement
             RowLayout {
                 spacing: 10
-                Button {
-                    text: root.tr("add_mouth")
-                    implicitHeight: 44
-                    onClicked: root.mouthSelectorRequested()
+                Image {
+                    id: addMouthBtn
+                    width: root.addButtonSize
+                    height: root.addButtonSize
+                    source: "qrc:/images/android/smile_button.png"
+                    sourceSize.width: root.addButtonSize
+                    sourceSize.height: root.addButtonSize
+                    fillMode: Image.PreserveAspectFit
+
+                    MouseArea {
+                        id: addMouthArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onPressed: addMouthBtn.source = "qrc:/images/android/pressed_smile_button.png"
+                        onReleased: {
+                            addMouthBtn.source = "qrc:/images/android/smile_button.png"
+                            root.mouthSelectorRequested()
+                        }
+                    }
+                    ToolTip.visible: addMouthArea.containsMouse
+                    ToolTip.text: root.tr("add_mouth")
                 }
-                Button {
-                    text: root.tr("add_animation")
-                    implicitHeight: 44
-                    onClicked: root.animationSelectorRequested()
+                Image {
+                    id: addAnimationBtn
+                    width: root.addButtonSize
+                    height: root.addButtonSize
+                    source: "qrc:/images/android/animation_happy_button.png"
+                    sourceSize.width: root.addButtonSize
+                    sourceSize.height: root.addButtonSize
+                    fillMode: Image.PreserveAspectFit
+
+                    MouseArea {
+                        id: addAnimationArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onPressed: addAnimationBtn.source = "qrc:/images/android/pressed_animation_happy_button.png"
+                        onReleased: {
+                            addAnimationBtn.source = "qrc:/images/android/animation_happy_button.png"
+                            root.animationSelectorRequested()
+                        }
+                    }
+                    ToolTip.visible: addAnimationArea.containsMouse
+                    ToolTip.text: root.tr("add_animation")
                 }
-                Button {
-                    text: root.tr("add_movement")
-                    implicitHeight: 44
-                    onClicked: root.movementSelectorRequested()
+                Image {
+                    id: addMovementBtn
+                    width: root.addButtonSize
+                    height: root.addButtonSize
+                    source: "qrc:/images/android/choreography_button.png"
+                    sourceSize.width: root.addButtonSize
+                    sourceSize.height: root.addButtonSize
+                    fillMode: Image.PreserveAspectFit
+
+                    MouseArea {
+                        id: addMovementArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onPressed: addMovementBtn.source = "qrc:/images/android/pressed_choreography_button.png"
+                        onReleased: {
+                            addMovementBtn.source = "qrc:/images/android/choreography_button.png"
+                            root.movementSelectorRequested()
+                        }
+                    }
+                    ToolTip.visible: addMovementArea.containsMouse
+                    ToolTip.text: root.tr("add_movement")
                 }
             }
 
