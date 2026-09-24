@@ -7,9 +7,11 @@ import "components"
 ApplicationWindow {
     id: main
     visible: true
-    // Window size ratio: change 0.85 to desired fraction (e.g., 0.8 for 80%)
-    width: Screen.desktopAvailableWidth * 0.85
-    height: Screen.desktopAvailableHeight * 0.85
+    // Window size ratio (fraction of available screen size), configurable via
+    // config.json "window_size_ratio". Falls back to 0.85 if unset/invalid.
+    readonly property real windowSizeRatio: parseFloat(Config.get("window_size_ratio")) || 0.85
+    width: Screen.desktopAvailableWidth * windowSizeRatio
+    height: Screen.desktopAvailableHeight * windowSizeRatio
     x: (Screen.desktopAvailableWidth - width) / 2
     y: (Screen.desktopAvailableHeight - height) / 2
     title: "ZowiDesktop - " + AppVersion + (stack.currentItem && stack.currentItem.screenName ? " - " + stack.currentItem.screenName : "")
