@@ -290,6 +290,7 @@
   },
   "GameTimelineScreen.qml": {
     "title": "Línea de tiempo",
+    "subtitle": "3, 2, 1... ¡Acción! Crea tu propia coreografía combinando movimientos, animaciones y gestos para dar vida a tu Zowi.",
     "play_button": "Reproducir",
     "stop_button": "Detener",
     "add_movement": "Añadir Movimiento",

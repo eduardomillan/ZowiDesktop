@@ -8,8 +8,8 @@ ApplicationWindow {
     id: main
     visible: true
     // Window size ratio (fraction of available screen size), configurable via
-    // config.json "window_size_ratio". Falls back to 0.85 if unset/invalid.
-    readonly property real windowSizeRatio: parseFloat(Config.get("window_size_ratio")) || 0.85
+    // config.json "window_size_ratio". Falls back to 0.75 if unset/invalid.
+    readonly property real windowSizeRatio: parseFloat(Config.get("window_size_ratio")) || 0.75
     width: Screen.desktopAvailableWidth * windowSizeRatio
     height: Screen.desktopAvailableHeight * windowSizeRatio
     x: (Screen.desktopAvailableWidth - width) / 2

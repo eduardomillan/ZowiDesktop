@@ -19,6 +19,7 @@ ScreenTemplate {
     subtitle: tr("subtitle")
     showBackButton: true
     footerHeight: 50
+    property int cornerButtonSize: 88  // Configurable corner button size
 
     // Target-miniature policy, config "mouths_target_onscreen":
     //   "auto"   (default) → shown only while the robot is NOT connected
@@ -95,8 +96,8 @@ ScreenTemplate {
 
         Button {
             id: rankingBtn
-            width: 88
-            height: 88
+            width: root.cornerButtonSize
+            height: root.cornerButtonSize
             enabled: false
 
             contentItem: Image {
@@ -114,8 +115,8 @@ ScreenTemplate {
 
         Button {
             id: helpBtn
-            width: 88
-            height: 88
+            width: root.cornerButtonSize
+            height: root.cornerButtonSize
 
             contentItem: Image {
                 source: "qrc:/images/android/how_to_play_button.png"

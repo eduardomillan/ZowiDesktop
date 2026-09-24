@@ -17,6 +17,7 @@ ScreenTemplate {
     id: root
     screenName: "GameTimelineScreen"
     title: tr("title")
+    subtitle: tr("subtitle")
     showBackButton: true
 
     function tr(source) { return Translator.translate("GameTimelineScreen.qml", source) }
@@ -61,6 +62,13 @@ ScreenTemplate {
 
     property bool isPlayingTimeline: false
     readonly property int addButtonSize: 80
+    property real buttonSpacingRatio: 0.03  // % of window width; adjust for testing
+
+    // TimelineChip configurable sizes
+    property int chipWidth: 200
+    property int chipHeight: 180
+    property int chipIconSize: 72
+    property int chipDeleteButtonSize: 40
 
     Item {
         anchors.fill: parent
@@ -84,13 +92,17 @@ ScreenTemplate {
 
                 delegate: Item {
                     id: wrapper
-                    width: 200
-                    height: 180
+                    width: root.chipWidth
+                    height: root.chipHeight
                     property bool dragging: false
 
                     TimelineChip {
                         id: chip
                         anchors.fill: parent
+                        chipWidth: root.chipWidth
+                        chipHeight: root.chipHeight
+                        chipIconSize: root.chipIconSize
+                        chipDeleteButtonSize: root.chipDeleteButtonSize
                         commandData: ({
                             name: model.name,
                             type: model.type,
@@ -155,7 +167,7 @@ ScreenTemplate {
 
             // Add buttons, fixed order: Mouth, Animation, Movement
             RowLayout {
-                spacing: 10
+                spacing: root.width * root.buttonSpacingRatio
                 Image {
                     id: addMouthBtn
                     width: root.addButtonSize
@@ -228,30 +240,29 @@ ScreenTemplate {
 
             // Single circular Play/Stop toggle button
             Button {
-                implicitWidth: 56
-                implicitHeight: 56
+                implicitWidth: root.addButtonSize
+                implicitHeight: root.addButtonSize
                 enabled: root.isPlayingTimeline || (Robot.connected && timelineModel.count > 0)
                 contentItem: Item {
                     anchors.centerIn: parent
                     Image {
                         anchors.centerIn: parent
-                        source: root.isPlayingTimeline ? "qrc:/images/android/ic_play_arrow_white_24dp.png"
-                                                       : "qrc:/images/android/ic_play_arrow_white_24dp.png"
-                        width: 24
-                        height: 24
+                        source: "qrc:/images/android/ic_play_arrow_white_24dp.png"
+                        width: root.addButtonSize * 0.43
+                        height: root.addButtonSize * 0.43
                         fillMode: Image.PreserveAspectFit
                         visible: !root.isPlayingTimeline
                     }
                     Rectangle {
                         anchors.centerIn: parent
-                        width: 16
-                        height: 16
+                        width: root.addButtonSize * 0.29
+                        height: root.addButtonSize * 0.29
                         color: "#ffffff"
                         visible: root.isPlayingTimeline
                     }
                 }
                 background: Rectangle {
-                    radius: 28
+                    radius: root.addButtonSize / 2
                     color: parent.down
                            ? (Config.get("color_accent_pressed") || "#17736c")
                            : (parent.enabled ? (Config.get("color_accent") || "#21a69b")

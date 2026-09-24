@@ -22,6 +22,7 @@ ScreenTemplate {
     readonly property int yr: 1
     readonly property int rl: 2
     readonly property int rr: 3
+    property int buttonHeight: 56  // Configurable button height
 
     function tr(source) { return Translator.translate("CalibrationScreen.qml", source) }
     function send(cmd) { if (Robot.connected) Robot.sendData(cmd) }
@@ -147,7 +148,7 @@ top: Calibration.step === 0 ? projectImage.bottom : parent.top
                     Button {
                         id: cancelButton
                         implicitWidth: 200
-                        height: 56
+                        height: root.buttonHeight
                         text: root.tr("cancel")
                         background: Rectangle {
                             color: cancelButton.pressed ? Config.get("color_danger_pressed") || "#c0392b" : Config.get("color_danger") || "#e74c3c"
@@ -167,7 +168,7 @@ top: Calibration.step === 0 ? projectImage.bottom : parent.top
                     Button {
                         id: continueButton
                         implicitWidth: 200
-                        height: 56
+                        height: root.buttonHeight
                         text: root.tr("continue")
                         background: Rectangle {
                             color: continueButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
@@ -347,7 +348,7 @@ top: Calibration.step === 0 ? projectImage.bottom : parent.top
                     Button {
                         id: testButton
                         implicitWidth: 190
-                        height: 56
+                        height: root.buttonHeight
                         text: root.tr("test_movement")
                         background: Rectangle {
                             color: testButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
@@ -367,7 +368,7 @@ top: Calibration.step === 0 ? projectImage.bottom : parent.top
                     Button {
                         id: restartButton
                         implicitWidth: 190
-                        height: 56
+                        height: root.buttonHeight
                         text: root.tr("restart")
                         background: Rectangle {
                             color: restartButton.pressed ? Config.get("color_warning_pressed") || "#d35400" : Config.get("color_warning") || "#e67e22"
@@ -390,7 +391,7 @@ top: Calibration.step === 0 ? projectImage.bottom : parent.top
                     Button {
                         id: confirmButton
                         implicitWidth: 190
-                        height: 56
+                        height: root.buttonHeight
                         text: root.tr("confirm")
                         background: Rectangle {
                             color: confirmButton.pressed ? Config.get("color_primary_pressed") || "#1c3a1c" : Config.get("color_primary") || "#2d5a2d"

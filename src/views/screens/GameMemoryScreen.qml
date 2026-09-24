@@ -12,6 +12,7 @@ ScreenTemplate {
     subtitle: tr("subtitle")
     showBackButton: true
     footerHeight: 140
+    property int cornerButtonSize: 88  // Configurable corner button size
 
     function tr(source) { return Translator.translate("GameMemoryScreen.qml", source) }
 
@@ -46,8 +47,8 @@ ScreenTemplate {
         // Ranking (placeholder for the future top-10 list)
         Button {
             id: rankingBtn
-            width: 88
-            height: 88
+            width: root.cornerButtonSize
+            height: root.cornerButtonSize
             enabled: false
 
             contentItem: Image {
@@ -66,8 +67,8 @@ ScreenTemplate {
         // Help ("Cómo jugar")
         Button {
             id: helpBtn
-            width: 88
-            height: 88
+            width: root.cornerButtonSize
+            height: root.cornerButtonSize
 
             contentItem: Image {
                 source: "qrc:/images/android/how_to_play_button.png"

@@ -10,8 +10,13 @@ import "../components"
 Item {
     id: root
     property var commandData: ({})
-    implicitWidth: 200
-    implicitHeight: 180
+    property int chipWidth: 200         // Configurable chip width
+    property int chipHeight: 180        // Configurable chip height
+    property int chipIconSize: 72       // Configurable icon size
+    property int chipDeleteButtonSize: 40  // Configurable delete button size
+
+    implicitWidth: chipWidth
+    implicitHeight: chipHeight
 
     signal deleteRequested()
     signal repsChanged(int reps)
@@ -98,8 +103,8 @@ Item {
         // Icon tile: 200x120, rounded corners, dark bottom lip
         Rectangle {
             id: tile
-            Layout.preferredWidth: 200
-            Layout.preferredHeight: 120
+            Layout.preferredWidth: root.chipWidth
+            Layout.preferredHeight: root.chipHeight * 0.67  // Maintain aspect ratio (120/180)
             radius: 14
             color: root.colors.base
 
@@ -113,9 +118,9 @@ Item {
             Image {
                 anchors.centerIn: parent
                 source: root.iconSource
-                sourceSize: Qt.size(72, 72)
-                width: 72
-                height: 72
+                sourceSize: Qt.size(root.chipIconSize, root.chipIconSize)
+                width: root.chipIconSize
+                height: root.chipIconSize
                 fillMode: Image.PreserveAspectFit
             }
 
@@ -125,8 +130,8 @@ Item {
             // Delete overlay, top-right
             Button {
                 anchors { top: parent.top; right: parent.right; margins: -6 }
-                width: 40
-                height: 40
+                width: root.chipDeleteButtonSize
+                height: root.chipDeleteButtonSize
                 flat: true
                 contentItem: Image {
                     source: parent.down ? "qrc:/images/android/pressed_delete_button.png"

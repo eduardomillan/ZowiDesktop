@@ -18,6 +18,7 @@ ScreenTemplate {
     property string projectId: ""
     title: project.title || tr("title")
     subtitle: ""
+    property int buttonHeight: 56  // Configurable button height
 
     // Emitted when the (optional) third footer button is pressed. `target` is
     // the project's configured action_target (e.g. "gamepad"); main.qml maps
@@ -196,7 +197,7 @@ ScreenTemplate {
             Button {
                 id: learnMoreButton
                 implicitWidth: 200
-                height: 56
+                height: root.buttonHeight
                 text: projectScreen.tr("learn_more")
                 background: Rectangle {
                     color: learnMoreButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
@@ -216,7 +217,7 @@ ScreenTemplate {
             Button {
                 id: testButton
                 implicitWidth: 200
-                height: 56
+                height: root.buttonHeight
                 text: projectScreen.tr("test")
                 enabled: !projectScreen.quizStarted && Projects.isQuizEnabled()
                 background: Rectangle {
@@ -249,7 +250,7 @@ ScreenTemplate {
                 id: actionButton
                 visible: project.actionTarget && project.actionTarget !== ""
                 implicitWidth: 200
-                height: 56
+                height: root.buttonHeight
                 text: project.actionLabel || project.actionTarget || ""
                 background: Rectangle {
                     color: actionButton.pressed ? Config.get("color_primary_pressed") || "#1f4a1f" : Config.get("color_primary") || "#2d5a2d"
@@ -274,7 +275,7 @@ ScreenTemplate {
                 id: installButton
                 visible: project.hexPath && project.hexPath !== ""
                 implicitWidth: 200
-                height: 56
+                height: root.buttonHeight
                 text: projectScreen.tr("install_firmware")
                 enabled: Robot.connected && !projectScreen.installing && !projectScreen.quizStarted
                 background: Rectangle {

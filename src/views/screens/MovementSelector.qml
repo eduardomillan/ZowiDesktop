@@ -32,7 +32,7 @@ ScreenTemplate {
         { name: "Crusaito",      icon: "qrc:/images/android/pad_crusaito_button.png" }
     ]
 
-    property real iconSize: 72
+    property real buttonSize: 80  // Configurable button size
     property real cellSpacing: 14
 
     Flickable {
@@ -55,13 +55,13 @@ ScreenTemplate {
                 model: root.movementOptions
 
                 Column {
-                    width: root.iconSize + 8
+                    width: root.buttonSize + 8
                     spacing: 4
 
                     Rectangle {
-                        width: root.iconSize
-                        height: root.iconSize
-                        radius: Math.min(root.iconSize * 0.2, 16)
+                        width: root.buttonSize
+                        height: root.buttonSize
+                        radius: Math.min(root.buttonSize * 0.2, 16)
                         color: mvMouse.containsMouse
                                ? (Config.get("color_bg_hover") || "#e0f0e0")
                                : "#ffffff"
@@ -70,10 +70,10 @@ ScreenTemplate {
 
                         Image {
                             anchors.centerIn: parent
-                            width: root.iconSize * 0.7
-                            height: root.iconSize * 0.7
+                            width: root.buttonSize * 0.7
+                            height: root.buttonSize * 0.7
                             source: modelData.icon
-                            sourceSize: Qt.size(root.iconSize * 2, root.iconSize * 2)
+                            sourceSize: Qt.size(root.buttonSize * 2, root.buttonSize * 2)
                             fillMode: Image.PreserveAspectFit
                         }
 
@@ -89,12 +89,12 @@ ScreenTemplate {
                     Text {
                         text: modelData.name
                         anchors.horizontalCenter: parent.horizontalCenter
-                        font.pixelSize: Math.max(9, root.iconSize * 0.16)
+                        font.pixelSize: Math.max(9, root.buttonSize * 0.16)
                         font.bold: true
                         color: Config.get("color_primary") || "#2d5a2d"
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
-                        width: root.iconSize + 8
+                        width: root.buttonSize + 8
                     }
                 }
             }

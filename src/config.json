@@ -33,7 +33,7 @@
     "transport_timeout": "1500",
     "connect_timeout": "10000",
     "rename_lock_ms": "3000",
-    "window_size_ratio": "0.85",
+    "window_size_ratio": "0.75",
     "dev_mode": "false",
     "zowi_dice_help": "always",
     "mouths_help": "always",
