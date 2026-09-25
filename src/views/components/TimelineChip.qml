@@ -31,19 +31,19 @@ Item {
     function resolveIcon(type, name) {
         var iconMap = {
             movement: {
-                "Walk Forward":      "qrc:/images/android/timeline_walk.png",
-                "Walk Backward":     "qrc:/images/android/timeline_walk.png",
-                "Turn Left":         "qrc:/images/android/timeline_turn.png",
-                "Turn Right":        "qrc:/images/android/timeline_turn.png",
-                "Moonwalker Left":   "qrc:/images/android/timeline_moonwalk.png",
-                "Moonwalker Right":  "qrc:/images/android/timeline_moonwalk.png",
-                "Bend Forward":      "qrc:/images/android/timeline_bend.png",
-                "Shake Leg":         "qrc:/images/android/timeline_shake_leg.png",
-                "Up/Down":           "qrc:/images/android/timeline_updown.png",
-                "Jitter":            "qrc:/images/android/timeline_jitter.png",
-                "Swing":             "qrc:/images/android/timeline_swing.png",
-                "Flapping":          "qrc:/images/android/timeline_flapping.png",
-                "Crusaito":          "qrc:/images/android/timeline_crusaito.png"
+                "Walk Forward":      "qrc:/images/android/pad_walk_forward.png",
+                "Walk Backward":     "qrc:/images/android/pad_walk_backward.png",
+                "Turn Left":         "qrc:/images/android/pad_turn_left_button.png",
+                "Turn Right":        "qrc:/images/android/pad_turn_right_button.png",
+                "Moonwalker Left":   "qrc:/images/android/pad_moonwalker_left.png",
+                "Moonwalker Right":  "qrc:/images/android/pad_moonwalker_right.png",
+                "Bend Forward":      "qrc:/images/android/pad_bend_button.png",
+                "Shake Leg":         "qrc:/images/android/pad_shake_leg_button.png",
+                "Up/Down":           "qrc:/images/android/pad_updown_button.png",
+                "Jitter":            "qrc:/images/android/pad_jitter_button.png",
+                "Swing":             "qrc:/images/android/pad_swing_button.png",
+                "Flapping":          "qrc:/images/android/pad_flapping_button.png",
+                "Crusaito":          "qrc:/images/android/pad_crusaito_button.png"
             },
             animation: {
                 "Happy":       "qrc:/images/android/animation_happy_icon.png",
