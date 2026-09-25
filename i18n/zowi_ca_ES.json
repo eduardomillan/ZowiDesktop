@@ -208,7 +208,8 @@
     "confirm": "Confirma"
   },
   "MouthScreen.qml": {
-    "mouths_title": "Boques"
+    "mouths_title": "Boques",
+    "close": "Tancar"
   },
   "MouthEditorScreen.qml": {
     "title": "Editor de boques",
@@ -218,7 +219,8 @@
     "pattern_label": "Patró"
   },
   "GestureScreen.qml": {
-    "gestures_title": "Gestos"
+    "gestures_title": "Gestos",
+    "close": "Tancar"
   },
   "SoundsScreen.qml": {
     "sounds_title": "Sons",
@@ -307,12 +309,14 @@
     "add_mouth": "Afegeix boca",
     "help": "Ajuda",
     "empty_timeline": "La teva línia de temps està buida. Afegeix alguns comandaments per començar!",
+    "how_to_play_text": "Selecciona gestos, animacions i moviments per afegir-los a la línia de temps. Quan tinguis una combinació que t'agrada, prem Play i mira com ZOWINAME cobra vida! Pots combinar-ho amb una cançó que estigueu tocant al mateix temps per crear una coreografia.",
     "repetitions": "Reps",
     "duration": "Duració",
     "dir": "Dir"
   },
   "MovementSelector.qml": {
     "title": "Triïa un moviment",
-    "subtitle": "Toca un moviment per afegir-lo a la teva línia de temps"
+    "subtitle": "Toca un moviment per afegir-lo a la teva línia de temps",
+    "close": "Tancar"
   }
 }

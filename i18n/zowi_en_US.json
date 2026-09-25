@@ -209,7 +209,8 @@
     "confirm": "Confirm"
   },
   "MouthScreen.qml": {
-    "mouths_title": "Mouths"
+    "mouths_title": "Mouths",
+    "close": "Close"
   },
   "MouthEditorScreen.qml": {
     "title": "Mouth editor",
@@ -219,7 +220,8 @@
     "pattern_label": "Pattern"
   },
   "GestureScreen.qml": {
-    "gestures_title": "Gestures"
+    "gestures_title": "Gestures",
+    "close": "Close"
   },
   "SoundsScreen.qml": {
     "sounds_title": "Sounds",
@@ -308,12 +310,14 @@
     "add_mouth": "Add Mouth",
     "help": "Help",
     "empty_timeline": "Your timeline is empty. Add some commands to start!",
+    "how_to_play_text": "Select gestures, animations and movements to add them to the timeline. When you have a combination you like, hit Play and watch ZOWINAME come to life! You can combine it with a song you play at the same time to create a choreography.",
     "repetitions": "Reps",
     "duration": "Duration",
     "dir": "Dir"
   },
   "MovementSelector.qml": {
     "title": "Select a movement",
-    "subtitle": "Tap a movement to add it to your timeline"
+    "subtitle": "Tap a movement to add it to your timeline",
+    "close": "Close"
   }
 }

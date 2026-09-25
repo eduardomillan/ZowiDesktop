@@ -13,6 +13,7 @@ ScreenTemplate {
     showBackButton: true
     footerHeight: 140
     property int cornerButtonSize: 88  // Configurable corner button size
+    property real helpDialogWidthRatio: 0.5  // Help dialog width as % of window width
 
     function tr(source) { return Translator.translate("GameMemoryScreen.qml", source) }
 
@@ -349,7 +350,7 @@ ScreenTemplate {
     Dialog {
         id: helpDialog
         modal: true
-        width: 460
+        width: Math.round(root.width * root.helpDialogWidthRatio)
         anchors.centerIn: parent
 
         property real helpContentH: helpTitle.height + helpImg.height

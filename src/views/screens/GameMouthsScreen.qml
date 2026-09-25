@@ -20,6 +20,7 @@ ScreenTemplate {
     showBackButton: true
     footerHeight: 50
     property int cornerButtonSize: 88  // Configurable corner button size
+    property real helpDialogWidthRatio: 0.5  // Help dialog width as % of window width
 
     // Target-miniature policy, config "mouths_target_onscreen":
     //   "auto"   (default) → shown only while the robot is NOT connected
@@ -338,7 +339,7 @@ ScreenTemplate {
     Dialog {
         id: helpDialog
         modal: true
-        width: 460
+        width: Math.round(root.width * root.helpDialogWidthRatio)
         anchors.centerIn: parent
 
         property real helpContentH: helpTitle.height + helpImg.height

@@ -19,6 +19,8 @@ ScreenTemplate {
     title: tr("title")
     subtitle: tr("subtitle")
     showBackButton: true
+    property int cornerButtonSize: 88  // Configurable corner button size
+    property real helpDialogWidthRatio: 0.5  // Help dialog width as % of window width
 
     function tr(source) { return Translator.translate("GameTimelineScreen.qml", source) }
 
@@ -69,8 +71,8 @@ ScreenTemplate {
     property real chipHeightRatio: 0.60           // % of strip area height (stripArea, not full screen)
     property real chipIconSizeRatio: 0.50         // % of chipWidth
     property real chipDeleteButtonSizeRatio: 0.35 // % of chipWidth
-    property real chipButtonWidthRatio: 0.40      // % of chipWidth (reps/duration/direction buttons)
-    property real chipButtonHeightRatio: 0.35     // % of chipWidth (reps/duration/direction buttons)
+    property real chipButtonWidthRatio: 0.30      // % of chipWidth (reps/duration/direction buttons)
+    property real chipButtonHeightRatio: 0.28     // % of chipWidth (reps/duration/direction buttons)
 
     property int chipWidth: Math.max(120, Math.round(root.width * chipWidthRatio))
     property int chipHeight: Math.max(110, Math.round(stripArea.height * chipHeightRatio))
@@ -81,6 +83,50 @@ ScreenTemplate {
 
     // Use dialogs or full-screen selectors for timeline item selection
     readonly property bool useDialogSelectors: Config.get("timeline_selectors_as_dialogs") === "true"
+
+    // ─── Corner buttons: Ranking + Help (top-right) ─────────────────────────
+    corner: Row {
+        spacing: -10
+
+        Button {
+            id: rankingBtn
+            width: root.cornerButtonSize
+            height: root.cornerButtonSize
+            enabled: false
+
+            contentItem: Image {
+                source: "qrc:/images/android/ranking_button.png"
+                sourceSize.width: 56
+                sourceSize.height: 56
+                fillMode: Image.PreserveAspectFit
+            }
+
+            background: Rectangle {
+                radius: 44
+                color: rankingBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+            }
+        }
+
+        Button {
+            id: helpBtn
+            width: root.cornerButtonSize
+            height: root.cornerButtonSize
+
+            contentItem: Image {
+                source: "qrc:/images/android/how_to_play_button.png"
+                sourceSize.width: 56
+                sourceSize.height: 56
+                fillMode: Image.PreserveAspectFit
+            }
+
+            background: Rectangle {
+                radius: 44
+                color: helpBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+            }
+
+            onClicked: helpDialog.open()
+        }
+    }
 
     Item {
         anchors.fill: parent
@@ -312,5 +358,97 @@ ScreenTemplate {
     MovementSelectorDialog {
         id: movementDialog
         onMovementSelected: (name, type) => root.addCommand(type, name)
+    }
+
+    // ─── Help Dialog ────────────────────────────────────────────────────────
+    Dialog {
+        id: helpDialog
+        modal: true
+        width: Math.round(root.width * root.helpDialogWidthRatio)
+        anchors.centerIn: parent
+
+        property real helpContentH: helpTitle.height + helpImg.height
+                                    + helpText.implicitHeight + helpCloseBtn.height
+                                    + 3 * helpCol.spacing
+        height: Math.ceil(helpContentH) + 48 + Math.round(helpContentH * 0.05)
+
+        background: Rectangle {
+            radius: 20
+            color: "#ffffff"
+            border.color: Config.get("color_accent") || "#21a69b"
+            border.width: 2
+        }
+
+        contentItem: Column {
+            id: helpCol
+            spacing: 18
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+                margins: 24
+            }
+
+            Text {
+                id: helpTitle
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root.tr("title")
+                font.pixelSize: 20
+                font.bold: true
+                color: Config.get("color_primary") || "#2d5a2d"
+            }
+
+            Image {
+                id: helpImg
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 130
+                height: 130
+                source: "qrc:/images/android/timeline_button.png"
+                sourceSize.width: 130
+                sourceSize.height: 130
+                fillMode: Image.PreserveAspectFit
+            }
+
+            Text {
+                id: helpText
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
+                text: {
+                    var baseText = root.tr("how_to_play_text")
+                    var zowiName = Session.getString("activeZowiName", "Zowi")
+                    return baseText.replace("ZOWINAME", zowiName)
+                }
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: 14
+                color: Config.get("color_primary") || "#2d5a2d"
+            }
+
+            Button {
+                id: helpCloseBtn
+                anchors.horizontalCenter: parent.horizontalCenter
+                implicitWidth: 160
+                implicitHeight: 44
+                text: root.tr("close")
+
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.bold: true
+                    font.pixelSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: 22
+                    color: helpCloseBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
+                }
+
+                onClicked: helpDialog.close()
+            }
+        }
     }
 }

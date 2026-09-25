@@ -208,7 +208,8 @@
     "confirm": "Confirmer"
   },
   "MouthScreen.qml": {
-    "mouths_title": "Bouches"
+    "mouths_title": "Bouches",
+    "close": "Fermer"
   },
   "MouthEditorScreen.qml": {
     "title": "Éditeur de bouches",
@@ -218,7 +219,8 @@
     "pattern_label": "Motif"
   },
   "GestureScreen.qml": {
-    "gestures_title": "Gestes"
+    "gestures_title": "Gestes",
+    "close": "Fermer"
   },
   "SoundsScreen.qml": {
     "sounds_title": "Sons",
@@ -307,12 +309,14 @@
     "add_mouth": "Ajouter bouche",
     "help": "Aide",
     "empty_timeline": "Votre ligne de temps est vide. Ajoutez des commandes pour commencer!",
+    "how_to_play_text": "Sélectionnez des gestes, des animations et des mouvements pour les ajouter à la ligne de temps. Quand tu auras une combinaison que tu aimes, appuie sur Play et regarde ZOWINAME prendre vie ! Tu peux le combiner avec une chanson que tu joues en même temps pour créer une chorégraphie.",
     "repetitions": "Reps",
     "duration": "Durée",
     "dir": "Dir"
   },
   "MovementSelector.qml": {
     "title": "Choisissez un mouvement",
-    "subtitle": "Touchez un mouvement pour l'ajouter à votre ligne de temps"
+    "subtitle": "Touchez un mouvement pour l'ajouter à votre ligne de temps",
+    "close": "Fermer"
   }
 }
