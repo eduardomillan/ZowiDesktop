@@ -1,10 +1,42 @@
 # src/gui/CMakeLists.txt
+
+# Auto-generate views.qrc, images.qrc, projects.qrc from disk globbing.
+# app.qrc and i18n.qrc remain manually maintained (small, with custom aliases/locales).
+include(${CMAKE_SOURCE_DIR}/cmake/GenerateQrc.cmake)
+
+set(GENERATED_QRC_DIR ${CMAKE_BINARY_DIR}/generated)
+file(MAKE_DIRECTORY ${GENERATED_QRC_DIR})
+
+# Generate views.qrc: all .qml files under src/views/
+zowi_generate_qrc(${GENERATED_QRC_DIR}/views.qrc ${CMAKE_SOURCE_DIR} "/"
+    ${CMAKE_SOURCE_DIR}/src/views/*.qml
+    ${CMAKE_SOURCE_DIR}/src/views/screens/*.qml
+    ${CMAKE_SOURCE_DIR}/src/views/components/*.qml
+)
+
+# Generate images.qrc: image assets under images/ (excludes other formats like .xcf)
+zowi_generate_qrc(${GENERATED_QRC_DIR}/images.qrc ${CMAKE_SOURCE_DIR} "/"
+    ${CMAKE_SOURCE_DIR}/images/*.png
+    ${CMAKE_SOURCE_DIR}/images/*.jpg
+    ${CMAKE_SOURCE_DIR}/images/*.jpeg
+    ${CMAKE_SOURCE_DIR}/images/*/*.png
+    ${CMAKE_SOURCE_DIR}/images/*/*.jpg
+    ${CMAKE_SOURCE_DIR}/images/*/*.jpeg
+)
+
+# Generate projects.qrc: project data and locale pages/quizzes/strings
+zowi_generate_qrc(${GENERATED_QRC_DIR}/projects.qrc ${CMAKE_SOURCE_DIR}/projects "/projects"
+    ${CMAKE_SOURCE_DIR}/projects/*.json
+    ${CMAKE_SOURCE_DIR}/projects/*/*.json
+    ${CMAKE_SOURCE_DIR}/projects/*/*.html
+)
+
 set(GUI_QRC_FILES
-    ${CMAKE_SOURCE_DIR}/views.qrc
+    ${GENERATED_QRC_DIR}/views.qrc
     ${CMAKE_SOURCE_DIR}/app.qrc
-    ${CMAKE_SOURCE_DIR}/images.qrc
+    ${GENERATED_QRC_DIR}/images.qrc
     ${CMAKE_SOURCE_DIR}/i18n.qrc
-    ${CMAKE_SOURCE_DIR}/projects.qrc
+    ${GENERATED_QRC_DIR}/projects.qrc
 )
 if(ZOWI_QT_VERSION EQUAL 6)
     qt6_add_resources(GUI_RESOURCES ${GUI_QRC_FILES} OPTIONS --no-zstd)

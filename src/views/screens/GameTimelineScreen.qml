@@ -70,6 +70,9 @@ ScreenTemplate {
     property int chipIconSize: 72
     property int chipDeleteButtonSize: 40
 
+    // Use dialogs or full-screen selectors for timeline item selection
+    readonly property bool useDialogSelectors: Config.get("timeline_selectors_as_dialogs") === "true"
+
     Item {
         anchors.fill: parent
         anchors.margins: 20
@@ -184,7 +187,8 @@ ScreenTemplate {
                         onPressed: addMouthBtn.source = "qrc:/images/android/pressed_smile_button.png"
                         onReleased: {
                             addMouthBtn.source = "qrc:/images/android/smile_button.png"
-                            root.mouthSelectorRequested()
+                            if (root.useDialogSelectors) mouthDialog.open()
+                            else root.mouthSelectorRequested()
                         }
                     }
                     ToolTip.visible: addMouthArea.containsMouse
@@ -206,7 +210,8 @@ ScreenTemplate {
                         onPressed: addAnimationBtn.source = "qrc:/images/android/pressed_animation_happy_button.png"
                         onReleased: {
                             addAnimationBtn.source = "qrc:/images/android/animation_happy_button.png"
-                            root.animationSelectorRequested()
+                            if (root.useDialogSelectors) gestureDialog.open()
+                            else root.animationSelectorRequested()
                         }
                     }
                     ToolTip.visible: addAnimationArea.containsMouse
@@ -228,7 +233,8 @@ ScreenTemplate {
                         onPressed: addMovementBtn.source = "qrc:/images/android/pressed_choreography_button.png"
                         onReleased: {
                             addMovementBtn.source = "qrc:/images/android/choreography_button.png"
-                            root.movementSelectorRequested()
+                            if (root.useDialogSelectors) movementDialog.open()
+                            else root.movementSelectorRequested()
                         }
                     }
                     ToolTip.visible: addMovementArea.containsMouse
@@ -279,5 +285,21 @@ ScreenTemplate {
                 }
             }
         }
+    }
+
+    // Dialogs for timeline item selection (shown when useDialogSelectors flag is true)
+    MouthSelectorDialog {
+        id: mouthDialog
+        onMouthSelected: (name) => root.addCommand("mouth", name)
+    }
+
+    GestureSelectorDialog {
+        id: gestureDialog
+        onGestureSelected: (name) => root.addCommand("animation", name)
+    }
+
+    MovementSelectorDialog {
+        id: movementDialog
+        onMovementSelected: (name, type) => root.addCommand(type, name)
     }
 }
