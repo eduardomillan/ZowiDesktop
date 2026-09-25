@@ -27,23 +27,6 @@ Item {
 
     function tr(source) { return Translator.translate("GameTimelineScreen.qml", source) }
 
-    // Resolve glyph info for movement icons (walk, turn, bend, etc.)
-    function resolveGlyph(type, name) {
-        if (type !== "movement") return null
-        var glyphMap = {
-            "Walk Forward":     { glyph: "walk", mirrored: false },
-            "Walk Backward":    { glyph: "walk", mirrored: false },
-            "Turn Left":        { glyph: "turn", mirrored: false },
-            "Turn Right":       { glyph: "turn", mirrored: true },
-            "Bend Forward":     { glyph: "bend", mirrored: false },
-            "Shake Leg":        { glyph: "shakeLeg", mirrored: false },
-            "Swing":            { glyph: "swing", mirrored: false },
-            "Moonwalker Left":  { glyph: "moonwalk", mirrored: false },
-            "Moonwalker Right": { glyph: "moonwalk", mirrored: true }
-        }
-        return glyphMap[name] || null
-    }
-
     // Map action name to icon file
     function resolveIcon(type, name) {
         var iconMap = {
@@ -113,7 +96,6 @@ Item {
     })
     readonly property var colors: typeColors[commandData.type] || typeColors.movement
     readonly property var iconSource: resolveIcon(commandData.type, commandData.name)
-    readonly property var glyphInfo: resolveGlyph(commandData.type, commandData.name)
 
     ColumnLayout {
         anchors.fill: parent
@@ -135,18 +117,7 @@ Item {
                 color: root.colors.dark
             }
 
-            MovementGlyphIcon {
-                visible: !!root.glyphInfo
-                anchors.centerIn: parent
-                width: root.chipIconSize
-                height: root.chipIconSize
-                glyph: root.glyphInfo ? root.glyphInfo.glyph : ""
-                mirrored: root.glyphInfo ? root.glyphInfo.mirrored : false
-                glyphColor: "#ffffff"
-            }
-
             Image {
-                visible: !root.glyphInfo
                 anchors.centerIn: parent
                 source: root.iconSource
                 sourceSize: Qt.size(root.chipIconSize, root.chipIconSize)
