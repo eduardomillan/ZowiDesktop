@@ -35,7 +35,7 @@ Item {
 
         RowLayout {
             id: padsRow
-            anchors { top: parent.top; horizontalCenter: parent.horizontalCenter; topMargin: 20 }
+            anchors.centerIn: parent
             spacing: root.padSpacing
 
             Rectangle {

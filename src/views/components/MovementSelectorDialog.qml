@@ -2,14 +2,23 @@
 // shown from GameTimelineScreen when timeline_selectors_as_dialogs config flag is enabled.
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 
 Dialog {
     id: root
 
     modal: true
+    parent: Overlay.overlay
     anchors.centerIn: parent
-    width: 700
-    padding: 0
+    readonly property real sizeRatio: parseFloat(Config.get("timeline_selector_dialog_size_ratio")) || 0.8
+    width: (parent ? parent.width : 800) * sizeRatio
+    height: (parent ? parent.height : 600) * sizeRatio
+    padding: 20
+
+    function tr(source) { return Translator.translate("MovementSelector.qml", source) }
+
+    property int closeButtonWidth: 160
+    property int closeButtonHeight: 44
 
     signal movementSelected(string name, string type)
 
@@ -20,27 +29,22 @@ Dialog {
         border.width: 2
     }
 
-    contentItem: Column {
+    contentItem: ColumnLayout {
         spacing: 12
-        anchors.margins: 20
-        width: root.width - 40
 
         Text {
-            text: qsTr("Select Movement")
+            text: root.tr("title")
             font.bold: true
             font.pixelSize: 18
             color: Config.get("color_primary") || "#2d5a2d"
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
         }
 
         Loader {
             active: root.visible
-            width: parent.width
-            height: 350
+            Layout.fillWidth: true
+            Layout.fillHeight: true
             sourceComponent: MovementSelectorContent {
-                padSpacing: 40
-                movementPadSize: 260
-                actionPadSize: 260
                 onMovementSelected: (name, type) => {
                     root.movementSelected(name, type)
                     root.close()
@@ -49,8 +53,10 @@ Dialog {
         }
 
         Button {
-            text: qsTr("Close")
-            anchors.horizontalCenter: parent.horizontalCenter
+            text: root.tr("close")
+            Layout.alignment: Qt.AlignHCenter
+            implicitWidth: root.closeButtonWidth
+            implicitHeight: root.closeButtonHeight
             onClicked: root.close()
             background: Rectangle {
                 color: parent.down ? (Config.get("color_accent_pressed") || "#17736c") : (Config.get("color_accent") || "#21a69b")
@@ -60,7 +66,9 @@ Dialog {
                 text: parent.text
                 color: "#ffffff"
                 font.bold: true
+                font.pixelSize: 16
                 horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
         }
     }
