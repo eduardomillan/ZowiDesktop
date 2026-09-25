@@ -339,6 +339,7 @@ ScreenTemplate {
     Dialog {
         id: helpDialog
         modal: true
+        parent: Overlay.overlay
         width: Math.round(root.width * root.helpDialogWidthRatio)
         anchors.centerIn: parent
 
