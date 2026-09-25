@@ -296,12 +296,14 @@
     "add_movement": "Añadir Movimiento",
     "add_animation": "Añadir Animación",
     "add_mouth": "Añadir Boca",
+    "clear_timeline": "Borrar",
     "help": "Ayuda",
     "empty_timeline": "Tu línea de tiempo está vacía. ¡Añade algunos comandos para empezar!",
     "repetitions": "Reps",
     "duration": "Duración",
     "dir": "Dir",
-    "how_to_play_text": "Selecciona gestos, animaciones y movimientos para ponerlos en la línea de tiempo. Cuando tengas una combinación que te guste, ¡dale al Play y verás como ZOWINAME se pone en acción! Puedes combinarlo con una canción que reproduzcas al mismo tiempo, para crear una coreografía."
+    "how_to_play_text": "Selecciona gestos, animaciones y movimientos para ponerlos en la línea de tiempo. Cuando tengas una combinación que te guste, ¡dale al Play y verás como ZOWINAME se pone en acción! Puedes combinarlo con una canción que reproduzcas al mismo tiempo, para crear una coreografía.",
+    "close": "Cerrar"
   },
   "MovementSelector.qml": {
     "title": "Elige un movimiento",

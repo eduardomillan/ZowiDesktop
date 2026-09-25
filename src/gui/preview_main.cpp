@@ -17,6 +17,7 @@
 #include "controllers/MouthsGameController.h"
 #include "controllers/ProjectsController.h"
 #include "controllers/SessionController.h"
+#include "controllers/TimelineController.h"
 
 class PreviewSession final : public QObject
 {
@@ -257,6 +258,7 @@ int main(int argc, char *argv[])
     SessionController sessionStore;
     ProjectsController projects(&translator, &sessionStore);
     MouthsGameController mouths;
+    TimelineController timeline;
 
     // Forward the game's cosmetic commands (mouth/gesture) to the preview
     // robot mock, gated by its connection state.
@@ -287,6 +289,7 @@ int main(int argc, char *argv[])
     view.rootContext()->setContextProperty(QStringLiteral("Commands"), &commands);
     view.rootContext()->setContextProperty(QStringLiteral("Mouths"), &mouths);
     view.rootContext()->setContextProperty(QStringLiteral("Projects"), &projects);
+    view.rootContext()->setContextProperty(QStringLiteral("Timeline"), &timeline);
     view.rootContext()->setContextProperty(QStringLiteral("AppVersion"), QString(ZOWI_VERSION));
     // Optional: let a screen open on an internal step (e.g. calibration steps
     // 0..3). Screens read it as `PreviewStep` and fall back to their own default.

@@ -12,6 +12,7 @@ add_library(zowi_core STATIC
     src/projects_preferences_store.cpp
     src/zowi_dice.cpp
     src/mouths_game.cpp
+    src/timeline_command.cpp
 )
 
 target_include_directories(zowi_core

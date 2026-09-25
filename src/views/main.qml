@@ -42,7 +42,10 @@ ApplicationWindow {
 
     function pushTimeline() {
         var timeline = stack.push("qrc:/src/views/screens/GameTimelineScreen.qml")
-        timeline.backClicked.connect(function() { stack.pop() })
+        timeline.backClicked.connect(function() {
+            timeline.saveSequence()
+            stack.pop()
+        })
 
         // GUI-phase feedback: playback core (MovementSequencer) comes later.
         timeline.playClicked.connect(function(count) {

@@ -61,6 +61,7 @@ add_executable(ZowiDesktop WIN32
     controllers/ProjectsController.cpp
     controllers/ZowiDiceController.cpp
     controllers/MouthsGameController.cpp
+    controllers/TimelineController.cpp
     ${GUI_RESOURCES}
 )
 
@@ -109,6 +110,7 @@ add_executable(zowi_screen_preview
     controllers/MouthsGameController.cpp
     controllers/ProjectsController.cpp
     controllers/SessionController.cpp
+    controllers/TimelineController.cpp
     ${GUI_RESOURCES}
 )
 

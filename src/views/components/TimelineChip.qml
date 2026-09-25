@@ -129,21 +129,6 @@ Item {
             ToolTip.visible: chipMouse.containsMouse
             ToolTip.text: root.commandData.name || ""
 
-            // Delete overlay, top-right
-            Button {
-                anchors { top: parent.top; right: parent.right; margins: -6 }
-                width: root.chipDeleteButtonSize
-                height: root.chipDeleteButtonSize
-                flat: true
-                contentItem: Image {
-                    source: parent.down ? "qrc:/images/android/pressed_delete_button.png"
-                                         : "qrc:/images/android/delete_button.png"
-                    fillMode: Image.PreserveAspectFit
-                }
-                background: Item {}
-                onClicked: root.deleteRequested()
-            }
-
             MouseArea { id: chipMouse; anchors.fill: parent; hoverEnabled: true; z: -1 }
         }
 
@@ -193,4 +178,5 @@ Item {
             }
         }
     }
+
 }

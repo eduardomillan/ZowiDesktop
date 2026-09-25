@@ -62,8 +62,50 @@ ScreenTemplate {
         addCommand(type, name)
     }
 
-    property bool isPlayingTimeline: false
+    function serializeModel() {
+        var items = []
+        for (var i = 0; i < timelineModel.count; i++) {
+            items.push(timelineModel.get(i))
+        }
+        return items
+    }
+
+    function loadSequence() {
+        var items = Timeline.loadSequence()
+        timelineModel.clear()
+        for (var i = 0; i < items.length; i++) {
+            timelineModel.append(items[i])
+        }
+        if (items.length > 0) {
+            console.log("[Timeline] Loaded " + items.length + " commands from persistence")
+        }
+    }
+
+    function saveSequence() {
+        Timeline.saveSequence(serializeModel())
+    }
+
+    function clearTimeline() {
+        timelineModel.clear()
+        console.log("[Timeline] Timeline cleared")
+    }
+
+    Component.onCompleted: {
+        root.playClicked.connect(onPlayClicked)
+        root.stopClicked.connect(onStopClicked)
+    }
+
+    function onPlayClicked(count) {
+        Timeline.play(serializeModel())
+    }
+
+    function onStopClicked() {
+        Timeline.stop()
+    }
+
+    property bool isPlayingTimeline: Timeline.isPlaying
     readonly property int addButtonSize: 80
+    property int playClearButtonSize: 80
     property real buttonSpacingRatio: 0.03  // % of window width; adjust for testing
 
     // TimelineChip sizes: responsive to available space (strip area, not full screen)
@@ -153,6 +195,7 @@ ScreenTemplate {
                     width: root.chipWidth
                     height: root.chipHeight
                     property bool dragging: false
+                    property int itemIndex: index
 
                     TimelineChip {
                         id: chip
@@ -172,10 +215,40 @@ ScreenTemplate {
                             supportsDirection: model.supportsDirection,
                             supportsDuration: model.supportsDuration
                         })
-                        onDeleteRequested: timelineModel.remove(index)
-                        onRepsChanged: timelineModel.setProperty(index, "reps", reps)
-                        onDurationChanged: timelineModel.setProperty(index, "duration", duration)
-                        onDirectionChanged: timelineModel.setProperty(index, "direction", direction)
+                        onDeleteRequested: {
+                            console.log("[Timeline] Delete requested for index:", wrapper.itemIndex, "count:", timelineModel.count)
+                            timelineModel.remove(wrapper.itemIndex)
+                            console.log("[Timeline] After delete, count:", timelineModel.count)
+                        }
+                        onRepsChanged: {
+                            timelineModel.setProperty(wrapper.itemIndex, "reps", reps)
+                        }
+                        onDurationChanged: {
+                            timelineModel.setProperty(wrapper.itemIndex, "duration", duration)
+                        }
+                        onDirectionChanged: {
+                            timelineModel.setProperty(wrapper.itemIndex, "direction", direction)
+                        }
+                    }
+
+                    // Delete button (red rectangle) - directly in wrapper to ensure it captures clicks
+                    Button {
+                        anchors { top: parent.top; right: parent.right; topMargin: 4; rightMargin: 4 }
+                        width: root.chipDeleteButtonSize
+                        height: root.chipDeleteButtonSize
+                        flat: true
+                        z: 100
+
+                        contentItem: Image {
+                            source: parent.down ? "qrc:/images/android/pressed_delete_button.png"
+                                                 : "qrc:/images/android/delete_button.png"
+                            fillMode: Image.PreserveAspectFit
+                        }
+                        background: Item {}
+
+                        onClicked: {
+                            timelineModel.remove(wrapper.itemIndex)
+                        }
                     }
 
                     MouseArea {
@@ -190,7 +263,9 @@ ScreenTemplate {
                             var colW = wrapper.width + sequenceList.spacing
                             var newIndex = Math.round((wrapper.x + sequenceList.contentX) / colW)
                             newIndex = Math.max(0, Math.min(timelineModel.count - 1, newIndex))
-                            if (newIndex !== index) timelineModel.move(index, newIndex, 1)
+                            if (newIndex !== wrapper.itemIndex) {
+                                timelineModel.move(wrapper.itemIndex, newIndex, 1)
+                            }
                             wrapper.x = 0
                         }
                     }
@@ -301,42 +376,43 @@ ScreenTemplate {
 
             Item { Layout.fillWidth: true }  // spacer
 
+            // Clear Timeline button (left side before Play/Stop)
+            Button {
+                implicitWidth: root.playClearButtonSize
+                implicitHeight: root.playClearButtonSize
+                enabled: timelineModel.count > 0
+                contentItem: Image {
+                    source: parent.down ? "qrc:/images/android/pressed_delete_timeline_button.png"
+                                         : "qrc:/images/android/delete_timeline_button.png"
+                    sourceSize.width: root.playClearButtonSize
+                    sourceSize.height: root.playClearButtonSize
+                    fillMode: Image.PreserveAspectFit
+                }
+                background: Item {}
+                ToolTip.visible: hovered
+                ToolTip.text: root.tr("clear_timeline") || "Clear Timeline"
+                onClicked: {
+                    root.clearTimeline()
+                }
+            }
+
             // Single circular Play/Stop toggle button
             Button {
-                implicitWidth: root.addButtonSize
-                implicitHeight: root.addButtonSize
+                implicitWidth: root.playClearButtonSize
+                implicitHeight: root.playClearButtonSize
                 enabled: root.isPlayingTimeline || (Robot.connected && timelineModel.count > 0)
-                contentItem: Item {
-                    anchors.centerIn: parent
-                    Image {
-                        anchors.centerIn: parent
-                        source: "qrc:/images/android/ic_play_arrow_white_24dp.png"
-                        width: root.addButtonSize * 0.43
-                        height: root.addButtonSize * 0.43
-                        fillMode: Image.PreserveAspectFit
-                        visible: !root.isPlayingTimeline
-                    }
-                    Rectangle {
-                        anchors.centerIn: parent
-                        width: root.addButtonSize * 0.29
-                        height: root.addButtonSize * 0.29
-                        color: "#ffffff"
-                        visible: root.isPlayingTimeline
-                    }
+                contentItem: Image {
+                    source: parent.down ? "qrc:/images/android/pressed_play_button.png"
+                                         : "qrc:/images/android/play_button.png"
+                    sourceSize.width: root.playClearButtonSize
+                    sourceSize.height: root.playClearButtonSize
+                    fillMode: Image.PreserveAspectFit
                 }
-                background: Rectangle {
-                    radius: root.addButtonSize / 2
-                    color: parent.down
-                           ? (Config.get("color_accent_pressed") || "#17736c")
-                           : (parent.enabled ? (Config.get("color_accent") || "#21a69b")
-                                             : (Config.get("color_bg_disabled") || "#e6e6e6"))
-                }
+                background: Item {}
                 onClicked: {
                     if (!root.isPlayingTimeline) {
-                        root.isPlayingTimeline = true
                         root.playClicked(timelineModel.count)
                     } else {
-                        root.isPlayingTimeline = false
                         root.stopClicked()
                     }
                 }
