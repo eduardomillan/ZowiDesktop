@@ -64,11 +64,20 @@ ScreenTemplate {
     readonly property int addButtonSize: 80
     property real buttonSpacingRatio: 0.03  // % of window width; adjust for testing
 
-    // TimelineChip configurable sizes
-    property int chipWidth: 200
-    property int chipHeight: 180
-    property int chipIconSize: 72
-    property int chipDeleteButtonSize: 40
+    // TimelineChip sizes: responsive to available space (strip area, not full screen)
+    property real chipWidthRatio: 0.15            // % of screen width
+    property real chipHeightRatio: 0.60           // % of strip area height (stripArea, not full screen)
+    property real chipIconSizeRatio: 0.50         // % of chipWidth
+    property real chipDeleteButtonSizeRatio: 0.35 // % of chipWidth
+    property real chipButtonWidthRatio: 0.40      // % of chipWidth (reps/duration/direction buttons)
+    property real chipButtonHeightRatio: 0.35     // % of chipWidth (reps/duration/direction buttons)
+
+    property int chipWidth: Math.max(120, Math.round(root.width * chipWidthRatio))
+    property int chipHeight: Math.max(110, Math.round(stripArea.height * chipHeightRatio))
+    property int chipIconSize: Math.round(chipWidth * chipIconSizeRatio)
+    property int chipDeleteButtonSize: Math.round(chipWidth * chipDeleteButtonSizeRatio)
+    property int chipButtonWidth: Math.round(chipWidth * chipButtonWidthRatio)
+    property int chipButtonHeight: Math.round(chipWidth * chipButtonHeightRatio)
 
     // Use dialogs or full-screen selectors for timeline item selection
     readonly property bool useDialogSelectors: Config.get("timeline_selectors_as_dialogs") === "true"
@@ -86,7 +95,7 @@ ScreenTemplate {
                 id: sequenceList
                 anchors.centerIn: parent
                 width: parent.width - 40      // 20dp side padding equivalent
-                height: 180                   // Android strip height
+                height: root.chipHeight       // Dynamic: follows chip size
                 orientation: ListView.Horizontal
                 visible: timelineModel.count > 0
                 clip: true
@@ -106,6 +115,8 @@ ScreenTemplate {
                         chipHeight: root.chipHeight
                         chipIconSize: root.chipIconSize
                         chipDeleteButtonSize: root.chipDeleteButtonSize
+                        chipButtonWidth: root.chipButtonWidth
+                        chipButtonHeight: root.chipButtonHeight
                         commandData: ({
                             name: model.name,
                             type: model.type,

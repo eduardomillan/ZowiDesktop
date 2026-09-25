@@ -10,6 +10,8 @@ Button {
     property var states: []          // [{ value, icon, pressedIcon }]
     property var currentValue
     property string toolTip: ""
+    property int buttonWidth: 64     // Configurable width
+    property int buttonHeight: 48    // Configurable height
     property int currentIndex: {
         for (var i = 0; i < states.length; i++) {
             if (states[i].value === currentValue) return i
@@ -18,8 +20,8 @@ Button {
     }
     signal valueChanged(var value)
 
-    implicitWidth: 64
-    implicitHeight: 48
+    implicitWidth: buttonWidth
+    implicitHeight: buttonHeight
     flat: true
     ToolTip.visible: hovered
     ToolTip.text: root.toolTip

@@ -10,10 +10,12 @@ import "../components"
 Item {
     id: root
     property var commandData: ({})
-    property int chipWidth: 200         // Configurable chip width
-    property int chipHeight: 180        // Configurable chip height
-    property int chipIconSize: 72       // Configurable icon size
-    property int chipDeleteButtonSize: 40  // Configurable delete button size
+    property int chipWidth: 200              // Configurable chip width
+    property int chipHeight: 180             // Configurable chip height
+    property int chipIconSize: 72            // Configurable icon size
+    property int chipDeleteButtonSize: 40    // Configurable delete button size
+    property int chipButtonWidth: 64         // Configurable button width (reps/duration/direction)
+    property int chipButtonHeight: 48        // Configurable button height (reps/duration/direction)
 
     implicitWidth: chipWidth
     implicitHeight: chipHeight
@@ -100,11 +102,11 @@ Item {
         spacing: 4
         anchors.margins: 0
 
-        // Icon tile: 200x120, rounded corners, dark bottom lip
+        // Icon tile: rounded corners, dark bottom lip; fills remaining height after buttons
         Rectangle {
             id: tile
             Layout.preferredWidth: root.chipWidth
-            Layout.preferredHeight: root.chipHeight * 0.67  // Maintain aspect ratio (120/180)
+            Layout.fillHeight: true
             radius: 14
             color: root.colors.base
 
@@ -151,6 +153,8 @@ Item {
             spacing: 2
 
             CycleIconButton {
+                buttonWidth: root.chipButtonWidth
+                buttonHeight: root.chipButtonHeight
                 states: [
                     { value: 1,  icon: "qrc:/images/android/steps_1_button.png",  pressedIcon: "qrc:/images/android/pressed_steps_1_button.png" },
                     { value: 5,  icon: "qrc:/images/android/steps_5_button.png",  pressedIcon: "qrc:/images/android/pressed_steps_5_button.png" },
@@ -163,6 +167,8 @@ Item {
 
             CycleIconButton {
                 visible: !!root.commandData.supportsDuration
+                buttonWidth: root.chipButtonWidth
+                buttonHeight: root.chipButtonHeight
                 states: [
                     { value: "Slow",   icon: "qrc:/images/android/speed_low_button.png",    pressedIcon: "qrc:/images/android/pressed_speed_low_button.png" },
                     { value: "Medium", icon: "qrc:/images/android/speed_medium_button.png", pressedIcon: "qrc:/images/android/pressed_speed_medium_button.png" },
@@ -175,6 +181,8 @@ Item {
 
             CycleIconButton {
                 visible: !!root.commandData.supportsDirection
+                buttonWidth: root.chipButtonWidth
+                buttonHeight: root.chipButtonHeight
                 states: [
                     { value: "Left",  icon: "qrc:/images/android/direction_left_button.png",  pressedIcon: "qrc:/images/android/pressed_direction_left_button.png" },
                     { value: "Right", icon: "qrc:/images/android/direction_right_button.png", pressedIcon: "qrc:/images/android/pressed_direction_right_button.png" }
