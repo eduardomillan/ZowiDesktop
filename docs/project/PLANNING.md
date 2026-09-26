@@ -214,7 +214,10 @@ src/
   `SCREEN_GAME_MOUTHS.md`). Outstanding: the shared ranking layer,
   tracked in that doc (shared with Memory).
 
-- [ ] Game: Timeline. Visual block editor
+- [x] Game: Timeline (0.9.3–0.9.4) — implemented (GUI editor + playback; see
+  `SCREEN_GAME_TIMELINE.md`). Core backend (`MovementSequencer`) and persistence
+  (`timeline_sequence` key) are deferred to backend phase; achievements tracked
+  there too.
 
 
 ### Future milestones 🕒

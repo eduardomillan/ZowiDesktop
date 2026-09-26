@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-09-26
+
+### Added
+- **Timeline editor playback & visual polish.** The timeline editor now features
+  real playback with full visual feedback: animated border highlight on each
+  playing command, smooth button fade-in/out on state changes, and automatic
+  Stop button icon swap (Play ↔ Stop) so users can stop playback mid-sequence.
+- **Help dialog auto-open.** Timeline screen (and Memory game) now auto-show their
+  help dialogs on first visit, with configurable behavior (`timeline_help`,
+  `memory_help`) to always show, show once, or never display the help.
+- **Clear Timeline confirmation.** Accidentally wiping the timeline now prompts
+  a confirmation dialog before deletion.
+- **Clearer feedback when Play is disabled.** Hovering over the Play button now
+  shows why it's unavailable: "Connect your Zowi to play" or "Add a command to
+  the timeline", helping users understand what's blocking playback.
+- **Smoother list animations.** Adding, removing or reordering chips in the
+  timeline now includes smooth fade-in/out and repositioning transitions.
+
+### Changed
+- **Config key renamed for clarity.** `zowi_dice_help` is now `memory_help` in
+  `config.json` (the Memory/"Zowi says" game).
+- **Mouth LEDs now yellow.** The Paintbrush and Mouth Editor games now use yellow
+  LEDs when drawing, for better visual contrast and clearer feedback.
+- **Empty state is more prominent.** The "no commands yet" state now shows a
+  larger icon (80×80) aligned with the add buttons, making it more discoverable.
+
+### Fixed
+- **Timeline editor i18n gaps filled.** Added missing translations
+  (`clear_timeline`, `close`, and new button labels) to all 5 supported locales
+  (Spanish, English, French, Catalan, Bulgarian).
+
 ## [0.9.3] - 2026-09-23
 
 ### Added

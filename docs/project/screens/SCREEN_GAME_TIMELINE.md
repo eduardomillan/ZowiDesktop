@@ -7,11 +7,13 @@
 > game alongside [SCREEN_GAME_ZOWI_SAYS.md](SCREEN_GAME_ZOWI_SAYS.md) and
 > [SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md); future games can be added.
 
-- **Status:** ⚠️ **NOT IMPLEMENTED** — design proposal pending review.
-- **File:** `src/views/screens/GameTimelineScreen.qml` (does not exist yet).
-- **i18n context:** `"GameTimelineScreen.qml"` (planned).
+- **Status:** ✅ **GUI IMPLEMENTED** (0.9.3–0.9.4) — timeline editor and visual
+  playback (no backend sequencer yet). Backend persistence and `MovementSequencer`
+  planned for backend phase.
+- **File:** `src/views/screens/GameTimelineScreen.qml` (624 lines, complete).
+- **i18n context:** `"GameTimelineScreen.qml"` (all 5 locales + 8 new keys in 0.9.4).
 - **Game id:** `timeline` — Home tile `qrc:/images/android/timeline_button.png`
-  (currently `enabled: false` in [SCREEN_HOME.md](SCREEN_HOME.md)).
+  (enabled and navigates to screen).
 - **Source of truth (Android):** GAME_ID `TIMELINE_GAME_ID`;
   `TimelineActivity` / `TimelinePresenterImpl`, `VIEWS.md` §TimelineActivity;
   ranking under `TIMELINE_GAME_ID`.
@@ -21,7 +23,7 @@
   add buttons and the list itself ungated, as on Android). No battery check.
 - Reached from Home *Play* tile → push; back → pop.
 
-## Signals (planned)
+## Signals (implemented)
 
 | Signal | Emitted by | Consumed in |
 |--------|-----------|-------------|
@@ -32,12 +34,13 @@
 | `playClicked()` / `stopClicked()` | toolbar | sequence player start/cancel |
 | `backClicked()` | inherited from `ScreenTemplate` | `main.qml`: `stack.pop()` |
 
-## QML context used (planned)
+## QML context used (implemented)
 
 - `Robot`: `connected` (gates Play), `sendData(cmd)`.
-- `Commands`: builders for the sequence items (see table).
-- `Config.get(...)`: theme colors; **achievements enabled/disabled flag**.
-- `Session`: progress persistence (`timeline_sequence`).
+- `Timeline`: `play()`, `stop()`, `isPlaying`, `currentIndex` (playback state).
+- `Commands`: builders for the sequence items.
+- `Config.get(...)`: theme colors, `timeline_help`/`memory_help` flags, locale.
+- `Session`: read/store `activeZowiName` (for help text), `timeline_help_seen`.
 - `Translator` (via `tr()`).
 
 ## Commands sent (planned)
@@ -53,19 +56,21 @@
   item through the existing core `MovementSequencer` (src/core), which times
   each command's duration and emits the next one.
 
-## Gameplay (planned)
+## Gameplay (GUI complete; backend deferred)
 
-- **Drafting (ungated):** Add Movement / Animation / Mouth opens a picker,
-  appends `TimelineCommand(cmd, repetitions=1)`. Movement & animation picks are
-  achievement-gated on Android; mouth is not — mirror once ACHIEVEMENTS is on.
-- **Editing:** per-item spinners — repetitions (only if repeatable), duration
-  (only if the movement has allowed durations: slow/med/fast), direction (only
-  if applicable). Long-press **drag reorder**; per-row **delete**.
-- **Play (conn-gated):** waits for the `"A"` ack, expands each item by its
-  repetitions, **appends a trailing `StopCommand`**, plays the whole sequence
-  once (**no loop**), then stops. If the list contained **≥ 15 commands** at
-  play → `anxious` achievement (reserved). First play → help overlay.
-- **Stop:** cancels the sequence + sends `S\r`.
+- **Drafting (ungated):** Add Movement / Animation / Mouth opens a picker dialog,
+  appends new timeline command with defaults (reps=1, duration=Medium). ✅ Done.
+- **Editing:** per-chip cycle buttons — repetitions (movement only), duration
+  (movement only, slow/medium/fast), direction (Crusaito only). Long-press drag
+  to reorder; per-chip delete button. Disabled during playback. ✅ Done.
+- **Play (conn-gated):** single button that swaps to Stop icon mid-playback.
+  Sends commands to robot (reps expanded in C++); highlights each chip as it
+  plays with animated border; auto-scrolls to current chip; shows stop button
+  with disabled-reason tooltips ("Connect Zowi", "Add a command").
+  ✅ Done (playback UI). Backend sequencer deferred.
+- **Clear:** one-click wipe now requires confirmation dialog. ✅ Done.
+- **Help:** auto-opens on first visit (configurable `timeline_help` flag). ✅ Done.
+- **Achievements:** `anxious` (15+ commands) reserved for achievements layer.
 
 ## Persistence (planned)
 
@@ -74,15 +79,18 @@
   restored on entry, mirroring `GameController.saveProgress(TIMELINE_GAME_ID)`
   / `loadProgress`. Cleared by "Forget playing history" (Settings).
 
-## i18n (planned)
+## i18n (implemented)
 
-New keys under `"GameTimelineScreen.qml"`: `title`, `play_button`,
-`stop_button`, `add_movement`, `add_animation`, `add_mouth`, `help`, current
-game id already translated on the Home context (`"timeline": "Línea de tiempo"`).
+Complete key set under `"GameTimelineScreen.qml"` in all 5 locales (es_ES, en_US,
+fr_FR, ca_ES, bg_BG): `title`, `subtitle`, `play_button`, `stop_button`,
+`add_movement`, `add_animation`, `add_mouth`, `clear_timeline`, `close`, `help`,
+`empty_timeline`, `how_to_play_text`, `repetitions`, `duration`, `dir` (v0.9.3),
+plus `play_disabled_no_robot`, `play_disabled_empty`, `confirm_clear_title`,
+`confirm_clear_message`, `confirm_clear_action`, `cancel` (v0.9.4).
 
-## Open questions (for review)
+## Deferred (backend phase)
 
-- Drag reorder on desktop: reuse Android's approach (long-press drag) or a
-  simpler up/down toothpick? Tentatively long-press drag.
-- Playback timing: hard-code `period` per move (as on Android) vs reuse the
-  Pad speed setting? Tentatively reuse the movement's own duration spinner.
+- **Persistence:** `timeline_sequence` JSON storage and load (SessionController).
+- **Sequencer:** core `MovementSequencer` currently fires all reps of a command
+  back-to-back; per-rep timing visualization deferred.
+- **Achievements:** `anxious` gating (≥15 commands) reserved for achievements layer.
