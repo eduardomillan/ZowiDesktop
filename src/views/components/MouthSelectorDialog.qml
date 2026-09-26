@@ -19,6 +19,7 @@ Dialog {
 
     property int closeButtonWidth: 160
     property int closeButtonHeight: 44
+    property bool executePreviewed: true
 
     signal mouthSelected(string name)
 
@@ -45,6 +46,7 @@ Dialog {
             Layout.fillWidth: true
             Layout.fillHeight: true
             sourceComponent: MouthSelectorContent {
+                executePreviewed: root.executePreviewed
                 onMouthSelected: (name) => {
                     root.mouthSelected(name)
                     root.close()

@@ -19,6 +19,7 @@ Dialog {
 
     property int closeButtonWidth: 160
     property int closeButtonHeight: 44
+    property bool executePreviewed: true
 
     signal gestureSelected(string name)
 
@@ -45,6 +46,7 @@ Dialog {
             Layout.fillWidth: true
             Layout.fillHeight: true
             sourceComponent: GestureSelectorContent {
+                executePreviewed: root.executePreviewed
                 onGestureSelected: (name) => {
                     root.gestureSelected(name)
                     root.close()

@@ -429,6 +429,7 @@ ScreenTemplate {
                 implicitWidth: root.playClearButtonSize
                 implicitHeight: root.playClearButtonSize
                 enabled: timelineModel.count > 0
+                opacity: enabled ? 1.0 : 0.4
                 contentItem: Image {
                     source: parent.down ? "qrc:/images/android/pressed_delete_timeline_button.png"
                                          : "qrc:/images/android/delete_timeline_button.png"
@@ -449,6 +450,7 @@ ScreenTemplate {
                 implicitWidth: root.playClearButtonSize
                 implicitHeight: root.playClearButtonSize
                 enabled: root.isPlayingTimeline || (Robot.connected && timelineModel.count > 0)
+                opacity: enabled ? 1.0 : 0.4
                 contentItem: Image {
                     source: parent.down ? "qrc:/images/android/pressed_play_button.png"
                                          : "qrc:/images/android/play_button.png"
@@ -471,11 +473,13 @@ ScreenTemplate {
     // Dialogs for timeline item selection (shown when useDialogSelectors flag is true)
     MouthSelectorDialog {
         id: mouthDialog
+        executePreviewed: false
         onMouthSelected: (name) => root.addCommand("mouth", name)
     }
 
     GestureSelectorDialog {
         id: gestureDialog
+        executePreviewed: false
         onGestureSelected: (name) => root.addCommand("animation", name)
     }
 

@@ -17,6 +17,7 @@ Item {
     property string selectedGesture: ""
     property real iconSize: 80
     property real cellSpacing: 20
+    property bool executePreviewed: true  // Whether to execute gesture immediately when selected (false in timeline editors)
 
     readonly property var gestureIdByName: ({
         "Happy": Commands.GestureHappy, "SuperHappy": Commands.GestureSuperHappy,
@@ -48,8 +49,10 @@ Item {
         var id = gestureIdByName[name]
         if (id === undefined) return
         selectedGesture = name
-        send(Commands.gestureById(id))
-        console.log("[GestureScreen] " + name + " -> H command sent")
+        if (executePreviewed) {
+            send(Commands.gestureById(id))
+            console.log("[GestureScreen] " + name + " -> H command sent")
+        }
         gestureSelected(name)
     }
 

@@ -17,6 +17,7 @@ Item {
     property string selectedMouth: ""
     property real iconSize: 80
     property real cellSpacing: 20
+    property bool executePreviewed: true  // Whether to execute mouth immediately when selected (false in timeline editors)
 
     readonly property var mouthIdByName: ({
         "Smile": Commands.MouthSmile, "HappyOpen": Commands.MouthHappyOpen,
@@ -68,8 +69,10 @@ Item {
             cmd = Commands.mouthById(id)
         }
         selectedMouth = name
-        send(cmd)
-        console.log("[MouthScreen] " + name + " -> L command sent")
+        if (executePreviewed) {
+            send(cmd)
+            console.log("[MouthScreen] " + name + " -> L command sent")
+        }
         mouthSelected(name)
     }
 
