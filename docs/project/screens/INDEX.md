@@ -21,6 +21,8 @@
 | Calibration | `src/views/screens/CalibrationScreen.qml` | [SCREEN_CALIBRATION.md](SCREEN_CALIBRATION.md) |
 | Mouth editor (pintabocas) | `src/views/screens/MouthEditorScreen.qml` | [SCREEN_MOUTH_EDITOR.md](SCREEN_MOUTH_EDITOR.md) |
 | Draw the mouths (pintabocas game) | `src/views/screens/GameMouthsScreen.qml` | [SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md) |
+| Memory (zowi says game) | `src/views/screens/GameMemoryScreen.qml` | [SCREEN_GAME_MEMORY.md](SCREEN_GAME_MEMORY.md) |
+| Timeline editor (coreography/1, 2, 3 ¡Acción!) | `src/views/screens/GameTimelineScreen.qml` | [SCREEN_GAME_TIMELINE.md](SCREEN_GAME_TIMELINE.md) |
 | Pad (gamepad) | `src/views/screens/PadScreen.qml` | [SCREEN_PAD.md](SCREEN_PAD.md) |
 | Mouth picker | `src/views/screens/MouthScreen.qml` | [SCREEN_MOUTH.md](SCREEN_MOUTH.md) |
 | Gesture picker | `src/views/screens/GestureScreen.qml` | [SCREEN_GESTURE.md](SCREEN_GESTURE.md) |
@@ -59,6 +61,8 @@ SplashScreen ──(hasDismissedWizard || hasDevice)──▶ HomeScreen
 | Home | `projectRequested(projectId)` | Project (any Discover lesson) |
 | Home | `mouthEditorClicked` | MouthEditor |
 | Home | `mouthsClicked` | GameMouths |
+| Home | `zowiSaysClicked` | GameMemory |
+| Home | `timelineClicked` | GameTimeline |
 | Home | `settingsClicked` | Settings |
 | Settings | `calibrationRequested` | Calibration |
 | Settings | `forgetCompleted` | Welcome (replace) |
@@ -74,7 +78,7 @@ with **Ctrl+D** (window-level `Shortcut` in `main.qml`).
   `bg_BG`).
 - **Context objects** registered in `src/gui/main.cpp`: `Session`, `Translator`,
   `Robot`, `Config`, `Calibration`, `Commands`, `AppVersion`, `Mouths` (Draw the
-  mouths game), `ZowiDice` (Memory game).
+  mouths game), `ZowiDice` (Memory game), `Timeline` (Timeline editor/playback).
 - **Back button** comes from `ScreenTemplate` (`backClicked` signal).
 - **Command builders** are the `Commands` object (`CommandsController`), which
   wraps the Qt-free `zowi::robot_commands` core module.
