@@ -16,7 +16,7 @@
   - [M7 — Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
   - [M8 — Basic projects ✅](#m8--basic-projects-)
   - [M9 — Advanced projects ✅](#m9--advanced-projects-)
-  - [M10 - Games 🚧](#m10--games-)
+  - [M10 - Games ✅](#m10--games-)
   - [Future milestones 🕒](#future-milestones-)
   - [Application new features 🕒](#application-new-features-)
 - [Testing](#testing)
@@ -204,20 +204,13 @@ src/
 
 - [x] Arrange the projects logically
 
-### M10 — Games 🚧
+### M10 — Games ✅
 
-- [x] Game: Memory — implemented (core + tests + GUI + i18n; see
-  `SCREEN_GAME_MEMORY.md`). Outstanding: the shared ranking layer,
-  tracked in that doc (shared with Draw the mouth).
+- [x] Game: Memory — Outstanding: the shared ranking layer
 
-- [x] Game: Draw the mouth — implemented (core + tests + GUI + i18n; see
-  `SCREEN_GAME_MOUTHS.md`). Outstanding: the shared ranking layer,
-  tracked in that doc (shared with Memory).
+- [x] Game: Draw the mouth — Outstanding: the shared ranking layer
 
-- [x] Game: Timeline (0.9.3–0.9.4) — implemented (GUI editor + playback; see
-  `SCREEN_GAME_TIMELINE.md`). Core backend (`MovementSequencer`) and persistence
-  (`timeline_sequence` key) are deferred to backend phase; achievements tracked
-  there too.
+- [x] Game: Timeline — Persistence is deferred to a future phase
 
 
 ### Future milestones 🕒
@@ -228,15 +221,19 @@ src/
 
 - [ ] Low battery management
 
-- [ ] Improve the CLI shell with history
+- [ ] Configure an APT repository
 
-- [ ] Enhance renaming, max. lenght, chars allowed
+- [ ] Enhance renaming, max. length, chars allowed
 
 - [ ] Allow renaming with startup names $ and #
 
-- [ ] **Projects CLI commands** — `project list/show/reset/prefs` (uses core ProjectsStore/ProjectsPreferencesStore, no Qt)
-
 - [ ] Design improvements
+
+- [ ] Improve the CLI shell with history
+
+- [ ] Projects in CLI. List, show, reset, prefs, etc.
+
+- [ ] Games in CLI
 
 
 
@@ -260,6 +257,7 @@ src/
 
 - [ ] Adapt the software to other robots (Otto with Arduino or ESP32)
 
+
 ## Testing
 
 - **Core unit tests** (`src/core/tests/`): `test_session_store`, `test_config_store`,
@@ -270,6 +268,7 @@ src/
 - **QML preview scripts** (`src/views/tests/`): Shell scripts to launch individual screens.
 - Run tests: `ctest --test-dir build --output-on-failure`
 
+
 ## Technical notes
 
 - Bluetooth Classic SPP only — BLE is not supported by Zowi's HC-06/HC-05 module.
@@ -278,6 +277,7 @@ src/
 - All robot images and UI assets come from the original Android project (`drawable-xxxhdpi`).
 - GUI debug builds load QML from disk with hot-reload; release builds use `resources.qrc`.
 - Runtime logs: `qDebug`/`qWarning` mirrored to stderr + per-day log file at `AppDataLocation`.
+
 
 ## Repository strategy (monorepo vs. multiple repos)
 

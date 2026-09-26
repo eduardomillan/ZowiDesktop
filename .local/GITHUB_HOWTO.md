@@ -17,7 +17,7 @@
 
 ### Releases
 Releases are the official published versions of the software.
-- In ZowiDesktop, the version comes from `CMakeLists.txt`.
+- In ZowiDesktop, the version comes from the root file `VERSION` (single source of truth), automatically read by `CMakeLists.txt` and all packaging scripts.
 - Releases are created manually.
 - They usually include Linux AppImage and Debian packages, plus Windows artifacts when available.
 - Users download releases from the GitHub Releases page.
@@ -35,7 +35,7 @@ Packages are installable or reusable build artifacts.
 
 ## Repo-specific release flow
 
-1. Bump the version in `CMakeLists.txt`.
+1. Bump the version in `VERSION`.
 2. Update `CHANGELOG.md`.
 3. Build Linux artifacts: AppImage and Debian packages.
 4. Build Windows artifacts: portable zip and installer.

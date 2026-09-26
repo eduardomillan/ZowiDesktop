@@ -17,7 +17,7 @@
 - [X] En `src/views/main.qml` falta internacionalizar la línea `rootNotice.show("Robot already named \"" + Robot.deviceName + "\". Keeping it.")`.
 - [X] Cuando no hay disponible ningún robot ni por USB ni Bt y hay un robot registrado, el programa se queda en "Conectando..." por siempre, cuando debería haber un timeout de unos 10 segundos y pasar a "modo demo".
 - [X] Cuando no se encuentra ningún robot en la ventana de escaneo, no debería mostrarse la lista de robots. Solamente debe aparecer esta lista cuando se encuentre al menos un robot. Si al cabo de un tiempo no se ha encontrado ningún robot, que lo indique mediante un mensaje en ese mismo lugar. 
-- [ ] Revisar por qué, al registrar Zowi y renombrar, hay que renombrar dos veces.
+- [X] Revisar por qué, al registrar Zowi y renombrar, hay que renombrar dos veces.
 - [ ] En la pantalla inicial, el selector de idioma debe estar ligado a los botones y no al pie de página.
 
 
@@ -36,8 +36,8 @@
 ## Cambios
 - [X] Sustituir la flecha "atrás" por el botón "back" (imagen de flecha izquierda) que se utiliza en la app Android original
 - [ ] En settings, añadir opción para cambiar idioma (que se vuelva a la pantalla de splash)
-- [ ] Añadir ayuda de la línea de comandos (help) a los scripts disponibles
-- [ ] Revisar los scripts actuales (carpetas /scripts y /packaging) y ver si tenemos todos los necesarios, por ejemplo, para ejecutar el Release.
+- [X] Añadir ayuda de la línea de comandos (help) a los scripts disponibles
+- [X] Revisar los scripts actuales (carpetas /scripts y /packaging) y ver si tenemos todos los necesarios, por ejemplo, para ejecutar el Release.
 
 
 ## Windows
