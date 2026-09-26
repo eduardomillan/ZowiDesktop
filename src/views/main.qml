@@ -47,12 +47,11 @@ ApplicationWindow {
             stack.pop()
         })
 
-        // GUI-phase feedback: playback core (MovementSequencer) comes later.
         timeline.playClicked.connect(function(count) {
-            console.log("[Timeline] Play pressed (" + count + " commands) — backend pending")
+            Timeline.play(timeline.serializeModel())
         })
         timeline.stopClicked.connect(function() {
-            console.log("[Timeline] Stop pressed — backend pending")
+            Timeline.stop()
         })
 
         timeline.movementSelectorRequested.connect(function() {

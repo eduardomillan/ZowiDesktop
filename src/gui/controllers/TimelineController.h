@@ -6,6 +6,9 @@
 #include <QVariantList>
 #include <QVariantMap>
 #include <QTimer>
+#include <memory>
+
+#include <zowi/timeline_player.h>
 
 class SessionController;
 class RobotController;
@@ -39,17 +42,19 @@ signals:
     void currentIndexChanged();
 
 private slots:
-    void playNext();
+    void onRobotSoftwareAck();
+    void onRobotFinalAck();
+    void sendNextCommand();
 
 private:
     SessionController* m_session = nullptr;
     RobotController* m_robot = nullptr;
     CommandsController* m_commands = nullptr;
-    bool m_isPlaying = false;
-    int m_currentIndex = -1;
-    QVariantList m_currentSequence;
-    QTimer m_playbackTimer;
+
+    std::unique_ptr<zowi::TimelinePlayer> m_player;
+    QTimer m_moveStartTimeout;  // Safety net for missing &&A
 
     int getDurationMs(const QString& duration) const;
     QString commandToString(const QVariantMap& cmd);
+    void updateFromPlayer();
 };

@@ -3,16 +3,29 @@
 #include "RobotController.h"
 #include "CommandsController.h"
 #include "zowi/timeline_command.h"
+#include "zowi/robot_commands.h"
 
 #include <QDebug>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QTimer>
+
+namespace {
+constexpr int kMoveStartTimeoutMs = 20000;
+}
 
 TimelineController::TimelineController(QObject* parent)
     : QObject(parent)
+    , m_player(std::make_unique<zowi::TimelinePlayer>())
 {
-    connect(&m_playbackTimer, &QTimer::timeout, this, &TimelineController::playNext);
+    m_moveStartTimeout.setSingleShot(true);
+    m_moveStartTimeout.setInterval(kMoveStartTimeoutMs);
+    connect(&m_moveStartTimeout, &QTimer::timeout, this, [this]() {
+        qWarning() << "[Timeline] Movement &&A not received within"
+                   << kMoveStartTimeoutMs << "ms; stopping playback.";
+        stop();
+    });
 }
 
 TimelineController::~TimelineController() = default;
@@ -23,6 +36,10 @@ void TimelineController::setSessionController(SessionController* session) {
 
 void TimelineController::setRobotController(RobotController* robot) {
     m_robot = robot;
+    if (m_robot) {
+        connect(m_robot, &RobotController::softwareAckReceived, this, &TimelineController::onRobotSoftwareAck);
+        connect(m_robot, &RobotController::finalAckReceived, this, &TimelineController::onRobotFinalAck);
+    }
 }
 
 void TimelineController::setCommandsController(CommandsController* commands) {
@@ -30,11 +47,11 @@ void TimelineController::setCommandsController(CommandsController* commands) {
 }
 
 bool TimelineController::isPlaying() const {
-    return m_isPlaying;
+    return m_player && m_player->isPlaying();
 }
 
 int TimelineController::currentIndex() const {
-    return m_currentIndex;
+    return m_player ? m_player->currentIndex() : -1;
 }
 
 void TimelineController::saveSequence(const QVariantList &items) {
@@ -168,20 +185,25 @@ QString TimelineController::commandToString(const QVariantMap& cmd) {
         if (name == "Moonwalker Left") return m_commands->moonwalkerLeft(duration);
         if (name == "Moonwalker Right") return m_commands->moonwalkerRight(duration);
         if (name == "Bend Forward") return m_commands->bendForward(duration);
-        if (name == "Shake Leg") return m_commands->shakeLegLeft(duration);
+        if (name == "Bend Backward") return m_commands->bendBackward(duration);
+        if (name == "Shake Leg Left") return m_commands->shakeLegLeft(duration);
+        if (name == "Shake Leg Right") return m_commands->shakeLegRight(duration);
         if (name == "Up/Down") return m_commands->updown(duration);
         if (name == "Jitter") return m_commands->jitter(duration);
         if (name == "Swing") return m_commands->swing(duration);
-        if (name == "Flapping") return m_commands->flappingLeft(duration);
+        if (name == "Flapping Left") return m_commands->flappingLeft(duration);
+        if (name == "Flapping Right") return m_commands->flappingRight(duration);
         if (name == "Crusaito") {
             QString dir = cmd.value("direction", "Front").toString();
-            return dir == "Left" ? m_commands->crusaitoBackward(duration)
-                                 : m_commands->crusaitoForward(duration);
+            return dir == "Right" ? m_commands->crusaitoForward(duration)
+                                  : m_commands->crusaitoBackward(duration);
         }
+        if (name == "Jump") return m_commands->jump(duration);
+        if (name == "Tiptoе Swing") return m_commands->tiptoeSwing(duration);
     } else if (type == "animation") {
         // Map animation names to gesture IDs
         if (name == "Happy") return m_commands->gestureById(0);
-        if (name == "SuperHappy") return m_commands->gestureById(1);
+        if (name == "Super Happy") return m_commands->gestureById(1);
         if (name == "Sad") return m_commands->gestureById(2);
         if (name == "Sleeping") return m_commands->gestureById(3);
         if (name == "Fart") return m_commands->gestureById(4);
@@ -206,7 +228,7 @@ QString TimelineController::commandToString(const QVariantMap& cmd) {
         if (name == "Vamp2") return m_commands->mouthById(m_commands->mouthVamp2());
         if (name == "LineMouth") return m_commands->mouthById(m_commands->mouthLineMouth());
         if (name == "Confused") return m_commands->mouthById(m_commands->mouthConfused());
-        if (name == "DiagLeft") return m_commands->mouthById(m_commands->mouthDiagonal());
+        if (name == "Diagonal") return m_commands->mouthById(m_commands->mouthDiagonal());
         if (name == "Sad") return m_commands->mouthById(m_commands->mouthSad());
         if (name == "SadOpen") return m_commands->mouthById(m_commands->mouthSadOpen());
         if (name == "SadClosed") return m_commands->mouthById(m_commands->mouthSadClosed());
@@ -226,52 +248,76 @@ void TimelineController::play(const QVariantList &items) {
         return;
     }
 
-    m_currentSequence = items;
-    m_currentIndex = 0;
-    m_isPlaying = true;
-    emit isPlayingChanged();
+    // Build TimelineStep vector from QVariantList
+    std::vector<zowi::TimelineStep> steps;
+    for (const auto& item : items) {
+        auto map = item.toMap();
+        QString cmdStr = commandToString(map);
+        if (cmdStr.isEmpty()) {
+            qWarning() << "[Timeline] Skipping unknown command:" << map.value("type") << map.value("name");
+            continue;
+        }
 
-    playNext();
-}
+        bool isMovement = (map.value("type", "").toString() == "movement");
+        int reps = map.value("reps", 1).toInt();
+        zowi::MovementSpeed speed = static_cast<zowi::MovementSpeed>(getDurationMs(map.value("duration", "Medium").toString()));
 
-void TimelineController::stop() {
-    m_playbackTimer.stop();
-    m_isPlaying = false;
-    m_currentIndex = -1;
-    emit isPlayingChanged();
-    emit currentIndexChanged();
-
-    if (m_robot) {
-        m_robot->sendData(m_commands->stop());
-        qDebug() << "[Timeline] Playback stopped";
+        steps.push_back({cmdStr.toStdString(), isMovement, reps, speed});
     }
-}
 
-void TimelineController::playNext() {
-    if (m_currentIndex >= m_currentSequence.length()) {
-        stop();
+    if (steps.empty()) {
+        qWarning() << "[Timeline] Cannot play: no valid commands";
         return;
     }
 
-    QVariantMap cmd = m_currentSequence.at(m_currentIndex).toMap();
-    int reps = cmd.value("reps", 1).toInt();
-    int duration = getDurationMs(cmd.value("duration", "Medium").toString());
+    // Reset and start player
+    m_player->start(steps);
+    updateFromPlayer();
+    sendNextCommand();
+}
 
-    QString name = cmd.value("name", "").toString();
-    QString type = cmd.value("type", "").toString();
-    qDebug() << "[Timeline] Executing:" << type << name << "reps:" << reps << "duration:" << duration;
+void TimelineController::stop() {
+    if (!m_player) return;
+    m_moveStartTimeout.stop();
+    m_player->cancel();
+    if (m_robot) {
+        m_robot->sendData(QString::fromStdString(zowi::commandStop()));
+    }
+    updateFromPlayer();
+}
 
-    for (int i = 0; i < reps; ++i) {
-        QString cmdStr = commandToString(cmd);
-        qDebug() << "[Timeline] Command string:" << (cmdStr.isEmpty() ? "EMPTY" : "OK");
-        if (!cmdStr.isEmpty() && m_robot) {
-            m_robot->sendData(cmdStr);
+void TimelineController::onRobotSoftwareAck() {
+    if (!m_player || !m_player->isPlaying()) return;
+    m_moveStartTimeout.stop();
+    m_player->onSoftwareAck();
+    sendNextCommand();
+}
+
+void TimelineController::onRobotFinalAck() {
+    if (!m_player || !m_player->isPlaying()) return;
+    m_player->onFinalAck();
+    updateFromPlayer();
+    if (m_player->isPlaying()) {
+        sendNextCommand();
+    }
+}
+
+void TimelineController::sendNextCommand() {
+    if (!m_player || !m_robot) return;
+
+    std::string cmd = m_player->nextRobotCommand();
+    if (!cmd.empty()) {
+        QString qcmd = QString::fromStdString(cmd);
+        m_robot->sendData(qcmd);
+        qDebug() << "[Timeline] Sending:" << qcmd.trimmed();
+        // Arm guard timeout if this is a movement command
+        if (!qcmd.isEmpty() && qcmd[0] == QLatin1Char('M')) {
+            m_moveStartTimeout.start();
         }
     }
+}
 
+void TimelineController::updateFromPlayer() {
+    emit isPlayingChanged();
     emit currentIndexChanged();
-    m_currentIndex++;
-
-    // Schedule next command
-    m_playbackTimer.start(duration);
 }

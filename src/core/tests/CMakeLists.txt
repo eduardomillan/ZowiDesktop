@@ -47,3 +47,7 @@ add_test(NAME test_mouths_game COMMAND test_mouths_game)
 add_executable(test_timeline_command test_timeline_command.cpp)
 target_link_libraries(test_timeline_command PRIVATE Zowi::core)
 add_test(NAME test_timeline_command COMMAND test_timeline_command)
+
+add_executable(test_timeline_player test_timeline_player.cpp)
+target_link_libraries(test_timeline_player PRIVATE Zowi::core)
+add_test(NAME test_timeline_player COMMAND test_timeline_player)
