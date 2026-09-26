@@ -303,7 +303,13 @@
     "duration": "Duración",
     "dir": "Dir",
     "how_to_play_text": "Selecciona gestos, animaciones y movimientos para ponerlos en la línea de tiempo. Cuando tengas una combinación que te guste, ¡dale al Play y verás como ZOWINAME se pone en acción! Puedes combinarlo con una canción que reproduzcas al mismo tiempo, para crear una coreografía.",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "play_disabled_no_robot": "Conecta tu Zowi para reproducir",
+    "play_disabled_empty": "Añade algún comando a la línea de tiempo",
+    "confirm_clear_title": "¿Vaciar la línea de tiempo?",
+    "confirm_clear_message": "Se eliminarán todos los comandos. Esta acción no se puede deshacer.",
+    "confirm_clear_action": "Vaciar",
+    "cancel": "Cancelar"
   },
   "MovementSelector.qml": {
     "title": "Elige un movimiento",

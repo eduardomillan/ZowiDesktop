@@ -313,7 +313,15 @@
     "how_to_play_text": "Select gestures, animations and movements to add them to the timeline. When you have a combination you like, hit Play and watch ZOWINAME come to life! You can combine it with a song you play at the same time to create a choreography.",
     "repetitions": "Reps",
     "duration": "Duration",
-    "dir": "Dir"
+    "dir": "Dir",
+    "clear_timeline": "Clear",
+    "close": "Close",
+    "play_disabled_no_robot": "Connect your Zowi to play",
+    "play_disabled_empty": "Add a command to the timeline",
+    "confirm_clear_title": "Clear the timeline?",
+    "confirm_clear_message": "All commands will be deleted. This action cannot be undone.",
+    "confirm_clear_action": "Clear",
+    "cancel": "Cancel"
   },
   "MovementSelector.qml": {
     "title": "Select a movement",

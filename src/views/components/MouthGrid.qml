@@ -161,7 +161,7 @@ Item {
                         Image {
                             anchors.fill: parent
                             source: model.on
-                                    ? "qrc:/images/android/mouths_led_on.png"
+                                    ? "qrc:/images/android/mouths_led_on_yellow.png"
                                     : "qrc:/images/android/mouths_led_off.png"
                             sourceSize: Qt.size(root.cellSize * 2, root.cellSize * 2)
                             fillMode: Image.PreserveAspectFit

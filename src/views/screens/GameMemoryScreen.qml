@@ -20,18 +20,18 @@ ScreenTemplate {
     // Pause identity poll while game is running (like PadScreen does).
     // The game does NOT auto-start: the Play button in the footer starts it,
     // so the user can begin when they want or go back. The help dialog opens
-    // on entry according to config "zowi_dice_help": "always" → every time,
-    // "once" → only the first time (zowi_says_help_seen session flag).
+    // on entry according to config "memory_help": "always" → every time,
+    // "once" → only the first time (memory_help_seen session flag).
     // No deferral is needed: the dialog is centered with anchors.centerIn,
     // so it stays centered regardless of when layout settles.
     Component.onCompleted: {
         Robot.setDataPollingEnabled(false)
-        var helpMode = Config.get("zowi_dice_help") || "once"
-        var helpSeen = Session.getString("zowi_says_help_seen", "false") === "true"
+        var helpMode = Config.get("memory_help") || "once"
+        var helpSeen = Session.getString("memory_help_seen", "false") === "true"
         if (helpMode === "always") {
             helpDialog.open()
         } else if (!helpSeen) {
-            Session.saveString("zowi_says_help_seen", "true")
+            Session.saveString("memory_help_seen", "true")
             helpDialog.open()
         }
     }

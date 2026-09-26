@@ -102,6 +102,15 @@ ScreenTemplate {
     Component.onCompleted: {
         root.playClicked.connect(onPlayClicked)
         root.stopClicked.connect(onStopClicked)
+
+        var helpMode = Config.get("timeline_help") || "once"
+        var helpSeen = Session.getString("timeline_help_seen", "false") === "true"
+        if (helpMode === "always") {
+            helpDialog.open()
+        } else if (!helpSeen) {
+            Session.saveString("timeline_help_seen", "true")
+            helpDialog.open()
+        }
     }
 
     function onPlayClicked(count) {
@@ -207,6 +216,19 @@ ScreenTemplate {
                 spacing: 10
                 model: timelineModel
 
+                add: Transition {
+                    NumberAnimation { properties: "opacity"; from: 0; to: 1; duration: 180; easing.type: Easing.InOutQuad }
+                }
+                remove: Transition {
+                    NumberAnimation { properties: "opacity"; to: 0; duration: 180; easing.type: Easing.InOutQuad }
+                }
+                displaced: Transition {
+                    NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.InOutQuad }
+                }
+                move: Transition {
+                    NumberAnimation { properties: "x,y"; duration: 180; easing.type: Easing.InOutQuad }
+                }
+
                 // Auto-scroll to current playing chip
                 Connections {
                     target: root
@@ -230,9 +252,10 @@ ScreenTemplate {
                         anchors.fill: parent
                         border.color: Config.get("color_accent") || "#21a69b"
                         border.width: wrapper.itemIndex === root.currentPlayingIndex ? 3 : 0
+                        Behavior on border.width { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
                         color: "transparent"
                         radius: 14
-                        visible: root.isPlayingTimeline && border.width > 0
+                        visible: root.isPlayingTimeline
                         z: 50
                     }
 
@@ -365,13 +388,14 @@ ScreenTemplate {
             Column {
                 anchors.centerIn: parent
                 visible: timelineModel.count === 0
-                spacing: 6
-                Text {
+                spacing: 12
+                Image {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: root.tr("title")
-                    font.bold: true
-                    font.pixelSize: 18
-                    color: Config.get("color_primary") || "#2d5a2d"
+                    source: "qrc:/images/android/timeline_button.png"
+                    width: root.addButtonSize
+                    height: root.addButtonSize
+                    fillMode: Image.PreserveAspectFit
+                    opacity: 0.6
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -471,6 +495,7 @@ ScreenTemplate {
                 implicitHeight: root.playClearButtonSize
                 enabled: !root.isPlayingTimeline && timelineModel.count > 0
                 opacity: enabled ? 1.0 : 0.4
+                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
                 contentItem: Image {
                     source: parent.down ? "qrc:/images/android/pressed_delete_timeline_button.png"
                                          : "qrc:/images/android/delete_timeline_button.png"
@@ -482,29 +507,99 @@ ScreenTemplate {
                 ToolTip.visible: hovered
                 ToolTip.text: root.tr("clear_timeline") || "Clear Timeline"
                 onClicked: {
-                    root.clearTimeline()
+                    clearConfirmDialog.open()
                 }
             }
 
             // Single circular Play/Stop toggle button
             Button {
+                id: playStopButton
                 implicitWidth: root.playClearButtonSize
                 implicitHeight: root.playClearButtonSize
-                enabled: !root.isPlayingTimeline && (Robot.connected && timelineModel.count > 0)
+                enabled: root.isPlayingTimeline || (Robot.connected && timelineModel.count > 0)
                 opacity: enabled ? 1.0 : 0.4
+                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
                 contentItem: Image {
-                    source: parent.down ? "qrc:/images/android/pressed_play_button.png"
-                                         : "qrc:/images/android/play_button.png"
+                    source: root.isPlayingTimeline
+                                ? (parent.down ? "qrc:/images/android/pressed_stop_button.png"
+                                               : "qrc:/images/android/stop_button.png")
+                                : (parent.down ? "qrc:/images/android/pressed_play_button.png"
+                                               : "qrc:/images/android/play_button.png")
                     sourceSize.width: root.playClearButtonSize
                     sourceSize.height: root.playClearButtonSize
                     fillMode: Image.PreserveAspectFit
                 }
                 background: Item {}
+                ToolTip.visible: hovered
+                ToolTip.text: root.isPlayingTimeline
+                    ? root.tr("stop_button")
+                    : (!Robot.connected ? root.tr("play_disabled_no_robot")
+                       : (timelineModel.count === 0 ? root.tr("play_disabled_empty")
+                          : root.tr("play_button")))
                 onClicked: {
                     if (!root.isPlayingTimeline) {
                         root.playClicked(timelineModel.count)
                     } else {
                         root.stopClicked()
+                    }
+                }
+            }
+        }
+    }
+
+    // Clear Timeline confirmation dialog
+    Dialog {
+        id: clearConfirmDialog
+        modal: true
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 400
+        padding: 20
+        background: Rectangle {
+            radius: 20
+            color: "#ffffff"
+            border.color: Config.get("color_primary") || "#2d5a2d"
+            border.width: 2
+        }
+        contentItem: ColumnLayout {
+            spacing: 16
+            Text {
+                text: root.tr("confirm_clear_title")
+                font.bold: true
+                font.pixelSize: 18
+                color: Config.get("color_primary") || "#2d5a2d"
+                Layout.alignment: Qt.AlignHCenter
+            }
+            Text {
+                text: root.tr("confirm_clear_message")
+                font.pixelSize: 14
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+            }
+            RowLayout {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 12
+                Button {
+                    text: root.tr("cancel")
+                    implicitWidth: 160
+                    implicitHeight: 44
+                    onClicked: clearConfirmDialog.close()
+                    background: Rectangle { radius: 8; color: "#cccccc" }
+                    contentItem: Text {
+                        text: parent.text; color: "#333333"
+                        horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
+                    }
+                }
+                Button {
+                    text: root.tr("confirm_clear_action")
+                    implicitWidth: 160
+                    implicitHeight: 44
+                    onClicked: { root.clearTimeline(); clearConfirmDialog.close() }
+                    background: Rectangle { radius: 8; color: "#d9534f" }
+                    contentItem: Text {
+                        text: parent.text; color: "#ffffff"; font.bold: true
+                        horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
                     }
                 }
             }

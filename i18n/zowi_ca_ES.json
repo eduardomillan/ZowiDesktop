@@ -312,7 +312,15 @@
     "how_to_play_text": "Selecciona gestos, animacions i moviments per afegir-los a la línia de temps. Quan tinguis una combinació que t'agrada, prem Play i mira com ZOWINAME cobra vida! Pots combinar-ho amb una cançó que estigueu tocant al mateix temps per crear una coreografia.",
     "repetitions": "Reps",
     "duration": "Duració",
-    "dir": "Dir"
+    "dir": "Dir",
+    "clear_timeline": "Esborrar",
+    "close": "Tancar",
+    "play_disabled_no_robot": "Connecta el teu Zowi per jugar",
+    "play_disabled_empty": "Afegeix una ordre a la línia de temps",
+    "confirm_clear_title": "Esborrar la línia de temps?",
+    "confirm_clear_message": "Totes les ordres seran eliminades. Aquesta acció no es pot desfer.",
+    "confirm_clear_action": "Esborrar",
+    "cancel": "Cancelar"
   },
   "MovementSelector.qml": {
     "title": "Triïa un moviment",
