@@ -19,6 +19,7 @@ Item {
 
     implicitWidth: chipWidth
     implicitHeight: chipHeight
+    readonly property alias iconTileHeight: tile.height
 
     signal deleteRequested()
     signal repsChanged(int reps)
@@ -138,6 +139,8 @@ Item {
             spacing: 2
 
             CycleIconButton {
+                opacity: root.commandData.type !== "mouth" ? 1 : 0
+                enabled: root.commandData.type !== "mouth"
                 buttonWidth: root.chipButtonWidth
                 buttonHeight: root.chipButtonHeight
                 states: [

@@ -196,6 +196,7 @@ ScreenTemplate {
                     height: root.chipHeight
                     property bool dragging: false
                     property int itemIndex: index
+                    transform: Translate { id: dragTranslate; x: 0 }
 
                     TimelineChip {
                         id: chip
@@ -252,21 +253,68 @@ ScreenTemplate {
                     }
 
                     MouseArea {
-                        anchors.fill: parent
-                        drag.target: wrapper.dragging ? wrapper : undefined
-                        drag.axis: Drag.XAxis
+                        id: dragMouse
+                        anchors { top: parent.top; left: parent.left; right: parent.right }
+                        height: chip.iconTileHeight
+                        drag.target: undefined
                         drag.threshold: 4
-                        onPressAndHold: wrapper.dragging = true
+                        hoverEnabled: false
+
+                        property int startX: 0
+                        property bool canDrag: false
+                        property int minDragDelta: 8
+
+                        Timer {
+                            id: holdTimer
+                            interval: 200
+                            onTriggered: {
+                                dragMouse.canDrag = true
+                                dragMouse.preventStealing = true
+                            }
+                        }
+
+                        onPressed: {
+                            startX = mouseX
+                            dragTranslate.x = 0
+                            canDrag = false
+                            holdTimer.start()
+                        }
+
+                        onPositionChanged: {
+                            if (!pressed) return
+                            var delta = Math.abs(mouseX - startX)
+                            if (!canDrag && delta > minDragDelta) {
+                                holdTimer.stop()
+                                return
+                            }
+                            if (!canDrag) return
+                            dragTranslate.x = mouseX - startX
+                        }
+
                         onReleased: {
-                            if (!wrapper.dragging) return
-                            wrapper.dragging = false
+                            holdTimer.stop()
+                            dragMouse.preventStealing = false
+                            if (!canDrag || dragTranslate.x === 0) {
+                                dragTranslate.x = 0
+                                return
+                            }
+                            canDrag = false
+
                             var colW = wrapper.width + sequenceList.spacing
-                            var newIndex = Math.round((wrapper.x + sequenceList.contentX) / colW)
+                            var worldPos = wrapper.mapToItem(sequenceList, dragTranslate.x, 0).x
+                            var newIndex = Math.round(worldPos / colW)
                             newIndex = Math.max(0, Math.min(timelineModel.count - 1, newIndex))
                             if (newIndex !== wrapper.itemIndex) {
                                 timelineModel.move(wrapper.itemIndex, newIndex, 1)
                             }
-                            wrapper.x = 0
+                            dragTranslate.x = 0
+                        }
+
+                        onCanceled: {
+                            holdTimer.stop()
+                            dragMouse.preventStealing = false
+                            canDrag = false
+                            dragTranslate.x = 0
                         }
                     }
                 }
