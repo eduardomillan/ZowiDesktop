@@ -110,6 +110,7 @@ add_executable(zowi_screen_preview
     controllers/MouthsGameController.cpp
     controllers/ProjectsController.cpp
     controllers/SessionController.cpp
+    controllers/RobotController.cpp
     controllers/TimelineController.cpp
     ${GUI_RESOURCES}
 )
@@ -126,6 +127,27 @@ target_link_libraries(zowi_screen_preview PRIVATE
     Qt${ZOWI_QT_VERSION}::Quick
     Qt${ZOWI_QT_VERSION}::QuickControls2
 )
+
+# Qt Bluetooth backend (Linux/macOS only)
+if(NOT WIN32)
+    target_link_libraries(zowi_screen_preview PRIVATE Zowi::bt_qt)
+endif()
+
+# Serial/USB transport. Provides the USB connection option.
+if(NOT WIN32)
+    target_link_libraries(zowi_screen_preview PRIVATE Zowi::bt_serial)
+    target_compile_definitions(zowi_screen_preview PRIVATE ZOWI_HAVE_SERIAL=1)
+endif()
+if(WIN32)
+    target_link_libraries(zowi_screen_preview PRIVATE Zowi::bt_serial_win)
+    target_compile_definitions(zowi_screen_preview PRIVATE ZOWI_HAVE_SERIAL=1)
+endif()
+
+# Native Windows Bluetooth (C++/WinRT SPP). Replaces BlueZ on Windows.
+if(WIN32)
+    target_link_libraries(zowi_screen_preview PRIVATE Zowi::bt_native)
+    target_compile_definitions(zowi_screen_preview PRIVATE ZOWI_HAVE_NATIVE_BT=1)
+endif()
 
 # Grant CAP_NET_ADMIN so the GUI can connect via BlueZ SPP without root.
 find_program(SETCAP_PROGRAM setcap)
