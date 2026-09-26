@@ -214,7 +214,7 @@ src/
   `SCREEN_GAME_MOUTHS.md`). Outstanding: the shared ranking layer,
   tracked in that doc (shared with Memory).
 
-- [ ] Game: Visual block editor
+- [ ] Game: Timeline. Visual block editor
 
 
 ### Future milestones 🕒

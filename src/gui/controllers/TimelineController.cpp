@@ -194,28 +194,28 @@ QString TimelineController::commandToString(const QVariantMap& cmd) {
         if (name == "Victory") return m_commands->gestureById(11);
         if (name == "Fail") return m_commands->gestureById(12);
     } else if (type == "mouth") {
-        // Map mouth names to mouth IDs
-        if (name == "Smile") return m_commands->mouthById(0);
-        if (name == "HappyOpen") return m_commands->mouthById(1);
-        if (name == "HappyClosed") return m_commands->mouthById(2);
-        if (name == "Heart") return m_commands->mouthById(3);
-        if (name == "BigSurprise") return m_commands->mouthById(4);
-        if (name == "SmallSurprise") return m_commands->mouthById(5);
-        if (name == "TongueOut") return m_commands->mouthById(6);
-        if (name == "Vamp1") return m_commands->mouthById(7);
-        if (name == "Vamp2") return m_commands->mouthById(8);
-        if (name == "LineMouth") return m_commands->mouthById(9);
-        if (name == "Confused") return m_commands->mouthById(10);
-        if (name == "DiagLeft") return m_commands->mouthById(11);
-        if (name == "Sad") return m_commands->mouthById(12);
-        if (name == "SadOpen") return m_commands->mouthById(13);
-        if (name == "SadClosed") return m_commands->mouthById(14);
-        if (name == "Ok") return m_commands->mouthById(15);
-        if (name == "X") return m_commands->mouthById(16);
-        if (name == "Interrogation") return m_commands->mouthById(17);
-        if (name == "Thunder") return m_commands->mouthById(18);
-        if (name == "Culito") return m_commands->mouthById(19);
-        if (name == "Angry") return m_commands->mouthById(20);
+        // Map mouth names using CommandsController methods
+        if (name == "Smile") return m_commands->mouthById(m_commands->mouthSmile());
+        if (name == "HappyOpen") return m_commands->mouthById(m_commands->mouthHappyOpen());
+        if (name == "HappyClosed") return m_commands->mouthById(m_commands->mouthHappyClosed());
+        if (name == "Heart") return m_commands->mouthById(m_commands->mouthHeart());
+        if (name == "BigSurprise") return m_commands->mouthById(m_commands->mouthBigSurprise());
+        if (name == "SmallSurprise") return m_commands->mouthById(m_commands->mouthSmallSurprise());
+        if (name == "TongueOut") return m_commands->mouthById(m_commands->mouthTongueOut());
+        if (name == "Vamp1") return m_commands->mouthById(m_commands->mouthVamp1());
+        if (name == "Vamp2") return m_commands->mouthById(m_commands->mouthVamp2());
+        if (name == "LineMouth") return m_commands->mouthById(m_commands->mouthLineMouth());
+        if (name == "Confused") return m_commands->mouthById(m_commands->mouthConfused());
+        if (name == "DiagLeft") return m_commands->mouthById(m_commands->mouthDiagonal());
+        if (name == "Sad") return m_commands->mouthById(m_commands->mouthSad());
+        if (name == "SadOpen") return m_commands->mouthById(m_commands->mouthSadOpen());
+        if (name == "SadClosed") return m_commands->mouthById(m_commands->mouthSadClosed());
+        if (name == "Ok") return m_commands->mouthById(m_commands->mouthOk());
+        if (name == "X") return m_commands->mouthById(m_commands->mouthX());
+        if (name == "Interrogation") return m_commands->mouthById(m_commands->mouthInterrogation());
+        if (name == "Thunder") return m_commands->mouthById(m_commands->mouthThunder());
+        if (name == "Culito") return m_commands->mouthById(m_commands->mouthCulito());
+        if (name == "Angry") return m_commands->mouthById(m_commands->mouthAngry());
     }
     return QString();
 }
@@ -257,8 +257,13 @@ void TimelineController::playNext() {
     int reps = cmd.value("reps", 1).toInt();
     int duration = getDurationMs(cmd.value("duration", "Medium").toString());
 
+    QString name = cmd.value("name", "").toString();
+    QString type = cmd.value("type", "").toString();
+    qDebug() << "[Timeline] Executing:" << type << name << "reps:" << reps << "duration:" << duration;
+
     for (int i = 0; i < reps; ++i) {
         QString cmdStr = commandToString(cmd);
+        qDebug() << "[Timeline] Command string:" << (cmdStr.isEmpty() ? "EMPTY" : "OK");
         if (!cmdStr.isEmpty() && m_robot) {
             m_robot->sendData(cmdStr);
         }

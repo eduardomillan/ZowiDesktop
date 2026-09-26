@@ -65,7 +65,16 @@ ScreenTemplate {
     function serializeModel() {
         var items = []
         for (var i = 0; i < timelineModel.count; i++) {
-            items.push(timelineModel.get(i))
+            var modelItem = timelineModel.get(i)
+            items.push({
+                name: modelItem.name,
+                type: modelItem.type,
+                reps: modelItem.reps,
+                duration: modelItem.duration,
+                direction: modelItem.direction,
+                supportsDirection: modelItem.supportsDirection,
+                supportsDuration: modelItem.supportsDuration
+            })
         }
         return items
     }
@@ -96,7 +105,14 @@ ScreenTemplate {
     }
 
     function onPlayClicked(count) {
-        Timeline.play(serializeModel())
+        console.log("[GameTimeline] Play clicked, count:", count)
+        var items = serializeModel()
+        console.log("[GameTimeline] Serialized items:", items.length)
+        for (var i = 0; i < items.length; i++) {
+            console.log("[GameTimeline] Item " + i + ":", items[i].type, items[i].name)
+        }
+        Timeline.play(items)
+        console.log("[GameTimeline] Timeline.play() called")
     }
 
     function onStopClicked() {
@@ -104,6 +120,7 @@ ScreenTemplate {
     }
 
     property bool isPlayingTimeline: Timeline.isPlaying
+    property int currentPlayingIndex: Timeline.currentIndex
     readonly property int addButtonSize: 80
     property int playClearButtonSize: 80
     property real buttonSpacingRatio: 0.03  // % of window width; adjust for testing
@@ -190,6 +207,16 @@ ScreenTemplate {
                 spacing: 10
                 model: timelineModel
 
+                // Auto-scroll to current playing chip
+                Connections {
+                    target: root
+                    function onCurrentPlayingIndexChanged() {
+                        if (root.isPlayingTimeline && root.currentPlayingIndex >= 0) {
+                            sequenceList.positionViewAtIndex(root.currentPlayingIndex, ListView.Center)
+                        }
+                    }
+                }
+
                 delegate: Item {
                     id: wrapper
                     width: root.chipWidth
@@ -197,6 +224,17 @@ ScreenTemplate {
                     property bool dragging: false
                     property int itemIndex: index
                     transform: Translate { id: dragTranslate; x: 0 }
+
+                    // Playback highlight border
+                    Rectangle {
+                        anchors.fill: parent
+                        border.color: Config.get("color_accent") || "#21a69b"
+                        border.width: wrapper.itemIndex === root.currentPlayingIndex ? 3 : 0
+                        color: "transparent"
+                        radius: 14
+                        visible: root.isPlayingTimeline && border.width > 0
+                        z: 50
+                    }
 
                     TimelineChip {
                         id: chip
@@ -207,6 +245,7 @@ ScreenTemplate {
                         chipDeleteButtonSize: root.chipDeleteButtonSize
                         chipButtonWidth: root.chipButtonWidth
                         chipButtonHeight: root.chipButtonHeight
+                        enabled: !root.isPlayingTimeline
                         commandData: ({
                             name: model.name,
                             type: model.type,
@@ -234,6 +273,7 @@ ScreenTemplate {
 
                     // Delete button (red rectangle) - directly in wrapper to ensure it captures clicks
                     Button {
+                        enabled: !root.isPlayingTimeline
                         anchors { top: parent.top; right: parent.right; topMargin: 4; rightMargin: 4 }
                         width: root.chipDeleteButtonSize
                         height: root.chipDeleteButtonSize
@@ -254,6 +294,7 @@ ScreenTemplate {
 
                     MouseArea {
                         id: dragMouse
+                        enabled: !root.isPlayingTimeline
                         anchors { top: parent.top; left: parent.left; right: parent.right }
                         height: chip.iconTileHeight
                         drag.target: undefined
@@ -428,7 +469,7 @@ ScreenTemplate {
             Button {
                 implicitWidth: root.playClearButtonSize
                 implicitHeight: root.playClearButtonSize
-                enabled: timelineModel.count > 0
+                enabled: !root.isPlayingTimeline && timelineModel.count > 0
                 opacity: enabled ? 1.0 : 0.4
                 contentItem: Image {
                     source: parent.down ? "qrc:/images/android/pressed_delete_timeline_button.png"
@@ -449,7 +490,7 @@ ScreenTemplate {
             Button {
                 implicitWidth: root.playClearButtonSize
                 implicitHeight: root.playClearButtonSize
-                enabled: root.isPlayingTimeline || (Robot.connected && timelineModel.count > 0)
+                enabled: !root.isPlayingTimeline && (Robot.connected && timelineModel.count > 0)
                 opacity: enabled ? 1.0 : 0.4
                 contentItem: Image {
                     source: parent.down ? "qrc:/images/android/pressed_play_button.png"
