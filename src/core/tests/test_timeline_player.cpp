@@ -91,8 +91,11 @@ int main() {
 
         player.onSoftwareAck();
         player.onFinalAck();
+        // Non-movements now await the display timer firing (simulated by the UI/test)
+        // After ack, we're in MotionlessAwaitingDisplay; call advanceNonmovement() as the UI timer would
+        player.advanceNonmovement();
 
-        // After the animation's ack, we should be finished (no more steps)
+        // Now we should be finished (no more steps)
         checkBool("animation_finished", player.finished());
     }
 

@@ -45,6 +45,7 @@ private slots:
     void onRobotSoftwareAck();
     void onRobotFinalAck();
     void sendNextCommand();
+    void onMotionlessDisplayTimeout();
 
 private:
     SessionController* m_session = nullptr;
@@ -52,7 +53,8 @@ private:
     CommandsController* m_commands = nullptr;
 
     std::unique_ptr<zowi::TimelinePlayer> m_player;
-    QTimer m_moveStartTimeout;  // Safety net for missing &&A
+    QTimer m_moveStartTimeout;     // Safety net for missing &&A
+    QTimer m_motionlessDisplay;    // Display time for animations/mouths
 
     int getDurationMs(const QString& duration) const;
     QString commandToString(const QVariantMap& cmd);

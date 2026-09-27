@@ -74,7 +74,7 @@ Item {
                 "LineMouth":     "qrc:/images/android/line_mouth_icon.png",
                 "Confused":      "qrc:/images/android/confused_icon.png",
                 "DiagLeft":      "qrc:/images/android/diagonal_icon.png",
-                "DiagRight":     "qrc:/images/android/interrogation_icon.png",
+                "DiagRight":     "qrc:/images/android/diagonal_reverse_icon.png",
                 "Sad":           "qrc:/images/android/sad_icon.png",
                 "SadOpen":       "qrc:/images/android/sad_open_icon.png",
                 "SadClosed":     "qrc:/images/android/sad_closed_icon.png",

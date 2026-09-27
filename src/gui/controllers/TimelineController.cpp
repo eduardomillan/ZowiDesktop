@@ -26,6 +26,9 @@ TimelineController::TimelineController(QObject* parent)
                    << kMoveStartTimeoutMs << "ms; stopping playback.";
         stop();
     });
+
+    m_motionlessDisplay.setSingleShot(true);
+    connect(&m_motionlessDisplay, &QTimer::timeout, this, &TimelineController::onMotionlessDisplayTimeout);
 }
 
 TimelineController::~TimelineController() = default;
@@ -185,14 +188,11 @@ QString TimelineController::commandToString(const QVariantMap& cmd) {
         if (name == "Moonwalker Left") return m_commands->moonwalkerLeft(duration);
         if (name == "Moonwalker Right") return m_commands->moonwalkerRight(duration);
         if (name == "Bend Forward") return m_commands->bendForward(duration);
-        if (name == "Bend Backward") return m_commands->bendBackward(duration);
-        if (name == "Shake Leg Left") return m_commands->shakeLegLeft(duration);
-        if (name == "Shake Leg Right") return m_commands->shakeLegRight(duration);
+        if (name == "Shake Leg") return m_commands->shakeLegLeft(duration);  // Default to Left
         if (name == "Up/Down") return m_commands->updown(duration);
         if (name == "Jitter") return m_commands->jitter(duration);
         if (name == "Swing") return m_commands->swing(duration);
-        if (name == "Flapping Left") return m_commands->flappingLeft(duration);
-        if (name == "Flapping Right") return m_commands->flappingRight(duration);
+        if (name == "Flapping") return m_commands->flappingLeft(duration);  // Default to Left
         if (name == "Crusaito") {
             QString dir = cmd.value("direction", "Front").toString();
             return dir == "Right" ? m_commands->crusaitoForward(duration)
@@ -201,9 +201,9 @@ QString TimelineController::commandToString(const QVariantMap& cmd) {
         if (name == "Jump") return m_commands->jump(duration);
         if (name == "Tiptoе Swing") return m_commands->tiptoeSwing(duration);
     } else if (type == "animation") {
-        // Map animation names to gesture IDs
+        // Map animation names to gesture IDs (match GestureSelectorContent.qml exactly)
         if (name == "Happy") return m_commands->gestureById(0);
-        if (name == "Super Happy") return m_commands->gestureById(1);
+        if (name == "SuperHappy") return m_commands->gestureById(1);
         if (name == "Sad") return m_commands->gestureById(2);
         if (name == "Sleeping") return m_commands->gestureById(3);
         if (name == "Fart") return m_commands->gestureById(4);
@@ -228,7 +228,8 @@ QString TimelineController::commandToString(const QVariantMap& cmd) {
         if (name == "Vamp2") return m_commands->mouthById(m_commands->mouthVamp2());
         if (name == "LineMouth") return m_commands->mouthById(m_commands->mouthLineMouth());
         if (name == "Confused") return m_commands->mouthById(m_commands->mouthConfused());
-        if (name == "Diagonal") return m_commands->mouthById(m_commands->mouthDiagonal());
+        if (name == "DiagLeft") return m_commands->mouthById(m_commands->mouthDiagonal());
+        if (name == "DiagRight") return m_commands->mouth(17318416);  // reverseDiagonalMatrix value
         if (name == "Sad") return m_commands->mouthById(m_commands->mouthSad());
         if (name == "SadOpen") return m_commands->mouthById(m_commands->mouthSadOpen());
         if (name == "SadClosed") return m_commands->mouthById(m_commands->mouthSadClosed());
@@ -279,6 +280,7 @@ void TimelineController::play(const QVariantList &items) {
 void TimelineController::stop() {
     if (!m_player) return;
     m_moveStartTimeout.stop();
+    m_motionlessDisplay.stop();
     m_player->cancel();
     if (m_robot) {
         m_robot->sendData(QString::fromStdString(zowi::commandStop()));
@@ -295,10 +297,33 @@ void TimelineController::onRobotSoftwareAck() {
 
 void TimelineController::onRobotFinalAck() {
     if (!m_player || !m_player->isPlaying()) return;
+
+    // Both movements and non-movements generate real &&F from the firmware
+    bool wasMovement = m_player->currentStepIsMovement();
     m_player->onFinalAck();
     updateFromPlayer();
+
     if (m_player->isPlaying()) {
+        // After movement completes and advances to next step, always send the next command first
+        if (wasMovement) {
+            // Just completed a movement; send whatever comes next (movement or non-movement)
+            sendNextCommand();
+        } else {
+            // Non-movement just completed: firmware sent &&F confirming execution
+            // Start the display duration timer before advancing
+            int displayMs = m_player->currentSpeed();
+            m_motionlessDisplay.setInterval(displayMs);
+            m_motionlessDisplay.start();
+        }
+    }
+}
+
+void TimelineController::onMotionlessDisplayTimeout() {
+    if (m_player && m_player->isPlaying()) {
+        // Non-movement display time is over; advance to next step and send its command
+        m_player->advanceNonmovement();
         sendNextCommand();
+        // updateFromPlayer() is called inside sendNextCommand() when the next item is sent
     }
 }
 
@@ -310,10 +335,21 @@ void TimelineController::sendNextCommand() {
         QString qcmd = QString::fromStdString(cmd);
         m_robot->sendData(qcmd);
         qDebug() << "[Timeline] Sending:" << qcmd.trimmed();
-        // Arm guard timeout if this is a movement command
+
+        // Update UI to reflect the currently executing item
+        updateFromPlayer();
+
+        // Arm guard timeout only for movements (waiting for hardware &&A)
         if (!qcmd.isEmpty() && qcmd[0] == QLatin1Char('M')) {
             m_moveStartTimeout.start();
         }
+        // For non-movements: display timer will be started when &&F ack arrives from firmware
+    } else if (m_player->finished()) {
+        // Sequence complete: send final stop command
+        m_robot->sendData(QString::fromStdString(zowi::commandStop()));
+        qDebug() << "[Timeline] Sequence complete, sending final stop";
+        m_player->reset();
+        updateFromPlayer();
     }
 }
 

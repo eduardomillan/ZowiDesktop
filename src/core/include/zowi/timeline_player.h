@@ -42,13 +42,21 @@ public:
     bool finished() const { return m_state == TimelinePlayerState::Finished; }
     int currentIndex() const { return m_currentStepIndex; }
     int totalSteps() const { return static_cast<int>(m_steps.size()); }
+    int currentSpeed() const { return static_cast<int>(m_currentSpeed); }
+    bool currentStepIsMovement() const {
+        if (m_currentStepIndex >= static_cast<int>(m_steps.size())) return false;
+        return m_steps[m_currentStepIndex].isMovement;
+    }
+
+    // For UI-driven advancement of non-movement items after display timer expires
+    void advanceNonmovement() { advanceToNextStep(); }
 
     // Timeout guidance for drivers
     int startTimeoutMs() const { return 20000; }
     int cycleTimeoutMs() const { return static_cast<int>(m_currentSpeed) + 1500; }
 
 private:
-    enum class StepPhase { Idle, MoveQueued, MoveRunning, AwaitingStopAcks, MotionlessRunning };
+    enum class StepPhase { Idle, MoveQueued, MoveRunning, AwaitingStopAcks, MotionlessRunning, MotionlessAwaitingDisplay };
 
     void advanceToNextStep();
     bool isMovementAtIndex(int idx) const;

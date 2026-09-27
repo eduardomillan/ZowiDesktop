@@ -50,10 +50,10 @@ std::string TimelinePlayer::nextRobotCommand() {
             return commandStop();
         }
     } else {
-        // Non-movement step (animation/mouth): send once, wait for ack, advance
+        // Non-movement step (animation/mouth): send once, wait for ack + duration time
         if (m_phase == StepPhase::Idle) {
             m_phase = StepPhase::MotionlessRunning;
-            m_currentSpeed = step.speed;
+            m_currentSpeed = step.speed;  // Use speed as display duration
             m_stopAckSeen = false;
             return step.wireCommand;
         }
@@ -80,12 +80,8 @@ void TimelinePlayer::onSoftwareAck() {
             // Stop command accepted (drain phase)
             m_stopAckSeen = true;
         }
-    } else {
-        // Non-movement: mark that command was accepted
-        if (m_phase == StepPhase::MotionlessRunning) {
-            m_stopAckSeen = true;
-        }
     }
+    // Note: non-movements don't wait for acks (firmware doesn't send them for H/L commands)
 }
 
 void TimelinePlayer::onFinalAck() {
@@ -109,9 +105,10 @@ void TimelinePlayer::onFinalAck() {
             advanceToNextStep();
         }
     } else {
-        // Non-movement: advance on first final ack (motion was instant)
-        if (m_phase == StepPhase::MotionlessRunning && m_stopAckSeen) {
-            advanceToNextStep();
+        // Non-movement (gesture/mouth): firmware sends real &&F when done
+        // Transition to awaiting-display phase; the UI timer will dispatch advancement
+        if (m_phase == StepPhase::MotionlessRunning) {
+            m_phase = StepPhase::MotionlessAwaitingDisplay;
         }
     }
 }
