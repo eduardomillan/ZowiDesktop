@@ -43,7 +43,7 @@ Status:
 | **0.7.0** | M7 | Zowi calibration (servo trims via`C`/`G` protocol commands) | ✅ |
 | **0.8.0** | M8 | Basic projects | ✅ |
 | **0.9.0** | M9 | Advanced projects | ✅ |
-| **0.10.0** | M10 | Games | 🚧 |
+| **0.10.0** | M10 | Games | ✅ |
 
 
 ## Architecture
