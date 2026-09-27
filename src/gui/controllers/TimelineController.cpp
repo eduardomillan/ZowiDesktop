@@ -29,6 +29,10 @@ TimelineController::TimelineController(QObject* parent)
 
     m_motionlessDisplay.setSingleShot(true);
     connect(&m_motionlessDisplay, &QTimer::timeout, this, &TimelineController::onMotionlessDisplayTimeout);
+
+    m_stopAckDrain.setSingleShot(true);
+    m_stopAckDrain.setInterval(m_player->stopAckDrainTimeoutMs());
+    connect(&m_stopAckDrain, &QTimer::timeout, this, &TimelineController::onStopAckDrainTimeout);
 }
 
 TimelineController::~TimelineController() = default;
@@ -252,8 +256,7 @@ void TimelineController::play(const QVariantList &items) {
         return;
     }
 
-    // Build TimelineStep vector from QVariantList, expanding repetitions
-    // (each "repetition" becomes a separate command, like Android does)
+    // Build TimelineStep vector from QVariantList
     std::vector<zowi::TimelineStep> steps;
     for (const auto& item : items) {
         auto map = item.toMap();
@@ -265,14 +268,20 @@ void TimelineController::play(const QVariantList &items) {
 
         bool isMovement = (map.value("type", "").toString() == "movement");
         int reps = map.value("reps", 1).toInt();
+        if (reps < 1) reps = 1;  // Defensive: prevent undefined cycles=0 in MovementSequencer
         zowi::MovementSpeed speed = static_cast<zowi::MovementSpeed>(getDurationMs(map.value("duration", "Medium").toString()));
 
         qDebug() << "[Timeline] Step:" << map.value("type") << map.value("name")
                   << "reps=" << reps << "cmd=" << cmdStr.trimmed();
 
-        // Expand: each repetition is a separate command
-        for (int rep = 0; rep < reps; ++rep) {
-            steps.push_back({cmdStr.toStdString(), isMovement, speed});
+        if (isMovement) {
+            // One step, N cycles: driven by MovementSequencer (one M sent once, N &&F-counted cycles, no per-cycle stutter)
+            steps.push_back({cmdStr.toStdString(), true, speed, reps});
+        } else {
+            // Non-movements: expand reps into separate commands (unchanged behavior)
+            for (int rep = 0; rep < reps; ++rep) {
+                steps.push_back({cmdStr.toStdString(), false, speed, 1});
+            }
         }
     }
 
@@ -291,6 +300,7 @@ void TimelineController::stop() {
     if (!m_player) return;
     m_moveStartTimeout.stop();
     m_motionlessDisplay.stop();
+    m_stopAckDrain.stop();
     m_player->cancel();
     if (m_robot) {
         m_robot->sendData(QString::fromStdString(zowi::commandStop()));
@@ -313,21 +323,40 @@ void TimelineController::onRobotFinalAck() {
     bool wasMovement = m_player->currentStepIsMovement();
     qDebug() << "[Timeline] &&F received; index=" << m_player->currentIndex()
               << "isMovement=" << wasMovement;
-    m_player->onFinalAck();
+
+    // If we're already draining a just-sent Stop's own ack, this &&F is presumed
+    // to be it: end the drain early rather than waiting out the full timeout.
+    bool wasDraining = m_player->movementAwaitingAdvance();
+
+    m_player->onFinalAck();  // Unconditional forward into m_moveSeq for movement steps
     updateFromPlayer();
 
-    if (m_player->isPlaying()) {
-        // After movement completes and advances to next step, always send the next command first
-        if (wasMovement) {
-            // Just completed a movement; send whatever comes next (movement or non-movement)
-            sendNextCommand();
+    if (!m_player->isPlaying()) return;
+
+    if (wasDraining) {
+        // Stop-ack drained (arrived during the window): advance to next step now
+        m_stopAckDrain.stop();
+        m_player->advanceMovement();
+        updateFromPlayer();
+        sendNextCommand();
+        return;
+    }
+
+    if (wasMovement) {
+        if (m_player->movementAwaitingAdvance()) {
+            // Nth cycle just counted and its Stop already sent: start the bounded
+            // best-effort wait for the Stop's own trailing ack (mirrors CLI's awaitStopAck).
+            m_stopAckDrain.start();
         } else {
-            // Non-movement just completed: firmware sent &&F confirming execution
-            // Start the display duration timer before advancing
-            int displayMs = m_player->currentSpeed();
-            m_motionlessDisplay.setInterval(displayMs);
-            m_motionlessDisplay.start();
+            // Mid-sequence cycle ack: nothing to advance yet; let sendNextCommand() check if Stop is due
+            sendNextCommand();
         }
+    } else {
+        // Non-movement just completed: firmware sent &&F confirming execution
+        // Start the display duration timer before advancing
+        int displayMs = m_player->currentSpeed();
+        m_motionlessDisplay.setInterval(displayMs);
+        m_motionlessDisplay.start();
     }
 }
 
@@ -337,6 +366,15 @@ void TimelineController::onMotionlessDisplayTimeout() {
         m_player->advanceNonmovement();
         sendNextCommand();
         // updateFromPlayer() is called inside sendNextCommand() when the next item is sent
+    }
+}
+
+void TimelineController::onStopAckDrainTimeout() {
+    if (m_player && m_player->movementAwaitingAdvance()) {
+        // Stop-ack drain window elapsed (best-effort, never blocking): advance to next step now
+        m_player->advanceMovement();
+        updateFromPlayer();
+        sendNextCommand();
     }
 }
 
