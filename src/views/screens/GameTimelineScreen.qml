@@ -28,7 +28,7 @@ ScreenTemplate {
     readonly property var movementDirectionNames: ["Crusaito"]
     function metaFor(type, name) {
         return {
-            supportsDuration: type === "movement",
+            supportsDuration: type === "movement" || type === "mouth",
             supportsDirection: type === "movement" && root.movementDirectionNames.indexOf(name) !== -1
         }
     }

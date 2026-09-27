@@ -155,6 +155,9 @@ QVariantList TimelineController::loadSequence() const {
             map["supportsDuration"] = true;
             // Only Crusaito supports direction
             map["supportsDirection"] = (cmd.name == "Crusaito");
+        } else if (cmd.type == zowi::TimelineItemType::Mouth) {
+            map["supportsDuration"] = true;
+            map["supportsDirection"] = false;
         } else {
             map["supportsDuration"] = false;
             map["supportsDirection"] = false;
