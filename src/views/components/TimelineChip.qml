@@ -64,7 +64,7 @@ Item {
             mouth: {
                 "Smile":         "qrc:/images/android/smile_icon.png",
                 "HappyOpen":     "qrc:/images/android/happy_open_icon.png",
-                "HappyClosed":   "qrc:/images/android/interrogation_icon.png",
+                "HappyClosed":   "qrc:/images/android/happy_closed_icon.png",
                 "Heart":         "qrc:/images/android/heart_icon.png",
                 "BigSurprise":   "qrc:/images/android/big_surprise_icon.png",
                 "SmallSurprise": "qrc:/images/android/small_surprise_icon.png",
