@@ -46,6 +46,7 @@ private slots:
     void onRobotFinalAck();
     void sendNextCommand();
     void onMotionlessDisplayTimeout();
+    void onStopAckDrainTimeout();
 
 private:
     SessionController* m_session = nullptr;
@@ -55,6 +56,7 @@ private:
     std::unique_ptr<zowi::TimelinePlayer> m_player;
     QTimer m_moveStartTimeout;     // Safety net for missing &&A
     QTimer m_motionlessDisplay;    // Display time for animations/mouths
+    QTimer m_stopAckDrain;         // Bounded drain wait for Stop's trailing ack
 
     int getDurationMs(const QString& duration) const;
     QString commandToString(const QVariantMap& cmd);
