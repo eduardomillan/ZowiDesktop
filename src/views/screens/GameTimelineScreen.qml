@@ -25,11 +25,13 @@ ScreenTemplate {
     function tr(source) { return Translator.translate("GameTimelineScreen.qml", source) }
 
     // Metadata for each action: which controls to show (direction, duration)
-    readonly property var movementDirectionNames: ["Crusaito"]
     function metaFor(type, name) {
+        var supportsDir = type === "movement" && Timeline.commandSupportsDirection(name)
+        var isFrontBack = supportsDir && Timeline.commandUsesFrontBackDirection(name)
         return {
             supportsDuration: type === "movement" || type === "mouth",
-            supportsDirection: type === "movement" && root.movementDirectionNames.indexOf(name) !== -1
+            supportsDirection: supportsDir,
+            defaultDirection: supportsDir ? (isFrontBack ? "Front" : "Left") : "Front"
         }
     }
 
@@ -45,7 +47,7 @@ ScreenTemplate {
             "type": type,
             "reps": 1,
             "duration": "Medium",
-            "direction": meta.supportsDirection ? "Left" : "Front",
+            "direction": meta.defaultDirection,
             "supportsDirection": meta.supportsDirection,
             "supportsDuration": meta.supportsDuration
         })
