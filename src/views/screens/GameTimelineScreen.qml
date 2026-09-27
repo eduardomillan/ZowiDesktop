@@ -245,6 +245,7 @@ ScreenTemplate {
                     height: root.chipHeight
                     property bool dragging: false
                     property int itemIndex: index
+                    z: dragging ? 1 : 0
                     transform: Translate { id: dragTranslate; x: 0 }
 
                     // Playback highlight border
@@ -325,6 +326,7 @@ ScreenTemplate {
                         hoverEnabled: false
 
                         property int startX: 0
+                        property int startGlobalX: 0
                         property bool canDrag: false
                         property int minDragDelta: 8
 
@@ -334,11 +336,13 @@ ScreenTemplate {
                             onTriggered: {
                                 dragMouse.canDrag = true
                                 dragMouse.preventStealing = true
+                                wrapper.dragging = true
                             }
                         }
 
                         onPressed: {
                             startX = mouseX
+                            startGlobalX = dragMouse.mapToItem(sequenceList, mouseX, 0).x
                             dragTranslate.x = 0
                             canDrag = false
                             holdTimer.start()
@@ -352,12 +356,14 @@ ScreenTemplate {
                                 return
                             }
                             if (!canDrag) return
-                            dragTranslate.x = mouseX - startX
+                            var currentGlobalX = dragMouse.mapToItem(sequenceList, mouseX, 0).x
+                            dragTranslate.x = currentGlobalX - startGlobalX
                         }
 
                         onReleased: {
                             holdTimer.stop()
                             dragMouse.preventStealing = false
+                            wrapper.dragging = false
                             if (!canDrag || dragTranslate.x === 0) {
                                 dragTranslate.x = 0
                                 return
@@ -377,6 +383,7 @@ ScreenTemplate {
                         onCanceled: {
                             holdTimer.stop()
                             dragMouse.preventStealing = false
+                            wrapper.dragging = false
                             canDrag = false
                             dragTranslate.x = 0
                         }
