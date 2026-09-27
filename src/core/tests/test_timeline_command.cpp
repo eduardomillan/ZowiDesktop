@@ -90,6 +90,45 @@ int main() {
         checkBool("default_duration", cmd.duration == zowi::TimelineDuration::Medium);
     }
 
+    // Test Back direction (new enum value)
+    {
+        std::vector<zowi::TimelineCommand> original;
+        original.push_back(zowi::TimelineCommand(
+            zowi::TimelineItemType::Movement, "Crusaito", 1,
+            zowi::TimelineDuration::Medium, zowi::TimelineDirection::Back));
+        original.push_back(zowi::TimelineCommand(
+            zowi::TimelineItemType::Movement, "Bend Forward", 1,
+            zowi::TimelineDuration::Medium, zowi::TimelineDirection::Back));
+
+        std::string json = zowi::serializeTimeline(original);
+        std::vector<zowi::TimelineCommand> restored = zowi::parseTimeline(json);
+
+        checkInt("back_direction_count", restored.size(), 2);
+        checkBool("back_direction_crusaito", restored[0].direction == zowi::TimelineDirection::Back);
+        checkBool("back_direction_bend", restored[1].direction == zowi::TimelineDirection::Back);
+    }
+
+    // Test all four direction values round-trip correctly
+    {
+        std::vector<zowi::TimelineDirection> all_dirs = {
+            zowi::TimelineDirection::Left,
+            zowi::TimelineDirection::Right,
+            zowi::TimelineDirection::Front,
+            zowi::TimelineDirection::Back
+        };
+
+        for (auto dir : all_dirs) {
+            std::vector<zowi::TimelineCommand> original;
+            original.push_back(zowi::TimelineCommand(
+                zowi::TimelineItemType::Movement, "TestMove", 1,
+                zowi::TimelineDuration::Medium, dir));
+            std::string json = zowi::serializeTimeline(original);
+            std::vector<zowi::TimelineCommand> restored = zowi::parseTimeline(json);
+            checkBool((std::string("roundtrip_") + std::to_string(static_cast<int>(dir))).c_str(),
+                      restored.size() == 1 && restored[0].direction == dir);
+        }
+    }
+
     std::cout << "\n" << test_count << " tests, " << fail_count << " failures\n";
     return fail_count;
 }

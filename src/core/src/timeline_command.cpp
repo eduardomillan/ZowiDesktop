@@ -40,6 +40,7 @@ std::string directionToString(TimelineDirection dir) {
         case TimelineDirection::Left: return "Left";
         case TimelineDirection::Right: return "Right";
         case TimelineDirection::Front: return "Front";
+        case TimelineDirection::Back: return "Back";
     }
     return "Front";
 }
@@ -47,6 +48,7 @@ std::string directionToString(TimelineDirection dir) {
 TimelineDirection stringToDirection(const std::string& s) {
     if (s == "Left") return TimelineDirection::Left;
     if (s == "Right") return TimelineDirection::Right;
+    if (s == "Back") return TimelineDirection::Back;
     return TimelineDirection::Front;
 }
 

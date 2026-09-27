@@ -13,6 +13,14 @@
 
 namespace {
 constexpr int kMoveStartTimeoutMs = 20000;
+
+bool supportsFrontBackDirection(const QString& name) {
+    return name == "Crusaito" || name == "Bend Forward";
+}
+
+bool supportsLeftRightDirection(const QString& name) {
+    return name == "Shake Leg" || name == "Flapping";
+}
 }
 
 TimelineController::TimelineController(QObject* parent)
@@ -59,6 +67,14 @@ int TimelineController::currentIndex() const {
 
 int TimelineController::currentChipIndex() const {
     return m_player ? m_player->currentChipIndex() : -1;
+}
+
+bool TimelineController::commandSupportsDirection(const QString& name) const {
+    return supportsFrontBackDirection(name) || supportsLeftRightDirection(name);
+}
+
+bool TimelineController::commandUsesFrontBackDirection(const QString& name) const {
+    return supportsFrontBackDirection(name);
 }
 
 void TimelineController::saveSequence(const QVariantList &items) {
@@ -149,6 +165,9 @@ QVariantList TimelineController::loadSequence() const {
             case zowi::TimelineDirection::Right:
                 map["direction"] = "Right";
                 break;
+            case zowi::TimelineDirection::Back:
+                map["direction"] = "Back";
+                break;
             default:
                 map["direction"] = "Front";
                 break;
@@ -157,8 +176,7 @@ QVariantList TimelineController::loadSequence() const {
         // Compute supportsDuration / supportsDirection (mirrors GameTimelineScreen logic)
         if (cmd.type == zowi::TimelineItemType::Movement) {
             map["supportsDuration"] = true;
-            // Only Crusaito supports direction
-            map["supportsDirection"] = (cmd.name == "Crusaito");
+            map["supportsDirection"] = commandSupportsDirection(QString::fromStdString(cmd.name));
         } else if (cmd.type == zowi::TimelineItemType::Mouth) {
             map["supportsDuration"] = true;
             map["supportsDirection"] = false;
@@ -194,16 +212,28 @@ QString TimelineController::commandToString(const QVariantMap& cmd) {
         if (name == "Turn Right") return m_commands->turnRight(duration);
         if (name == "Moonwalker Left") return m_commands->moonwalkerLeft(duration);
         if (name == "Moonwalker Right") return m_commands->moonwalkerRight(duration);
-        if (name == "Bend Forward") return m_commands->bendForward(duration);
-        if (name == "Shake Leg") return m_commands->shakeLegLeft(duration);  // Default to Left
+        if (name == "Bend Forward") {
+            QString dir = cmd.value("direction", "Front").toString();
+            return dir == "Back" ? m_commands->bendBackward(duration)
+                                 : m_commands->bendForward(duration);
+        }
+        if (name == "Shake Leg") {
+            QString dir = cmd.value("direction", "Left").toString();
+            return dir == "Right" ? m_commands->shakeLegRight(duration)
+                                  : m_commands->shakeLegLeft(duration);
+        }
         if (name == "Up/Down") return m_commands->updown(duration);
         if (name == "Jitter") return m_commands->jitter(duration);
         if (name == "Swing") return m_commands->swing(duration);
-        if (name == "Flapping") return m_commands->flappingLeft(duration);  // Default to Left
+        if (name == "Flapping") {
+            QString dir = cmd.value("direction", "Left").toString();
+            return dir == "Right" ? m_commands->flappingRight(duration)
+                                  : m_commands->flappingLeft(duration);
+        }
         if (name == "Crusaito") {
             QString dir = cmd.value("direction", "Front").toString();
-            return dir == "Right" ? m_commands->crusaitoForward(duration)
-                                  : m_commands->crusaitoBackward(duration);
+            return dir == "Back" ? m_commands->crusaitoBackward(duration)
+                                 : m_commands->crusaitoForward(duration);
         }
         if (name == "Jump") return m_commands->jump(duration);
         if (name == "Tiptoе Swing") return m_commands->tiptoeSwing(duration);

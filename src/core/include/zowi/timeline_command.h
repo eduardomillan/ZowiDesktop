@@ -20,7 +20,8 @@ enum class TimelineDuration {
 enum class TimelineDirection {
     Left,
     Right,
-    Front
+    Front,
+    Back
 };
 
 struct TimelineCommand {

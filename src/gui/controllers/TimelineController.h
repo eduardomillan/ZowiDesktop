@@ -34,6 +34,9 @@ public:
     int currentIndex() const;
     int currentChipIndex() const;
 
+    Q_INVOKABLE bool commandSupportsDirection(const QString& name) const;
+    Q_INVOKABLE bool commandUsesFrontBackDirection(const QString& name) const;
+
     Q_INVOKABLE void saveSequence(const QVariantList &items);
     Q_INVOKABLE QVariantList loadSequence() const;
     Q_INVOKABLE void play(const QVariantList &items);

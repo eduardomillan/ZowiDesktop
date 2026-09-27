@@ -177,11 +177,14 @@ Item {
                 visible: !!root.commandData.supportsDirection
                 buttonWidth: root.chipButtonWidth
                 buttonHeight: root.chipButtonHeight
-                states: [
+                states: Timeline.commandUsesFrontBackDirection(root.commandData.name) ? [
+                    { value: "Front", icon: "qrc:/images/android/direction_front_button.png", pressedIcon: "qrc:/images/android/pressed_direction_front_button.png" },
+                    { value: "Back",  icon: "qrc:/images/android/direction_back_button.png",  pressedIcon: "qrc:/images/android/pressed_direction_back_button.png" }
+                ] : [
                     { value: "Left",  icon: "qrc:/images/android/direction_left_button.png",  pressedIcon: "qrc:/images/android/pressed_direction_left_button.png" },
                     { value: "Right", icon: "qrc:/images/android/direction_right_button.png", pressedIcon: "qrc:/images/android/pressed_direction_right_button.png" }
                 ]
-                currentValue: root.commandData.direction || "Left"
+                currentValue: root.commandData.direction || (Timeline.commandUsesFrontBackDirection(root.commandData.name) ? "Front" : "Left")
                 toolTip: root.tr("dir")
                 onValueChanged: root.directionChanged(value)
             }
