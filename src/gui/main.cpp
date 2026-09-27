@@ -183,8 +183,6 @@ int main(int argc, char *argv[])
     timeline.setSessionController(&session);
     timeline.setRobotController(&robot);
     timeline.setCommandsController(&commands);
-    timeline.setRobotController(&robot);
-    timeline.setCommandsController(&commands);
 
     // Wire MouthsGameController (Draw the mouths / Pintabocas). Cosmetics are
     // forwarded to the robot only while connected (game logic works offline).

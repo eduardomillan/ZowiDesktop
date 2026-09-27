@@ -252,7 +252,8 @@ void TimelineController::play(const QVariantList &items) {
         return;
     }
 
-    // Build TimelineStep vector from QVariantList
+    // Build TimelineStep vector from QVariantList, expanding repetitions
+    // (each "repetition" becomes a separate command, like Android does)
     std::vector<zowi::TimelineStep> steps;
     for (const auto& item : items) {
         auto map = item.toMap();
@@ -266,7 +267,13 @@ void TimelineController::play(const QVariantList &items) {
         int reps = map.value("reps", 1).toInt();
         zowi::MovementSpeed speed = static_cast<zowi::MovementSpeed>(getDurationMs(map.value("duration", "Medium").toString()));
 
-        steps.push_back({cmdStr.toStdString(), isMovement, reps, speed});
+        qDebug() << "[Timeline] Step:" << map.value("type") << map.value("name")
+                  << "reps=" << reps << "cmd=" << cmdStr.trimmed();
+
+        // Expand: each repetition is a separate command
+        for (int rep = 0; rep < reps; ++rep) {
+            steps.push_back({cmdStr.toStdString(), isMovement, speed});
+        }
     }
 
     if (steps.empty()) {
@@ -293,6 +300,8 @@ void TimelineController::stop() {
 
 void TimelineController::onRobotSoftwareAck() {
     if (!m_player || !m_player->isPlaying()) return;
+    qDebug() << "[Timeline] &&A received; index=" << m_player->currentIndex()
+              << "isMovement=" << m_player->currentStepIsMovement();
     m_moveStartTimeout.stop();
     m_player->onSoftwareAck();
     sendNextCommand();
@@ -301,8 +310,9 @@ void TimelineController::onRobotSoftwareAck() {
 void TimelineController::onRobotFinalAck() {
     if (!m_player || !m_player->isPlaying()) return;
 
-    // Both movements and non-movements generate real &&F from the firmware
     bool wasMovement = m_player->currentStepIsMovement();
+    qDebug() << "[Timeline] &&F received; index=" << m_player->currentIndex()
+              << "isMovement=" << wasMovement;
     m_player->onFinalAck();
     updateFromPlayer();
 

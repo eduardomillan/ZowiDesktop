@@ -9,7 +9,7 @@ ApplicationWindow {
     visible: true
     // Window size ratio (fraction of available screen size), configurable via
     // config.json "window_size_ratio". Falls back to 0.75 if unset/invalid.
-    readonly property real windowSizeRatio: parseFloat(Config.get("window_size_ratio")) || 0.75
+    readonly property real windowSizeRatio: parseFloat(Config.get("window_size_ratio")) || 0.65
     width: Screen.desktopAvailableWidth * windowSizeRatio
     height: Screen.desktopAvailableHeight * windowSizeRatio
     x: (Screen.desktopAvailableWidth - width) / 2
@@ -45,13 +45,6 @@ ApplicationWindow {
         timeline.backClicked.connect(function() {
             timeline.saveSequence()
             stack.pop()
-        })
-
-        timeline.playClicked.connect(function(count) {
-            Timeline.play(timeline.serializeModel())
-        })
-        timeline.stopClicked.connect(function() {
-            Timeline.stop()
         })
 
         timeline.movementSelectorRequested.connect(function() {

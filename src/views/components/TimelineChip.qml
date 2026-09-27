@@ -14,8 +14,8 @@ Item {
     property int chipHeight: 180             // Configurable chip height
     property int chipIconSize: 72            // Configurable icon size
     property int chipDeleteButtonSize: 40    // Configurable delete button size
-    property int chipButtonWidth: 64         // Configurable button width (reps/duration/direction)
-    property int chipButtonHeight: 48        // Configurable button height (reps/duration/direction)
+    property int chipButtonWidth: 70         // Configurable button width (reps/duration/direction)
+    property int chipButtonHeight: 55        // Configurable button height (reps/duration/direction)
 
     implicitWidth: chipWidth
     implicitHeight: chipHeight
@@ -144,9 +144,11 @@ Item {
                 buttonWidth: root.chipButtonWidth
                 buttonHeight: root.chipButtonHeight
                 states: [
-                    { value: 1,  icon: "qrc:/images/android/steps_1_button.png",  pressedIcon: "qrc:/images/android/pressed_steps_1_button.png" },
-                    { value: 5,  icon: "qrc:/images/android/steps_5_button.png",  pressedIcon: "qrc:/images/android/pressed_steps_5_button.png" },
-                    { value: 10, icon: "qrc:/images/android/steps_10_button.png", pressedIcon: "qrc:/images/android/pressed_steps_10_button.png" }
+                    { value: 1, icon: "qrc:/images/android/repeat_1_button.png", pressedIcon: "qrc:/images/android/pressed_repeat_1_button.png" },
+                    { value: 2, icon: "qrc:/images/android/repeat_2_button.png", pressedIcon: "qrc:/images/android/pressed_repeat_2_button.png" },
+                    { value: 3, icon: "qrc:/images/android/repeat_3_button.png", pressedIcon: "qrc:/images/android/pressed_repeat_3_button.png" },
+                    { value: 4, icon: "qrc:/images/android/repeat_4_button.png", pressedIcon: "qrc:/images/android/pressed_repeat_4_button.png" },
+                    { value: 5, icon: "qrc:/images/android/repeat_5_button.png", pressedIcon: "qrc:/images/android/pressed_repeat_5_button.png" }
                 ]
                 currentValue: root.commandData.reps || 1
                 toolTip: root.tr("repetitions")
