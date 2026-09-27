@@ -30,7 +30,7 @@ void checkString(const char* name, const std::string& got, const std::string& ex
 } // namespace
 
 int main() {
-    // Test: single movement with default cycles=1
+    // Test: single movement command (expanded from reps=1)
     {
         zowi::TimelinePlayer player;
         std::vector<zowi::TimelineStep> steps;
@@ -38,7 +38,6 @@ int main() {
             zowi::commandWalkForward(zowi::MovementSpeed::Medium),
             true,   // isMovement
             zowi::MovementSpeed::Medium
-            // cycles defaults to 1
         });
 
         player.start(steps);
@@ -53,16 +52,9 @@ int main() {
         player.onSoftwareAck();
         checkBool("single_move_still_playing_after_ack", player.isPlaying());
 
-        // For cycles=1, Stop is sent immediately after &&A
-        std::string stopCmd = player.nextRobotCommand();
-        checkBool("single_move_stop_sent_after_ack", !stopCmd.empty() && stopCmd[0] == 'S');
-
-        // Simulate &&F (final ack) — should now await advance
+        // Simulate &&F (final ack) — should advance to next step
         player.onFinalAck();
-        checkBool("single_move_awaiting_advance", player.movementAwaitingAdvance());
-
-        // Advance it
-        player.advanceMovement();
+        checkBool("single_move_advanced", player.currentIndex() == 1);
         checkBool("single_move_finished", player.finished());
     }
 
@@ -116,73 +108,53 @@ int main() {
         checkBool("cancel_idle_state", player.state() == zowi::TimelinePlayerState::Idle);
     }
 
-    // Test: movement with cycles=3 (one step, three gait cycles, no per-cycle stutter)
+    // Test: sequence of expanded commands (simulating reps)
+    // User selected Walk Forward 3 times → expands to 3 separate M commands
     {
         zowi::TimelinePlayer player;
         std::vector<zowi::TimelineStep> steps;
-        steps.push_back({
-            zowi::commandWalkForward(zowi::MovementSpeed::Medium),
-            true,
-            zowi::MovementSpeed::Medium,
-            3  // cycles=3
-        });
-        steps.push_back({
-            zowi::commandGesture(zowi::GestureId::Sad),
-            false,
-            zowi::MovementSpeed::Medium
-        });
+        // Expanded: 3 separate movement commands (from reps=3)
+        for (int i = 0; i < 3; ++i) {
+            steps.push_back({
+                zowi::commandWalkForward(zowi::MovementSpeed::Medium),
+                true,
+                zowi::MovementSpeed::Medium
+            });
+        }
 
         player.start(steps);
-        checkBool("cycles3_start_playing", player.isPlaying());
-        checkBool("cycles3_start_index_0", player.currentIndex() == 0);
+        checkBool("reps3_start_playing", player.isPlaying());
+        checkBool("reps3_start_index_0", player.currentIndex() == 0);
 
-        // Send M once
+        // Rep 1: M -> &&A -> &&F -> advance
         std::string cmd1 = player.nextRobotCommand();
-        checkBool("cycles3_cmd1_is_M", !cmd1.empty() && cmd1.find('M') != std::string::npos);
-        checkBool("cycles3_still_index_0_after_M", player.currentIndex() == 0);
+        checkBool("reps3_rep1_is_M", !cmd1.empty() && cmd1.find('M') != std::string::npos);
+        checkBool("reps3_rep1_still_index_0", player.currentIndex() == 0);
 
-        // Second call (before any ack) returns nothing
-        std::string cmd1b = player.nextRobotCommand();
-        checkBool("cycles3_no_resend_before_ack", cmd1b.empty());
-
-        // Ack 1: &&A
         player.onSoftwareAck();
-        checkBool("cycles3_not_awaiting_after_ack1", !player.movementAwaitingAdvance());
-
-        // Ack 1: &&F (cycle 1 complete)
         player.onFinalAck();
-        checkBool("cycles3_not_awaiting_after_f1", !player.movementAwaitingAdvance());
-        // Stop not sent yet (would be after ack N-1 = ack 2)
-        std::string stopCheck1 = player.nextRobotCommand();
-        checkBool("cycles3_no_stop_yet_after_f1", stopCheck1.empty());
+        checkBool("reps3_after_rep1_advanced", player.currentIndex() == 1);
 
-        // Ack 2: &&A (start of cycle 2)
+        // Rep 2: M -> &&A -> &&F -> advance
+        std::string cmd2 = player.nextRobotCommand();
+        checkBool("reps3_rep2_is_M", !cmd2.empty() && cmd2.find('M') != std::string::npos);
+        checkBool("reps3_rep2_still_index_1", player.currentIndex() == 1);
+
         player.onSoftwareAck();
-
-        // Ack 2: &&F (cycle 2 complete = ack N-1)
         player.onFinalAck();
-        // Now Stop should be queued and returned
-        std::string stopCmd = player.nextRobotCommand();
-        checkBool("cycles3_stop_sent_after_f2", !stopCmd.empty() && stopCmd[0] == 'S');
+        checkBool("reps3_after_rep2_advanced", player.currentIndex() == 2);
 
-        // Ack 3: &&A (start of cycle 3)
+        // Rep 3: M -> &&A -> &&F -> advance to finished
+        std::string cmd3 = player.nextRobotCommand();
+        checkBool("reps3_rep3_is_M", !cmd3.empty() && cmd3.find('M') != std::string::npos);
+
         player.onSoftwareAck();
-
-        // Ack 3: &&F (cycle 3 complete = ack N)
         player.onFinalAck();
-        checkBool("cycles3_awaiting_after_f3", player.movementAwaitingAdvance());
-        checkBool("cycles3_still_index_0_awaiting", player.currentIndex() == 0);
-
-        // Advance it (simulating the stop-ack drain completing)
-        player.advanceMovement();
-        checkBool("cycles3_advanced_to_index1", player.currentIndex() == 1);
-
-        // Next step should be the gesture
-        std::string nextCmd = player.nextRobotCommand();
-        checkBool("cycles3_next_is_gesture_H", !nextCmd.empty() && nextCmd.find('H') != std::string::npos);
+        checkBool("reps3_all_done", player.currentIndex() == 3);
+        checkBool("reps3_finished", player.finished());
     }
 
-    // Test: gesture repeated 3 times (expanded into 3 separate H commands)
+    // Test: gesture repeated 3 times (expanded)
     {
         zowi::TimelinePlayer player;
         std::vector<zowi::TimelineStep> steps;
@@ -190,19 +162,18 @@ int main() {
             steps.push_back({
                 zowi::commandGesture(zowi::GestureId::Confused),
                 false,
-                zowi::MovementSpeed::Medium,
-                1  // each rep is cycles=1 (default)
+                zowi::MovementSpeed::Medium
             });
         }
 
         player.start(steps);
 
-        for (int rep = 0; rep < 3; ++rep) {
+        for (int rep = 1; rep <= 3; ++rep) {
             std::string cmd = player.nextRobotCommand();
             checkBool(("gesture_reps3_rep" + std::to_string(rep) + "_is_H").c_str(),
                       !cmd.empty() && cmd.find('H') != std::string::npos);
-            checkBool(("gesture_reps3_rep" + std::to_string(rep) + "_index_" + std::to_string(rep)).c_str(),
-                      player.currentIndex() == rep);
+            checkBool(("gesture_reps3_rep" + std::to_string(rep) + "_index_" + std::to_string(rep-1)).c_str(),
+                      player.currentIndex() == rep - 1);
 
             player.onFinalAck();
             player.advanceNonmovement();
@@ -210,43 +181,6 @@ int main() {
 
         checkBool("gesture_reps3_all_done", player.currentIndex() == 3);
         checkBool("gesture_reps3_finished", player.finished());
-    }
-
-    // Test: cancel mid-movement-with-cycles (cycles=3)
-    {
-        zowi::TimelinePlayer player;
-        std::vector<zowi::TimelineStep> steps;
-        steps.push_back({
-            zowi::commandWalkForward(zowi::MovementSpeed::Medium),
-            true,
-            zowi::MovementSpeed::Medium,
-            3
-        });
-
-        player.start(steps);
-        player.nextRobotCommand();  // M sent
-        player.onSoftwareAck();       // &&A
-        player.onFinalAck();          // &&F cycle 1
-
-        // Cancel mid-cycle
-        player.cancel();
-        checkBool("cancel_mid_cycles_state_idle", player.state() == zowi::TimelinePlayerState::Idle);
-
-        // Start a new step and verify no leftover m_stopSent state
-        std::vector<zowi::TimelineStep> newSteps;
-        newSteps.push_back({
-            zowi::commandWalkForward(zowi::MovementSpeed::Medium),
-            true,
-            zowi::MovementSpeed::Medium,
-            1
-        });
-        player.start(newSteps);
-        std::string newCmd = player.nextRobotCommand();
-        checkBool("cancel_mid_cycles_fresh_start_is_M", !newCmd.empty() && newCmd.find('M') != std::string::npos);
-
-        player.onSoftwareAck();
-        std::string nextCmd = player.nextRobotCommand();
-        checkBool("cancel_mid_cycles_fresh_stop_sent", !nextCmd.empty() && nextCmd[0] == 'S');
     }
 
     std::cout << "\n" << test_count << " tests, " << fail_count << " failures\n";

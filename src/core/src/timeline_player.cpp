@@ -7,16 +7,13 @@ void TimelinePlayer::start(const std::vector<TimelineStep>& steps) {
     m_steps = steps;
     m_currentStepIndex = 0;
     m_phase = StepPhase::Idle;
-    m_moveSeq.reset();
-    m_stopSent = false;
+    m_softwareAckSeen = false;
     m_state = TimelinePlayerState::Playing;
 }
 
 void TimelinePlayer::cancel() {
     m_state = TimelinePlayerState::Idle;
     m_phase = StepPhase::Idle;
-    m_moveSeq.reset();
-    m_stopSent = false;
 }
 
 void TimelinePlayer::reset() {
@@ -33,26 +30,15 @@ std::string TimelinePlayer::nextRobotCommand() {
     const TimelineStep& step = m_steps[m_currentStepIndex];
 
     if (step.isMovement) {
+        // Movement: send M, wait for &&A + &&F
         if (m_phase == StepPhase::Idle) {
-            // First call for this movement step: arm the sequencer and send M exactly once.
-            m_phase = StepPhase::MoveActive;
+            m_phase = StepPhase::MoveQueued;
             m_currentSpeed = step.speed;
-            m_stopSent = false;
-            m_moveSeq.reset();
-            m_moveSeq.start(step.cycles, step.speed);
+            m_softwareAckSeen = false;
             return step.wireCommand;  // Send the M command
         }
-        if (m_phase == StepPhase::MoveActive) {
-            // Queue the Stop as soon as the sequencer asks for it: immediately
-            // after &&A for cycles<=1, or after ack N-1 for cycles>1. Sent once.
-            if (m_moveSeq.shouldQueueStop() && !m_stopSent) {
-                m_stopSent = true;
-                return commandStop();
-            }
-        }
-        return {};  // waiting on &&A, a cycle &&F, or the drain
     } else {
-        // Non-movement step (animation/mouth): send once, wait for ack + duration time
+        // Non-movement (animation/mouth): send H/L, wait for &&F, then display timer
         if (m_phase == StepPhase::Idle) {
             m_phase = StepPhase::MotionlessRunning;
             m_currentSpeed = step.speed;  // Use speed as display duration
@@ -69,11 +55,10 @@ void TimelinePlayer::onSoftwareAck() {
 
     const TimelineStep& step = m_steps[m_currentStepIndex];
 
-    if (step.isMovement && m_phase == StepPhase::MoveActive) {
-        // Unconditional forward to sequencer; it handles its own state internally
-        RobotMessage ack;
-        ack.cmd = toChar(Command::Ack);
-        m_moveSeq.onMessage(ack);
+    if (step.isMovement && m_phase == StepPhase::MoveQueued) {
+        // M command accepted
+        m_phase = StepPhase::MoveRunning;
+        m_softwareAckSeen = true;
     }
 }
 
@@ -83,15 +68,11 @@ void TimelinePlayer::onFinalAck() {
 
     const TimelineStep& step = m_steps[m_currentStepIndex];
 
-    if (step.isMovement && m_phase == StepPhase::MoveActive) {
-        // Unconditional forward to sequencer
-        RobotMessage fin;
-        fin.cmd = toChar(Command::FinalAck);
-        m_moveSeq.onMessage(fin);
-        // Do NOT advance here. Advancement is now driven by the controller
-        // via movementAwaitingAdvance()/advanceMovement() after the stop-ack drain.
+    if (step.isMovement && m_phase == StepPhase::MoveRunning) {
+        // Movement complete; advance to next step
+        advanceToNextStep();
     } else if (!step.isMovement && m_phase == StepPhase::MotionlessRunning) {
-        // Non-movement: firmware sent &&F when done; wait for display timer
+        // Non-movement: firmware ack received; wait for display timer
         m_phase = StepPhase::MotionlessAwaitingDisplay;
     }
 }
@@ -99,22 +80,11 @@ void TimelinePlayer::onFinalAck() {
 void TimelinePlayer::advanceToNextStep() {
     m_currentStepIndex++;
     m_phase = StepPhase::Idle;
-    m_moveSeq.reset();
-    m_stopSent = false;
+    m_softwareAckSeen = false;
 
     if (m_currentStepIndex >= static_cast<int>(m_steps.size())) {
         m_state = TimelinePlayerState::Finished;
     }
-}
-
-bool TimelinePlayer::movementAwaitingAdvance() const {
-    return isPlaying() && currentStepIsMovement()
-        && m_phase == StepPhase::MoveActive && m_moveSeq.finished();
-}
-
-void TimelinePlayer::advanceMovement() {
-    if (!movementAwaitingAdvance()) return;
-    advanceToNextStep();
 }
 
 void TimelinePlayer::advanceNonmovement() {

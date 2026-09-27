@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 
-#include <zowi/movement_sequencer.h>
 #include <zowi/robot_commands.h>
 
 namespace zowi {
@@ -12,7 +11,6 @@ struct TimelineStep {
     std::string wireCommand;      // The wire string to send (M.../H.../L.../S...)
     bool isMovement;              // True if this is a movement
     MovementSpeed speed;          // Speed/duration in ms
-    int cycles = 1;               // Movement steps only: gait cycles to run back-to-back via MovementSequencer
 };
 
 enum class TimelinePlayerState {
@@ -48,23 +46,15 @@ public:
         return m_steps[m_currentStepIndex].isMovement;
     }
 
-    // Movement with cycles: true once the Nth cycle is counted and Stop already sent,
-    // waiting for stop-ack drain before advancing to the next step
-    bool movementAwaitingAdvance() const;
-
-    // Called once the stop-ack drain window elapses (or a stray ack arrives early)
-    void advanceMovement();
-
     // For UI-driven advancement of non-movement items after display timer
     void advanceNonmovement();
 
     // Timeout guidance
     int startTimeoutMs() const { return 20000; }
     int cycleTimeoutMs() const { return static_cast<int>(m_currentSpeed) + 1500; }
-    int stopAckDrainTimeoutMs() const { return 2000; }
 
 private:
-    enum class StepPhase { Idle, MoveActive, MotionlessRunning, MotionlessAwaitingDisplay };
+    enum class StepPhase { Idle, MoveQueued, MoveRunning, MotionlessRunning, MotionlessAwaitingDisplay };
 
     void advanceToNextStep();
 
@@ -72,9 +62,7 @@ private:
     std::vector<TimelineStep> m_steps;
     int m_currentStepIndex = 0;
     StepPhase m_phase = StepPhase::Idle;
-
-    MovementSequencer m_moveSeq;
-    bool m_stopSent = false;  // prevents re-sending Stop for the same step
+    bool m_softwareAckSeen = false;
 
     MovementSpeed m_currentSpeed = MovementSpeed::Medium;
 };
