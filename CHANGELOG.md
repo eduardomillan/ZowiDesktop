@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.5] - 2026-09-27
+
+### Added
+- **Direction control for Bend, Shake Leg, and Flapping in Timeline.** The timeline editor now lets you choose the direction (Forward/Backward for Bend, Left/Right for Shake Leg and Flapping) for each movement chip, just like Crusaito. Icons update automatically to match the movement type.
+
+### Fixed
+- **Timeline outline now stays with repeated movements.** When a movement has multiple repetitions (e.g., Walk Forward ×3), the highlight border now correctly stays on that chip for all its repetitions instead of jumping ahead. Outline advances only when the next movement begins.
+- **Crusaito direction mapping corrected.** Crusaito now uses Forward/Backward labels instead of Left/Right, matching its actual movement semantics and aligning with the CLI.
+- **Timeline tiles fade when playing.** Tiles dim to 50% opacity while playback is active, making it clear that controls are disabled during sequence execution. Opacity smoothly animates when toggling play/stop.
+
 ## [0.9.4] - 2026-09-26
 
 ### Added

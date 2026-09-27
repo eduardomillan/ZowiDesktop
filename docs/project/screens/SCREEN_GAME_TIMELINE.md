@@ -7,10 +7,12 @@
 > game alongside [SCREEN_GAME_ZOWI_SAYS.md](SCREEN_GAME_ZOWI_SAYS.md) and
 > [SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md); future games can be added.
 
-- **Status:** ✅ **GUI IMPLEMENTED** (0.9.3–0.9.4) — timeline editor and visual
-  playback (no backend sequencer yet). Backend persistence and `MovementSequencer`
-  planned for backend phase.
-- **File:** `src/views/screens/GameTimelineScreen.qml` (624 lines, complete).
+- **Status:** ✅ **GUI IMPLEMENTED** (0.9.3–0.9.5) — timeline editor and visual
+  playback with direction support for all directional movements (Crusaito,
+  Bend, Shake Leg, Flapping), correct outline highlight during repetitions,
+  and visual feedback (opacity dimming) during playback. Backend persistence
+  and `MovementSequencer` planned for backend phase.
+- **File:** `src/views/screens/GameTimelineScreen.qml` (630+ lines, complete).
 - **i18n context:** `"GameTimelineScreen.qml"` (all 5 locales + 8 new keys in 0.9.4).
 - **Game id:** `timeline` — Home tile `qrc:/images/android/timeline_button.png`
   (enabled and navigates to screen).
@@ -37,7 +39,10 @@
 ## QML context used (implemented)
 
 - `Robot`: `connected` (gates Play), `sendData(cmd)`.
-- `Timeline`: `play()`, `stop()`, `isPlaying`, `currentIndex` (playback state).
+- `Timeline`: `play()`, `stop()`, `isPlaying`, `currentIndex` (playback state),
+  `currentChipIndex` (visual chip highlight during playback),
+  `commandSupportsDirection(name)`, `commandUsesFrontBackDirection(name)`
+  (direction support queries for UI state).
 - `Commands`: builders for the sequence items.
 - `Config.get(...)`: theme colors, `timeline_help`/`memory_help` flags, locale.
 - `Session`: read/store `activeZowiName` (for help text), `timeline_help_seen`.
@@ -62,8 +67,9 @@
 - **Drafting (ungated):** Add Movement / Animation / Mouth opens a picker dialog,
   appends new timeline command with defaults (reps=1, duration=Medium). ✅ Done.
 - **Editing:** per-chip cycle buttons — repetitions (movement only), duration
-  (movement only, slow/medium/fast), direction (Crusaito only). Long-press drag
-  to reorder; per-chip delete button. Disabled during playback. ✅ Done.
+  (movement only, slow/medium/fast), direction (Crusaito, Bend, Shake Leg, Flapping).
+  Long-press drag to reorder; per-chip delete button. Disabled during playback,
+  with opacity fade for visual feedback. ✅ Done.
 - **Play (conn-gated):** single button that swaps to Stop icon mid-playback.
   Sends commands to robot; highlights each chip as it plays with animated
   border; auto-scrolls to current chip; shows stop button with disabled-reason
