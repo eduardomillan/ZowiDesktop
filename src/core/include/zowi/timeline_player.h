@@ -11,6 +11,7 @@ struct TimelineStep {
     std::string wireCommand;      // The wire string to send (M.../H.../L.../S...)
     bool isMovement;              // True if this is a movement
     MovementSpeed speed;          // Speed/duration in ms
+    int chipIndex = 0;            // Index into the original (unexpanded) GUI chip list; stable across all repetitions of one chip
 };
 
 enum class TimelinePlayerState {
@@ -44,6 +45,11 @@ public:
     bool currentStepIsMovement() const {
         if (m_currentStepIndex >= static_cast<int>(m_steps.size())) return false;
         return m_steps[m_currentStepIndex].isMovement;
+    }
+
+    int currentChipIndex() const {
+        if (m_currentStepIndex >= static_cast<int>(m_steps.size())) return -1;
+        return m_steps[m_currentStepIndex].chipIndex;
     }
 
     // For UI-driven advancement of non-movement items after display timer

@@ -20,6 +20,7 @@ class TimelineController : public QObject
 
     Q_PROPERTY(bool isPlaying READ isPlaying NOTIFY isPlayingChanged)
     Q_PROPERTY(int currentIndex READ currentIndex NOTIFY currentIndexChanged)
+    Q_PROPERTY(int currentChipIndex READ currentChipIndex NOTIFY currentChipIndexChanged)
 
 public:
     explicit TimelineController(QObject* parent = nullptr);
@@ -31,6 +32,7 @@ public:
 
     bool isPlaying() const;
     int currentIndex() const;
+    int currentChipIndex() const;
 
     Q_INVOKABLE void saveSequence(const QVariantList &items);
     Q_INVOKABLE QVariantList loadSequence() const;
@@ -40,6 +42,7 @@ public:
 signals:
     void isPlayingChanged();
     void currentIndexChanged();
+    void currentChipIndexChanged();
 
 private slots:
     void onRobotSoftwareAck();

@@ -129,7 +129,7 @@ ScreenTemplate {
     }
 
     property bool isPlayingTimeline: Timeline.isPlaying
-    property int currentPlayingIndex: Timeline.currentIndex
+    property int currentPlayingIndex: Timeline.currentChipIndex
     readonly property int addButtonSize: 80
     property int playClearButtonSize: 80
     property real buttonSpacingRatio: 0.03  // % of window width; adjust for testing

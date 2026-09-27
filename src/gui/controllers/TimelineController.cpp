@@ -57,6 +57,10 @@ int TimelineController::currentIndex() const {
     return m_player ? m_player->currentIndex() : -1;
 }
 
+int TimelineController::currentChipIndex() const {
+    return m_player ? m_player->currentChipIndex() : -1;
+}
+
 void TimelineController::saveSequence(const QVariantList &items) {
     if (!m_session) return;
 
@@ -255,11 +259,13 @@ void TimelineController::play(const QVariantList &items) {
     // Build TimelineStep vector from QVariantList, expanding repetitions
     // (each "repetition" becomes a separate command, like Android does)
     std::vector<zowi::TimelineStep> steps;
+    int chipIndex = 0;
     for (const auto& item : items) {
         auto map = item.toMap();
         QString cmdStr = commandToString(map);
         if (cmdStr.isEmpty()) {
             qWarning() << "[Timeline] Skipping unknown command:" << map.value("type") << map.value("name");
+            ++chipIndex;   // maintains alignment with timelineModel even for unresolved commands
             continue;
         }
 
@@ -270,10 +276,11 @@ void TimelineController::play(const QVariantList &items) {
         qDebug() << "[Timeline] Step:" << map.value("type") << map.value("name")
                   << "reps=" << reps << "cmd=" << cmdStr.trimmed();
 
-        // Expand: each repetition is a separate command
+        // Expand: each repetition is a separate command, tagged with its origin chip index
         for (int rep = 0; rep < reps; ++rep) {
-            steps.push_back({cmdStr.toStdString(), isMovement, speed});
+            steps.push_back({cmdStr.toStdString(), isMovement, speed, chipIndex});
         }
+        ++chipIndex;
     }
 
     if (steps.empty()) {
@@ -369,4 +376,5 @@ void TimelineController::sendNextCommand() {
 void TimelineController::updateFromPlayer() {
     emit isPlayingChanged();
     emit currentIndexChanged();
+    emit currentChipIndexChanged();
 }

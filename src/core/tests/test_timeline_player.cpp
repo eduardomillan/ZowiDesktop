@@ -183,6 +183,61 @@ int main() {
         checkBool("gesture_reps3_finished", player.finished());
     }
 
+    // Test: currentChipIndex stays constant across all reps of one chip,
+    // then advances exactly once per chip boundary (regression test for
+    // GUI outline desync: chips [0,1,2] with reps [1,3,1])
+    {
+        zowi::TimelinePlayer player;
+        std::vector<zowi::TimelineStep> steps;
+        // Chip 0: 1 rep (movement)
+        steps.push_back({zowi::commandWalkForward(zowi::MovementSpeed::Medium), true, zowi::MovementSpeed::Medium, 0});
+        // Chip 1: 3 reps (movement)
+        for (int i = 0; i < 3; ++i) {
+            steps.push_back({zowi::commandWalkForward(zowi::MovementSpeed::Medium), true, zowi::MovementSpeed::Medium, 1});
+        }
+        // Chip 2: 1 rep (movement)
+        steps.push_back({zowi::commandWalkForward(zowi::MovementSpeed::Medium), true, zowi::MovementSpeed::Medium, 2});
+
+        player.start(steps);
+        checkBool("chipidx_start_chip0", player.currentChipIndex() == 0);
+
+        // Chip 0's single rep: M -> &&A -> &&F -> advance to chip 1's first rep
+        player.nextRobotCommand();
+        player.onSoftwareAck();
+        player.onFinalAck();
+        checkBool("chipidx_after_chip0_is_chip1", player.currentChipIndex() == 1);
+        checkBool("chipidx_after_chip0_stepindex_is_1", player.currentIndex() == 1);
+
+        // Chip 1, rep 1 of 3: chipIndex must stay 1
+        player.nextRobotCommand();
+        player.onSoftwareAck();
+        player.onFinalAck();
+        checkBool("chipidx_chip1_rep1_still_chip1", player.currentChipIndex() == 1);
+        checkBool("chipidx_chip1_rep1_stepindex_is_2", player.currentIndex() == 2);
+
+        // Chip 1, rep 2 of 3: chipIndex must still stay 1 (this is the exact bug scenario)
+        player.nextRobotCommand();
+        player.onSoftwareAck();
+        player.onFinalAck();
+        checkBool("chipidx_chip1_rep2_still_chip1", player.currentChipIndex() == 1);
+        checkBool("chipidx_chip1_rep2_stepindex_is_3", player.currentIndex() == 3);
+
+        // Chip 1, rep 3 of 3: after this, advance into chip 2
+        player.nextRobotCommand();
+        player.onSoftwareAck();
+        player.onFinalAck();
+        checkBool("chipidx_after_chip1_is_chip2", player.currentChipIndex() == 2);
+        checkBool("chipidx_after_chip1_stepindex_is_4", player.currentIndex() == 4);
+
+        // Chip 2's single rep: finishes the sequence
+        player.nextRobotCommand();
+        player.onSoftwareAck();
+        player.onFinalAck();
+        checkBool("chipidx_finished_stepindex_is_5", player.currentIndex() == 5);
+        checkBool("chipidx_finished_returns_neg1", player.currentChipIndex() == -1);
+        checkBool("chipidx_finished_state", player.finished());
+    }
+
     std::cout << "\n" << test_count << " tests, " << fail_count << " failures\n";
     return fail_count;
 }
