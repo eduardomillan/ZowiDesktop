@@ -8,7 +8,7 @@ Compact guidance for OpenCode sessions in this repo. Read `.github/copilot-instr
 - Core tests in `src/core/tests/` link only `Zowi::core` — keep core Qt-free.
 
 ## Build & test (non-obvious)
-- **Commits and pushes are explicit-approval only**: Do NOT commit or push changes unless the user explicitly orders it with a clear instruction like "commit and push" or "commit y push". This is non-negotiable. Even after a successful build or when changes are complete, wait for user approval before touching git. Build verification does not imply commit approval.
+- **Commits and pushes are explicit-approval only**: Do NOT commit or push changes unless the user explicitly orders it with a clear instruction like "commit and push" or "commit y push". This is **non-negotiable and critical**. Even after a successful build or when changes are complete, wait for user approval before touching git. Build verification does not imply commit approval. The user will explicitly say when to commit.
 - Commit messages are always written in **English** (concise, imperative style, following the repo's existing commit history).
 - Normal build: `./build.sh` (Linux, Qt 6, GUI+CLI). Scoped: `./build.sh --gui`, `./build.sh --cli`, `./build.sh -5 --cli` (Qt 5), `./build.sh --demo`. `--clean` wipes `build/` first and combines with any of them (same on `build.bat`).
 - Windows build: `build.bat` (GUI+CLI) from a **x64 Native Tools Command Prompt for VS 2022** (or any VS 2022 prompt that has `vcvarsall.bat` on PATH). Scoped: `build.bat --gui`, `build.bat --cli`. `windeployqt --qmldir src\views` runs automatically after GUI build.
