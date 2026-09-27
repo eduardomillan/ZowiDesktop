@@ -16,9 +16,13 @@ Item {
     property int chipDeleteButtonSize: 40    // Configurable delete button size
     property int chipButtonWidth: 70         // Configurable button width (reps/duration/direction)
     property int chipButtonHeight: 55        // Configurable button height (reps/duration/direction)
+    property real chipPlaybackOpacity: 0.5   // Configurable opacity applied to the chip while dimmed is true
+    property bool dimmed: false              // Set by the parent while Timeline.isPlaying is true
 
     implicitWidth: chipWidth
     implicitHeight: chipHeight
+    opacity: root.dimmed ? root.chipPlaybackOpacity : 1.0
+    Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.InOutQuad } }
     readonly property alias iconTileHeight: tile.height
 
     signal deleteRequested()

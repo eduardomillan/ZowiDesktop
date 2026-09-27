@@ -270,6 +270,7 @@ ScreenTemplate {
                         chipButtonWidth: root.chipButtonWidth
                         chipButtonHeight: root.chipButtonHeight
                         enabled: !root.isPlayingTimeline
+                        dimmed: root.isPlayingTimeline
                         commandData: ({
                             name: model.name,
                             type: model.type,
