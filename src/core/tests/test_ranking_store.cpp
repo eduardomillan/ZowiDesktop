@@ -211,6 +211,52 @@ void test_separate_file_from_session() {
     std::cout << "OK" << std::endl;
 }
 
+void test_online_registration() {
+    std::cout << "test_online_registration: " << std::flush;
+    fs::path dir = TempStore::makeDir("online");
+    {
+        RankingStore r(dir.string());
+        assert(r.onlineNumber() == 0 && r.onlineToken().empty());
+        r.setOnlineRegistration(50, "tok");            // invalid number: ignored
+        r.setOnlineRegistration(200, "");              // empty token: ignored
+        assert(r.onlineNumber() == 0);
+        r.createPlayer(200);
+        r.setOnlineRegistration(200, "secret-token");
+        assert(r.onlineNumber() == 200 && r.onlineToken() == "secret-token");
+    }
+    {
+        RankingStore r(dir.string());                   // persists across runs
+        assert(r.onlineNumber() == 200 && r.onlineToken() == "secret-token");
+        assert(r.renamePlayer(200, 250));               // the token belongs to the old number
+        assert(r.onlineNumber() == 0 && r.onlineToken().empty());
+        r.setOnlineRegistration(250, "t2");
+        r.clearOnlineRegistration();
+        assert(r.onlineNumber() == 0);
+        r.setOnlineRegistration(250, "t3");
+        r.clear();                                       // admin clear drops it too
+        assert(r.onlineNumber() == 0);
+    }
+    fs::remove_all(dir);
+    std::cout << "OK" << std::endl;
+}
+
+void test_file_is_owner_only() {
+    std::cout << "test_file_is_owner_only: " << std::flush;
+#ifndef _WIN32
+    fs::path dir = TempStore::makeDir("perms");
+    {
+        RankingStore r(dir.string());
+        r.createPlayer(222);
+        r.setOnlineRegistration(222, "secret");
+    }
+    const auto perms = fs::status(dir / "ZowiRanking.json").permissions();
+    assert((perms & (fs::perms::group_all | fs::perms::others_all)) == fs::perms::none);
+    assert((perms & fs::perms::owner_read) != fs::perms::none);
+    fs::remove_all(dir);
+#endif
+    std::cout << "OK" << std::endl;
+}
+
 int main() {
     test_numbers_and_names();
     test_create_players();
@@ -221,6 +267,8 @@ int main() {
     test_persistence_and_clear();
     test_corrupt_and_legacy_data();
     test_separate_file_from_session();
+    test_online_registration();
+    test_file_is_owner_only();
     std::cout << "All ranking_store tests passed." << std::endl;
     return 0;
 }

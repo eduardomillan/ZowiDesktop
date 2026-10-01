@@ -347,6 +347,14 @@
     "number_invalid": "Saisis un nombre de 100 à 999.",
     "other_number": "Proposer un autre",
     "save": "Enregistrer",
-    "how_points": "Chaque jeu ajoute ton meilleur score à ton total. Seul le dépassement de ton propre record compte, et les points vont au joueur actif."
+    "how_points": "Chaque jeu ajoute ton meilleur score à ton total. Seul le dépassement de ton propre record compte, et les points vont au joueur actif.",
+    "tab_local": "Local",
+    "tab_world": "Monde",
+    "world_title": "Classement mondial",
+    "world_loading": "Chargement du classement mondial…",
+    "world_error": "Impossible de charger le classement mondial. Vérifie ta connexion.",
+    "world_retry": "Réessayer",
+    "world_empty": "Personne n'est encore dans le classement mondial.",
+    "world_updated": "Mis à jour : %1"
   }
 }

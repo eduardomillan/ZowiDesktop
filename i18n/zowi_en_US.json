@@ -348,6 +348,14 @@
     "number_invalid": "Enter a number from 100 to 999.",
     "other_number": "Suggest another",
     "save": "Save",
-    "how_points": "Every game adds your best score to your total. Only beating your own best counts, and points go to the active player."
+    "how_points": "Every game adds your best score to your total. Only beating your own best counts, and points go to the active player.",
+    "tab_local": "Local",
+    "tab_world": "World",
+    "world_title": "World ranking",
+    "world_loading": "Loading the world ranking…",
+    "world_error": "The world ranking could not be loaded. Check your connection.",
+    "world_retry": "Retry",
+    "world_empty": "Nobody is in the world ranking yet.",
+    "world_updated": "Updated: %1"
   }
 }

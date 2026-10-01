@@ -30,6 +30,10 @@ public:
 
     void removeKey(const std::string &key);
 
+    // Keep the file readable/writable by its owner only (POSIX 0600): for files
+    // that hold a secret. Applied now and on every save; no-op on Windows.
+    void restrictToOwner();
+
     using ChangedCallback = std::function<void()>;
     void onChanged(ChangedCallback cb) { m_onChanged = std::move(cb); }
 
@@ -37,6 +41,7 @@ private:
     std::string m_filePath;
     nlohmann::json m_data;
     ChangedCallback m_onChanged;
+    bool m_ownerOnly = false;
 
     void load();
     void save();

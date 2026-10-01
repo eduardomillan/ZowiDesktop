@@ -59,3 +59,7 @@ add_test(NAME test_ranking_store COMMAND test_ranking_store)
 add_executable(test_timeline_score test_timeline_score.cpp)
 target_link_libraries(test_timeline_score PRIVATE Zowi::core)
 add_test(NAME test_timeline_score COMMAND test_timeline_score)
+
+add_executable(test_ranking_online test_ranking_online.cpp)
+target_link_libraries(test_ranking_online PRIVATE Zowi::core)
+add_test(NAME test_ranking_online COMMAND test_ranking_online)

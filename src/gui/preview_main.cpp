@@ -19,6 +19,7 @@
 #include "controllers/SessionController.h"
 #include "controllers/TimelineController.h"
 #include "controllers/RankingController.h"
+#include "controllers/OnlineRankingClient.h"
 
 class PreviewSession final : public QObject
 {
@@ -261,6 +262,10 @@ int main(int argc, char *argv[])
     MouthsGameController mouths;
     TimelineController timeline;
     RankingController ranking(zowi::ConfigStore::parseBool(config.get("ranking_enabled").toStdString(), true));
+    OnlineRankingClient onlineRanking(
+        &ranking,
+        zowi::ConfigStore::parseBool(config.get("ranking_online_allowed").toStdString(), true),
+        config.get("ranking_online_read_url"), config.get("ranking_online_submit_url"));
 
     // Forward the game's cosmetic commands (mouth/gesture) to the preview
     // robot mock, gated by its connection state.
@@ -293,6 +298,7 @@ int main(int argc, char *argv[])
     view.rootContext()->setContextProperty(QStringLiteral("Projects"), &projects);
     view.rootContext()->setContextProperty(QStringLiteral("Timeline"), &timeline);
     view.rootContext()->setContextProperty(QStringLiteral("Ranking"), &ranking);
+    view.rootContext()->setContextProperty(QStringLiteral("OnlineRanking"), &onlineRanking);
     view.rootContext()->setContextProperty(QStringLiteral("AppVersion"), QString(ZOWI_VERSION));
     // Optional: let a screen open on an internal step (e.g. calibration steps
     // 0..3). Screens read it as `PreviewStep` and fall back to their own default.

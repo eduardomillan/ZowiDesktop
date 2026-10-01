@@ -23,6 +23,9 @@ public:
     Q_PROPERTY(bool enabled READ enabled CONSTANT)
     bool enabled() const { return m_enabled; }
 
+    // Shared with OnlineRankingClient: one in-memory copy of the ranking file.
+    zowi::RankingStore &store() { return m_store; }
+
     // Result codes of createPlayer().
     enum CreateResult { Created = 0, InvalidNumber = 1, NumberTaken = 2 };
     Q_ENUM(CreateResult)

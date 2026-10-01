@@ -347,6 +347,14 @@
     "number_invalid": "Escriu un número del 100 al 999.",
     "other_number": "Suggereix-ne un altre",
     "save": "Desa",
-    "how_points": "Cada joc suma la teva millor marca al teu total. Només compta superar la teva pròpia marca, i els punts van al jugador actiu."
+    "how_points": "Cada joc suma la teva millor marca al teu total. Només compta superar la teva pròpia marca, i els punts van al jugador actiu.",
+    "tab_local": "Local",
+    "tab_world": "Mundial",
+    "world_title": "Rànquing mundial",
+    "world_loading": "Carregant el rànquing mundial…",
+    "world_error": "No s'ha pogut carregar el rànquing mundial. Comprova la connexió.",
+    "world_retry": "Torna-ho a provar",
+    "world_empty": "Encara no hi ha ningú al rànquing mundial.",
+    "world_updated": "Actualitzat: %1"
   }
 }

@@ -93,11 +93,38 @@ void SessionStore::load() {
     }
 }
 
+namespace {
+void applyOwnerOnly(const std::string &path) {
+#ifndef _WIN32
+    namespace fs = std::filesystem;
+    std::error_code ec;
+    fs::permissions(path, fs::perms::owner_read | fs::perms::owner_write,
+                    fs::perm_options::replace, ec);
+#else
+    (void)path;
+#endif
+}
+} // namespace
+
+void SessionStore::restrictToOwner() {
+    m_ownerOnly = true;
+    if (std::filesystem::exists(m_filePath)) applyOwnerOnly(m_filePath);
+}
+
 void SessionStore::save() {
+    // A new secret-holding file is created empty and locked down before it
+    // receives any data, so it is never readable by others.
+    if (m_ownerOnly && !std::filesystem::exists(m_filePath)) {
+        std::ofstream create(m_filePath);
+        create.close();
+        applyOwnerOnly(m_filePath);
+    }
     std::ofstream file(m_filePath);
     if (file.is_open()) {
         file << m_data.dump(4);
     }
+    file.close();
+    if (m_ownerOnly) applyOwnerOnly(m_filePath);
 }
 
 std::string SessionStore::resolveConfigPath(const std::string &org, const std::string &app,

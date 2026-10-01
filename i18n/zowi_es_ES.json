@@ -344,6 +344,14 @@
     "number_invalid": "Escribe un número del 100 al 999.",
     "other_number": "Sugerir otro",
     "save": "Guardar",
-    "how_points": "Cada juego suma tu mejor marca a tu total. Solo cuenta superar tu propia marca, y los puntos van al jugador activo."
+    "how_points": "Cada juego suma tu mejor marca a tu total. Solo cuenta superar tu propia marca, y los puntos van al jugador activo.",
+    "tab_local": "Local",
+    "tab_world": "Mundial",
+    "world_title": "Ranking mundial",
+    "world_loading": "Cargando el ranking mundial…",
+    "world_error": "No se pudo cargar el ranking mundial. Comprueba tu conexión.",
+    "world_retry": "Reintentar",
+    "world_empty": "Todavía no hay nadie en el ranking mundial.",
+    "world_updated": "Actualizado: %1"
   }
 }

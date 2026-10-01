@@ -27,7 +27,8 @@
 | Single global ranking, local (core `RankingStore`) | ✅ Implemented |
 | Local players `Player-NNN` (several per install) | ✅ Implemented |
 | Zowi Says (Memory), Mouths (Pintabocas) and Timeline add to the ranking | ✅ Implemented |
-| Online ranking (top 100, 30-day expiry) | 🚧 Pending (design below) |
+| World ranking, **read** (Local / World tabs, downloads the public JSON) | ✅ Implemented; hidden until `ranking_online_read_url` is set |
+| World ranking, **sharing** (server, checkbox, delete) | 🚧 Pending (design below) |
 | Privacy policy (incl. online-ranking text) | 📝 Draft in `PRIVACY.md`, pending review |
 
 Different from the Android original, which kept a free-text top-10 **per game**

@@ -58,7 +58,10 @@ public:
     // `configDir` optionally pins the directory (platform default when empty),
     // like SessionStore. Hosts pass their app data dir; tests pass a temp dir.
     explicit RankingStore(const std::string &configDir = "", RankingScoreConfig config = {})
-        : m_store("ZowiDesktop", "ZowiRanking", configDir), m_config(config) {}
+        : m_store("ZowiDesktop", "ZowiRanking", configDir), m_config(config) {
+        // The file can hold the online ownership token: owner-only permissions.
+        m_store.restrictToOwner();
+    }
 
     // 100-999: three digits, never starting with 0.
     static bool isValidNumber(int number);
@@ -82,8 +85,17 @@ public:
     bool setActivePlayer(int number);
     // Creates and activates a random player when there is none; returns it.
     int ensureActivePlayer();
-    // Changes a player's number keeping their scores (online name clash).
+    // Changes a player's number keeping their scores (online name clash). If
+    // `from` was registered online, that registration (and its token) is dropped.
     bool renamePlayer(int from, int to);
+
+    // ── online registration (world ranking) ─────────────────────────────
+    // The secret returned by the server when a player is registered online.
+    // Never published; the file is kept owner-only (0600).
+    int onlineNumber() const;           // 0 when not registered online
+    std::string onlineToken() const;    // "" when not registered online
+    void setOnlineRegistration(int number, const std::string &token);
+    void clearOnlineRegistration();
 
     // ── scoring ─────────────────────────────────────────────────────────
     // Records a raw score for the active player (created on demand). Only a

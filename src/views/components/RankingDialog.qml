@@ -14,6 +14,8 @@ Dialog {
     id: root
 
     property string mode: "list"      // "list" | "new" | "switch"
+    property string tab: "local"      // "local" | "world" (only when the world ranking is available)
+    readonly property bool worldTab: mode === "list" && OnlineRanking.available && tab === "world"
     property var entries: []          // top list
     property var allPlayers: []       // every local player (for switching)
     property int suggestion: 0        // free random number proposed to the user
@@ -55,6 +57,7 @@ Dialog {
 
     function showList() {
         mode = "list"
+        tab = "local"
         refresh()
         open()
     }
@@ -99,15 +102,158 @@ Dialog {
         Text {
             Layout.alignment: Qt.AlignHCenter
             text: root.mode === "new" ? root.tr("new_player")
-                  : (root.mode === "switch" ? root.tr("switch_player") : root.tr("title"))
+                  : (root.mode === "switch" ? root.tr("switch_player")
+                     : (root.worldTab ? root.tr("world_title") : root.tr("title")))
             font.pixelSize: 20
             font.bold: true
             color: Config.get("color_primary") || "#2d5a2d"
         }
 
+        // ── Tabs: Local / World (only when the world ranking is available) ──
+        Row {
+            id: tabRow
+            visible: root.mode === "list" && OnlineRanking.available
+            Layout.alignment: Qt.AlignHCenter
+            spacing: 8
+
+            Repeater {
+                model: [ { key: "local", label: root.tr("tab_local") },
+                         { key: "world", label: root.tr("tab_world") } ]
+
+                delegate: Rectangle {
+                    width: 120
+                    height: 34
+                    radius: 17
+                    color: root.tab === modelData.key ? (Config.get("color_accent") || "#21a69b") : "transparent"
+                    border.color: Config.get("color_accent") || "#21a69b"
+                    border.width: 2
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: modelData.label
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: root.tab === modelData.key ? "#ffffff" : (Config.get("color_primary") || "#2d5a2d")
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        onClicked: {
+                            root.tab = modelData.key
+                            if (modelData.key === "world") OnlineRanking.refresh()
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── World ranking (read-only list) ──────────────────────────────
+        Item {
+            visible: root.worldTab
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: Math.max(root.rowHeight * 4, Math.min(OnlineRanking.world.length, 8) * (root.rowHeight + 4))
+            Layout.minimumHeight: root.rowHeight * 3
+
+            Column {
+                anchors.centerIn: parent
+                width: parent.width
+                spacing: 10
+                visible: OnlineRanking.worldState !== 2 || OnlineRanking.world.length === 0
+
+                Text {
+                    width: parent.width
+                    horizontalAlignment: Text.AlignHCenter
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: 14
+                    color: OnlineRanking.worldState === 3 ? "#d32f2f" : (Config.get("color_primary") || "#2d5a2d")
+                    text: OnlineRanking.worldState === 1 ? root.tr("world_loading")
+                          : (OnlineRanking.worldState === 3 ? root.tr("world_error")
+                             : (OnlineRanking.worldState === 2 ? root.tr("world_empty") : ""))
+                }
+
+                Button {
+                    id: retryBtn
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: OnlineRanking.worldState === 3
+                    implicitWidth: 150
+                    implicitHeight: 40
+                    text: root.tr("world_retry")
+                    contentItem: Text {
+                        text: retryBtn.text
+                        color: "#ffffff"
+                        font.bold: true
+                        font.pixelSize: 15
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: 20
+                        color: retryBtn.pressed ? Config.get("color_accent_pressed") || "#17736c"
+                                                : (Config.get("color_accent") || "#21a69b")
+                    }
+                    onClicked: OnlineRanking.refresh()
+                }
+            }
+
+            ListView {
+                anchors.fill: parent
+                visible: OnlineRanking.worldState === 2 && OnlineRanking.world.length > 0
+                clip: true
+                spacing: 4
+                model: OnlineRanking.world
+                interactive: contentHeight > height
+
+                delegate: Rectangle {
+                    width: ListView.view.width
+                    height: root.rowHeight
+                    radius: 10
+                    color: modelData.own ? (Config.get("color_bg_hover") || "#e0f0e0") : "transparent"
+
+                    Text {
+                        id: worldPos
+                        anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                        width: 34
+                        text: modelData.position
+                        font.pixelSize: 14
+                        font.bold: true
+                        color: Config.get("color_accent") || "#21a69b"
+                    }
+                    Text {
+                        anchors {
+                            left: worldPos.right; leftMargin: 6
+                            right: worldPoints.left; rightMargin: 8
+                            verticalCenter: parent.verticalCenter
+                        }
+                        elide: Text.ElideRight
+                        text: modelData.name
+                        font.pixelSize: 16
+                        font.bold: modelData.own
+                        color: Config.get("color_primary") || "#2d5a2d"
+                    }
+                    Text {
+                        id: worldPoints
+                        anchors { right: parent.right; rightMargin: 12; verticalCenter: parent.verticalCenter }
+                        text: root.tr("points").arg(modelData.total)
+                        font.pixelSize: 16
+                        font.bold: true
+                        color: Config.get("color_accent") || "#21a69b"
+                    }
+                }
+            }
+        }
+
+        Text {
+            visible: root.worldTab && OnlineRanking.worldState === 2 && OnlineRanking.generated.length > 0
+            Layout.alignment: Qt.AlignHCenter
+            text: root.tr("world_updated").arg(OnlineRanking.generated)
+            font.pixelSize: 12
+            color: Config.get("color_primary") || "#2d5a2d"
+            opacity: 0.7
+        }
+
         // ── Ranking list ────────────────────────────────────────────────
         Item {
-            visible: root.mode === "list"
+            visible: root.mode === "list" && !root.worldTab
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredHeight: Math.max(root.rowHeight * 2, Math.min(root.entries.length, 11) * (root.rowHeight + 4))
@@ -185,7 +331,7 @@ Dialog {
         }
 
         Text {
-            visible: root.mode === "list" && root.activeName.length > 0
+            visible: root.mode === "list" && !root.worldTab && root.activeName.length > 0
             Layout.alignment: Qt.AlignHCenter
             text: root.tr("playing_as").arg(root.activeName)
             font.pixelSize: 14
@@ -193,7 +339,7 @@ Dialog {
         }
 
         Text {
-            visible: root.mode === "list"
+            visible: root.mode === "list" && !root.worldTab
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
@@ -204,7 +350,7 @@ Dialog {
         }
 
         Row {
-            visible: root.mode === "list"
+            visible: root.mode === "list" && !root.worldTab
             Layout.alignment: Qt.AlignHCenter
             spacing: 12
 

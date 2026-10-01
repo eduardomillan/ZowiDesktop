@@ -16,6 +16,7 @@ add_library(zowi_core STATIC
     src/timeline_player.cpp
     src/timeline_score.cpp
     src/ranking_store.cpp
+    src/ranking_online.cpp
 )
 
 target_include_directories(zowi_core

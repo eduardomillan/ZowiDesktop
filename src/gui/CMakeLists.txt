@@ -63,6 +63,7 @@ add_executable(ZowiDesktop WIN32
     controllers/MouthsGameController.cpp
     controllers/TimelineController.cpp
     controllers/RankingController.cpp
+    controllers/OnlineRankingClient.cpp
     ${GUI_RESOURCES}
 )
 
@@ -79,6 +80,7 @@ target_link_libraries(ZowiDesktop PRIVATE
     Qt${ZOWI_QT_VERSION}::Core
     Qt${ZOWI_QT_VERSION}::Quick
     Qt${ZOWI_QT_VERSION}::QuickControls2
+    Qt${ZOWI_QT_VERSION}::Network
 )
 
 # Qt Bluetooth backend (Linux/macOS only)
@@ -114,6 +116,7 @@ add_executable(zowi_screen_preview
     controllers/RobotController.cpp
     controllers/TimelineController.cpp
     controllers/RankingController.cpp
+    controllers/OnlineRankingClient.cpp
     ${GUI_RESOURCES}
 )
 
@@ -128,6 +131,7 @@ target_link_libraries(zowi_screen_preview PRIVATE
     Qt${ZOWI_QT_VERSION}::Qml
     Qt${ZOWI_QT_VERSION}::Quick
     Qt${ZOWI_QT_VERSION}::QuickControls2
+    Qt${ZOWI_QT_VERSION}::Network
 )
 
 # Qt Bluetooth backend (Linux/macOS only)

@@ -14,6 +14,8 @@ namespace {
 
 constexpr const char *kPlayersKey = "players";
 constexpr const char *kActiveKey = "active_player";
+constexpr const char *kOnlineNumberKey = "online_number";
+constexpr const char *kOnlineTokenKey = "online_token";
 constexpr const char *kNamePrefix = "Player-";
 
 int64_t nowSeconds()
@@ -207,7 +209,32 @@ bool RankingStore::renamePlayer(int from, int to)
     it->number = to;
     save(all);
     if (wasActive) m_store.setInt(kActiveKey, to);
+    if (onlineNumber() == from) clearOnlineRegistration();  // the token belongs to the old number
     return true;
+}
+
+int RankingStore::onlineNumber() const
+{
+    const int number = m_store.getInt(kOnlineNumberKey, 0);
+    return isValidNumber(number) && !onlineToken().empty() ? number : 0;
+}
+
+std::string RankingStore::onlineToken() const
+{
+    return m_store.getString(kOnlineTokenKey, "");
+}
+
+void RankingStore::setOnlineRegistration(int number, const std::string &token)
+{
+    if (!isValidNumber(number) || token.empty()) return;
+    m_store.setInt(kOnlineNumberKey, number);
+    m_store.setString(kOnlineTokenKey, token);
+}
+
+void RankingStore::clearOnlineRegistration()
+{
+    m_store.removeKey(kOnlineNumberKey);
+    m_store.removeKey(kOnlineTokenKey);
 }
 
 RankingResult RankingStore::recordScore(RankingGame game, int rawScore, int64_t timestamp)
