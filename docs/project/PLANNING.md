@@ -215,7 +215,7 @@ src/
 
 ### Future milestones 🕒
 
-- [ ] Ranking in games — local top-10 done for Memory, Draw the mouth and Timeline; pending: the optional online ranking (`RANKING_HOWTO.md`)
+- [ ] Ranking in games — single local global ranking done (Memory, Draw the mouth, Timeline, players `Player-NNN`); pending: the optional online ranking (`RANKING_HOWTO.md`)
 
 - [ ] Achievements layer
 

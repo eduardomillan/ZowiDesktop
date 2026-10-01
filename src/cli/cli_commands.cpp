@@ -85,37 +85,38 @@ int runSession(const SessionArgs &a)
 
 int runRanking(const RankingArgs &a)
 {
-    struct Named { const char *id; zowi::RankingGame game; };
-    const Named games[] = {
-        {"zowi_says", zowi::RankingGame::ZowiSays},
-        {"mouths", zowi::RankingGame::Mouths},
-        {"timeline", zowi::RankingGame::Timeline},
-    };
-
-    std::vector<Named> selected;
-    for (const auto &g : games) {
-        if (a.game == "all" || a.game == g.id) selected.push_back(g);
-    }
-    if (selected.empty()) {
-        std::cerr << "Unknown game '" << a.game << "' (use zowi_says, mouths, timeline or all)." << std::endl;
-        return 1;
-    }
-
     zowi::RankingStore ranking;  // own file (ZowiRanking.json), not the session
 
-    for (const auto &g : selected) {
-        if (a.clear) {
-            ranking.clear(g.game);
-            std::cout << "Cleared ranking: " << g.id << std::endl;
-            continue;
+    if (a.clear) {
+        if (a.player == "all") {
+            ranking.clear();
+            std::cout << "Cleared the whole ranking." << std::endl;
+            return 0;
         }
-        std::cout << g.id << ":" << std::endl;
-        const auto entries = ranking.top(g.game);
-        if (entries.empty()) std::cout << "  (empty)" << std::endl;
-        int position = 1;
-        for (const auto &e : entries) {
-            std::cout << "  " << position++ << ". " << e.playerName << " - " << e.points << std::endl;
+        const int number = zowi::RankingStore::parseNumber(a.player);
+        if (number == 0) {
+            std::cerr << "Invalid player '" << a.player << "' (use Player-123, 123 or all)." << std::endl;
+            return 1;
         }
+        if (!ranking.removePlayer(number)) {
+            std::cerr << "Player not found: " << zowi::RankingStore::displayName(number) << std::endl;
+            return 1;
+        }
+        std::cout << "Removed " << zowi::RankingStore::displayName(number) << "." << std::endl;
+        return 0;
+    }
+
+    const auto players = ranking.players();
+    if (players.empty()) {
+        std::cout << "(empty)" << std::endl;
+        return 0;
+    }
+    const int active = ranking.activePlayer();
+    for (const auto &p : players) {
+        std::cout << p.position << ". " << zowi::RankingStore::displayName(p.number)
+                  << " - " << p.total << " pts"
+                  << "  (Says " << p.zowiSays << ", Mouths " << p.mouths << ", Timeline " << p.timeline << ")"
+                  << (p.number == active ? "  [active]" : "") << std::endl;
     }
     return 0;
 }

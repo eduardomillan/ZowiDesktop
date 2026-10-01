@@ -272,8 +272,7 @@
     "final_score": "Puntuación final: %1",
     "new_best": "¡Nuevo récord!",
     "retry_button": "Reintentar",
-    "ranking_save": "Guardar en el ranking",
-    "ranking_qualified": "¡Has entrado en el ranking!"
+    "total_position": "%1: %2 pts · puesto %3"
   },
   "GameMouthsScreen.qml": {
     "title": "Pinta bocas",
@@ -289,8 +288,7 @@
     "game_over": "Fin del juego",
     "final_score": "Puntuación final: %1",
     "retry_button": "Reintentar",
-    "ranking_save": "Guardar en el ranking",
-    "ranking_qualified": "¡Has entrado en el ranking!"
+    "total_position": "%1: %2 pts · puesto %3"
   },
   "GameTimelineScreen.qml": {
     "title": "Línea de tiempo",
@@ -330,12 +328,17 @@
   },
   "RankingDialog.qml": {
     "title": "Ranking",
-    "points_earned": "Puntos: %1",
-    "enter_name": "¡Has entrado en el ranking! Escribe tu nombre:",
-    "name_placeholder": "Tu nombre",
-    "save": "Guardar",
     "points": "%1 pts",
-    "empty": "Aún no hay puntuaciones. ¡Juega una partida para entrar en el ranking!",
-    "close": "Cerrar"
+    "empty": "Aún no hay jugadores. ¡Juega una partida para aparecer en el ranking!",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "new_player": "Nuevo jugador",
+    "switch_player": "Cambiar de jugador",
+    "playing_as": "Jugando como %1",
+    "number_hint": "Elige un número del 100 al 999. No uses datos personales.",
+    "number_taken": "Ese número ya existe. Prueba con %1 o elige otro.",
+    "number_invalid": "Escribe un número del 100 al 999.",
+    "other_number": "Sugerir otro",
+    "save": "Guardar"
   }
 }

@@ -162,7 +162,7 @@ ScreenTemplate {
             id: rankingBtn
             width: root.cornerButtonSize
             height: root.cornerButtonSize
-            onClicked: rankingDialog.showList(0)
+            onClicked: rankingDialog.showList()
 
             contentItem: Image {
                 source: "qrc:/images/android/ranking_button.png"
@@ -728,18 +728,18 @@ ScreenTemplate {
     }
 
     // Ranking: a fully played sequence (real robot acks) earns a weighted-
-    // complexity score; long enough sequences that make the top 10 are
-    // offered the nickname dialog. Stop or a timeout never scores.
+    // complexity score that is added to the active player's total; a new best
+    // opens the ranking. Stop or a timeout never scores.
     RankingDialog {
         id: rankingDialog
-        game: "timeline"
     }
 
     Connections {
         target: Timeline
         function onSequenceCompleted(score, eligible) {
-            if (eligible && Ranking.qualifies("timeline", score))
-                rankingDialog.showScore(score)
+            if (!eligible) return
+            var r = Ranking.recordScore("timeline", score)
+            if (r.improved) rankingDialog.showList()
         }
     }
 }

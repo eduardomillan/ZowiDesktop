@@ -283,8 +283,7 @@
     "final_score": "Score final : %1",
     "new_best": "Nouveau record !",
     "retry_button": "Réessayer",
-    "ranking_save": "Enregistrer au classement",
-    "ranking_qualified": "Tu es dans le classement !"
+    "total_position": "%1 : %2 pts · place %3"
   },
   "GameMouthsScreen.qml": {
     "title": "Dessine les bouches",
@@ -300,8 +299,7 @@
     "game_over": "Fin de partie",
     "final_score": "Score final : %1",
     "retry_button": "Réessayer",
-    "ranking_save": "Enregistrer au classement",
-    "ranking_qualified": "Tu es dans le classement !"
+    "total_position": "%1 : %2 pts · place %3"
   },
   "GameTimelineScreen.qml": {
     "title": "Ligne de temps",
@@ -333,12 +331,17 @@
   },
   "RankingDialog.qml": {
     "title": "Classement",
-    "points_earned": "Points : %1",
-    "enter_name": "Tu es dans le classement ! Entre ton nom :",
-    "name_placeholder": "Ton nom",
-    "save": "Enregistrer",
     "points": "%1 pts",
-    "empty": "Aucun score pour le moment. Joue une partie pour entrer dans le classement !",
-    "close": "Fermer"
+    "empty": "Aucun joueur pour le moment. Joue une partie pour apparaître au classement !",
+    "close": "Fermer",
+    "back": "Retour",
+    "new_player": "Nouveau joueur",
+    "switch_player": "Changer de joueur",
+    "playing_as": "Tu joues en tant que %1",
+    "number_hint": "Choisis un nombre de 100 à 999. N'utilise pas de données personnelles.",
+    "number_taken": "Ce nombre existe déjà. Essaie %1 ou choisis-en un autre.",
+    "number_invalid": "Saisis un nombre de 100 à 999.",
+    "other_number": "Proposer un autre",
+    "save": "Enregistrer"
   }
 }

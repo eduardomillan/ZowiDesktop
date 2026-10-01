@@ -19,7 +19,7 @@ struct SessionArgs {
 };
 
 struct RankingArgs {
-    std::string game = "all";  // zowi_says | mouths | timeline | all
+    std::string player = "all";  // clear target: Player-123 | 123 | all
     bool list = false;
     bool clear = false;
 };

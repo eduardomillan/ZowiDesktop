@@ -284,8 +284,7 @@
     "final_score": "Final score: %1",
     "new_best": "New best!",
     "retry_button": "Retry",
-    "ranking_save": "Save to ranking",
-    "ranking_qualified": "You made the ranking!"
+    "total_position": "%1: %2 pts · position %3"
   },
   "GameMouthsScreen.qml": {
     "title": "Draw the mouths",
@@ -301,8 +300,7 @@
     "game_over": "Game over",
     "final_score": "Final score: %1",
     "retry_button": "Retry",
-    "ranking_save": "Save to ranking",
-    "ranking_qualified": "You made the ranking!"
+    "total_position": "%1: %2 pts · position %3"
   },
   "GameTimelineScreen.qml": {
     "title": "Timeline",
@@ -334,12 +332,17 @@
   },
   "RankingDialog.qml": {
     "title": "Ranking",
-    "points_earned": "Score: %1",
-    "enter_name": "You made the ranking! Enter your name:",
-    "name_placeholder": "Your name",
-    "save": "Save",
     "points": "%1 pts",
-    "empty": "No scores yet. Play a game to enter the ranking!",
-    "close": "Close"
+    "empty": "No players yet. Play a game to appear in the ranking!",
+    "close": "Close",
+    "back": "Back",
+    "new_player": "New player",
+    "switch_player": "Switch player",
+    "playing_as": "Playing as %1",
+    "number_hint": "Choose a number from 100 to 999. Don't use personal data.",
+    "number_taken": "That number is already taken. Try %1 or choose another.",
+    "number_invalid": "Enter a number from 100 to 999.",
+    "other_number": "Suggest another",
+    "save": "Save"
   }
 }

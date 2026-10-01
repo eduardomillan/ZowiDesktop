@@ -177,15 +177,16 @@ Type is auto-detected: `true`/`false` → bool, numeric → int, otherwise → s
 
 ## Ranking (admin)
 
-Rankings are stored in `ZowiRanking.json` (same config directory as the session
-file `ZowiApp.json`). The GUI can read and add ranking entries but never delete
-them. These commands are the only way to wipe a ranking (games: `zowi_says`, `mouths`, `timeline`).
+The ranking is **global**: every game adds to the total of a local player
+(`Player-123`, number 100-999). It is stored in `ZowiRanking.json` (same config
+directory as the session file `ZowiApp.json`). The GUI can read the ranking and add
+scores but never delete anything; these commands are the only way to remove
+players.
 
 ```bash
-zowi_cli ranking list              # all games
-zowi_cli ranking list mouths       # one game
-zowi_cli ranking clear mouths      # delete one game's ranking
-zowi_cli ranking clear all         # delete every ranking
+zowi_cli ranking list                # every player: total, per-game bests, [active]
+zowi_cli ranking clear Player-123    # remove one player (also: clear 123)
+zowi_cli ranking clear all           # wipe the whole ranking
 ```
 
 ## Config

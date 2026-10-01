@@ -36,13 +36,12 @@ int main(int argc, char **argv)
     listSession->final_callback([&]() { sessionArgs.list = true; });
 
     // ── ranking subcommand (admin only: the GUI cannot delete rankings) ──
-    auto *rankingCmd = app.add_subcommand("ranking", "Inspect or clear local game rankings (admin)");
-    auto *rankingList = rankingCmd->add_subcommand("list", "List ranking entries");
-    auto *rankingClear = rankingCmd->add_subcommand("clear", "Delete ranking entries");
+    auto *rankingCmd = app.add_subcommand("ranking", "Inspect or clear the local global ranking (admin)");
+    auto *rankingList = rankingCmd->add_subcommand("list", "List every player with their total");
+    auto *rankingClear = rankingCmd->add_subcommand("clear", "Delete one player or the whole ranking");
 
     zowi_cli::RankingArgs rankingArgs;
-    rankingList->add_option("game", rankingArgs.game, "zowi_says | mouths | timeline | all")->default_val("all");
-    rankingClear->add_option("game", rankingArgs.game, "zowi_says | mouths | timeline | all")->default_val("all");
+    rankingClear->add_option("player", rankingArgs.player, "Player-123 | 123 | all")->default_val("all");
     rankingList->final_callback([&]() { rankingArgs.list = true; });
     rankingClear->final_callback([&]() { rankingArgs.clear = true; });
 

@@ -81,17 +81,17 @@
 ## Ranking (implemented)
 
 Not in the Android original (Timeline had no ranking there); desktop addition.
-Local top-10 under game id `"timeline"` (see `RANKING_HOWTO.md`):
+Timeline adds to the **single global ranking** (see `RANKING_HOWTO.md`):
 
-- Score = weighted complexity of the sequence (`timelineScore()` in core):
+- Raw score = weighted complexity of the sequence (`timelineScore()` in core):
   movement 3 × reps, gesture 2 × reps, mouth 1; Fast +20 % / Slow −20 % on
-  movements; +2 per distinct item type; first 40 chips only.
+  movements; +2 per distinct item type; first 40 chips only. In the ranking it
+  is normalised (60 raw = 100 points) and the player's best counts.
 - Awarded **only when the whole sequence ran to completion** with real robot
-  acks. Stop, a timeout or a lost robot never score. At least 5 chips are
-  needed; the score must also make the top 10.
+  acks. Stop, a timeout or a lost robot never score. At least 5 chips are needed.
 - `TimelineController` emits `sequenceCompleted(score, eligible)`; the screen
-  opens `RankingDialog` (nickname) when eligible and qualifying. The corner
-  Ranking button opens the list.
+  records it for the active player and opens the ranking when it improved. The
+  corner Ranking button opens the list.
 
 ## Persistence (planned)
 

@@ -66,7 +66,7 @@ Core business logic. Zero Qt dependency. Testable on any platform.
 | `RobotState` | Cached robot identity/battery state |
 | `MessageParser` | Parses incoming robot stream messages |
 | `MovementSequencer` | Drives sequences of timed movements |
-| `RankingStore` | Local top-10 per game in its own `ZowiRanking.json` (see `RANKING_HOWTO.md`) |
+| `RankingStore` | Global ranking of local players (`Player-NNN`) in its own `ZowiRanking.json` (see `RANKING_HOWTO.md`) |
 | `CalibrationSession` | Servo trim calibration state machine |
 | `BluetoothApi` | Abstract Bluetooth interface (std::function callbacks) |
 
@@ -90,7 +90,7 @@ Qt Quick application. Controllers wrap core classes and expose them to QML via c
 | `ConfigController` | `ConfigStore` | `Config` |
 | `CommandsController` | `RobotCommands` + serial command queue | `Commands` |
 | `CalibrationSessionController` | `CalibrationSession` | `Calibration` |
-| `RankingController` | `RankingStore` (read + submit only) | `Ranking` |
+| `RankingController` | `RankingStore` (read, create/switch players, record scores; no delete) | `Ranking` |
 
 `RobotController` is transport-agnostic: it builds either the Qt/BlueZ SPP
 backend (`QtBluetoothBackend`) or the serial/USB backend

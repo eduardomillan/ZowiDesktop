@@ -142,8 +142,8 @@ intermission between a solved round and the next one.
   The score lives in its own strip between the card and the footer
   (`score_prefix`, bottom-anchored).
 - **Help** ("Cómo jugar") and **Ranking** are **icon buttons top-right**
-  (same slot/pattern as the Memory game). Ranking opens the shared top-10 dialog
-  (see `RANKING_HOWTO.md`).
+  (same slot/pattern as the Memory game). Ranking opens the shared global ranking
+  dialog (see `RANKING_HOWTO.md`).
 - Dialogs are standard `QtQuick.Controls.Dialog`, `modal` and centered, with
   custom content and content-driven height (same treatment as the Memory game).
 - Back button inherited from `ScreenTemplate` (`backClicked` — do **not**
@@ -186,10 +186,10 @@ repeated first target over 50 games, and the single-mouth-band fallback.
 - **Target miniature (implemented):** Android shows the target once at level
   start on the robot; this desktop version adds a configurable **on-screen
   miniature** (`mouths_target_onscreen`), hidden by default while connected.
-- **Ranking:** local top-10 (`game id "mouths"`, score = level − 1, minimum 2 to
-  enter). On game over a qualifying score offers *"Save to ranking"* (nickname
-  dialog). Details in `RANKING_HOWTO.md`. `rankScoreThreshold` in
-  `MouthsGameConfig` is still unused (the minimum lives in `RankingStore`).
+- **Ranking:** adds to the **single global ranking** (see `RANKING_HOWTO.md`).
+  On game over the screen records the score (level − 1) for the active player
+  (`Player-NNN`) and the dialog shows their total and position. There is no
+  per-game list. `rankScoreThreshold` in `MouthsGameConfig` is unused.
 - **Achievements:** `mouths_editor` (level ≥ 8) is not enforced; the game-over
   dialog simply shows the final score. `achievementLevelThreshold` stays
   reserved.
@@ -201,5 +201,5 @@ until each item lands.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Ranking top-10** | ✅ Implemented | Shared with Memory: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`. Delete is admin-only (`zowi_cli ranking clear`). See `RANKING_HOWTO.md`. Online ranking is still pending. |
+| **Ranking** | ✅ Implemented | Global ranking shared by all games: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`; delete is admin-only (`zowi_cli ranking`). See `RANKING_HOWTO.md`. Online ranking is still pending. |
 | **Achievement `mouths_editor`** (level ≥ 8) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). `achievementLevelThreshold` stays reserved. |

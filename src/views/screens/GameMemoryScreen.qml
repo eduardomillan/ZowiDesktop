@@ -50,7 +50,7 @@ ScreenTemplate {
             id: rankingBtn
             width: root.cornerButtonSize
             height: root.cornerButtonSize
-            onClicked: rankingDialog.showList(0)
+            onClicked: rankingDialog.showList()
 
             contentItem: Image {
                 source: "qrc:/images/android/ranking_button.png"
@@ -449,14 +449,14 @@ ScreenTemplate {
         width: 360
         anchors.centerIn: parent
 
-        // Set when the dialog opens (before the score is saved).
-        property bool canRank: false
+        // Filled when the game ends (score recorded in the global ranking).
+        property string resultText: ""
         property bool isNewBest: false
 
         property real gameOverContentH: gameOverTitle.height + gameOverScore.height
                                         + gameOverBest.height + gameOverBtns.height
                                         + 3 * gameOverCol.spacing
-                                        + (gameOverRankBtn.visible ? gameOverRankBtn.height + gameOverCol.spacing : 0)
+                                        + gameOverRank.height + gameOverCol.spacing
         height: Math.ceil(gameOverContentH) + 48 + Math.round(gameOverContentH * 0.05)
 
         background: Rectangle {
@@ -497,35 +497,18 @@ ScreenTemplate {
             Text {
                 id: gameOverBest
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: gameOverDialog.isNewBest ? tr("new_best") : (gameOverDialog.canRank ? tr("ranking_qualified") : "")
+                text: gameOverDialog.isNewBest ? tr("new_best") : ""
                 font.pixelSize: 14
                 color: Config.get("color_accent") || "#21a69b"
             }
 
-            // Save the score to the ranking (only when it qualifies).
-            Button {
-                id: gameOverRankBtn
-                visible: gameOverDialog.canRank
+            // Global ranking result: total and position of the active player.
+            Text {
+                id: gameOverRank
                 anchors.horizontalCenter: parent.horizontalCenter
-                implicitWidth: 274
-                implicitHeight: 44
-                text: tr("ranking_save")
-
-                contentItem: Text {
-                    text: parent.text
-                    color: "#ffffff"
-                    font.bold: true
-                    font.pixelSize: 16
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-                background: Rectangle {
-                    radius: 22
-                    color: gameOverRankBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
-                }
-
-                onClicked: rankingDialog.showScore(ZowiDice.score)
+                text: gameOverDialog.resultText
+                font.pixelSize: 14
+                color: Config.get("color_primary") || "#2d5a2d"
             }
 
             Row {
@@ -596,14 +579,15 @@ ScreenTemplate {
     Connections {
         target: ZowiDice
         function onGameOver(score) {
-            gameOverDialog.canRank = Ranking.qualifies("zowi_says", score)
-            gameOverDialog.isNewBest = score > 0 && score > Ranking.best("zowi_says")
+            var r = Ranking.recordScore("zowi_says", score)
+            gameOverDialog.isNewBest = r.improved 
+            gameOverDialog.resultText = r.number > 0
+                ? tr("total_position").arg(r.name).arg(r.total).arg(r.position) : ""
             gameOverDialog.open()
         }
     }
 
     RankingDialog {
         id: rankingDialog
-        game: "zowi_says"
     }
 }

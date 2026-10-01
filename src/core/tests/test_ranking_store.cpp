@@ -3,15 +3,17 @@
 #include <cassert>
 #include <filesystem>
 #include <iostream>
+#include <set>
 
 namespace fs = std::filesystem;
 using zowi::RankingGame;
+using zowi::RankingStore;
 
 namespace {
 
 struct TempStore {
     fs::path dir;
-    zowi::RankingStore ranking;
+    RankingStore ranking;
 
     static fs::path makeDir(const char *name) {
         fs::path d = fs::temp_directory_path() / (std::string("zowi_ranking_test_") + name);
@@ -19,71 +21,137 @@ struct TempStore {
         fs::create_directories(d);
         return d;
     }
-    explicit TempStore(const char *name)
-        : dir(makeDir(name)), ranking(dir.string()) {}
+    explicit TempStore(const char *name) : dir(makeDir(name)), ranking(dir.string()) {}
     ~TempStore() { fs::remove_all(dir); }
 };
 
 } // namespace
 
-void test_empty() {
-    std::cout << "test_empty: " << std::flush;
-    TempStore t("empty");
-    assert(t.ranking.top(RankingGame::Mouths).empty());
-    assert(t.ranking.best(RankingGame::Mouths) == 0);
+void test_numbers_and_names() {
+    std::cout << "test_numbers_and_names: " << std::flush;
+    assert(!RankingStore::isValidNumber(99));
+    assert(RankingStore::isValidNumber(100));
+    assert(RankingStore::isValidNumber(999));
+    assert(!RankingStore::isValidNumber(1000));
+    assert(!RankingStore::isValidNumber(0));
+    assert(RankingStore::displayName(123) == "Player-123");
+    assert(RankingStore::parseNumber("Player-123") == 123);
+    assert(RankingStore::parseNumber("456") == 456);
+    assert(RankingStore::parseNumber("099") == 0);   // leading zero
+    assert(RankingStore::parseNumber("Player-12") == 0);
+    assert(RankingStore::parseNumber("Player-1234") == 0);
+    assert(RankingStore::parseNumber("abc") == 0);
     std::cout << "OK" << std::endl;
 }
 
-void test_min_score_gate() {
-    std::cout << "test_min_score_gate: " << std::flush;
-    TempStore t("gate");
-    assert(!t.ranking.qualifies(RankingGame::ZowiSays, 2));
-    assert(t.ranking.submit(RankingGame::ZowiSays, "Ana", 2) == 0);
-    assert(t.ranking.top(RankingGame::ZowiSays).empty());
-    assert(t.ranking.qualifies(RankingGame::ZowiSays, 3));
-    assert(!t.ranking.qualifies(RankingGame::Mouths, 1));
-    assert(t.ranking.qualifies(RankingGame::Mouths, 2));
+void test_create_players() {
+    std::cout << "test_create_players: " << std::flush;
+    TempStore t("create");
+    assert(t.ranking.players().empty());
+    assert(t.ranking.activePlayer() == 0);
+    assert(!t.ranking.createPlayer(50));    // invalid
+    assert(!t.ranking.createPlayer(0));
+    assert(t.ranking.createPlayer(123));
+    assert(t.ranking.activePlayer() == 123);  // first player becomes active
+    assert(!t.ranking.createPlayer(123));   // taken
+    assert(t.ranking.createPlayer(456));
+    assert(t.ranking.activePlayer() == 123);  // creating another does not switch
+    assert(t.ranking.setActivePlayer(456));
+    assert(t.ranking.activePlayer() == 456);
+    assert(!t.ranking.setActivePlayer(777));
+    assert(t.ranking.players().size() == 2);
     std::cout << "OK" << std::endl;
 }
 
-void test_order_and_ties() {
-    std::cout << "test_order_and_ties: " << std::flush;
+void test_suggest_free_number() {
+    std::cout << "test_suggest_free_number: " << std::flush;
+    TempStore t("suggest");
+    for (int i = 0; i < 50; ++i) {
+        const int n = t.ranking.suggestFreeNumber();
+        assert(RankingStore::isValidNumber(n));
+        assert(!t.ranking.hasPlayer(n));
+    }
+    // Fill all but one number: the suggestion must be the only free one.
+    for (int n = RankingStore::kMinNumber; n <= RankingStore::kMaxNumber; ++n) {
+        if (n != 500) assert(t.ranking.createPlayer(n));
+    }
+    assert(t.ranking.suggestFreeNumber() == 500);
+    assert(t.ranking.createPlayer(500));
+    assert(t.ranking.suggestFreeNumber() == 0);   // full
+    std::cout << "OK" << std::endl;
+}
+
+void test_scoring_and_normalisation() {
+    std::cout << "test_scoring_and_normalisation: " << std::flush;
+    TempStore t("scoring");
+    // 12/12 Says = 100, 8/8 Mouths = 100, 60/60 Timeline = 100
+    assert(t.ranking.pointsFor(RankingGame::ZowiSays, 12) == 100);
+    assert(t.ranking.pointsFor(RankingGame::Mouths, 8) == 100);
+    assert(t.ranking.pointsFor(RankingGame::Timeline, 60) == 100);
+    assert(t.ranking.pointsFor(RankingGame::Timeline, 30) == 50);
+    assert(t.ranking.pointsFor(RankingGame::Mouths, 0) == 0);
+    assert(t.ranking.pointsFor(RankingGame::ZowiSays, 24) == 200);  // no cap
+
+    auto r = t.ranking.recordScore(RankingGame::ZowiSays, 6, 10);  // creates the player
+    assert(r.improved && r.number != 0 && r.total == 50 && r.position == 1);
+    assert(t.ranking.activePlayer() == r.number);
+
+    r = t.ranking.recordScore(RankingGame::ZowiSays, 4, 11);   // lower: ignored
+    assert(!r.improved && r.total == 50);
+    r = t.ranking.recordScore(RankingGame::ZowiSays, 6, 12);   // equal: not an improvement
+    assert(!r.improved && r.total == 50);
+    r = t.ranking.recordScore(RankingGame::ZowiSays, 12, 13);
+    assert(r.improved && r.total == 100);
+    r = t.ranking.recordScore(RankingGame::Mouths, 4, 14);     // other game adds up
+    assert(r.improved && r.total == 150);
+    assert(t.ranking.total(r.number) == 150);
+    std::cout << "OK" << std::endl;
+}
+
+void test_ranking_order_and_ties() {
+    std::cout << "test_ranking_order_and_ties: " << std::flush;
     TempStore t("order");
-    assert(t.ranking.submit(RankingGame::Mouths, "A", 5, 100) == 1);
-    assert(t.ranking.submit(RankingGame::Mouths, "B", 9, 101) == 1);
-    assert(t.ranking.submit(RankingGame::Mouths, "C", 5, 102) == 3);  // tie goes after existing 5
-    const auto top = t.ranking.top(RankingGame::Mouths);
+    assert(t.ranking.createPlayer(200));
+    assert(t.ranking.createPlayer(300));
+    assert(t.ranking.createPlayer(400));
+
+    t.ranking.setActivePlayer(200);
+    t.ranking.recordScore(RankingGame::Mouths, 4, 100);        // 50
+    t.ranking.setActivePlayer(300);
+    t.ranking.recordScore(RankingGame::Mouths, 8, 200);        // 100
+    t.ranking.setActivePlayer(400);
+    auto r = t.ranking.recordScore(RankingGame::Mouths, 4, 50); // 50, reached before 200
+    assert(r.position == 2);                                    // ties: earlier first
+
+    const auto top = t.ranking.top();
     assert(top.size() == 3);
-    assert(top[0].playerName == "B" && top[0].points == 9 && top[0].timestamp == 101);
-    assert(top[1].playerName == "A");
-    assert(top[2].playerName == "C");
-    assert(t.ranking.best(RankingGame::Mouths) == 9);
+    assert(top[0].number == 300 && top[0].position == 1);
+    assert(top[1].number == 400);
+    assert(top[2].number == 200);
+    assert(t.ranking.position(200) == 3);
+    assert(t.ranking.position(999) == 0);
+    assert(t.ranking.top(2).size() == 2);
     std::cout << "OK" << std::endl;
 }
 
-void test_capped_at_ten() {
-    std::cout << "test_capped_at_ten: " << std::flush;
-    TempStore t("cap");
-    for (int i = 0; i < 10; ++i) t.ranking.submit(RankingGame::Timeline, "P" + std::to_string(i), 10 + i, 1);
-    assert(t.ranking.top(RankingGame::Timeline).size() == 10);
-    // Equal to the lowest (10) does not qualify; higher does and evicts it.
-    assert(!t.ranking.qualifies(RankingGame::Timeline, 10));
-    assert(t.ranking.submit(RankingGame::Timeline, "Low", 10, 1) == 0);
-    assert(t.ranking.submit(RankingGame::Timeline, "New", 11, 1) == 10);
-    const auto top = t.ranking.top(RankingGame::Timeline);
-    assert(top.size() == 10);
-    assert(top.back().points == 11 && top.back().playerName == "New");
-    std::cout << "OK" << std::endl;
-}
+void test_rename_and_remove() {
+    std::cout << "test_rename_and_remove: " << std::flush;
+    TempStore t("rename");
+    t.ranking.createPlayer(200);
+    t.ranking.recordScore(RankingGame::Mouths, 8, 10);
+    t.ranking.createPlayer(300);
+    assert(!t.ranking.renamePlayer(200, 300));  // taken
+    assert(!t.ranking.renamePlayer(200, 50));   // invalid
+    assert(!t.ranking.renamePlayer(555, 556));  // unknown
+    assert(t.ranking.renamePlayer(200, 250));
+    assert(!t.ranking.hasPlayer(200));
+    assert(t.ranking.total(250) == 100);        // scores kept
+    assert(t.ranking.activePlayer() == 250);    // active follows the rename
 
-void test_name_sanitizing() {
-    std::cout << "test_name_sanitizing: " << std::flush;
-    TempStore t("name");
-    t.ranking.submit(RankingGame::Mouths, "   ", 5, 1);
-    t.ranking.submit(RankingGame::Mouths, "  ABCDEFGHIJKLMNOP  ", 6, 1);
-    const auto top = t.ranking.top(RankingGame::Mouths);
-    assert(top[0].playerName == "ABCDEFGHIJKL");
-    assert(top[1].playerName == "?");
+    assert(t.ranking.removePlayer(250));
+    assert(!t.ranking.removePlayer(250));
+    assert(t.ranking.activePlayer() == 0);
+    assert(t.ranking.ensureActivePlayer() == 300);  // falls back to an existing player
     std::cout << "OK" << std::endl;
 }
 
@@ -91,35 +159,36 @@ void test_persistence_and_clear() {
     std::cout << "test_persistence_and_clear: " << std::flush;
     fs::path dir = TempStore::makeDir("persist");
     {
-        zowi::RankingStore r(dir.string());
-        r.submit(RankingGame::ZowiSays, "Zed", 7, 5);
-        r.submit(RankingGame::Mouths, "Mo", 4, 5);
+        RankingStore r(dir.string());
+        r.createPlayer(321);
+        r.recordScore(RankingGame::Timeline, 30, 5);
     }
     {
-        zowi::RankingStore r(dir.string());
-        assert(r.top(RankingGame::ZowiSays).size() == 1);
-        assert(r.best(RankingGame::ZowiSays) == 7);
-        r.clear(RankingGame::ZowiSays);
-        assert(r.top(RankingGame::ZowiSays).empty());
-        assert(r.top(RankingGame::Mouths).size() == 1);
-        r.clearAll();
-        assert(r.top(RankingGame::Mouths).empty());
+        RankingStore r(dir.string());
+        assert(r.activePlayer() == 321);
+        assert(r.total(321) == 50);
+        r.clear();
+        assert(r.players().empty());
+        assert(r.activePlayer() == 0);
     }
     fs::remove_all(dir);
     std::cout << "OK" << std::endl;
 }
 
-void test_corrupt_data() {
-    std::cout << "test_corrupt_data: " << std::flush;
+void test_corrupt_and_legacy_data() {
+    std::cout << "test_corrupt_and_legacy_data: " << std::flush;
     fs::path dir = TempStore::makeDir("corrupt");
     {
-        // Write garbage under a ranking key directly in the ranking file.
         zowi::SessionStore raw("ZowiDesktop", "ZowiRanking", dir.string());
-        raw.setString(zowi::RankingStore::keyFor(RankingGame::Mouths), "not json");
+        raw.setString("players", "not json");
+        raw.setString("mouths", "[{\"playerName\":\"Old\",\"points\":5}]");  // legacy per-game list
     }
-    zowi::RankingStore r(dir.string());
-    assert(r.top(RankingGame::Mouths).empty());
-    assert(r.submit(RankingGame::Mouths, "Ok", 5, 1) == 1);
+    RankingStore r(dir.string());
+    assert(r.players().empty());
+    assert(r.recordScore(RankingGame::Mouths, 4, 1).improved);
+    r.clear();  // admin clear also wipes legacy keys
+    zowi::SessionStore raw("ZowiDesktop", "ZowiRanking", dir.string());
+    assert(raw.keys().empty());
     fs::remove_all(dir);
     std::cout << "OK" << std::endl;
 }
@@ -128,31 +197,29 @@ void test_separate_file_from_session() {
     std::cout << "test_separate_file_from_session: " << std::flush;
     fs::path dir = TempStore::makeDir("separate");
     {
-        zowi::RankingStore r(dir.string());
-        r.submit(RankingGame::Mouths, "Ana", 5, 1);
+        RankingStore r(dir.string());
+        r.createPlayer(222);
         zowi::SessionStore session("ZowiDesktop", "ZowiApp", dir.string());
         session.setString("activeZowiName", "R2");
-        // Wiping the whole session must not affect rankings.
-        for (const auto &k : session.keys()) session.removeKey(k);
+        for (const auto &k : session.keys()) session.removeKey(k);  // wipe the whole session
     }
     assert(fs::exists(dir / "ZowiRanking.json"));
     assert(fs::exists(dir / "ZowiApp.json"));
-    zowi::RankingStore again(dir.string());
-    assert(again.top(RankingGame::Mouths).size() == 1);
-    zowi::SessionStore sessionAgain("ZowiDesktop", "ZowiApp", dir.string());
-    assert(sessionAgain.keys().empty());
+    RankingStore again(dir.string());
+    assert(again.hasPlayer(222));
     fs::remove_all(dir);
     std::cout << "OK" << std::endl;
 }
 
 int main() {
-    test_empty();
-    test_min_score_gate();
-    test_order_and_ties();
-    test_capped_at_ten();
-    test_name_sanitizing();
+    test_numbers_and_names();
+    test_create_players();
+    test_suggest_free_number();
+    test_scoring_and_normalisation();
+    test_ranking_order_and_ties();
+    test_rename_and_remove();
     test_persistence_and_clear();
-    test_corrupt_data();
+    test_corrupt_and_legacy_data();
     test_separate_file_from_session();
     std::cout << "All ranking_store tests passed." << std::endl;
     return 0;

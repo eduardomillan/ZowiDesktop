@@ -1,7 +1,8 @@
 #include "RankingController.h"
 
 #include <QDebug>
-#include <QVariantMap>
+
+#include <algorithm>
 
 RankingController::RankingController(QObject *parent)
     : QObject(parent)
@@ -20,43 +21,121 @@ bool RankingController::gameFromId(const QString &id, zowi::RankingGame &out)
     return true;
 }
 
-QVariantList RankingController::top(const QString &game) const
+QVariantMap RankingController::toMap(const zowi::RankingPlayer &p, int active)
 {
-    QVariantList list;
-    zowi::RankingGame g;
-    if (!gameFromId(game, g)) return list;
+    QVariantMap row;
+    row["position"] = p.position;
+    row["number"] = p.number;
+    row["name"] = QString::fromStdString(zowi::RankingStore::displayName(p.number));
+    row["total"] = p.total;
+    row["active"] = (p.number == active);
+    return row;
+}
 
-    int position = 1;
-    for (const auto &e : m_store.top(g)) {
-        QVariantMap row;
-        row["position"] = position++;
-        row["points"] = e.points;
-        row["playerName"] = QString::fromStdString(e.playerName);
-        list.append(row);
+QVariantList RankingController::top() const
+{
+    const int active = m_store.activePlayer();
+    QVariantList list;
+    bool activeShown = false;
+    for (const auto &p : m_store.top()) {
+        list.append(toMap(p, active));
+        activeShown = activeShown || p.number == active;
+    }
+    if (active != 0 && !activeShown) {
+        for (const auto &p : m_store.players()) {
+            if (p.number == active) list.append(toMap(p, active));
+        }
     }
     return list;
 }
 
-bool RankingController::qualifies(const QString &game, int score) const
+QVariantList RankingController::players() const
 {
-    zowi::RankingGame g;
-    return gameFromId(game, g) && m_store.qualifies(g, score);
+    const int active = m_store.activePlayer();
+    auto all = m_store.players();
+    std::sort(all.begin(), all.end(), [](const zowi::RankingPlayer &a, const zowi::RankingPlayer &b) {
+        return a.number < b.number;
+    });
+    QVariantList list;
+    for (const auto &p : all) list.append(toMap(p, active));
+    return list;
 }
 
-int RankingController::submit(const QString &game, const QString &playerName, int score)
+int RankingController::activePlayer() const
 {
+    return m_store.activePlayer();
+}
+
+QString RankingController::activePlayerName() const
+{
+    const int active = m_store.activePlayer();
+    return active == 0 ? QString() : playerName(active);
+}
+
+QString RankingController::playerName(int number) const
+{
+    return QString::fromStdString(zowi::RankingStore::displayName(number));
+}
+
+int RankingController::suggestNumber() const
+{
+    return m_store.suggestFreeNumber();
+}
+
+bool RankingController::isValidNumber(int number) const
+{
+    return zowi::RankingStore::isValidNumber(number);
+}
+
+bool RankingController::isNumberFree(int number) const
+{
+    return zowi::RankingStore::isValidNumber(number) && !m_store.hasPlayer(number);
+}
+
+int RankingController::createPlayer(int number)
+{
+    if (!zowi::RankingStore::isValidNumber(number)) return InvalidNumber;
+    const int previousActive = m_store.activePlayer();
+    if (!m_store.createPlayer(number)) return NumberTaken;
+    qInfo() << "[Ranking] Created" << playerName(number);
+    emit rankingChanged();
+    if (m_store.activePlayer() != previousActive) emit activePlayerChanged();
+    return Created;
+}
+
+bool RankingController::setActivePlayer(int number)
+{
+    if (!m_store.setActivePlayer(number)) return false;
+    emit activePlayerChanged();
+    emit rankingChanged();
+    return true;
+}
+
+QVariantMap RankingController::recordScore(const QString &game, int score)
+{
+    QVariantMap out;
+    out["improved"] = false;
+    out["number"] = 0;
+    out["name"] = QString();
+    out["total"] = 0;
+    out["position"] = 0;
+
     zowi::RankingGame g;
-    if (!gameFromId(game, g)) return 0;
-    const int position = m_store.submit(g, playerName.toStdString(), score);
-    if (position > 0) {
-        qInfo() << "[Ranking]" << game << "score" << score << "entered at position" << position;
+    if (!gameFromId(game, g)) return out;
+
+    const int previousActive = m_store.activePlayer();
+    const auto result = m_store.recordScore(g, score);
+    out["improved"] = result.improved;
+    out["number"] = result.number;
+    out["name"] = result.number ? playerName(result.number) : QString();
+    out["total"] = result.total;
+    out["position"] = result.position;
+
+    if (result.number != previousActive) emit activePlayerChanged();  // auto-created
+    if (result.improved || result.number != previousActive) {
+        qInfo() << "[Ranking]" << game << "score" << score << "->" << out["name"].toString()
+                << "total" << result.total << "position" << result.position;
         emit rankingChanged();
     }
-    return position;
-}
-
-int RankingController::best(const QString &game) const
-{
-    zowi::RankingGame g;
-    return gameFromId(game, g) ? m_store.best(g) : 0;
+    return out;
 }

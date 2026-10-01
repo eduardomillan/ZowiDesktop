@@ -283,8 +283,7 @@
     "final_score": "Puntuació final: %1",
     "new_best": "Nou rècord!",
     "retry_button": "Reintentar",
-    "ranking_save": "Desa al rànquing",
-    "ranking_qualified": "Has entrat al rànquing!"
+    "total_position": "%1: %2 pts · lloc %3"
   },
   "GameMouthsScreen.qml": {
     "title": "Pinta boques",
@@ -300,8 +299,7 @@
     "game_over": "Fi del joc",
     "final_score": "Puntuació final: %1",
     "retry_button": "Reintentar",
-    "ranking_save": "Desa al rànquing",
-    "ranking_qualified": "Has entrat al rànquing!"
+    "total_position": "%1: %2 pts · lloc %3"
   },
   "GameTimelineScreen.qml": {
     "title": "Línia de temps",
@@ -333,12 +331,17 @@
   },
   "RankingDialog.qml": {
     "title": "Rànquing",
-    "points_earned": "Punts: %1",
-    "enter_name": "Has entrat al rànquing! Escriu el teu nom:",
-    "name_placeholder": "El teu nom",
-    "save": "Desa",
     "points": "%1 pts",
-    "empty": "Encara no hi ha puntuacions. Juga una partida per entrar al rànquing!",
-    "close": "Tanca"
+    "empty": "Encara no hi ha jugadors. Juga una partida per aparèixer al rànquing!",
+    "close": "Tanca",
+    "back": "Enrere",
+    "new_player": "Jugador nou",
+    "switch_player": "Canvia de jugador",
+    "playing_as": "Jugant com %1",
+    "number_hint": "Tria un número del 100 al 999. No facis servir dades personals.",
+    "number_taken": "Aquest número ja existeix. Prova %1 o tria'n un altre.",
+    "number_invalid": "Escriu un número del 100 al 999.",
+    "other_number": "Suggereix-ne un altre",
+    "save": "Desa"
   }
 }
