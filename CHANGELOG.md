@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **The ranking can be turned off per installation.** An administrator can switch the
+  ranking off (nothing is shown or saved) with a settings file, without reinstalling.
+  The same file can allow users to change other settings. The new configuration guide
+  in the documentation lists every setting.
+
 ## [0.9.6] - 2026-10-02
 
 ### Added

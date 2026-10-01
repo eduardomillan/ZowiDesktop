@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
     ProjectsController projects(&translator, &sessionStore);
     MouthsGameController mouths;
     TimelineController timeline;
-    RankingController ranking;
+    RankingController ranking(zowi::ConfigStore::parseBool(config.get("ranking_enabled").toStdString(), true));
 
     // Forward the game's cosmetic commands (mouth/gesture) to the preview
     // robot mock, gated by its connection state.

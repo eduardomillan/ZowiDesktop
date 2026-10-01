@@ -99,6 +99,7 @@ RobotController::RobotController(QObject *parent)
         cfg.loadFromString(cfgFile.readAll().toStdString());
         cfgFile.close();
     }
+    cfg.applyOverrides();
     try {
         std::string b = cfg.get("usb_baud");
         if (!b.empty()) m_usbBaud = std::stoi(b);

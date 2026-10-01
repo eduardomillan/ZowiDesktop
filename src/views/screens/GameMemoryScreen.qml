@@ -50,6 +50,7 @@ ScreenTemplate {
             id: rankingBtn
             width: root.cornerButtonSize
             height: root.cornerButtonSize
+            visible: Ranking.enabled
             onClicked: rankingDialog.showList()
 
             contentItem: Image {
@@ -355,8 +356,9 @@ ScreenTemplate {
         anchors.centerIn: parent
 
         property real helpContentH: helpTitle.height + helpImg.height
-                                    + helpText.implicitHeight + helpRankingText.implicitHeight
-                                    + helpCloseBtn.height + 4 * helpCol.spacing
+                                    + helpText.implicitHeight
+                                    + (helpRankingText.visible ? helpRankingText.implicitHeight : 0)
+                                    + helpCloseBtn.height + (helpRankingText.visible ? 4 : 3) * helpCol.spacing
         height: Math.ceil(helpContentH) + 48 + Math.round(helpContentH * 0.05)
 
         background: Rectangle {
@@ -416,6 +418,7 @@ ScreenTemplate {
             // Ranking paragraph, separate from the game presentation above.
             Text {
                 id: helpRankingText
+                visible: Ranking.enabled
                 anchors {
                     left: parent.left
                     right: parent.right
@@ -472,7 +475,7 @@ ScreenTemplate {
         property real gameOverContentH: gameOverTitle.height + gameOverScore.height
                                         + gameOverBest.height + gameOverBtns.height
                                         + 3 * gameOverCol.spacing
-                                        + gameOverRank.height + gameOverCol.spacing
+                                        + (gameOverRank.visible ? gameOverRank.height + gameOverCol.spacing : 0)
         height: Math.ceil(gameOverContentH) + 48 + Math.round(gameOverContentH * 0.05)
 
         background: Rectangle {
@@ -521,6 +524,7 @@ ScreenTemplate {
             // Global ranking result: total and position of the active player.
             Text {
                 id: gameOverRank
+                visible: gameOverDialog.resultText.length > 0
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: gameOverDialog.resultText
                 font.pixelSize: 14

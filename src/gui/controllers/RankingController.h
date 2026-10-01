@@ -16,7 +16,12 @@ class RankingController : public QObject
     Q_OBJECT
 
 public:
-    explicit RankingController(QObject *parent = nullptr);
+    // `enabled` comes from the `ranking_enabled` config key: when false the
+    // ranking is hidden everywhere and nothing is recorded.
+    explicit RankingController(bool enabled = true, QObject *parent = nullptr);
+
+    Q_PROPERTY(bool enabled READ enabled CONSTANT)
+    bool enabled() const { return m_enabled; }
 
     // Result codes of createPlayer().
     enum CreateResult { Created = 0, InvalidNumber = 1, NumberTaken = 2 };
@@ -52,6 +57,7 @@ signals:
 
 private:
     zowi::RankingStore m_store;
+    bool m_enabled = true;
 
     static bool gameFromId(const QString &id, zowi::RankingGame &out);
     static QVariantMap toMap(const zowi::RankingPlayer &p, int active);

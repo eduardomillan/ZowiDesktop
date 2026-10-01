@@ -179,6 +179,17 @@ if(ZOWI_BUILD_GUI)
     install(FILES packaging/linux/com.zowi.desktop.appdata.xml
         DESTINATION share/metainfo
     )
+
+    # System-wide configuration file for system packages (.deb, prefix /usr):
+    # /etc/ZowiDesktop/config.json overrides the compiled config.json and is kept
+    # on upgrades (debhelper marks files under /etc as conffiles). See
+    # docs/project/CONFIG_HOWTO.md.
+    if(UNIX AND NOT APPLE AND CMAKE_INSTALL_PREFIX STREQUAL "/usr")
+        install(FILES packaging/linux/zowidesktop-system-config.json
+            DESTINATION /etc/ZowiDesktop
+            RENAME config.json
+        )
+    endif()
 endif()
 
 if(ZOWI_BUILD_CLI)

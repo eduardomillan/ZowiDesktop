@@ -151,6 +151,7 @@ int runTranslate(const TranslateArgs &a)
 int runConfig(const ConfigArgs &a)
 {
     zowi::ConfigStore store("src/config.json");
+    store.applyOverrides();
 
     if (a.get) {
         std::string val = store.get(a.key);
@@ -198,6 +199,7 @@ int runScan(int argc, char **argv, const ScanArgs &a)
 #endif
 
     zowi::ConfigStore config("src/config.json");
+    config.applyOverrides();
     std::string macPrefix = config.get("zowi_mac_prefix");
 
     std::atomic<int> deviceCount{0};

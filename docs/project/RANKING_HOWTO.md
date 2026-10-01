@@ -11,6 +11,7 @@
   - [Storage](#storage)
   - [Timeline score](#timeline-score)
 - [GUI flow](#gui-flow)
+- [Turning the ranking off (per installation)](#turning-the-ranking-off-per-installation)
 - [Deleting rankings (admin only)](#deleting-rankings-admin-only)
 - [Online ranking (design, not built)](#online-ranking-design-not-built)
   - [Privacy and AppsEdu](#privacy-and-appsedu)
@@ -104,6 +105,24 @@ eligible.
   380 px), and a height that follows the content with a **minimum of 40 % of the
   window height**; it never exceeds 90 % of the window (the list then scrolls).
   To change it, edit that property or instantiate `RankingDialog { sizeRatio: 0.5 }`.
+
+## Turning the ranking off (per installation)
+
+The `ranking_enabled` key (default `true`) switches the whole ranking on or off
+for an installation without recompiling. With `false`, **everything is hidden**
+(corner buttons, ranking dialog, the ranking paragraph of the help dialogs, the
+game-over total and the Timeline notice) and **nothing is recorded** (no player
+is created, no score saved). Data already saved is kept and comes back when it is
+turned on again; `zowi_cli ranking` still works for the administrator.
+
+Set it in the system file, which wins over everything else:
+
+```json
+{ "ranking_enabled": "false" }
+```
+
+in `/etc/ZowiDesktop/config.json` (Windows: `%PROGRAMDATA%\ZowiDesktop\config.json`).
+See `CONFIG_HOWTO.md` for the layers and the `allow_*` switches.
 
 ## Deleting rankings (admin only)
 

@@ -4,8 +4,9 @@
 
 #include <algorithm>
 
-RankingController::RankingController(QObject *parent)
+RankingController::RankingController(bool enabled, QObject *parent)
     : QObject(parent)
+    , m_enabled(enabled)
 {
 }
 
@@ -94,6 +95,7 @@ bool RankingController::isNumberFree(int number) const
 
 int RankingController::createPlayer(int number)
 {
+    if (!m_enabled) return InvalidNumber;
     if (!zowi::RankingStore::isValidNumber(number)) return InvalidNumber;
     const int previousActive = m_store.activePlayer();
     if (!m_store.createPlayer(number)) return NumberTaken;
@@ -105,6 +107,7 @@ int RankingController::createPlayer(int number)
 
 bool RankingController::setActivePlayer(int number)
 {
+    if (!m_enabled) return false;
     if (!m_store.setActivePlayer(number)) return false;
     emit activePlayerChanged();
     emit rankingChanged();
@@ -119,6 +122,8 @@ QVariantMap RankingController::recordScore(const QString &game, int score)
     out["name"] = QString();
     out["total"] = 0;
     out["position"] = 0;
+
+    if (!m_enabled) return out;  // ranking disabled: record nothing
 
     zowi::RankingGame g;
     if (!gameFromId(game, g)) return out;

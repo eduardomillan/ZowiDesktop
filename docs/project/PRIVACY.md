@@ -43,7 +43,8 @@ Ubicación habitual: en Linux, `~/.config/ZowiDesktop/` (sesión y ranking) y
 `%LOCALAPPDATA%\ZowiDesktop\`.
 
 Los jugadores del ranking son **números**, no personas: no se asocian a ningún
-nombre real. El nombre que pongas a tu Zowi también se guarda en tu equipo:
+nombre real. El administrador de una instalación (por ejemplo, un centro educativo)
+puede **desactivar el ranking por completo**; entonces no se muestra ni se guarda nada. El nombre que pongas a tu Zowi también se guarda en tu equipo:
 evita usar nombres reales o datos personales.
 
 ## 3. Qué no hace la aplicación
@@ -125,7 +126,8 @@ Usual locations: on Linux, `~/.config/ZowiDesktop/` (session and ranking) and
 `%LOCALAPPDATA%\ZowiDesktop\`.
 
 Ranking players are **numbers**, not people: they are not linked to any real
-name. The name you give your Zowi is also stored on your computer: avoid real
+name. The administrator of an installation (for example a school) can **turn the
+ranking off completely**; then nothing is shown or saved. The name you give your Zowi is also stored on your computer: avoid real
 names or personal data.
 
 ## 3. What the app does not do

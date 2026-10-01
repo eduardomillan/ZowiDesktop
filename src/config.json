@@ -46,5 +46,8 @@
     "restore_simulate_low_battery": "false",
     "restore_low_battery_threshold": "50",
     "timeline_selectors_as_dialogs": "true",
-    "timeline_selector_dialog_size_ratio": "0.8"
+    "timeline_selector_dialog_size_ratio": "0.8",
+    "ranking_enabled": "true",
+    "allow_environment_config": "false",
+    "allow_user_config": "false"
 }

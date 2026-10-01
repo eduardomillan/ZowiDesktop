@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
     ZowiDiceController zowiDice;
     MouthsGameController mouths;
     TimelineController timeline;
-    RankingController ranking;
+    RankingController ranking(zowi::ConfigStore::parseBool(config.get("ranking_enabled").toStdString(), true));
     g_logLevel = logLevelFromName(config.get("log_level"));
     robot.setSessionController(&session);
 

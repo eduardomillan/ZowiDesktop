@@ -68,6 +68,7 @@ void resetRobotState()
 void loadLogLevel()
 {
     zowi::ConfigStore config("src/config.json");
+    config.applyOverrides();
     g_debugLog = (config.get("log_level") == "debug");
 }
 

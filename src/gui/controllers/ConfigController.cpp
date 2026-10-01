@@ -14,6 +14,9 @@ ConfigController::ConfigController(QObject *parent)
     } else {
         qWarning() << "ConfigController: cannot open config.json";
     }
+    // System / environment / user layers on top of the compiled defaults
+    // (see docs/project/CONFIG_HOWTO.md).
+    m_store.applyOverrides();
     m_devOverlayVisible = devMode();
 }
 
