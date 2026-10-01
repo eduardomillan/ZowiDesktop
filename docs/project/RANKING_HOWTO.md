@@ -4,6 +4,19 @@
 > pending. Single source of truth; per-game notes live in the
 > `screens/SCREEN_GAME_*.md` files. Planning history: `.local/ranking_planning.md`.
 
+## Table of Contents
+
+- [Status](#status)
+- [Model](#model)
+  - [Storage](#storage)
+  - [Timeline score](#timeline-score)
+- [GUI flow](#gui-flow)
+- [Deleting rankings (admin only)](#deleting-rankings-admin-only)
+- [Online ranking (design, not built)](#online-ranking-design-not-built)
+  - [Privacy and AppsEdu](#privacy-and-appsedu)
+- [Known limits](#known-limits)
+- [Tests](#tests)
+
 ---
 
 ## Status
@@ -14,7 +27,7 @@
 | Local players `Player-NNN` (several per install) | ✅ Implemented |
 | Zowi Says (Memory), Mouths (Pintabocas) and Timeline add to the ranking | ✅ Implemented |
 | Online ranking (top 100, 30-day expiry) | 🚧 Pending (design below) |
-| Privacy policy text for the online ranking | 🚧 Pending |
+| Privacy policy (incl. online-ranking text) | 📝 Draft in `PRIVACY.md`, pending review |
 
 Different from the Android original, which kept a free-text top-10 **per game**
 (Zowi Says and Mouths only, no player, no global total, no Timeline).
@@ -75,9 +88,10 @@ eligible.
   *"Player-123: 150 pts · position 2"* (and *"New best!"* in Memory when the
   player's best improved). `GameTimelineScreen` records after a completed
   sequence and opens the ranking when the player improved.
-- **The player is told how to score:** each game'"'"'s "How to play" text ends with a
-  sentence on how it adds points (Memory: a point per round, Mouths: a point per
-  level, both only if the player'"'"'s best improves; Timeline: play a sequence of at
+- **The player is told how to score:** each game's "How to play" dialog has a
+  second paragraph (key `how_to_play_ranking`, rich text with the key words in
+  **bold**), separate from the game presentation, on how it adds points (Memory: a point per round, Mouths: a point per
+  level, both only if the player's best improves; Timeline: play a sequence of at
   least 5 items to the end, movements > gestures > mouths, variety bonus). The
   ranking dialog has a short "every game adds your best score…" note, and a
   completed Timeline sequence with fewer than 5 items shows a message instead of
@@ -85,6 +99,11 @@ eligible.
 - `RankingDialog.qml` (shared; i18n context `RankingDialog.qml`): the top 10
   (the active player is always shown, highlighted), "New player" and
   "Switch player". The corner **Ranking** button of the three games opens it.
+  **Size:** the dialog takes `sizeRatio` (a property of `RankingDialog.qml`,
+  default **0.4**) of the app window: width = 40 % of the window width (at least
+  380 px), and a height that follows the content with a **minimum of 40 % of the
+  window height**; it never exceeds 90 % of the window (the list then scrolls).
+  To change it, edit that property or instantiate `RankingDialog { sizeRatio: 0.5 }`.
 
 ## Deleting rankings (admin only)
 
@@ -140,7 +159,7 @@ payments, no student profiling, no risk to the Conselleria's security or
 reputation, cybersecurity tests, and no personal student data in apps. Design
 consequences: no free text (nothing personal can be typed), the id is a random
 number that does not identify a person (but is a persistent pseudonym once
-online → opt-in and mention it in the privacy policy), 30-day retention online,
+online → opt-in and covered in `PRIVACY.md` §6), 30-day retention online,
 and nothing is sent until the user opts in. To be confirmed with the AppsEdu
 channel (GVA SAI) and the Conselleria's data-protection office before publishing
 the online ranking. This is not legal advice.

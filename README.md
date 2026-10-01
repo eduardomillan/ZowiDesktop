@@ -79,6 +79,19 @@ Built with Qt and QML (C++ core, Qt-free business logic).
 
 Open source — contributions welcome.
 
+## Privacy
+
+Zowi Desktop works locally: no accounts, advertising, analytics or profiling, and it
+does not send data to the Internet. It never asks for personal data. It only stores
+your robot's pairing details, settings, your Timeline sequence and the local ranking
+(random `Player-NNN` numbers) in files in your user folder, plus technical logs.
+There is nothing to delete inside the app's ranking: only an administrator can
+wipe it (`zowi_cli ranking clear`).
+
+The full policy (in Spanish and English, **draft pending review**) is in
+[docs/project/PRIVACY.md](docs/project/PRIVACY.md), including the prepared text for
+the future optional online ranking.
+
 ## Project documentation
 
 - [Project index](docs/project/INDEX.md)
