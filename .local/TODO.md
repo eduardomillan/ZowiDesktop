@@ -40,6 +40,7 @@
 - [X] Añadir ayuda de la línea de comandos (help) a los scripts disponibles
 - [X] Revisar los scripts actuales (carpetas /scripts y /packaging) y ver si tenemos todos los necesarios, por ejemplo, para ejecutar el Release.
 - [ ] Acceso al ranking desde la home screen.
+- [ ] Reducir el texto explicativo de los proyectos al 85% de pantalla (o un porcentaje que quede bien en pantalla)
 
 
 ## Windows
