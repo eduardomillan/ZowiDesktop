@@ -1,8 +1,15 @@
 // SplashScreen: Initial screen shown on app launch.
-// Displays the Zowi logo and provides Continue/Quit buttons
-// along with language selector flags (ES, CA, EN, FR, BG).
+// Displays the Zowi logo and provides Continue/Quit buttons along with the
+// language selector (ES, CA, EN, FR, BG).
+//
+// Layout: a single ColumnLayout (connection notice, logo, title, buttons,
+// language selector) instead of absolutely offset layers, so nothing overlaps
+// at any window size. Sizes scale with the window (see `unit`) between sane
+// limits. Everything is in logical pixels and the popup stays inside the
+// window, so it behaves the same on X11 and Wayland (incl. fractional scaling).
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 import "../components"
 
 FocusScope {
@@ -11,151 +18,184 @@ FocusScope {
     signal splashFinished()
     signal quitRequested()
 
+    // Read by main.qml for the window title.
+    property string screenName: "SplashScreen"
     property bool _resetNoZowi: false
+
+    focus: true
+
+    // ── Palette ─────────────────────────────────────────────────────────
+    readonly property color primary: Config.get("color_primary") || "#2d5a2d"
+    readonly property color accent: Config.get("color_accent") || "#21a69b"
+    readonly property color accentPressed: Config.get("color_accent_pressed") || "#17736c"
+
+    // ── Scale: derived from the smaller window side ─────────────────────
+    function clamp(value, low, high) { return Math.max(low, Math.min(high, value)) }
+    readonly property real unit: Math.min(width, height)
+    readonly property int pageMargin: Math.round(clamp(unit * 0.04, 12, 32))
+    readonly property int gap: Math.round(clamp(unit * 0.025, 8, 24))
+    readonly property real logoMax: clamp(unit * 0.30, 96, 380)
+    readonly property int titleSize: Math.round(clamp(unit * 0.08, 28, 96))
+    readonly property int subtitleSize: Math.round(clamp(unit * 0.03, 14, 30))
+    readonly property int buttonHeight: Math.round(clamp(unit * 0.08, 44, 64))
+    readonly property int buttonWidth: Math.round(clamp(width * 0.25, 160, 300))
+    readonly property int buttonFont: Math.round(clamp(unit * 0.03, 16, 24))
+    readonly property int smallFont: Math.round(clamp(unit * 0.022, 13, 18))
+    // Continue and Quit stack in a column when they do not fit side by side.
+    readonly property bool narrow: width < 2 * buttonWidth + gap + 2 * pageMargin
 
     function tr(source) { return Translator.translate("SplashScreen.qml", source) }
 
+    Keys.onReturnPressed: splashScope.splashFinished()
+    Keys.onEnterPressed: splashScope.splashFinished()
+
     Rectangle {
-        id: splash
         anchors.fill: parent
-        property string screenName: "SplashScreen"
-
         color: Config.get("color_bg_app") || "#f4f9f4"
+    }
 
-    Column {
-        anchors.centerIn: parent
-        anchors.verticalCenterOffset: -60
-        spacing: 20
+    ColumnLayout {
+        anchors.fill: parent
+        anchors.margins: splashScope.pageMargin
+        spacing: splashScope.gap
+
+        // No connection notice: part of the flow, so it pushes the content down
+        // instead of covering the logo.
+        Rectangle {
+            id: noBtBanner
+            visible: !Robot.bluetoothAvailable && !Robot.usbAvailable
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            Layout.maximumWidth: 520
+            Layout.preferredHeight: noBtText.implicitHeight + 24
+            radius: 12
+            color: "#fff4e5"
+            border.color: Config.get("color_warning") || "#e67e22"
+            border.width: 1
+
+            Text {
+                id: noBtText
+                anchors.fill: parent
+                anchors.margins: 12
+                text: splashScope.tr("no_connection")
+                color: "#a0522d"
+                font.pixelSize: splashScope.smallFont
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        Item { Layout.fillHeight: true }
 
         Image {
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: splashScope.logoMax
+            Layout.maximumHeight: splashScope.logoMax
+            Layout.minimumHeight: 48
             source: Config.get("splash_image")
-            sourceSize.width: 180
-            sourceSize.height: 180
             fillMode: Image.PreserveAspectFit
+            horizontalAlignment: Image.AlignHCenter
+            verticalAlignment: Image.AlignVCenter
+            smooth: true
         }
 
         Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("zowi")
-            color: Config.get("color_primary") || "#2d5a2d"
-            font.pixelSize: 48
+            Layout.alignment: Qt.AlignHCenter
+            text: splashScope.tr("zowi")
+            color: splashScope.primary
+            font.pixelSize: splashScope.titleSize
             font.bold: true
             font.family: "monospace"
         }
 
         Text {
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: tr("desktop")
-            color: Config.get("color_primary") || "#2d5a2d"
-            font.pixelSize: 18
+            Layout.alignment: Qt.AlignHCenter
+            text: splashScope.tr("desktop")
+            color: splashScope.primary
+            font.pixelSize: splashScope.subtitleSize
             opacity: 0.7
         }
-    }
 
-    Row {
-        anchors.centerIn: parent
-        anchors.verticalCenterOffset: 150
-        spacing: 20
+        GridLayout {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: splashScope.gap
+            columns: splashScope.narrow ? 1 : 2
+            columnSpacing: splashScope.gap
+            rowSpacing: splashScope.gap
 
-        Button {
-            id: continueButton
-            implicitWidth: 200
-            height: 50
-            text: tr("continue")
+            Button {
+                id: continueButton
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: splashScope.buttonWidth
+                Layout.preferredHeight: splashScope.buttonHeight
+                text: splashScope.tr("continue")
 
-            contentItem: Text {
-                text: parent.text
-                font.pixelSize: 18
-                font.bold: true
-                color: "#ffffff"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+                contentItem: Text {
+                    text: continueButton.text
+                    font.pixelSize: splashScope.buttonFont
+                    font.bold: true
+                    color: "#ffffff"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: height / 2
+                    color: continueButton.pressed ? splashScope.accentPressed : splashScope.accent
+                }
+
+                onClicked: splashScope.splashFinished()
             }
 
-            background: Rectangle {
-                radius: 25
-                color: continueButton.pressed ? Config.get("color_accent_pressed") || "#17736c" : Config.get("color_accent") || "#21a69b"
-            }
+            Button {
+                id: quitButton
+                visible: Config.get("button_quit_visible") === "true"
+                Layout.alignment: Qt.AlignHCenter
+                Layout.preferredWidth: splashScope.buttonWidth
+                Layout.preferredHeight: splashScope.buttonHeight
+                text: splashScope.tr("quit")
 
-            onClicked: splashScope.splashFinished()
+                contentItem: Text {
+                    text: quitButton.text
+                    font.pixelSize: Math.round(splashScope.buttonFont * 0.8)
+                    font.bold: true
+                    color: splashScope.primary
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    opacity: 0.8
+                }
+
+                background: Rectangle {
+                    radius: height / 2
+                    color: "transparent"
+                    border.color: splashScope.primary
+                    border.width: 2
+                    opacity: 0.5
+                }
+
+                onClicked: splashScope.quitRequested()
+            }
         }
 
-        Button {
-            id: quitButton
-            visible: Config.get("button_quit_visible") === "true"
-            implicitWidth: 200
-            height: 50
-            text: tr("quit")
-
-            contentItem: Text {
-                text: parent.text
-                font.pixelSize: 14
-                font.bold: true
-                color: Config.get("color_primary") || "#2d5a2d"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                opacity: 0.8
-            }
-
-            background: Rectangle {
-                radius: 25
-                color: "transparent"
-                border.color: Config.get("color_primary") || "#2d5a2d"
-                border.width: 2
-                opacity: 0.5
-            }
-
-            onClicked: splashScope.quitRequested()
-        }
-    }
-
-    Rectangle {
-        id: noBtBanner
-        visible: !Robot.bluetoothAvailable && !Robot.usbAvailable
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
-        anchors.topMargin: 24
-        width: Math.min(parent.width - 40, 520)
-        height: noBtText.implicitHeight + 24
-        radius: 12
-        color: "#fff4e5"
-        border.color: Config.get("color_warning") || "#e67e22"
-        border.width: 1
+        Item { Layout.fillHeight: true }
 
         Text {
-            id: noBtText
-            anchors.fill: parent
-            anchors.margins: 12
-            text: tr("no_connection")
-            color: "#a0522d"
-            font.pixelSize: 13
-            wrapMode: Text.WordWrap
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
+            Layout.alignment: Qt.AlignHCenter
+            text: splashScope.tr("select_language")
+            color: splashScope.primary
+            font.pixelSize: splashScope.smallFont
+            opacity: 0.8
         }
-    }
-
-    Text {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: langRow.top
-        anchors.bottomMargin: 10
-        text: tr("select_language")
-        color: Config.get("color_primary") || "#2d5a2d"
-        font.pixelSize: 13
-        opacity: 0.6
-    }
-
-    Row {
-        id: langRow
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 52
 
         ComboBox {
             id: langCombo
-            width: 160
-            height: 36
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: Math.round(splashScope.clamp(splashScope.width * 0.2, 160, 220))
+            Layout.preferredHeight: Math.round(splashScope.clamp(splashScope.unit * 0.06, 36, 48))
+            Layout.bottomMargin: 4
 
             model: ListModel {
                 ListElement { text: "Español"; locale: "es_ES" }
@@ -166,7 +206,7 @@ FocusScope {
             }
             textRole: "text"
 
-            font.pixelSize: 14
+            font.pixelSize: Math.round(splashScope.clamp(splashScope.unit * 0.025, 14, 18))
             font.family: "monospace"
 
             Component.onCompleted: {
@@ -190,29 +230,27 @@ FocusScope {
 
             contentItem: Text {
                 text: langCombo.displayText
-                color: Config.get("color_primary") || "#2d5a2d"
+                color: splashScope.primary
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter
                 font: langCombo.font
             }
 
             background: Rectangle {
-                radius: 18
-                border.color: Config.get("color_primary") || "#2d5a2d"
+                radius: height / 2
+                border.color: splashScope.primary
                 border.width: 1
                 opacity: 0.5
                 color: "transparent"
-                implicitWidth: 160
-                implicitHeight: 36
             }
 
             delegate: ItemDelegate {
                 width: langCombo.width
-                height: 36
+                height: langCombo.height
 
                 contentItem: Text {
                     text: model.text
-                    color: Config.get("color_primary") || "#2d5a2d"
+                    color: splashScope.primary
                     verticalAlignment: Text.AlignVCenter
                     horizontalAlignment: Text.AlignHCenter
                     font: langCombo.font
@@ -223,8 +261,11 @@ FocusScope {
                 }
             }
 
+            // In-window popup (the default), opened upwards on purpose: the
+            // selector sits at the bottom, so it never runs off the window and
+            // behaves the same on X11 and Wayland.
             popup: Popup {
-                y: langCombo.height + 2
+                y: -implicitHeight - 2
                 width: langCombo.width
                 padding: 0
 
@@ -242,15 +283,17 @@ FocusScope {
                 background: Rectangle {
                     color: "#ffffff"
                     radius: 8
-                    border.color: Config.get("color_primary") || "#2d5a2d"
+                    border.color: splashScope.primary
                     border.width: 1
                 }
             }
         }
     }
 
+    // Development overlay: reset the registered Zowi.
     Item {
         anchors.fill: parent
+        z: 10
         visible: Config.devMode && Config.devOverlayVisible
 
         MessageBar {
@@ -267,7 +310,7 @@ FocusScope {
             }
             implicitWidth: 90
             height: 32
-            text: tr("reset")
+            text: splashScope.tr("reset")
 
             contentItem: Text {
                 text: parent.text
@@ -301,15 +344,14 @@ FocusScope {
         id: forgetter
         onForgetFinished: function(unpaired, message) {
             if (splashScope._resetNoZowi)
-                msgBar.show(tr("reset_no_zowi"), Config.get("color_error") || "#c0392b")
+                msgBar.show(splashScope.tr("reset_no_zowi"), Config.get("color_error") || "#c0392b")
             else if (unpaired)
-                msgBar.show(tr("unpair_success"))
+                msgBar.show(splashScope.tr("unpair_success"))
             else
-                msgBar.show(tr("unpair_app_only"))
+                msgBar.show(splashScope.tr("unpair_app_only"))
         }
         onStatusMessage: function(text) { msgBar.show(text) }
-        }
     }
 
-    Component.onCompleted: splash.forceActiveFocus()
+    Component.onCompleted: splashScope.forceActiveFocus()
 }

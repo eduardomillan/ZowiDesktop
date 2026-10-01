@@ -9,11 +9,17 @@ ApplicationWindow {
     visible: true
     // Window size ratio (fraction of available screen size), configurable via
     // config.json "window_size_ratio". Falls back to 0.75 if unset/invalid.
-    readonly property real windowSizeRatio: parseFloat(Config.get("window_size_ratio")) || 0.65
-    width: Screen.desktopAvailableWidth * windowSizeRatio
-    height: Screen.desktopAvailableHeight * windowSizeRatio
-    x: (Screen.desktopAvailableWidth - width) / 2
-    y: (Screen.desktopAvailableHeight - height) / 2
+    readonly property real windowSizeRatio: parseFloat(Config.get("window_size_ratio")) || 0.75
+    // Size relative to the screen the window is on (not the whole virtual
+    // desktop, which on multi-monitor setups spans every screen), and never
+    // below the minimum the screens are designed for. Wayland compositors (e.g.
+    // LliureX/KDE) ignore client-side x/y and honour the minimum size.
+    minimumWidth: 480
+    minimumHeight: 360
+    width: Math.max(minimumWidth, Screen.width * windowSizeRatio)
+    height: Math.max(minimumHeight, Screen.height * windowSizeRatio)
+    x: Screen.virtualX + (Screen.width - width) / 2
+    y: Screen.virtualY + (Screen.height - height) / 2
     title: "ZowiDesktop - " + AppVersion + (stack.currentItem && stack.currentItem.screenName ? " - " + stack.currentItem.screenName : "")
     color: Config.get("color_bg_app") || "#f4f9f4"
 
