@@ -78,6 +78,21 @@
 - **Help:** auto-opens on first visit (configurable `timeline_help` flag). ✅ Done.
 - **Achievements:** `anxious` (15+ commands) reserved for achievements layer.
 
+## Ranking (implemented)
+
+Not in the Android original (Timeline had no ranking there); desktop addition.
+Local top-10 under game id `"timeline"` (see `RANKING_HOWTO.md`):
+
+- Score = weighted complexity of the sequence (`timelineScore()` in core):
+  movement 3 × reps, gesture 2 × reps, mouth 1; Fast +20 % / Slow −20 % on
+  movements; +2 per distinct item type; first 40 chips only.
+- Awarded **only when the whole sequence ran to completion** with real robot
+  acks. Stop, a timeout or a lost robot never score. At least 5 chips are
+  needed; the score must also make the top 10.
+- `TimelineController` emits `sequenceCompleted(score, eligible)`; the screen
+  opens `RankingDialog` (nickname) when eligible and qualifying. The corner
+  Ranking button opens the list.
+
 ## Persistence (planned)
 
 - `timeline_sequence` — the current playlist (JSON list of

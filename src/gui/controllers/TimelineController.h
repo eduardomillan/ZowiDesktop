@@ -8,6 +8,9 @@
 #include <QTimer>
 #include <memory>
 
+#include <vector>
+
+#include <zowi/timeline_command.h>
 #include <zowi/timeline_player.h>
 
 class SessionController;
@@ -45,6 +48,10 @@ public:
 signals:
     void isPlayingChanged();
     void currentIndexChanged();
+    // Emitted once a whole sequence ran to completion with real robot acks
+    // (never after Stop or a timeout). `eligible` is false when the sequence
+    // is too short for the ranking; the score itself comes from timelineScore().
+    void sequenceCompleted(int score, bool eligible);
     void currentChipIndexChanged();
 
 private slots:
@@ -59,10 +66,12 @@ private:
     CommandsController* m_commands = nullptr;
 
     std::unique_ptr<zowi::TimelinePlayer> m_player;
+    std::vector<zowi::TimelineCommand> m_playedCommands;  // steps actually sent, for scoring
     QTimer m_moveStartTimeout;     // Safety net for missing &&A
     QTimer m_motionlessDisplay;    // Display time for animations/mouths
 
     int getDurationMs(const QString& duration) const;
     QString commandToString(const QVariantMap& cmd);
+    static zowi::TimelineCommand commandFromMap(const QVariantMap& map);
     void updateFromPlayer();
 };

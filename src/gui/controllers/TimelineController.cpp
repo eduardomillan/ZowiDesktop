@@ -3,6 +3,7 @@
 #include "RobotController.h"
 #include "CommandsController.h"
 #include "zowi/timeline_command.h"
+#include "zowi/timeline_score.h"
 #include "zowi/robot_commands.h"
 
 #include <QDebug>
@@ -82,44 +83,46 @@ void TimelineController::saveSequence(const QVariantList &items) {
 
     std::vector<zowi::TimelineCommand> timeline;
     for (const auto& item : items) {
-        auto map = item.toMap();
-
-        zowi::TimelineItemType type = zowi::TimelineItemType::Movement;
-        QString typeStr = map.value("type", "movement").toString();
-        if (typeStr == "animation") {
-            type = zowi::TimelineItemType::Animation;
-        } else if (typeStr == "mouth") {
-            type = zowi::TimelineItemType::Mouth;
-        }
-
-        zowi::TimelineDuration duration = zowi::TimelineDuration::Medium;
-        QString durationStr = map.value("duration", "Medium").toString();
-        if (durationStr == "Slow") {
-            duration = zowi::TimelineDuration::Slow;
-        } else if (durationStr == "Fast") {
-            duration = zowi::TimelineDuration::Fast;
-        }
-
-        zowi::TimelineDirection direction = zowi::TimelineDirection::Front;
-        QString directionStr = map.value("direction", "Front").toString();
-        if (directionStr == "Left") {
-            direction = zowi::TimelineDirection::Left;
-        } else if (directionStr == "Right") {
-            direction = zowi::TimelineDirection::Right;
-        }
-
-        timeline.emplace_back(
-            type,
-            map.value("name", "").toString().toStdString(),
-            map.value("reps", 1).toInt(),
-            duration,
-            direction
-        );
+        timeline.push_back(commandFromMap(item.toMap()));
     }
 
     std::string json = zowi::serializeTimeline(timeline);
     m_session->saveString("timeline_sequence", QString::fromStdString(json));
     qDebug() << "[Timeline] Saved" << items.size() << "commands to timeline_sequence";
+}
+
+zowi::TimelineCommand TimelineController::commandFromMap(const QVariantMap& map) {
+    zowi::TimelineItemType type = zowi::TimelineItemType::Movement;
+    const QString typeStr = map.value("type", "movement").toString();
+    if (typeStr == "animation") {
+        type = zowi::TimelineItemType::Animation;
+    } else if (typeStr == "mouth") {
+        type = zowi::TimelineItemType::Mouth;
+    }
+
+    zowi::TimelineDuration duration = zowi::TimelineDuration::Medium;
+    const QString durationStr = map.value("duration", "Medium").toString();
+    if (durationStr == "Slow") {
+        duration = zowi::TimelineDuration::Slow;
+    } else if (durationStr == "Fast") {
+        duration = zowi::TimelineDuration::Fast;
+    }
+
+    zowi::TimelineDirection direction = zowi::TimelineDirection::Front;
+    const QString directionStr = map.value("direction", "Front").toString();
+    if (directionStr == "Left") {
+        direction = zowi::TimelineDirection::Left;
+    } else if (directionStr == "Right") {
+        direction = zowi::TimelineDirection::Right;
+    }
+
+    return zowi::TimelineCommand(
+        type,
+        map.value("name", "").toString().toStdString(),
+        map.value("reps", 1).toInt(),
+        duration,
+        direction
+    );
 }
 
 QVariantList TimelineController::loadSequence() const {
@@ -289,6 +292,7 @@ void TimelineController::play(const QVariantList &items) {
     // Build TimelineStep vector from QVariantList, expanding repetitions
     // (each "repetition" becomes a separate command, like Android does)
     std::vector<zowi::TimelineStep> steps;
+    std::vector<zowi::TimelineCommand> played;  // one per chip, for the ranking score
     int chipIndex = 0;
     for (const auto& item : items) {
         auto map = item.toMap();
@@ -306,6 +310,8 @@ void TimelineController::play(const QVariantList &items) {
         qDebug() << "[Timeline] Step:" << map.value("type") << map.value("name")
                   << "reps=" << reps << "cmd=" << cmdStr.trimmed();
 
+        played.push_back(commandFromMap(map));
+
         // Expand: each repetition is a separate command, tagged with its origin chip index
         for (int rep = 0; rep < reps; ++rep) {
             steps.push_back({cmdStr.toStdString(), isMovement, speed, chipIndex});
@@ -319,6 +325,7 @@ void TimelineController::play(const QVariantList &items) {
     }
 
     // Reset and start player
+    m_playedCommands = std::move(played);
     m_player->start(steps);
     updateFromPlayer();
     sendNextCommand();
@@ -400,6 +407,11 @@ void TimelineController::sendNextCommand() {
         qDebug() << "[Timeline] Sequence complete, sending final stop";
         m_player->reset();
         updateFromPlayer();
+
+        const int score = zowi::timelineScore(m_playedCommands);
+        const bool eligible = zowi::timelineQualifiesForRanking(m_playedCommands);
+        qInfo() << "[Timeline] Sequence completed; score" << score << "eligible" << eligible;
+        emit sequenceCompleted(score, eligible);
     }
 }
 

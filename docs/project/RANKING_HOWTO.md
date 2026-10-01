@@ -11,10 +11,10 @@
 | Part | Status |
 |------|--------|
 | Local top-10 store (core) | ✅ Implemented (`RankingStore`) |
-| Timeline score formula (core) | ✅ Implemented (`timelineScore`), not wired to the UI yet |
+| Timeline score formula (core) | ✅ Implemented (`timelineScore`) |
 | Memory (Zowi Says) ranking in the GUI | ✅ Implemented |
 | Mouths (Pintabocas) ranking in the GUI | ✅ Implemented |
-| Timeline ranking in the GUI | 🚧 Pending (the Ranking button is still a disabled placeholder) |
+| Timeline ranking in the GUI | ✅ Implemented (awarded after a fully played sequence) |
 | Online ranking | 🚧 Pending (design only, see the planning doc) |
 | Player profiles | ❌ Not planned yet (see [Known limits](#known-limits)) |
 
@@ -50,13 +50,19 @@ The minimums mirror Android (`size > 3`, `level > 2`). The unused config fields
 `ZowiDiceConfig::rankThreshold` and `MouthsGameConfig::rankScoreThreshold` are
 **not** read by the ranking; the minimums live in `RankingStore`.
 
-### Timeline score (not wired yet)
+### Timeline score
 
 `timelineScore()` (`src/core/include/zowi/timeline_score.h`) awards points for a
 **completed** sequence: movement 3 × repetitions, gesture 2 × repetitions, mouth 1
 (ignores repetitions); movement speed Fast +20 % / Slow −20 %; +2 per distinct
 item type used; only the first 40 steps count; at least 5 steps to qualify.
 All numbers live in `TimelineScoreConfig`.
+
+It is awarded only when the **whole sequence ran to completion** with real robot
+acks (`TimelineController::sequenceCompleted(score, eligible)`): Stop, a timeout
+or a lost robot never score, and sequences under 5 chips are not eligible. When
+eligible and the score makes the top 10, `GameTimelineScreen.qml` opens the
+nickname dialog (`RankingDialog.showScore`).
 
 ## GUI flow
 
@@ -104,16 +110,14 @@ All numbers live in `TimelineScoreConfig`.
 
 ## Pending (see `.local/ranking_planning.md`)
 
-1. Timeline: emit a `sequenceCompleted(score)` from `TimelineController` and use
-   `RankingDialog` from `GameTimelineScreen.qml`.
-2. Online ranking: read from a static JSON on GitHub Pages; submissions go
+1. Online ranking: read from a static JSON on GitHub Pages; submissions go
    through a small serverless proxy (GitHub Pages alone is read-only and a token
    cannot ship in the client). Opt-in, nickname only, no accounts.
-3. Decide whether to add player profiles (reserve a player id in `RankingEntry`).
+2. Decide whether to add player profiles (reserve a player id in `RankingEntry`).
 
 ## Tests
 
 - Core: `test_ranking_store`, `test_timeline_score`
   (`ctest --test-dir build -R 'ranking|timeline_score'`).
-- Manual: play Memory/Mouths until the score qualifies, save a nickname, reopen
+- Manual: play Memory/Mouths until the score qualifies (and a Timeline of 5+ chips to the end with the robot), save a nickname, reopen
   the list from the corner button, then check `zowi_cli ranking list`.
