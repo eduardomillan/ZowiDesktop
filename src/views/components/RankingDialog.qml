@@ -7,6 +7,7 @@
 // Rankings can't be deleted from the app (admin only, via zowi_cli).
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 import "../components"
 
 Dialog {
@@ -18,6 +19,17 @@ Dialog {
     property int suggestion: 0        // free random number proposed to the user
     property string activeName: ""    // "Player-123" or "" when there is none yet
     readonly property int rowHeight: 44
+
+    // Size: 40 % of the app window (width), and a height that follows the content
+    // with a minimum of the same share of the window height. Change `sizeRatio`
+    // here (or when instantiating the dialog) to resize it; it is clamped to
+    // [0.2, maxRatio] and the dialog never grows past maxRatio of the window.
+    property real sizeRatio: 0.4
+    readonly property real maxRatio: 0.9
+    readonly property int minWidth: 380
+    readonly property real ratio: Math.min(maxRatio, Math.max(0.2, sizeRatio))
+    readonly property real windowWidth: parent ? parent.width : 800
+    readonly property real windowHeight: parent ? parent.height : 600
     property alias numberText: numberField.text  // exposed for tests
 
     // State of the number being typed in the "new player" form.
@@ -28,8 +40,10 @@ Dialog {
     modal: true
     parent: Overlay.overlay
     anchors.centerIn: parent
-    width: 380
     padding: 24
+    width: Math.min(maxRatio * windowWidth, Math.max(minWidth, ratio * windowWidth))
+    // implicitHeight = what the content asks for (list rows, buttons...).
+    height: Math.min(maxRatio * windowHeight, Math.max(ratio * windowHeight, implicitHeight))
 
     function tr(source) { return Translator.translate("RankingDialog.qml", source) }
 
@@ -79,11 +93,11 @@ Dialog {
         border.width: 2
     }
 
-    contentItem: Column {
+    contentItem: ColumnLayout {
         spacing: 16
 
         Text {
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
             text: root.mode === "new" ? root.tr("new_player")
                   : (root.mode === "switch" ? root.tr("switch_player") : root.tr("title"))
             font.pixelSize: 20
@@ -94,8 +108,10 @@ Dialog {
         // ── Ranking list ────────────────────────────────────────────────
         Item {
             visible: root.mode === "list"
-            width: parent.width
-            height: Math.max(root.rowHeight * 2, Math.min(root.entries.length, 11) * (root.rowHeight + 4))
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: Math.max(root.rowHeight * 2, Math.min(root.entries.length, 11) * (root.rowHeight + 4))
+            Layout.minimumHeight: root.rowHeight * 2
 
             Text {
                 anchors.centerIn: parent
@@ -170,7 +186,7 @@ Dialog {
 
         Text {
             visible: root.mode === "list" && root.activeName.length > 0
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
             text: root.tr("playing_as").arg(root.activeName)
             font.pixelSize: 14
             color: Config.get("color_primary") || "#2d5a2d"
@@ -178,7 +194,7 @@ Dialog {
 
         Text {
             visible: root.mode === "list"
-            width: parent.width
+            Layout.fillWidth: true
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WordWrap
             text: root.tr("how_points")
@@ -189,7 +205,7 @@ Dialog {
 
         Row {
             visible: root.mode === "list"
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
             spacing: 12
 
             Button {
@@ -238,10 +254,18 @@ Dialog {
         }
 
         // ── New player: choose a number ─────────────────────────────────
-        Column {
+        Item {
             visible: root.mode === "new"
-            width: parent.width
-            spacing: 12
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: newForm.implicitHeight
+            Layout.minimumHeight: newForm.implicitHeight
+
+            Column {
+                id: newForm
+                width: parent.width
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 12
 
             Text {
                 width: parent.width
@@ -345,13 +369,16 @@ Dialog {
                     onClicked: root.saveNewPlayer()
                 }
             }
+            }  // newForm Column
         }
 
         // ── Switch player ───────────────────────────────────────────────
         ListView {
             visible: root.mode === "switch"
-            width: parent.width
-            height: Math.min(root.allPlayers.length, 6) * (root.rowHeight + 4)
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: Math.min(root.allPlayers.length, 6) * (root.rowHeight + 4)
+            Layout.minimumHeight: Math.min(root.allPlayers.length, 2) * (root.rowHeight + 4)
             clip: true
             spacing: 4
             model: root.allPlayers
@@ -387,7 +414,7 @@ Dialog {
 
         Button {
             id: closeBtn
-            anchors.horizontalCenter: parent.horizontalCenter
+            Layout.alignment: Qt.AlignHCenter
             implicitWidth: 160
             implicitHeight: 44
             text: root.mode === "list" ? root.tr("close") : root.tr("back")

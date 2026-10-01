@@ -344,8 +344,8 @@ ScreenTemplate {
         anchors.centerIn: parent
 
         property real helpContentH: helpTitle.height + helpImg.height
-                                    + helpText.implicitHeight + helpCloseBtn.height
-                                    + 3 * helpCol.spacing
+                                    + helpText.implicitHeight + helpRankingText.implicitHeight
+                                    + helpCloseBtn.height + 4 * helpCol.spacing
         height: Math.ceil(helpContentH) + 48 + Math.round(helpContentH * 0.05)
 
         background: Rectangle {
@@ -395,6 +395,22 @@ ScreenTemplate {
                     right: parent.right
                 }
                 text: root.tr("how_to_play_text")
+                textFormat: Text.StyledText
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: 14
+                color: Config.get("color_primary") || "#2d5a2d"
+            }
+
+            // Ranking paragraph, separate from the game presentation above.
+            Text {
+                id: helpRankingText
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
+                text: root.tr("how_to_play_ranking")
+                textFormat: Text.StyledText
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
                 font.pixelSize: 14
