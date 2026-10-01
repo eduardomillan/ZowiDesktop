@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.6] - 2026-10-02
+
+### Added
+- **One ranking for all the games.** Memory (Zowi says), Draw the mouths and Timeline
+  now add your best score to a single shared total. You play as a player called
+  "Player-123" (a number from 100 to 999 that the app suggests, or that you can
+  choose; no names are used). Several people can share the same computer: create new
+  players and switch between them from the ranking window (the trophy button). Each
+  game's "How to play" window now tells you how to earn points.
+- **Points for Timeline.** A sequence that Zowi plays all the way to the end earns
+  points: movements are worth the most, then gestures, then mouths, and mixing
+  different kinds gives a bonus. It needs at least 5 items; if it has fewer, you are
+  told that it does not count for the ranking.
+- **Speed button for mouths in Timeline.** Mouth tiles can now be set to Slow,
+  Medium or Fast, which changes how long the mouth stays on Zowi.
+- **Repetitions from 1 to 5.** Movements and gestures in Timeline can now be repeated
+  1, 2, 3, 4 or 5 times (before: 1, 5 or 10), with new button pictures.
+- **Privacy policy (draft).** A first version, in Spanish and English, explains what
+  the app stores on your computer (nothing leaves it) and how to delete it. See
+  `docs/project/PRIVACY.md`.
+
+### Changed
+- **The start screen adapts to the window size.** The logo, texts and buttons grow or
+  shrink with the window, nothing overlaps when the window is small, the language list
+  opens upwards, and pressing Enter continues. The window now has a minimum size and
+  also looks right on Wayland desktops such as LliureX.
+- **"How to play" windows are easier to read.** The ranking explanation is a separate
+  paragraph and the most important words are in bold.
+- **The ranking window is bigger.** It takes about 40% of the program window and
+  grows to fit the players.
+- **The ranking can only be cleared by an administrator,** with the command-line tool
+  (`zowi_cli ranking`); there is no button to delete it inside the app.
+
+### Fixed
+- **Timeline plays gestures and mouths correctly.** They now run one after another,
+  waiting for Zowi to finish each one, and the sequence stops at the end instead of
+  staying on "Play".
+- **Repetitions are respected in Timeline,** and a sequence no longer gets stuck on
+  "Play" because of repeated confirmations from Zowi.
+- **Reordering tiles in Timeline.** The tile you drag stays on top of the others and
+  follows the mouse pointer.
+- **Two mouths showed the wrong picture in Timeline** (the happy closed mouth and the
+  reversed diagonal one). They now show the right one.
+
 ## [0.9.5] - 2026-09-27
 
 ### Added
