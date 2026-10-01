@@ -1,4 +1,5 @@
 #include "cli_commands.h"
+#include <zowi/ranking_store.h>
 #include "cli_state.h"
 #include "cli_util.h"
 
@@ -78,6 +79,43 @@ int runSession(const SessionArgs &a)
             store.removeKey(k);
         }
         std::cout << "Session cleared." << std::endl;
+    }
+    return 0;
+}
+
+int runRanking(const RankingArgs &a)
+{
+    struct Named { const char *id; zowi::RankingGame game; };
+    const Named games[] = {
+        {"zowi_says", zowi::RankingGame::ZowiSays},
+        {"mouths", zowi::RankingGame::Mouths},
+        {"timeline", zowi::RankingGame::Timeline},
+    };
+
+    std::vector<Named> selected;
+    for (const auto &g : games) {
+        if (a.game == "all" || a.game == g.id) selected.push_back(g);
+    }
+    if (selected.empty()) {
+        std::cerr << "Unknown game '" << a.game << "' (use zowi_says, mouths, timeline or all)." << std::endl;
+        return 1;
+    }
+
+    zowi::RankingStore ranking;  // own file (ZowiRanking.json), not the session
+
+    for (const auto &g : selected) {
+        if (a.clear) {
+            ranking.clear(g.game);
+            std::cout << "Cleared ranking: " << g.id << std::endl;
+            continue;
+        }
+        std::cout << g.id << ":" << std::endl;
+        const auto entries = ranking.top(g.game);
+        if (entries.empty()) std::cout << "  (empty)" << std::endl;
+        int position = 1;
+        for (const auto &e : entries) {
+            std::cout << "  " << position++ << ". " << e.playerName << " - " << e.points << std::endl;
+        }
     }
     return 0;
 }

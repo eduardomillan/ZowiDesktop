@@ -9,6 +9,7 @@ The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionalit
 - [Quick reference](#quick-reference)
 - [Help](#help)
 - [Session](#session)
+- [Ranking (admin)](#ranking-admin)
 - [Config](#config)
 - [Ports](#ports)
 - [Translate](#translate)
@@ -142,6 +143,10 @@ Output:
 Session cleared.
 ```
 
+Game rankings are **not** session data: they live in their own file
+(`ZowiRanking.json`, next to `ZowiApp.json`), so `session clear` never touches
+them. Only an admin can delete them with `zowi_cli ranking clear` (see below).
+
 Verify no keys remain:
 
 ```bash
@@ -169,6 +174,19 @@ OK
 ```
 
 Type is auto-detected: `true`/`false` → bool, numeric → int, otherwise → string.
+
+## Ranking (admin)
+
+Rankings are stored in `ZowiRanking.json` (same config directory as the session
+file `ZowiApp.json`). The GUI can read and add ranking entries but never delete
+them. These commands are the only way to wipe a ranking (games: `zowi_says`, `mouths`, `timeline`).
+
+```bash
+zowi_cli ranking list              # all games
+zowi_cli ranking list mouths       # one game
+zowi_cli ranking clear mouths      # delete one game's ranking
+zowi_cli ranking clear all         # delete every ranking
+```
 
 ## Config
 

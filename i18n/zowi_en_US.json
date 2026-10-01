@@ -32,7 +32,7 @@
     "update_stub": "Coming soon: will check whether a new version of the app is available.",
     "achievements": "Delete achievements",
     "achievements_desc": "Start over and clear your progress.",
-    "achievements_stub": "Coming soon: will erase your playing history (projects, games, rankings and achievements).",
+    "achievements_stub": "Coming soon: will erase your achievements. Rankings are not affected.",
     "forget": "Forget Zowi",
     "forget_desc": "The app will no longer detect this Zowi.",
     "calibrate": "Calibrate Zowi",
@@ -283,7 +283,9 @@
     "game_over": "Game over",
     "final_score": "Final score: %1",
     "new_best": "New best!",
-    "retry_button": "Retry"
+    "retry_button": "Retry",
+    "ranking_save": "Save to ranking",
+    "ranking_qualified": "You made the ranking!"
   },
   "GameMouthsScreen.qml": {
     "title": "Draw the mouths",
@@ -298,7 +300,9 @@
     "close": "Close",
     "game_over": "Game over",
     "final_score": "Final score: %1",
-    "retry_button": "Retry"
+    "retry_button": "Retry",
+    "ranking_save": "Save to ranking",
+    "ranking_qualified": "You made the ranking!"
   },
   "GameTimelineScreen.qml": {
     "title": "Timeline",
@@ -326,6 +330,16 @@
   "MovementSelector.qml": {
     "title": "Select a movement",
     "subtitle": "Tap a movement to add it to your timeline",
+    "close": "Close"
+  },
+  "RankingDialog.qml": {
+    "title": "Ranking",
+    "points_earned": "Score: %1",
+    "enter_name": "You made the ranking! Enter your name:",
+    "name_placeholder": "Your name",
+    "save": "Save",
+    "points": "%1 pts",
+    "empty": "No scores yet. Play a game to enter the ranking!",
     "close": "Close"
   }
 }

@@ -106,6 +106,7 @@ QString openLogFile()
 #include "controllers/ZowiDiceController.h"
 #include "controllers/MouthsGameController.h"
 #include "controllers/TimelineController.h"
+#include "controllers/RankingController.h"
 
 static QQmlApplicationEngine *s_engine = nullptr;
 static QString s_qmlPath;
@@ -171,6 +172,7 @@ int main(int argc, char *argv[])
     ZowiDiceController zowiDice;
     MouthsGameController mouths;
     TimelineController timeline;
+    RankingController ranking;
     g_logLevel = logLevelFromName(config.get("log_level"));
     robot.setSessionController(&session);
 
@@ -219,6 +221,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("ZowiDice", &zowiDice);
     engine.rootContext()->setContextProperty("Mouths", &mouths);
     engine.rootContext()->setContextProperty("Timeline", &timeline);
+    engine.rootContext()->setContextProperty("Ranking", &ranking);
     engine.rootContext()->setContextProperty("AppVersion", QString(ZOWI_VERSION));
 
     // Live G commands from the calibration screen go through the same write path

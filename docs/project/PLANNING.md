@@ -206,16 +206,16 @@ src/
 
 ### M10 — Games ✅
 
-- [x] Game: Memory — Outstanding: the shared ranking layer
+- [x] Game: Memory — Local ranking implemented (see `RANKING_HOWTO.md`)
 
-- [x] Game: Draw the mouth — Outstanding: the shared ranking layer
+- [x] Game: Draw the mouth — Local ranking implemented (see `RANKING_HOWTO.md`)
 
 - [x] Game: Timeline — Persistence is deferred to a future phase
 
 
 ### Future milestones 🕒
 
-- [ ] Ranking in games
+- [ ] Ranking in games — local top-10 done for Memory and Draw the mouth; pending: Timeline ranking and the optional online ranking (`RANKING_HOWTO.md`)
 
 - [ ] Achievements layer
 

@@ -35,6 +35,17 @@ int main(int argc, char **argv)
     clearSession->final_callback([&]() { sessionArgs.clear = true; });
     listSession->final_callback([&]() { sessionArgs.list = true; });
 
+    // ── ranking subcommand (admin only: the GUI cannot delete rankings) ──
+    auto *rankingCmd = app.add_subcommand("ranking", "Inspect or clear local game rankings (admin)");
+    auto *rankingList = rankingCmd->add_subcommand("list", "List ranking entries");
+    auto *rankingClear = rankingCmd->add_subcommand("clear", "Delete ranking entries");
+
+    zowi_cli::RankingArgs rankingArgs;
+    rankingList->add_option("game", rankingArgs.game, "zowi_says | mouths | timeline | all")->default_val("all");
+    rankingClear->add_option("game", rankingArgs.game, "zowi_says | mouths | timeline | all")->default_val("all");
+    rankingList->final_callback([&]() { rankingArgs.list = true; });
+    rankingClear->final_callback([&]() { rankingArgs.clear = true; });
+
     // ── translate subcommand ──────────────────────────────────
     auto *translateCmd = app.add_subcommand("translate", "Translate a string");
     zowi_cli::TranslateArgs translateArgs;
@@ -227,6 +238,7 @@ int main(int argc, char **argv)
 
     // ── Dispatch ──────────────────────────────────────────────────
     if (*sessionCmd)    return zowi_cli::runSession(sessionArgs);
+    if (*rankingCmd)    return zowi_cli::runRanking(rankingArgs);
     if (*translateCmd)  return zowi_cli::runTranslate(translateArgs);
     if (*configCmd)     return zowi_cli::runConfig(configArgs);
     if (*portsCmd)      return zowi_cli::runPorts();

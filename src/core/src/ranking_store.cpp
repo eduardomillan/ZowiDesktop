@@ -36,11 +36,11 @@ size_t insertionIndex(const std::vector<RankingEntry> &entries, int score)
 std::string RankingStore::keyFor(RankingGame game)
 {
     switch (game) {
-    case RankingGame::ZowiSays: return "zowi_says_ranking";
-    case RankingGame::Mouths:   return "mouths_ranking";
-    case RankingGame::Timeline: return "timeline_ranking";
+    case RankingGame::ZowiSays: return "zowi_says";
+    case RankingGame::Mouths:   return "mouths";
+    case RankingGame::Timeline: return "timeline";
     }
-    return "unknown_ranking";
+    return "unknown";
 }
 
 int RankingStore::minScoreToQualify(RankingGame game)
@@ -56,7 +56,7 @@ int RankingStore::minScoreToQualify(RankingGame game)
 std::vector<RankingEntry> RankingStore::top(RankingGame game) const
 {
     std::vector<RankingEntry> out;
-    const json parsed = json::parse(m_session.getString(keyFor(game), "[]"), nullptr, false);
+    const json parsed = json::parse(m_store.getString(keyFor(game), "[]"), nullptr, false);
     if (!parsed.is_array()) return out;
 
     for (const auto &item : parsed) {
@@ -108,7 +108,7 @@ int RankingStore::best(RankingGame game) const
 
 void RankingStore::clear(RankingGame game)
 {
-    m_session.removeKey(keyFor(game));
+    m_store.removeKey(keyFor(game));
 }
 
 void RankingStore::clearAll()
@@ -122,7 +122,7 @@ void RankingStore::save(RankingGame game, const std::vector<RankingEntry> &entri
     for (const auto &e : entries) {
         arr.push_back({{"points", e.points}, {"playerName", e.playerName}, {"timestamp", e.timestamp}});
     }
-    m_session.setString(keyFor(game), arr.dump());
+    m_store.setString(keyFor(game), arr.dump());
 }
 
 } // namespace zowi

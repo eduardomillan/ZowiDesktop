@@ -166,8 +166,8 @@ our `BendBackward` label is the same physical gesture.
   clipped `contentArea`; hidden when no screen uses it). The two sit **adjacent**
   (`spacing: -10` in the corner Row, slightly overlapping): **Ranking first,
   Help immediately to its right**, so the pair stays close together like the
-  Android original (tweak helps if it ever needs to widen/shrink). Ranking is
-  a disabled placeholder.
+  Android original (tweak helps if it ever needs to widen/shrink). Ranking opens
+  the shared top-10 dialog (`RankingDialog.qml`, see `RANKING_HOWTO.md`).
   The disconnect button is **not** shown on this screen (back stays top-left;
   forget lives in Settings).
 - Dialogs are standard `QtQuick.Controls.Dialog` (not the Android-native
@@ -239,10 +239,13 @@ player can retry.
 - **Top-left move (implemented):** the Android original plays `WALK FORWARD`
   (`M 1`) as one of the four random moves; this desktop version swaps it for
   **tiptoe-swing** (`M 14`). Same gameplay, different move.
-- **Ranking:** no leaderboard. The Ranking button is a disabled placeholder;
-  `rankThreshold` is defined in `ZowiDiceConfig` but unused.
+- **Ranking:** local top-10 (`game id "zowi_says"`, score = sequence length − 1,
+  minimum 3 to enter). On game over a qualifying score offers *"Save to
+  ranking"* (nickname dialog). *"New best"* compares against the stored best.
+  Details in `RANKING_HOWTO.md`. `rankThreshold` in `ZowiDiceConfig` is still
+  unused (the minimum lives in `RankingStore`).
 - **Achievements:** `in_love` (score ≥ 12) is not enforced; the game-over
-  dialog simply shows a *"New best"* line. `achievementThreshold` is reserved.
+  dialog only shows the *"New best"* / ranking line. `achievementThreshold` is reserved.
 - **Speed is fixed** (1000 ms) via `ZowiDiceConfig::initialSpeedMs`; not
   adjustable in the UI.
 - **Help text does not mention the Zowi's name** (Android interpolates
@@ -256,8 +259,8 @@ relevant section (with a CHANGELOG entry) and are ticked off.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Ranking top-10** | 🚧 Planned | The top-right Ranking button is a **disabled placeholder** and there is **no `RankingController` in the repo yet**. Plan: a *shared* ranking layer (core top-10 + Session-backed persistence, keyed by game id) reused by Memory **and** Pintabocas (see `SCREEN_GAME_MOUTHS.md`). `rankThreshold = 3` is defined in `ZowiDiceConfig` but unused until then. |
-| **Achievement `in_love`** (score ≥ 12) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). Today the game-over dialog only shows the *"New best"* line; `achievementThreshold` stays reserved. |
+| **Ranking top-10** | ✅ Implemented | Shared layer: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`; reused by Pintabocas. Delete is admin-only (`zowi_cli ranking clear`). See `RANKING_HOWTO.md`. Online ranking and Timeline are still pending. |
+| **Achievement `in_love`** (score ≥ 12) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). Today the game-over dialog only shows the *"New best"* / ranking line; `achievementThreshold` stays reserved. |
 | **Adjustable speed** | 🚧 Planned | `ZowiDiceConfig::initialSpeedMs = 1000` is fixed; add a UI speed selector mapping to `MovementSpeed`. |
 | **Help text with the Zowi's name** | 🚧 Planned | Android interpolates `%1$s` with the registered name; ours doesn't. Needs i18n work across the 5 locales. |
 | **Dead i18n keys cleanup** | 🧹 Cleanup | `walk_forward`, `bend_backward`, `jump`, `moonwalker_right` under `"GameMemoryScreen.qml"` (5 locales) are unused (image-only buttons). Kept as documented legacy for now; remove during cleanup. |

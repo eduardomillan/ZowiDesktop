@@ -99,7 +99,7 @@ ScreenTemplate {
             id: rankingBtn
             width: root.cornerButtonSize
             height: root.cornerButtonSize
-            enabled: false
+            onClicked: rankingDialog.showList(0)
 
             contentItem: Image {
                 source: "qrc:/images/android/ranking_button.png"
@@ -434,9 +434,13 @@ ScreenTemplate {
         width: 360
         anchors.centerIn: parent
 
+        // Set when the dialog opens (before the score is saved).
+        property bool canRank: false
+
         property real gameOverContentH: gameOverTitle.height + gameOverScore.height
                                         + gameOverBtns.height
                                         + 2 * gameOverCol.spacing
+                                        + (gameOverRankBtn.visible ? gameOverRankBtn.height + gameOverCol.spacing : 0)
         height: Math.ceil(gameOverContentH) + 48 + Math.round(gameOverContentH * 0.05)
 
         background: Rectangle {
@@ -472,6 +476,32 @@ ScreenTemplate {
                 font.pixelSize: 24
                 font.bold: true
                 color: Config.get("color_primary") || "#2d5a2d"
+            }
+
+            // Save the score to the ranking (only when it qualifies).
+            Button {
+                id: gameOverRankBtn
+                visible: gameOverDialog.canRank
+                anchors.horizontalCenter: parent.horizontalCenter
+                implicitWidth: 274
+                implicitHeight: 44
+                text: root.tr("ranking_save")
+
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.bold: true
+                    font.pixelSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: 22
+                    color: gameOverRankBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
+                }
+
+                onClicked: rankingDialog.showScore(Mouths.score)
             }
 
             Row {
@@ -550,7 +580,13 @@ ScreenTemplate {
                 drawGrid.clearAll()
         }
         function onGameOver(score) {
+            gameOverDialog.canRank = Ranking.qualifies("mouths", score)
             gameOverDialog.open()
         }
+    }
+
+    RankingDialog {
+        id: rankingDialog
+        game: "mouths"
     }
 }

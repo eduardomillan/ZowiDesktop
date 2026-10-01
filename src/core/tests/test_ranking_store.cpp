@@ -11,7 +11,6 @@ namespace {
 
 struct TempStore {
     fs::path dir;
-    zowi::SessionStore session;
     zowi::RankingStore ranking;
 
     static fs::path makeDir(const char *name) {
@@ -21,7 +20,7 @@ struct TempStore {
         return d;
     }
     explicit TempStore(const char *name)
-        : dir(makeDir(name)), session("ZowiTest", "RankingTest", dir.string()), ranking(session) {}
+        : dir(makeDir(name)), ranking(dir.string()) {}
     ~TempStore() { fs::remove_all(dir); }
 };
 
@@ -92,14 +91,12 @@ void test_persistence_and_clear() {
     std::cout << "test_persistence_and_clear: " << std::flush;
     fs::path dir = TempStore::makeDir("persist");
     {
-        zowi::SessionStore s("ZowiTest", "RankingTest", dir.string());
-        zowi::RankingStore r(s);
+        zowi::RankingStore r(dir.string());
         r.submit(RankingGame::ZowiSays, "Zed", 7, 5);
         r.submit(RankingGame::Mouths, "Mo", 4, 5);
     }
     {
-        zowi::SessionStore s("ZowiTest", "RankingTest", dir.string());
-        zowi::RankingStore r(s);
+        zowi::RankingStore r(dir.string());
         assert(r.top(RankingGame::ZowiSays).size() == 1);
         assert(r.best(RankingGame::ZowiSays) == 7);
         r.clear(RankingGame::ZowiSays);
@@ -114,10 +111,37 @@ void test_persistence_and_clear() {
 
 void test_corrupt_data() {
     std::cout << "test_corrupt_data: " << std::flush;
-    TempStore t("corrupt");
-    t.session.setString(zowi::RankingStore::keyFor(RankingGame::Mouths), "not json");
-    assert(t.ranking.top(RankingGame::Mouths).empty());
-    assert(t.ranking.submit(RankingGame::Mouths, "Ok", 5, 1) == 1);
+    fs::path dir = TempStore::makeDir("corrupt");
+    {
+        // Write garbage under a ranking key directly in the ranking file.
+        zowi::SessionStore raw("ZowiDesktop", "ZowiRanking", dir.string());
+        raw.setString(zowi::RankingStore::keyFor(RankingGame::Mouths), "not json");
+    }
+    zowi::RankingStore r(dir.string());
+    assert(r.top(RankingGame::Mouths).empty());
+    assert(r.submit(RankingGame::Mouths, "Ok", 5, 1) == 1);
+    fs::remove_all(dir);
+    std::cout << "OK" << std::endl;
+}
+
+void test_separate_file_from_session() {
+    std::cout << "test_separate_file_from_session: " << std::flush;
+    fs::path dir = TempStore::makeDir("separate");
+    {
+        zowi::RankingStore r(dir.string());
+        r.submit(RankingGame::Mouths, "Ana", 5, 1);
+        zowi::SessionStore session("ZowiDesktop", "ZowiApp", dir.string());
+        session.setString("activeZowiName", "R2");
+        // Wiping the whole session must not affect rankings.
+        for (const auto &k : session.keys()) session.removeKey(k);
+    }
+    assert(fs::exists(dir / "ZowiRanking.json"));
+    assert(fs::exists(dir / "ZowiApp.json"));
+    zowi::RankingStore again(dir.string());
+    assert(again.top(RankingGame::Mouths).size() == 1);
+    zowi::SessionStore sessionAgain("ZowiDesktop", "ZowiApp", dir.string());
+    assert(sessionAgain.keys().empty());
+    fs::remove_all(dir);
     std::cout << "OK" << std::endl;
 }
 
@@ -129,6 +153,7 @@ int main() {
     test_name_sanitizing();
     test_persistence_and_clear();
     test_corrupt_data();
+    test_separate_file_from_session();
     std::cout << "All ranking_store tests passed." << std::endl;
     return 0;
 }

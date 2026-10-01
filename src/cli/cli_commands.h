@@ -18,6 +18,12 @@ struct SessionArgs {
     bool clear = false;
 };
 
+struct RankingArgs {
+    std::string game = "all";  // zowi_says | mouths | timeline | all
+    bool list = false;
+    bool clear = false;
+};
+
 struct TranslateArgs {
     std::string locale;
     std::string context;
@@ -156,6 +162,7 @@ struct ShellArgs {
 };
 
 int runSession(const SessionArgs &a);
+int runRanking(const RankingArgs &a);
 int runTranslate(const TranslateArgs &a);
 int runConfig(const ConfigArgs &a);
 int runPorts();

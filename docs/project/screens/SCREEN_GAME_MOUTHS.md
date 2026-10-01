@@ -142,7 +142,8 @@ intermission between a solved round and the next one.
   The score lives in its own strip between the card and the footer
   (`score_prefix`, bottom-anchored).
 - **Help** ("Cómo jugar") and **Ranking** are **icon buttons top-right**
-  (same slot/pattern as the Memory game). Ranking is a disabled placeholder.
+  (same slot/pattern as the Memory game). Ranking opens the shared top-10 dialog
+  (see `RANKING_HOWTO.md`).
 - Dialogs are standard `QtQuick.Controls.Dialog`, `modal` and centered, with
   custom content and content-driven height (same treatment as the Memory game).
 - Back button inherited from `ScreenTemplate` (`backClicked` — do **not**
@@ -185,8 +186,10 @@ repeated first target over 50 games, and the single-mouth-band fallback.
 - **Target miniature (implemented):** Android shows the target once at level
   start on the robot; this desktop version adds a configurable **on-screen
   miniature** (`mouths_target_onscreen`), hidden by default while connected.
-- **Ranking:** no leaderboard. The Ranking button is a disabled placeholder;
-  `rankScoreThreshold = 2` is defined in `MouthsGameConfig` but unused.
+- **Ranking:** local top-10 (`game id "mouths"`, score = level − 1, minimum 2 to
+  enter). On game over a qualifying score offers *"Save to ranking"* (nickname
+  dialog). Details in `RANKING_HOWTO.md`. `rankScoreThreshold` in
+  `MouthsGameConfig` is still unused (the minimum lives in `RankingStore`).
 - **Achievements:** `mouths_editor` (level ≥ 8) is not enforced; the game-over
   dialog simply shows the final score. `achievementLevelThreshold` stays
   reserved.
@@ -198,5 +201,5 @@ until each item lands.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Ranking top-10** | 🚧 Planned | The top-right Ranking button is a **disabled placeholder** and there is **no `RankingController` in the repo yet**. Plan: a *shared* ranking layer (core top-10 + Session-backed persistence, keyed by game id) reused by Memory **and** Pintabocas (see `SCREEN_GAME_MEMORY.md`). `rankScoreThreshold = 2` is defined in `MouthsGameConfig` but unused until then. |
+| **Ranking top-10** | ✅ Implemented | Shared with Memory: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`. Delete is admin-only (`zowi_cli ranking clear`). See `RANKING_HOWTO.md`. Online ranking is still pending. |
 | **Achievement `mouths_editor`** (level ≥ 8) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). `achievementLevelThreshold` stays reserved. |

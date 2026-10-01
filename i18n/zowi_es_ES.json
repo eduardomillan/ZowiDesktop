@@ -32,7 +32,7 @@
     "update_stub": "Próximamente: comprobará si hay una nueva versión de la aplicación.",
     "achievements": "Borrar logros",
     "achievements_desc": "Empieza de cero y borra tu progreso.",
-    "achievements_stub": "Próximamente: borrará tu progreso de juego (proyectos, partidas, rankings y logros).",
+    "achievements_stub": "Próximamente: borrará tus logros. Los rankings no se ven afectados.",
     "forget": "Olvidar Zowi",
     "forget_desc": "La aplicación ya no detectará este Zowi.",
     "calibrate": "Calibrar Zowi",
@@ -271,7 +271,9 @@
     "game_over": "Fin del juego",
     "final_score": "Puntuación final: %1",
     "new_best": "¡Nuevo récord!",
-    "retry_button": "Reintentar"
+    "retry_button": "Reintentar",
+    "ranking_save": "Guardar en el ranking",
+    "ranking_qualified": "¡Has entrado en el ranking!"
   },
   "GameMouthsScreen.qml": {
     "title": "Pinta bocas",
@@ -286,7 +288,9 @@
     "close": "Cerrar",
     "game_over": "Fin del juego",
     "final_score": "Puntuación final: %1",
-    "retry_button": "Reintentar"
+    "retry_button": "Reintentar",
+    "ranking_save": "Guardar en el ranking",
+    "ranking_qualified": "¡Has entrado en el ranking!"
   },
   "GameTimelineScreen.qml": {
     "title": "Línea de tiempo",
@@ -322,6 +326,16 @@
   },
   "GestureScreen.qml": {
     "gestures_title": "Elige un gesto",
+    "close": "Cerrar"
+  },
+  "RankingDialog.qml": {
+    "title": "Ranking",
+    "points_earned": "Puntos: %1",
+    "enter_name": "¡Has entrado en el ranking! Escribe tu nombre:",
+    "name_placeholder": "Tu nombre",
+    "save": "Guardar",
+    "points": "%1 pts",
+    "empty": "Aún no hay puntuaciones. ¡Juega una partida para entrar en el ranking!",
     "close": "Cerrar"
   }
 }

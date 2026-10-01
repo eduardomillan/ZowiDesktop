@@ -32,7 +32,7 @@
     "update_stub": "Pròximament: comprovarà si hi ha una nova versió de l'aplicació.",
     "achievements": "Borrar assoliments",
     "achievements_desc": "Comença de zero i esborra el teu progrés.",
-    "achievements_stub": "Pròximament: esborrarà el teu progrés de joc (projectes, partides, rànquings i assoliments).",
+    "achievements_stub": "Pròximament: esborrarà els teus assoliments. Els rànquings no es veuen afectats.",
     "forget": "Oblidar Zowi",
     "forget_desc": "L'aplicació ja no detectarà este Zowi.",
     "calibrate": "Calibrar Zowi",
@@ -282,7 +282,9 @@
     "game_over": "Fi del joc",
     "final_score": "Puntuació final: %1",
     "new_best": "Nou rècord!",
-    "retry_button": "Reintentar"
+    "retry_button": "Reintentar",
+    "ranking_save": "Desa al rànquing",
+    "ranking_qualified": "Has entrat al rànquing!"
   },
   "GameMouthsScreen.qml": {
     "title": "Pinta boques",
@@ -297,7 +299,9 @@
     "close": "Tancar",
     "game_over": "Fi del joc",
     "final_score": "Puntuació final: %1",
-    "retry_button": "Reintentar"
+    "retry_button": "Reintentar",
+    "ranking_save": "Desa al rànquing",
+    "ranking_qualified": "Has entrat al rànquing!"
   },
   "GameTimelineScreen.qml": {
     "title": "Línia de temps",
@@ -326,5 +330,15 @@
     "title": "Triïa un moviment",
     "subtitle": "Toca un moviment per afegir-lo a la teva línia de temps",
     "close": "Tancar"
+  },
+  "RankingDialog.qml": {
+    "title": "Rànquing",
+    "points_earned": "Punts: %1",
+    "enter_name": "Has entrat al rànquing! Escriu el teu nom:",
+    "name_placeholder": "El teu nom",
+    "save": "Desa",
+    "points": "%1 pts",
+    "empty": "Encara no hi ha puntuacions. Juga una partida per entrar al rànquing!",
+    "close": "Tanca"
   }
 }

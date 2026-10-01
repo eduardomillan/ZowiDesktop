@@ -45,12 +45,12 @@ ScreenTemplate {
     corner: Row {
         spacing: -10
 
-        // Ranking (placeholder for the future top-10 list)
+        // Ranking (top-10 list)
         Button {
             id: rankingBtn
             width: root.cornerButtonSize
             height: root.cornerButtonSize
-            enabled: false
+            onClicked: rankingDialog.showList(0)
 
             contentItem: Image {
                 source: "qrc:/images/android/ranking_button.png"
@@ -449,9 +449,14 @@ ScreenTemplate {
         width: 360
         anchors.centerIn: parent
 
+        // Set when the dialog opens (before the score is saved).
+        property bool canRank: false
+        property bool isNewBest: false
+
         property real gameOverContentH: gameOverTitle.height + gameOverScore.height
                                         + gameOverBest.height + gameOverBtns.height
                                         + 3 * gameOverCol.spacing
+                                        + (gameOverRankBtn.visible ? gameOverRankBtn.height + gameOverCol.spacing : 0)
         height: Math.ceil(gameOverContentH) + 48 + Math.round(gameOverContentH * 0.05)
 
         background: Rectangle {
@@ -492,9 +497,35 @@ ScreenTemplate {
             Text {
                 id: gameOverBest
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: (ZowiDice.score >= 12) ? tr("new_best") : ""
+                text: gameOverDialog.isNewBest ? tr("new_best") : (gameOverDialog.canRank ? tr("ranking_qualified") : "")
                 font.pixelSize: 14
                 color: Config.get("color_accent") || "#21a69b"
+            }
+
+            // Save the score to the ranking (only when it qualifies).
+            Button {
+                id: gameOverRankBtn
+                visible: gameOverDialog.canRank
+                anchors.horizontalCenter: parent.horizontalCenter
+                implicitWidth: 274
+                implicitHeight: 44
+                text: tr("ranking_save")
+
+                contentItem: Text {
+                    text: parent.text
+                    color: "#ffffff"
+                    font.bold: true
+                    font.pixelSize: 16
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                background: Rectangle {
+                    radius: 22
+                    color: gameOverRankBtn.pressed ? Config.get("color_accent_pressed") || "#17736c" : (Config.get("color_accent") || "#21a69b")
+                }
+
+                onClicked: rankingDialog.showScore(ZowiDice.score)
             }
 
             Row {
@@ -565,7 +596,14 @@ ScreenTemplate {
     Connections {
         target: ZowiDice
         function onGameOver(score) {
+            gameOverDialog.canRank = Ranking.qualifies("zowi_says", score)
+            gameOverDialog.isNewBest = score > 0 && score > Ranking.best("zowi_says")
             gameOverDialog.open()
         }
+    }
+
+    RankingDialog {
+        id: rankingDialog
+        game: "zowi_says"
     }
 }

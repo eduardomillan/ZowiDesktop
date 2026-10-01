@@ -32,7 +32,7 @@
     "update_stub": "Bientôt disponible : vérifiera si une nouvelle version de l'application est disponible.",
     "achievements": "Supprimer les succès",
     "achievements_desc": "Recommencez à zéro et effacez votre progression.",
-    "achievements_stub": "Bientôt disponible : effacera votre historique de jeu (projets, parties, classements et succès).",
+    "achievements_stub": "Bientôt disponible : effacera vos succès. Les classements ne sont pas affectés.",
     "forget": "Oublier Zowi",
     "forget_desc": "L'application ne détectera plus ce Zowi.",
     "calibrate": "Calibrer Zowi",
@@ -282,7 +282,9 @@
     "game_over": "Fin de partie",
     "final_score": "Score final : %1",
     "new_best": "Nouveau record !",
-    "retry_button": "Réessayer"
+    "retry_button": "Réessayer",
+    "ranking_save": "Enregistrer au classement",
+    "ranking_qualified": "Tu es dans le classement !"
   },
   "GameMouthsScreen.qml": {
     "title": "Dessine les bouches",
@@ -297,7 +299,9 @@
     "close": "Fermer",
     "game_over": "Fin de partie",
     "final_score": "Score final : %1",
-    "retry_button": "Réessayer"
+    "retry_button": "Réessayer",
+    "ranking_save": "Enregistrer au classement",
+    "ranking_qualified": "Tu es dans le classement !"
   },
   "GameTimelineScreen.qml": {
     "title": "Ligne de temps",
@@ -325,6 +329,16 @@
   "MovementSelector.qml": {
     "title": "Choisissez un mouvement",
     "subtitle": "Touchez un mouvement pour l'ajouter à votre ligne de temps",
+    "close": "Fermer"
+  },
+  "RankingDialog.qml": {
+    "title": "Classement",
+    "points_earned": "Points : %1",
+    "enter_name": "Tu es dans le classement ! Entre ton nom :",
+    "name_placeholder": "Ton nom",
+    "save": "Enregistrer",
+    "points": "%1 pts",
+    "empty": "Aucun score pour le moment. Joue une partie pour entrer dans le classement !",
     "close": "Fermer"
   }
 }

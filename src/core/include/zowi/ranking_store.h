@@ -20,17 +20,23 @@ struct RankingEntry {
     int64_t timestamp = 0;  // seconds since epoch
 };
 
-// Local top-N ranking per game, persisted as a JSON array in the SessionStore
-// under "<game>_ranking" (same shape as the Android original: points,
-// playerName, timestamp; sorted descending, capped at kMaxEntries).
+// Local top-N ranking per game. Rankings live in their own file
+// (<config dir>/ZowiRanking.json), separate from the session file
+// (ZowiApp.json), so wiping or resetting the session never touches them.
+// Each game's list is a JSON array under "<game>" (same shape as the Android
+// original: points, playerName, timestamp; sorted descending, capped at
+// kMaxEntries).
 class RankingStore {
 public:
     static constexpr int kMaxEntries = 10;
     static constexpr size_t kMaxNameLength = 12;
 
-    explicit RankingStore(SessionStore &session) : m_session(session) {}
+    // `configDir` optionally pins the directory (platform default when empty),
+    // like SessionStore. Hosts pass their app data dir; tests pass a temp dir.
+    explicit RankingStore(const std::string &configDir = "")
+        : m_store("ZowiDesktop", "ZowiRanking", configDir) {}
 
-    // Session key for a game's ranking list.
+    // Key of a game's ranking list inside the ranking file.
     static std::string keyFor(RankingGame game);
     // Minimum score that may enter the ranking (Android: Says size>3, Mouths level>2).
     static int minScoreToQualify(RankingGame game);
@@ -52,7 +58,7 @@ public:
     void clearAll();
 
 private:
-    SessionStore &m_session;
+    SessionStore m_store;  // generic JSON key-value file, used only for rankings
 
     void save(RankingGame game, const std::vector<RankingEntry> &entries);
 };
