@@ -14,6 +14,8 @@ add_library(zowi_core STATIC
     src/mouths_game.cpp
     src/timeline_command.cpp
     src/timeline_player.cpp
+    src/timeline_score.cpp
+    src/ranking_store.cpp
 )
 
 target_include_directories(zowi_core

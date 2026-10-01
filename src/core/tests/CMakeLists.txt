@@ -51,3 +51,11 @@ add_test(NAME test_timeline_command COMMAND test_timeline_command)
 add_executable(test_timeline_player test_timeline_player.cpp)
 target_link_libraries(test_timeline_player PRIVATE Zowi::core)
 add_test(NAME test_timeline_player COMMAND test_timeline_player)
+
+add_executable(test_ranking_store test_ranking_store.cpp)
+target_link_libraries(test_ranking_store PRIVATE Zowi::core)
+add_test(NAME test_ranking_store COMMAND test_ranking_store)
+
+add_executable(test_timeline_score test_timeline_score.cpp)
+target_link_libraries(test_timeline_score PRIVATE Zowi::core)
+add_test(NAME test_timeline_score COMMAND test_timeline_score)
