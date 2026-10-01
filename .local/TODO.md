@@ -31,6 +31,7 @@
 - [ ] Revisar que, en el comando de 'rename', el máximo de caracteres es de 10, según se ha comprobado en zowiLibs.
 - [X] El "action" del proyecto "Robot alarma" reprograma el robot con el firmware de alarma (`ZOWI_Alarm_v2.hex`) desde la propia ventana del proyecto (`ProjectScreen`), con progreso y confirmación de batería baja (mismo `FirmwareInstallOverlay` que el restore de Settings).
 - [ ] Cuando se progame el nuevo firmware, reducir al 20% de batería el proceso con el que el robot se pone en estado de alarma (ahora es al 50%).
+- [ ] En el README, añadir información sobre la política de privacidad y gestión de datos personales.
 
 
 ## Cambios
@@ -38,6 +39,7 @@
 - [ ] En settings, añadir opción para cambiar idioma (que se vuelva a la pantalla de splash)
 - [X] Añadir ayuda de la línea de comandos (help) a los scripts disponibles
 - [X] Revisar los scripts actuales (carpetas /scripts y /packaging) y ver si tenemos todos los necesarios, por ejemplo, para ejecutar el Release.
+- [ ] Acceso al ranking desde la home screen.
 
 
 ## Windows

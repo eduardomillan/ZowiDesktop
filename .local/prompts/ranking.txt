@@ -1,0 +1,13 @@
+Haz un plan para implementar el ranking en ZowiDesktop. Además de la lógica ya implementada, 
+debes proponerme una manera de gestionar el ranking en juegos donde originalmente no estaban 
+(timeline, por ejemplo). 
+
+Además, quiero una opción para que dicho ranking se guarde online, tengo la infraestructura de Github,
+páginas web y demás, dime si es suficiente o se necesita algo más.
+
+Recuerda que el proyecto original está en ~/ZowiAppReborn y está hecho con Android.
+
+Revisa el resto de .md de este proyecto en .local, .docs/project, etc. para recabar más información
+para el planning del ranking.
+
+Escribe el plan en .local/ranking_planning.md
