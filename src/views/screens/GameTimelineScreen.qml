@@ -734,10 +734,20 @@ ScreenTemplate {
         id: rankingDialog
     }
 
+    // Short notice, e.g. a completed sequence too short to count for the ranking.
+    MessageBar {
+        id: msgBar
+        z: 100
+        duration: parseInt(Config.get("message_duration")) || 2000
+    }
+
     Connections {
         target: Timeline
         function onSequenceCompleted(score, eligible) {
-            if (!eligible) return
+            if (!eligible) {
+                msgBar.show(root.tr("ranking_too_short"))
+                return
+            }
             var r = Ranking.recordScore("timeline", score)
             if (r.improved) rankingDialog.showList()
         }

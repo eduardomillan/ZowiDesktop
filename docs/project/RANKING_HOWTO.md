@@ -75,6 +75,13 @@ eligible.
   *"Player-123: 150 pts · position 2"* (and *"New best!"* in Memory when the
   player's best improved). `GameTimelineScreen` records after a completed
   sequence and opens the ranking when the player improved.
+- **The player is told how to score:** each game'"'"'s "How to play" text ends with a
+  sentence on how it adds points (Memory: a point per round, Mouths: a point per
+  level, both only if the player'"'"'s best improves; Timeline: play a sequence of at
+  least 5 items to the end, movements > gestures > mouths, variety bonus). The
+  ranking dialog has a short "every game adds your best score…" note, and a
+  completed Timeline sequence with fewer than 5 items shows a message instead of
+  silently not scoring (`ranking_too_short`).
 - `RankingDialog.qml` (shared; i18n context `RankingDialog.qml`): the top 10
   (the active player is always shown, highlighted), "New player" and
   "Switch player". The corner **Ranking** button of the three games opens it.

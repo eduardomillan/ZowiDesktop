@@ -176,6 +176,17 @@ Dialog {
             color: Config.get("color_primary") || "#2d5a2d"
         }
 
+        Text {
+            visible: root.mode === "list"
+            width: parent.width
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+            text: root.tr("how_points")
+            font.pixelSize: 12
+            color: Config.get("color_primary") || "#2d5a2d"
+            opacity: 0.8
+        }
+
         Row {
             visible: root.mode === "list"
             anchors.horizontalCenter: parent.horizontalCenter

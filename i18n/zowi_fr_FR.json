@@ -277,7 +277,7 @@
     "bend_backward": "Se pencher",
     "jump": "Sauter",
     "moonwalker_right": "Moonwalker",
-    "how_to_play_text": "Zowi jouera une séquence de mouvements. Observez et répétez-la dans le même ordre. Un nouveau mouvement est ajouté à chaque tour.",
+    "how_to_play_text": "Zowi jouera une séquence de mouvements. Observez et répétez-la dans le même ordre. Un nouveau mouvement est ajouté à chaque tour. Chaque tour réussi ajoute un point à ton total du classement, à condition de battre ton meilleur score dans ce jeu.",
     "close": "Fermer",
     "game_over": "Fin de partie",
     "final_score": "Score final : %1",
@@ -294,7 +294,7 @@
     "score_prefix": "Score : %1",
     "level_prefix": "Niveau %1",
     "target_label": "Dessinez cette bouche :",
-    "how_to_play_text": "Zowi va vous montrer une bouche. Dessinez-la sur la grille avec le doigt ou la souris avant la fin du temps. Quand votre dessin correspond à l'objectif, vous gagnez un point et passez au niveau suivant !",
+    "how_to_play_text": "Zowi va vous montrer une bouche. Dessinez-la sur la grille avec le doigt ou la souris avant la fin du temps. Quand votre dessin correspond à l'objectif, vous gagnez un point et passez au niveau suivant ! Chaque niveau réussi ajoute un point à ton total du classement, à condition de battre ton meilleur score dans ce jeu.",
     "close": "Fermer",
     "game_over": "Fin de partie",
     "final_score": "Score final : %1",
@@ -311,7 +311,7 @@
     "add_mouth": "Ajouter bouche",
     "help": "Aide",
     "empty_timeline": "Votre ligne de temps est vide. Ajoutez des commandes pour commencer!",
-    "how_to_play_text": "Sélectionnez des gestes, des animations et des mouvements pour les ajouter à la ligne de temps. Quand tu auras une combinaison que tu aimes, appuie sur Play et regarde ZOWINAME prendre vie ! Tu peux le combiner avec une chanson que tu joues en même temps pour créer une chorégraphie.",
+    "how_to_play_text": "Sélectionnez des gestes, des animations et des mouvements pour les ajouter à la ligne de temps. Quand tu auras une combinaison que tu aimes, appuie sur Play et regarde ZOWINAME prendre vie ! Tu peux le combiner avec une chanson que tu joues en même temps pour créer une chorégraphie. Pour marquer des points au classement, joue jusqu'au bout une séquence d'au moins 5 éléments : les mouvements valent le plus, puis les gestes, puis les bouches, et mélanger les types donne un bonus.",
     "repetitions": "Reps",
     "duration": "Durée",
     "dir": "Dir",
@@ -322,7 +322,8 @@
     "confirm_clear_title": "Effacer la ligne de temps ?",
     "confirm_clear_message": "Toutes les commandes seront supprimées. Cette action ne peut pas être annulée.",
     "confirm_clear_action": "Effacer",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "ranking_too_short": "Les séquences de moins de 5 éléments ne comptent pas pour le classement."
   },
   "MovementSelector.qml": {
     "title": "Choisissez un mouvement",
@@ -342,6 +343,7 @@
     "number_taken": "Ce nombre existe déjà. Essaie %1 ou choisis-en un autre.",
     "number_invalid": "Saisis un nombre de 100 à 999.",
     "other_number": "Proposer un autre",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "how_points": "Chaque jeu ajoute ton meilleur score à ton total. Seul le dépassement de ton propre record compte, et les points vont au joueur actif."
   }
 }

@@ -277,7 +277,7 @@
     "bend_backward": "Doblegar",
     "jump": "Saltar",
     "moonwalker_right": "Moonwalker",
-    "how_to_play_text": "Zowi farà una seqüència de moviments. Mira'i i repeteix-la en el mateix ordre. Cada ronda s'afegeix un moviment nou.",
+    "how_to_play_text": "Zowi farà una seqüència de moviments. Mira'i i repeteix-la en el mateix ordre. Cada ronda s'afegeix un moviment nou. Cada ronda que encertes suma un punt al teu total del rànquing, sempre que superis la teva millor marca en aquest joc.",
     "close": "Tancar",
     "game_over": "Fi del joc",
     "final_score": "Puntuació final: %1",
@@ -294,7 +294,7 @@
     "score_prefix": "Puntuació: %1",
     "level_prefix": "Nivell %1",
     "target_label": "Dibuixa aquesta boca:",
-    "how_to_play_text": "En Zowi et mostrarà una boca. Dibuixa-la a la graella amb el dit o el ratolí abans que s'acabi el temps. Quan el teu dibuix coincideixi amb l'objectiu, guanyaràs un punt i passarem al següent nivell.",
+    "how_to_play_text": "En Zowi et mostrarà una boca. Dibuixa-la a la graella amb el dit o el ratolí abans que s'acabi el temps. Quan el teu dibuix coincideixi amb l'objectiu, guanyaràs un punt i passarem al següent nivell. Cada nivell que superes suma un punt al teu total del rànquing, sempre que superis la teva millor marca en aquest joc.",
     "close": "Tancar",
     "game_over": "Fi del joc",
     "final_score": "Puntuació final: %1",
@@ -311,7 +311,7 @@
     "add_mouth": "Afegeix boca",
     "help": "Ajuda",
     "empty_timeline": "La teva línia de temps està buida. Afegeix alguns comandaments per començar!",
-    "how_to_play_text": "Selecciona gestos, animacions i moviments per afegir-los a la línia de temps. Quan tinguis una combinació que t'agrada, prem Play i mira com ZOWINAME cobra vida! Pots combinar-ho amb una cançó que estigueu tocant al mateix temps per crear una coreografia.",
+    "how_to_play_text": "Selecciona gestos, animacions i moviments per afegir-los a la línia de temps. Quan tinguis una combinació que t'agrada, prem Play i mira com ZOWINAME cobra vida! Pots combinar-ho amb una cançó que estigueu tocant al mateix temps per crear una coreografia. Per puntuar al rànquing, reprodueix fins al final una seqüència d'almenys 5 elements: els moviments valen més, després els gestos i després les boques, i barrejar tipus diferents dona un extra.",
     "repetitions": "Reps",
     "duration": "Duració",
     "dir": "Dir",
@@ -322,7 +322,8 @@
     "confirm_clear_title": "Esborrar la línia de temps?",
     "confirm_clear_message": "Totes les ordres seran eliminades. Aquesta acció no es pot desfer.",
     "confirm_clear_action": "Esborrar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "ranking_too_short": "Les seqüències de menys de 5 elements no puntuen al rànquing."
   },
   "MovementSelector.qml": {
     "title": "Triïa un moviment",
@@ -342,6 +343,7 @@
     "number_taken": "Aquest número ja existeix. Prova %1 o tria'n un altre.",
     "number_invalid": "Escriu un número del 100 al 999.",
     "other_number": "Suggereix-ne un altre",
-    "save": "Desa"
+    "save": "Desa",
+    "how_points": "Cada joc suma la teva millor marca al teu total. Només compta superar la teva pròpia marca, i els punts van al jugador actiu."
   }
 }

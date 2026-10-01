@@ -278,7 +278,7 @@
     "bend_backward": "Bend",
     "jump": "Jump",
     "moonwalker_right": "Moonwalker",
-    "how_to_play_text": "Zowi will play a sequence of moves. Watch and repeat it in the same order. A new move is added each round.",
+    "how_to_play_text": "Zowi will play a sequence of moves. Watch and repeat it in the same order. A new move is added each round. Each round you get right adds a point to your ranking total, as long as it beats your best score in this game.",
     "close": "Close",
     "game_over": "Game over",
     "final_score": "Final score: %1",
@@ -295,7 +295,7 @@
     "score_prefix": "Score: %1",
     "level_prefix": "Level %1",
     "target_label": "Draw this mouth:",
-    "how_to_play_text": "Zowi will show you a mouth. Draw it on the grid with your finger or the mouse before the timer runs out. When your drawing matches the target, you earn a point and move to the next level!",
+    "how_to_play_text": "Zowi will show you a mouth. Draw it on the grid with your finger or the mouse before the timer runs out. When your drawing matches the target, you earn a point and move to the next level! Each level you complete adds a point to your ranking total, as long as it beats your best score in this game.",
     "close": "Close",
     "game_over": "Game over",
     "final_score": "Final score: %1",
@@ -312,7 +312,7 @@
     "add_mouth": "Add Mouth",
     "help": "Help",
     "empty_timeline": "Your timeline is empty. Add some commands to start!",
-    "how_to_play_text": "Select gestures, animations and movements to add them to the timeline. When you have a combination you like, hit Play and watch ZOWINAME come to life! You can combine it with a song you play at the same time to create a choreography.",
+    "how_to_play_text": "Select gestures, animations and movements to add them to the timeline. When you have a combination you like, hit Play and watch ZOWINAME come to life! You can combine it with a song you play at the same time to create a choreography. To score for the ranking, play a sequence of at least 5 items all the way to the end: movements are worth the most, then gestures, then mouths, and mixing different types earns a bonus.",
     "repetitions": "Reps",
     "duration": "Duration",
     "dir": "Dir",
@@ -323,7 +323,8 @@
     "confirm_clear_title": "Clear the timeline?",
     "confirm_clear_message": "All commands will be deleted. This action cannot be undone.",
     "confirm_clear_action": "Clear",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "ranking_too_short": "Sequences with fewer than 5 items don't count for the ranking."
   },
   "MovementSelector.qml": {
     "title": "Select a movement",
@@ -343,6 +344,7 @@
     "number_taken": "That number is already taken. Try %1 or choose another.",
     "number_invalid": "Enter a number from 100 to 999.",
     "other_number": "Suggest another",
-    "save": "Save"
+    "save": "Save",
+    "how_points": "Every game adds your best score to your total. Only beating your own best counts, and points go to the active player."
   }
 }

@@ -266,7 +266,7 @@
     "bend_backward": "Doblar",
     "jump": "Saltar",
     "moonwalker_right": "Moonwalker",
-    "how_to_play_text": "Zowi hará una secuencia de movimientos. Obsérvala y repítela en el mismo orden. Cada ronda se añade un movimiento nuevo.",
+    "how_to_play_text": "Zowi hará una secuencia de movimientos. Obsérvala y repítela en el mismo orden. Cada ronda se añade un movimiento nuevo. Cada ronda que aciertas suma un punto a tu total del ranking, siempre que superes tu mejor marca en este juego.",
     "close": "Cerrar",
     "game_over": "Fin del juego",
     "final_score": "Puntuación final: %1",
@@ -283,7 +283,7 @@
     "score_prefix": "Puntuación: %1",
     "level_prefix": "Nivel %1",
     "target_label": "Dibuja esta boca:",
-    "how_to_play_text": "Zowi te enseñará una boca. Dibújala en la cuadrícula con el dedo o el ratón antes de que acabe el tiempo. Cuando tu dibujo coincida con el objetivo, ganarás un punto y pasaremos al siguiente nivel.",
+    "how_to_play_text": "Zowi te enseñará una boca. Dibújala en la cuadrícula con el dedo o el ratón antes de que acabe el tiempo. Cuando tu dibujo coincida con el objetivo, ganarás un punto y pasaremos al siguiente nivel. Cada nivel que superas suma un punto a tu total del ranking, siempre que superes tu mejor marca en este juego.",
     "close": "Cerrar",
     "game_over": "Fin del juego",
     "final_score": "Puntuación final: %1",
@@ -304,14 +304,15 @@
     "repetitions": "Reps",
     "duration": "Duración",
     "dir": "Dir",
-    "how_to_play_text": "Selecciona gestos, animaciones y movimientos para ponerlos en la línea de tiempo. Cuando tengas una combinación que te guste, ¡dale al Play y verás como ZOWINAME se pone en acción! Puedes combinarlo con una canción que reproduzcas al mismo tiempo, para crear una coreografía.",
+    "how_to_play_text": "Selecciona gestos, animaciones y movimientos para ponerlos en la línea de tiempo. Cuando tengas una combinación que te guste, ¡dale al Play y verás como ZOWINAME se pone en acción! Puedes combinarlo con una canción que reproduzcas al mismo tiempo, para crear una coreografía. Para puntuar en el ranking, reproduce hasta el final una secuencia de al menos 5 elementos: los movimientos valen más, luego los gestos y luego las bocas, y mezclar tipos distintos da un extra.",
     "close": "Cerrar",
     "play_disabled_no_robot": "Conecta tu Zowi para reproducir",
     "play_disabled_empty": "Añade algún comando a la línea de tiempo",
     "confirm_clear_title": "¿Vaciar la línea de tiempo?",
     "confirm_clear_message": "Se eliminarán todos los comandos. Esta acción no se puede deshacer.",
     "confirm_clear_action": "Vaciar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "ranking_too_short": "Las secuencias de menos de 5 elementos no puntúan en el ranking."
   },
   "MovementSelector.qml": {
     "title": "Elige un movimiento",
@@ -339,6 +340,7 @@
     "number_taken": "Ese número ya existe. Prueba con %1 o elige otro.",
     "number_invalid": "Escribe un número del 100 al 999.",
     "other_number": "Sugerir otro",
-    "save": "Guardar"
+    "save": "Guardar",
+    "how_points": "Cada juego suma tu mejor marca a tu total. Solo cuenta superar tu propia marca, y los puntos van al jugador activo."
   }
 }
