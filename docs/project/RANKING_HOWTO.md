@@ -13,7 +13,8 @@
 - [GUI flow](#gui-flow)
 - [Turning the ranking off (per installation)](#turning-the-ranking-off-per-installation)
 - [Deleting rankings (admin only)](#deleting-rankings-admin-only)
-- [Online ranking (implemented, pending deployment)](#online-ranking-implemented-pending-deployment)
+- [Online ranking](#online-ranking)
+  - [Testing the online ranking by hand](#testing-the-online-ranking-by-hand)
   - [Privacy and AppsEdu](#privacy-and-appsedu)
 - [Known limits](#known-limits)
 - [Tests](#tests)
@@ -28,7 +29,7 @@
 | Local players `Player-NNN` (several per install) | ✅ Implemented |
 | Zowi Says (Memory), Mouths (Pintabocas) and Timeline add to the ranking | ✅ Implemented |
 | World ranking, **read** (Local / World tabs, downloads the public JSON) | ✅ Implemented; hidden until `ranking_online_read_url` is set |
-| World ranking, **sharing** (checkbox, taken-number flow, delete, `server/ranking-worker/`) | ✅ Implemented and tested locally; **not deployed** until the Worker exists and the URLs are set (`.local/CLOUDFARE_HOWTO.md`) |
+| World ranking, **sharing** (checkbox, taken-number flow, delete, `server/ranking-worker/`) | ✅ Implemented; Worker deployed (`.local/CLOUDFARE_HOWTO.md`); URLs set in `src/config.json` |
 | Privacy policy (incl. online-ranking text) | 📝 Draft in `PRIVACY.md`, pending review |
 
 Different from the Android original, which kept a free-text top-10 **per game**
@@ -141,7 +142,7 @@ See `CONFIG_HOWTO.md` for the layers and the `allow_*` switches.
   not affect the ranking. See `ZOWI_CLI_HOWTO.md`.
 - Online (future): only the maintainer, editing the published JSON on `gh-pages`.
 
-## Online ranking (implemented, pending deployment)
+## Online ranking
 
 How it works in the app (World tab of the ranking dialog, only when both URLs are
 configured and `ranking_online_allowed` is not `false`):
@@ -197,6 +198,70 @@ Design notes:
   Cloudflare Worker) that holds the GitHub token.
 - Opt-in, only the `Player-NNN` and the normalised totals are sent (no times, no
   history, no other data).
+
+### Testing the online ranking by hand
+
+Public addresses: Worker `https://zowi-ranking.eduardo-millan.workers.dev`, published
+list `https://eduardomillan.github.io/ZowiDesktop/ranking/ranking.json` (GitHub Pages
+serves `gh-pages/docs/` as its root, so there is no `/docs/` in the URL; Pages can take
+1-2 minutes to reflect a change).
+
+**Setup.** Rebuild (the URLs are compiled in) and, to keep your real ranking untouched,
+run the app with a throw-away configuration folder:
+
+```bash
+./build.sh --gui
+XDG_CONFIG_HOME=/tmp/zowitest ./build/ZowiDesktop
+```
+
+**1. Register and publish**
+
+1. Open the ranking: there are two tabs, **Local** and **World** (if not, the read URL
+   is not loaded).
+2. In **Local** press **New player** and pick a number (e.g. `996`).
+3. Play a game (Memory, Mouths or Timeline; demo mode works). With 0 points nothing is
+   sent and the app says you are not in the world ranking yet.
+4. Open **World**: the list loads.
+5. Tick **Share my score in the world ranking**: "Sending…" and then "Sharing as
+   Player-996 · position N"; **Delete my entry now** appears.
+6. Check the publication:
+   `curl -s https://eduardomillan.github.io/ZowiDesktop/ranking/ranking.json`
+7. Improve the score in a game: it is resent by itself and the published total goes up.
+
+**2. Number already taken**
+
+1. Register the number from a terminal:
+   `curl -XPOST https://zowi-ranking.eduardo-millan.workers.dev/submit -d '{"number":995,"zowi_says":1,"mouths":0,"timeline":0}'`
+2. In the app create player `995`, play and tick the box.
+3. The app says the number already exists and offers **Change**; pressing it moves the
+   player to a free number (points kept) and shares it.
+
+**3. Delete**
+
+1. Press **Delete my entry now**: the box is unticked and the button disappears.
+2. The published list drops the player within about 5 minutes (a deletion made less than
+   60 s after a publication waits for the scheduled task).
+
+**Direct checks of the Worker (no app)**
+
+```bash
+curl -s https://zowi-ranking.eduardo-millan.workers.dev/health          # {"ok":true}
+curl -s -XPOST .../submit -d '{"number":5}'                             # 400 invalid
+npx wrangler tail          # in server/ranking-worker: live Worker logs (GitHub errors show here)
+```
+
+**Cleaning up.** Empty the test entries (this clears the whole online ranking, so do it
+only while testing) and remove the throw-away folder:
+
+```bash
+cd server/ranking-worker
+npx wrangler d1 execute zowi-ranking --remote --command "DELETE FROM players"
+rm -rf /tmp/zowitest
+```
+
+The app logs `[RankingOnline]` lines in `~/.local/share/ZowiDesktop/ZowiDesktop-YYYY-MM-DD.log`.
+Changing the stored GitHub token: `npx wrangler secret put GITHUB_TOKEN` (the secret name
+is `GITHUB_TOKEN`; type the token only at the prompt, never on the command line).
 
 ### Privacy and AppsEdu
 

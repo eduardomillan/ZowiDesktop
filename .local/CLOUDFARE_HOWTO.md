@@ -160,7 +160,7 @@ qué va a pasar.
 6. **Apuntar la app al Worker**: pones la dirección en la configuración de la
    instalación (clave `ranking_online_submit_url`, la dirección base del Worker sin
    `/submit`) y la del JSON público en `ranking_online_read_url`
-   (`https://eduardomillan.github.io/ZowiDesktop/docs/ranking/ranking.json`). Te lo indico yo en su momento.
+   (`https://eduardomillan.github.io/ZowiDesktop/ranking/ranking.json`). Te lo indico yo en su momento.
 
 ## Qué me tienes que pasar y qué NO
 

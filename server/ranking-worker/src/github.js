@@ -21,12 +21,13 @@ export async function publish(env, doc, fetchFn = fetch) {
     let sha;
     const cur = await fetchFn(`${url}?ref=${encodeURIComponent(env.GITHUB_BRANCH)}`, { headers });
     if (cur.status === 200) sha = (await cur.json()).sha;
-    else if (cur.status !== 404) return false;
+    else if (cur.status !== 404) { console.error("github GET", cur.status, (await cur.text()).slice(0, 200)); return false; }
 
     const body = { message: "Update world ranking", content, branch: env.GITHUB_BRANCH };
     if (sha) body.sha = sha;
     const put = await fetchFn(url, { method: "PUT", headers, body: JSON.stringify(body) });
     if (put.ok) return true;
+    console.error("github PUT", put.status, (await put.text()).slice(0, 200));
     if (put.status !== 409 && put.status !== 422) return false;  // retry only on a stale sha
   }
   return false;

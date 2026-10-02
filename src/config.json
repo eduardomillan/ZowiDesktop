@@ -49,8 +49,8 @@
     "timeline_selector_dialog_size_ratio": "0.8",
     "ranking_enabled": "true",
     "ranking_online_allowed": "true",
-    "ranking_online_read_url": "",
-    "ranking_online_submit_url": "",
+    "ranking_online_read_url": "https://eduardomillan.github.io/ZowiDesktop/ranking/ranking.json",
+    "ranking_online_submit_url": "https://zowi-ranking.eduardo-millan.workers.dev",
     "allow_environment_config": "false",
     "allow_user_config": "false"
 }

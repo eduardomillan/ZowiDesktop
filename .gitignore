@@ -39,3 +39,6 @@ aqtinstall.log
 .opencode/
 .claude/
 .cursor/
+# Cloudflare Worker
+server/ranking-worker/.wrangler/
+server/ranking-worker/node_modules/
