@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ranking off (nothing is shown or saved) with a settings file, without reinstalling.
   The same file can allow users to change other settings. The new configuration guide
   in the documentation lists every setting.
+- **World ranking (optional, not active yet).** The ranking window gets a "World" tab
+  with the best 100 players. If you choose to, you can share your score there: only
+  your player number and your points are sent, the box is off by default, and you can
+  delete your entry at any time. If your number is already in use you can pick a new
+  one without losing your points. Installations can switch it off completely.
 
 ## [0.9.6] - 2026-10-02
 

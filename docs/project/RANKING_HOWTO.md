@@ -13,7 +13,7 @@
 - [GUI flow](#gui-flow)
 - [Turning the ranking off (per installation)](#turning-the-ranking-off-per-installation)
 - [Deleting rankings (admin only)](#deleting-rankings-admin-only)
-- [Online ranking (design, not built)](#online-ranking-design-not-built)
+- [Online ranking (implemented, pending deployment)](#online-ranking-implemented-pending-deployment)
   - [Privacy and AppsEdu](#privacy-and-appsedu)
 - [Known limits](#known-limits)
 - [Tests](#tests)
@@ -28,7 +28,7 @@
 | Local players `Player-NNN` (several per install) | ✅ Implemented |
 | Zowi Says (Memory), Mouths (Pintabocas) and Timeline add to the ranking | ✅ Implemented |
 | World ranking, **read** (Local / World tabs, downloads the public JSON) | ✅ Implemented; hidden until `ranking_online_read_url` is set |
-| World ranking, **sharing** (server, checkbox, delete) | 🚧 Pending (design below) |
+| World ranking, **sharing** (checkbox, taken-number flow, delete, `server/ranking-worker/`) | ✅ Implemented and tested locally; **not deployed** until the Worker exists and the URLs are set (`.local/CLOUDFARE_HOWTO.md`) |
 | Privacy policy (incl. online-ranking text) | 📝 Draft in `PRIVACY.md`, pending review |
 
 Different from the Android original, which kept a free-text top-10 **per game**
@@ -141,7 +141,33 @@ See `CONFIG_HOWTO.md` for the layers and the `allow_*` switches.
   not affect the ranking. See `ZOWI_CLI_HOWTO.md`.
 - Online (future): only the maintainer, editing the published JSON on `gh-pages`.
 
-## Online ranking (design, not built)
+## Online ranking (implemented, pending deployment)
+
+How it works in the app (World tab of the ranking dialog, only when both URLs are
+configured and `ranking_online_allowed` is not `false`):
+
+- **Checkbox "Share my score in the world ranking"** — off by default; the choice is
+  kept in the session (`ranking_share_online`). Nothing is sent while it is off, and
+  the app makes no request at all until the World tab is opened (or sharing was
+  already on at start-up).
+- Turning it on sends the active player's raw bests; every later improvement of the
+  total is sent again. The server computes the total and answers with a secret code
+  on the first registration (kept in `ZowiRanking.json`, owner-only).
+- **Number taken online** → the dialog says so and offers **Change**: the local
+  player gets a free number (scores kept) and the score is sent again.
+- **Not enough yet** (no points, or below the top-100 cut) → a friendly message; the
+  local ranking is unaffected.
+- **Delete my entry now** (shown once registered) removes the online entry at once
+  and turns sharing off. Unchecking the box only stops sending; the entry expires
+  after 30 days.
+- Switching the active local player while sharing registers the new one; the old
+  entry just expires.
+- Server: `server/ranking-worker/` (Cloudflare Worker + D1). Rules and API are in its
+  README; `node server/ranking-worker/test/devserver.js` runs a local stand-in
+  (`ranking_online_read_url` = `http://127.0.0.1:8787/ranking.json`,
+  `ranking_online_submit_url` = `http://127.0.0.1:8787`) for trying the app.
+
+Design notes:
 
 - **Only the top 100** is kept online. A player whose total does not enter the
   top 100 is not registered online (the local ranking still has them). With

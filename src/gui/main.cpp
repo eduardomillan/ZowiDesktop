@@ -178,6 +178,7 @@ int main(int argc, char *argv[])
         &ranking,
         zowi::ConfigStore::parseBool(config.get("ranking_online_allowed").toStdString(), true),
         config.get("ranking_online_read_url"), config.get("ranking_online_submit_url"));
+    onlineRanking.setSession(&session);
     g_logLevel = logLevelFromName(config.get("log_level"));
     robot.setSessionController(&session);
 

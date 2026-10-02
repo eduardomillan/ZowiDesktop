@@ -45,6 +45,8 @@ public:
     Q_INVOKABLE bool isNumberFree(int number) const;
     Q_INVOKABLE int createPlayer(int number);      // CreateResult
     Q_INVOKABLE bool setActivePlayer(int number);
+    // Changes a local player's number keeping the scores (online name clash).
+    bool renamePlayer(int from, int to);
 
     // Records a finished game for the active player (created on demand):
     // { improved, number, name, total, position }. Only an improvement of the

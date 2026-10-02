@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS players (
+  number     INTEGER PRIMARY KEY CHECK (number BETWEEN 100 AND 999),
+  zowi_says  INTEGER NOT NULL DEFAULT 0,
+  mouths     INTEGER NOT NULL DEFAULT 0,
+  timeline   INTEGER NOT NULL DEFAULT 0,
+  total      INTEGER NOT NULL DEFAULT 0,
+  updated_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  token_hash TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS rate_limit (
+  ip_hash TEXT NOT NULL,
+  day     TEXT NOT NULL,
+  count   INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (ip_hash, day)
+);
+
+CREATE TABLE IF NOT EXISTS meta (
+  key   TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);

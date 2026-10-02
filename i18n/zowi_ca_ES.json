@@ -355,6 +355,16 @@
     "world_error": "No s'ha pogut carregar el rànquing mundial. Comprova la connexió.",
     "world_retry": "Torna-ho a provar",
     "world_empty": "Encara no hi ha ningú al rànquing mundial.",
-    "world_updated": "Actualitzat: %1"
+    "world_updated": "Actualitzat: %1",
+    "share_label": "Compartir la meua puntuació al rànquing mundial",
+    "share_info": "Només s'envia el teu Player-NNN i el teu total de punts, res més. La teua entrada caduca als 30 dies si no millores la puntuació i pots esborrar-la quan vulgues.",
+    "share_sending": "Enviant…",
+    "share_ok": "Compartint com %1 · lloc %2",
+    "share_taken": "El número %1 ja existeix al rànquing mundial. Prem Canviar per triar-ne un altre i conservar els teus punts.",
+    "share_change": "Canviar",
+    "share_not_qualified": "Encara no entres al rànquing mundial. Continua jugant!",
+    "share_rate_limited": "Massa enviaments hui. Torna-ho a provar demà.",
+    "share_error": "No s'ha pogut enviar la teua puntuació. Es tornarà a provar amb la pròxima millora.",
+    "share_delete": "Esborrar la meua entrada ara"
   }
 }

@@ -1,0 +1,6 @@
+{
+  "name": "zowi-ranking-worker",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test test/" }
+}

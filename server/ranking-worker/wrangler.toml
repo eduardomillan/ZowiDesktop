@@ -1,0 +1,16 @@
+name = "zowi-ranking"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+GITHUB_REPO = "eduardomillan/ZowiDesktop"
+GITHUB_BRANCH = "gh-pages"
+GITHUB_PATH = "docs/ranking/ranking.json"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "zowi-ranking"
+database_id = "REPLACE_WITH_DATABASE_ID"  # printed by `wrangler d1 create zowi-ranking`

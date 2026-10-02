@@ -356,6 +356,16 @@
     "world_error": "The world ranking could not be loaded. Check your connection.",
     "world_retry": "Retry",
     "world_empty": "Nobody is in the world ranking yet.",
-    "world_updated": "Updated: %1"
+    "world_updated": "Updated: %1",
+    "share_label": "Share my score in the world ranking",
+    "share_info": "Only your Player-NNN and your points total are sent, nothing else. Your entry expires after 30 days if you do not improve your score, and you can delete it at any time.",
+    "share_sending": "Sending…",
+    "share_ok": "Sharing as %1 · position %2",
+    "share_taken": "The number %1 already exists in the world ranking. Press Change to pick another one and keep your points.",
+    "share_change": "Change",
+    "share_not_qualified": "You are not in the world ranking yet. Keep playing!",
+    "share_rate_limited": "Too many submissions today. Try again tomorrow.",
+    "share_error": "Your score could not be sent. It will be tried again on your next improvement.",
+    "share_delete": "Delete my entry now"
   }
 }

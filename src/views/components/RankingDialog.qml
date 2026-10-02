@@ -152,7 +152,7 @@ Dialog {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.preferredHeight: Math.max(root.rowHeight * 4, Math.min(OnlineRanking.world.length, 8) * (root.rowHeight + 4))
-            Layout.minimumHeight: root.rowHeight * 3
+            Layout.minimumHeight: root.rowHeight * 2
 
             Column {
                 anchors.centerIn: parent
@@ -249,6 +249,110 @@ Dialog {
             font.pixelSize: 12
             color: Config.get("color_primary") || "#2d5a2d"
             opacity: 0.7
+        }
+
+        // ── Share my score (opt-in, off by default) ─────────────────────
+        ColumnLayout {
+            visible: root.worldTab && OnlineRanking.canShare
+            Layout.fillWidth: true
+            spacing: 6
+
+            CheckBox {
+                id: shareCheck
+                Layout.fillWidth: true
+                text: root.tr("share_label")
+                checked: OnlineRanking.sharing
+                onToggled: OnlineRanking.sharing = checked
+                contentItem: Text {
+                    leftPadding: shareCheck.indicator.width + 8
+                    text: shareCheck.text
+                    wrapMode: Text.WordWrap
+                    font.pixelSize: 14
+                    font.bold: true
+                    color: Config.get("color_primary") || "#2d5a2d"
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            Text {
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                text: root.tr("share_info")
+                font.pixelSize: 12
+                color: Config.get("color_primary") || "#2d5a2d"
+                opacity: 0.8
+            }
+
+            Text {
+                id: shareStatus
+                Layout.fillWidth: true
+                wrapMode: Text.WordWrap
+                visible: text.length > 0
+                font.pixelSize: 13
+                font.bold: true
+                color: (OnlineRanking.shareState === 3 || OnlineRanking.shareState === 5 || OnlineRanking.shareState === 6)
+                       ? "#d32f2f" : (Config.get("color_primary") || "#2d5a2d")
+                text: !OnlineRanking.sharing ? ""
+                      : (OnlineRanking.shareState === 1 ? root.tr("share_sending")
+                         : (OnlineRanking.shareState === 2 ? root.tr("share_ok").arg(OnlineRanking.registeredName).arg(OnlineRanking.sharePosition)
+                            : (OnlineRanking.shareState === 3 ? root.tr("share_taken").arg(OnlineRanking.takenName)
+                               : (OnlineRanking.shareState === 4 ? root.tr("share_not_qualified")
+                                  : (OnlineRanking.shareState === 5 ? root.tr("share_rate_limited")
+                                     : (OnlineRanking.shareState === 6 ? root.tr("share_error") : ""))))))
+            }
+
+            Row {
+                Layout.alignment: Qt.AlignHCenter
+                spacing: 12
+
+                Button {
+                    id: changeBtn
+                    visible: OnlineRanking.sharing && OnlineRanking.shareState === 3
+                    implicitWidth: 150
+                    implicitHeight: 40
+                    text: root.tr("share_change")
+                    contentItem: Text {
+                        text: changeBtn.text
+                        color: "#ffffff"
+                        font.bold: true
+                        font.pixelSize: 15
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: 20
+                        color: changeBtn.pressed ? Config.get("color_accent_pressed") || "#17736c"
+                                                 : (Config.get("color_accent") || "#21a69b")
+                    }
+                    onClicked: {
+                        OnlineRanking.changeTakenNumber()
+                        root.refresh()
+                    }
+                }
+
+                Button {
+                    id: deleteBtn
+                    visible: OnlineRanking.registered
+                    implicitWidth: 220
+                    implicitHeight: 40
+                    text: root.tr("share_delete")
+                    contentItem: Text {
+                        text: deleteBtn.text
+                        color: "#d32f2f"
+                        font.bold: true
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: 20
+                        color: deleteBtn.pressed ? "#fde8e8" : "transparent"
+                        border.color: "#d32f2f"
+                        border.width: 2
+                    }
+                    onClicked: OnlineRanking.deleteEntry()
+                }
+            }
         }
 
         // ── Ranking list ────────────────────────────────────────────────

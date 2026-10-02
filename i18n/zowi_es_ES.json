@@ -352,6 +352,16 @@
     "world_error": "No se pudo cargar el ranking mundial. Comprueba tu conexión.",
     "world_retry": "Reintentar",
     "world_empty": "Todavía no hay nadie en el ranking mundial.",
-    "world_updated": "Actualizado: %1"
+    "world_updated": "Actualizado: %1",
+    "share_label": "Compartir mi puntuación en el ranking mundial",
+    "share_info": "Solo se envía tu Player-NNN y tu total de puntos, nada más. Tu entrada caduca a los 30 días si no mejoras tu puntuación y puedes borrarla cuando quieras.",
+    "share_sending": "Enviando…",
+    "share_ok": "Compartiendo como %1 · puesto %2",
+    "share_taken": "El número %1 ya existe en el ranking mundial. Pulsa Cambiar para elegir otro y conservar tus puntos.",
+    "share_change": "Cambiar",
+    "share_not_qualified": "Todavía no entras en el ranking mundial. ¡Sigue jugando!",
+    "share_rate_limited": "Demasiados envíos hoy. Inténtalo mañana.",
+    "share_error": "No se pudo enviar tu puntuación. Se reintentará con tu próxima mejora.",
+    "share_delete": "Borrar mi entrada ahora"
   }
 }

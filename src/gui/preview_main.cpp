@@ -266,6 +266,7 @@ int main(int argc, char *argv[])
         &ranking,
         zowi::ConfigStore::parseBool(config.get("ranking_online_allowed").toStdString(), true),
         config.get("ranking_online_read_url"), config.get("ranking_online_submit_url"));
+    onlineRanking.setSession(&sessionStore);
 
     // Forward the game's cosmetic commands (mouth/gesture) to the preview
     // robot mock, gated by its connection state.

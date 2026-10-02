@@ -144,3 +144,12 @@ QVariantMap RankingController::recordScore(const QString &game, int score)
     }
     return out;
 }
+
+bool RankingController::renamePlayer(int from, int to)
+{
+    if (!m_store.renamePlayer(from, to)) return false;
+    qInfo() << "[Ranking] Player" << playerName(from) << "is now" << playerName(to);
+    emit activePlayerChanged();
+    emit rankingChanged();
+    return true;
+}

@@ -23,7 +23,7 @@
 ## 1. Resumen
 
 Zowi Desktop funciona **en tu ordenador**. No tiene cuentas de usuario, ni
-publicidad, ni analítica, ni perfiles, y **no envía datos a Internet**. La
+publicidad, ni analítica, ni perfiles, y **no envía datos a Internet** (salvo el ranking online opcional de la sección 6, que solo se activa si lo marcas). La
 aplicación no te pide nombre, edad, correo ni ningún otro dato personal.
 
 ## 2. Qué se guarda en tu equipo
@@ -51,7 +51,7 @@ evita usar nombres reales o datos personales.
 
 - No usa cámara, micrófono ni ubicación.
 - No contiene publicidad, compras ni analítica, y no hace seguimiento.
-- No envía datos a Internet. La única comunicación es **Bluetooth o USB con tu
+- No envía datos a Internet (salvo el ranking online opcional, sección 6). La única comunicación es **Bluetooth o USB con tu
   Zowi** (la app busca robots cercanos para emparejarlo).
 - Cuando abres un enlace (web del proyecto, proyectos, ayuda) se abre tu
   **navegador**; el sitio visitado trata tus datos según su propia política.
@@ -69,10 +69,16 @@ archivo que quieras). Dentro de la aplicación **no hay un botón para borrar el
 ranking**: lo puede vaciar el administrador con `zowi_cli ranking clear`, y tú
 puedes borrar el archivo `ZowiRanking.json` de tu carpeta de usuario.
 
-## 6. Ranking online (*todavía no existe; texto preparado*)
+## 6. Ranking online (*todavía no activo; texto preparado*)
 
 > Esta sección **no se aplica** hasta que se publique el ranking online. Es opcional
-> y solo se activa si lo aceptas.
+> y solo se activa si lo aceptas (casilla desmarcada por defecto).
+>
+> **Hipótesis de trabajo (pendiente de consulta a la Delegación de Protección de Datos
+> de la Generalitat):** el número `Player-NNN` es aleatorio, no se pide ni se guarda
+> ningún dato del alumnado y no hay relación entre el número y la persona; por tanto se
+> entiende que no hay tratamiento de datos personales. No se afirma cumplimiento
+> normativo hasta tener esa respuesta.
 
 - **Qué se enviaría:** tu `Player-NNN`, tu puntuación total (normalizada) y un
   código secreto de propiedad que solo sirve para poder actualizar tu entrada.
@@ -86,8 +92,8 @@ puedes borrar el archivo `ZowiRanking.json` de tu carpeta de usuario.
   tutores — *mecanismo por definir*.
 - **Terceros:** la lista se publica en GitHub (GitHub Pages) y las
   actualizaciones pasan por un servicio intermedio — *proveedor y país por definir*.
-  Ese servicio puede ver temporalmente tu dirección IP para limitar abusos —
-  *plazo de conservación por definir*.
+  Ese servicio (Cloudflare) ve tu dirección IP al recibir la petición; solo guarda una
+  huella (hash) de ella en un contador diario para limitar abusos, que se borra a los 2 días.
 - **Tus derechos:** acceder, rectificar o borrar tu entrada escribiendo a
   [CORREO]; también puedes dejar de enviar puntuaciones y la entrada caducará.
 
@@ -106,7 +112,7 @@ documentación del proyecto.
 ## 1. Summary
 
 Zowi Desktop runs **on your computer**. It has no user accounts, no advertising,
-no analytics and no profiling, and it **does not send data to the Internet**. The
+no analytics and no profiling, and it **does not send data to the Internet** (except the optional online ranking in section 6, which only turns on if you tick it). The
 app never asks for your name, age, email or any other personal data.
 
 ## 2. What is stored on your computer
@@ -134,7 +140,7 @@ names or personal data.
 
 - It does not use the camera, microphone or location.
 - It has no advertising, purchases or analytics, and does not track you.
-- It does not send data to the Internet. The only communication is **Bluetooth or
+- It does not send data to the Internet (except the optional online ranking, section 6). The only communication is **Bluetooth or
   USB with your Zowi** (the app scans for nearby robots to pair with).
 - When you open a link (project website, projects, help) your **browser** opens;
   the visited site handles your data under its own policy.
@@ -152,10 +158,16 @@ want). There is **no button inside the app to delete the ranking**: the
 administrator can wipe it with `zowi_cli ranking clear`, and you can delete the
 `ZowiRanking.json` file in your user folder.
 
-## 6. Online ranking (*does not exist yet; text prepared*)
+## 6. Online ranking (*not active yet; text prepared*)
 
 > This section **does not apply** until the online ranking is released. It is
-> optional and only turns on if you agree.
+> optional and only turns on if you agree (checkbox off by default).
+>
+> **Working hypothesis (pending consultation with the Generalitat's data-protection
+> office):** the `Player-NNN` number is random, no student data is requested or
+> stored, and there is no link between the number and the person, so it is understood
+> that no personal data is processed. Compliance is not claimed until that answer is
+> received.
 
 - **What would be sent:** your `Player-NNN`, your total (normalised) score and a
   secret ownership code that only lets you update your own entry. Nothing else: no
@@ -169,8 +181,8 @@ administrator can wipe it with `zowi_cli ranking clear`, and you can delete the
   would give it — *mechanism to be defined*.
 - **Third parties:** the list is published on GitHub (GitHub Pages) and updates go
   through an intermediate service — *provider and country to be defined*. That
-  service may briefly see your IP address to limit abuse — *retention period to be
-  defined*.
+  service (Cloudflare) sees your IP address when it receives the request; it only
+  keeps a hash of it in a daily counter to limit abuse, deleted after 2 days.
 - **Your rights:** access, correct or delete your entry by writing to [EMAIL]; you
   can also stop sending scores and the entry will expire.
 

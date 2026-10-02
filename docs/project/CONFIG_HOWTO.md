@@ -157,7 +157,7 @@ Default values are the ones in `src/config.json`. "Read by" says who uses the ke
 | `ranking_enabled` | `true` | `true` / `false`. When `false` the ranking is hidden everywhere (buttons, dialog, help paragraph, messages) and nothing is recorded; data already saved is kept and returns when it is turned on again. `zowi_cli ranking` still works. See `RANKING_HOWTO.md`. |
 | `ranking_online_allowed` | `true` | `true` / `false`. When `false` everything about the **world ranking** is hidden and no request is ever made (set it in the system file to forbid it in a whole installation). Has no effect until the two URLs below are set. |
 | `ranking_online_read_url` | *(empty)* | `https://` address of the public world-ranking JSON (or `http://localhost…` for development). While empty, the "World" tab does not exist. |
-| `ranking_online_submit_url` | *(empty)* | `https://` address of the server that registers scores (used when the user chooses to share). |
+| `ranking_online_submit_url` | *(empty)* | Base `https://` address of the ranking server (the Worker, e.g. `https://zowi-ranking.<name>.workers.dev`; the app adds `/submit` and `/delete`), or `http://localhost…` for development. While empty, the "Share my score" checkbox does not exist. Sharing is the user's choice (off by default, session key `ranking_share_online`). |
 
 ### Logging and development
 
