@@ -133,7 +133,7 @@ CLI uses the same pattern in `src/cli/cli_util.cpp` (lines 21–28, 374–378).
 | **CLI commands** (`connect`, `flash`, `control`, `monitor`) | **Unified** — same argument parsing, same flows. `#ifdef _WIN32` only for raw console mode + backend instantiation. |
 | **Build system (Linux)** | **No changes** — `./build.sh` (or `cmake -DZOWI_BUILD_GUI=ON -DZOWI_BUILD_CLI=ON`) ignores Windows subdirs automatically. |
 | **Packaging (Linux)** | **Unaffected** — `.deb`, AppImage, apt repo built and published manually via `packaging/create-gh-release.sh` (no Linux CI job). |
-| **Translations / QML / Resources** | **Shared** — same `.ts/.json`, same `TranslationEngine`, same QML files. |
+| **Translations / QML / Resources** | **Shared** — same `i18n/*.json`, same `TranslationEngine`, same QML files. |
 
 **Bottom line:** Adding Windows support added **zero lines to Linux-specific code**. The "Windows layer" is strictly additive backends + compile guards.
 

@@ -40,7 +40,7 @@
   - config reads from `src/config.json`
 - The GUI reads config from the Qt resource path `:/src/config.json`, while the CLI reads the workspace file `src/config.json`. If config keys or file layout change, both access paths must still work.
 - Reuse the existing session keys instead of creating parallel names. Shared keys already used across the app include `activeZowiDeviceAddress`, `activeZowiName`, `activeZowiAppId`, `activeZowiBattery`, and `wizardDismissed`.
-- Translations are handled by the custom `TranslationEngine`, which reads `i18n/zowi_<locale>.ts` files directly. Supported locales are hard-coded in `TranslationEngine::availableLocales()`, so adding a locale requires updating both the file set and that method.
+- Translations are handled by the custom `TranslationEngine`, which reads `i18n/zowi_<locale>.json` files directly (keys grouped by screen context, `en_US` as fallback). Supported locales are hard-coded in `TranslationEngine::availableLocales()`, so adding a locale requires adding the JSON file, listing it in `i18n.qrc`, and updating that method.
 - QML text is translated with screen-specific contexts such as `Translator.translate("ScanScreen.qml", source)`. Preserve those context names when moving strings between screens, because the translation lookup depends on them.
 - Controllers in `src/gui/controllers/` are intentionally thin wrappers. Prefer exposing signals/properties from the controller over duplicating logic in QML.
 - Bluetooth discovery uses the `zowi_mac_prefix` key from `src/config.json` in both the CLI and QML scan flow. If discovery filters change, update both surfaces together.
