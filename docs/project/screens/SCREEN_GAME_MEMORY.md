@@ -84,9 +84,8 @@ Produced by core (`ZowiDiceGame::buildCommandForAction`), default
 | Bottom-right (Moonwalker) | `commandMoonwalkerRight` | `M 7 1000 30\r` |
 | End of each move | `commandStop` | `S\r` |
 
-Buttons use the Android assets already shipped in this repo: the top-left
-(now tiptoe-swing) uses `swing_button.png` (and `pressed_swing_button.png`),
-the other three use `move2_button.png`/`move3_button.png`/`move4_button.png`
+Buttons use the Android assets already shipped in this repo:
+`move1_button.png`/`move2_button.png`/`move3_button.png`/`move4_button.png`
 (with their `pressed_*` variants). The help dialog shows `simon_game_button.png`.
 
 **Verified against the original:** `ZowiAppReborn`'s `ZowiSaysMinigamePresenterImpl`

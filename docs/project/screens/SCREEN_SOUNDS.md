@@ -7,7 +7,7 @@
 - **File:** `src/views/screens/SoundsScreen.qml`
 - **i18n context:** `"SoundsScreen.qml"`
 - Pushed by `PadScreen.soundScreenRequested` (sounds button of the
-  gamepad, under Gestures; icon `images/sounds/sound_button.png`).
+  gamepad, under Gestures; icon `images/sounds/sound_button_sing.png`).
 
 ## Signals
 
