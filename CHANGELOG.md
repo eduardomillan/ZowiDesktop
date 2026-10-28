@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   delete your entry at any time. If your number is already in use you can pick a new
   one without losing your points. Installations can switch it off completely.
 
+### Changed
+- **Smaller app.** Pictures that the app never shows (screenshots and photos of the
+  original app and robot, kept only as reference) are no longer packed inside it, so
+  the program is about 17 MB smaller and quicker to download and install.
+
 ## [0.9.6] - 2026-10-02
 
 ### Added
