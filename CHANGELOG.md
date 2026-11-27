@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-27
+
 ### Added
 - **The ranking can be turned off per installation.** An administrator can switch the
   ranking off (nothing is shown or saved) with a settings file, without reinstalling.
@@ -19,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one without losing your points. Installations can switch it off completely.
 
 ### Changed
+- **Projects are spread evenly across the window.** The project icons on the home
+  screen now fill the whole width, like the games, with about the same distance between
+  them as before.
 - **Smaller app.** Pictures that the app never shows (screenshots and photos of the
   original app and robot, kept only as reference) are no longer packed inside it, so
   the program is about 17 MB smaller and quicker to download and install.
