@@ -19,6 +19,9 @@ ScreenTemplate {
     title: project.title || tr("title")
     subtitle: ""
     property int buttonHeight: 56  // Configurable button height
+    // Share of the window width taken by the explanatory text (and its image),
+    // centred; the rest is left as side margin. Lower it for narrower text.
+    property real articleWidthRatio: 0.85
 
     // Emitted when the (optional) third footer button is pressed. `target` is
     // the project's configured action_target (e.g. "gamepad"); main.qml maps
@@ -157,7 +160,8 @@ ScreenTemplate {
 
             Column {
                 id: articleCol
-                width: articleFlick.width
+                width: articleFlick.width * projectScreen.articleWidthRatio
+                x: (articleFlick.width - width) / 2
                 spacing: 20
 
                 Image {
