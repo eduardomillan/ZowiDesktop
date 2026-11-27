@@ -35,7 +35,7 @@ ScreenTemplate {
         }
     }
 
-    // Local sequence model (persisted later via Session, key timeline_sequence)
+    // Local sequence model, persisted through Timeline.saveSequence()/loadSequence() (session key timeline_sequence)
     ListModel {
         id: timelineModel
     }
@@ -104,6 +104,10 @@ ScreenTemplate {
     Component.onCompleted: {
         root.playClicked.connect(onPlayClicked)
         root.stopClicked.connect(onStopClicked)
+
+        // Restore the sequence saved when the screen was last left
+        // (main.qml pushTimeline() saves it on back).
+        loadSequence()
 
         var helpMode = Config.get("timeline_help") || "once"
         var helpSeen = Session.getString("timeline_help_seen", "false") === "true"

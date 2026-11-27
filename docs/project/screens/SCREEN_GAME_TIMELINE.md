@@ -12,8 +12,8 @@
   Bend, Shake Leg, Flapping), repetitions 1–5, slow/medium/fast for movements and
   mouths, correct outline highlight during repetitions, visual feedback
   (opacity dimming) during playback, and a score for the global ranking. The
-  sequence is saved when leaving the screen; **it is not reloaded on entry yet**
-  (see *Persistence*).
+  sequence is saved when leaving the screen and restored on entry (see
+  *Persistence*).
 - **File:** `src/views/screens/GameTimelineScreen.qml` (~780 lines) and the chip
   component `src/views/components/TimelineChip.qml`.
 - **Core logic (Qt-free):** `src/core/include/zowi/timeline_command.h`
@@ -113,18 +113,17 @@ Timeline adds to the **single global ranking** (see `RANKING_HOWTO.md`):
   records it for the active player and opens the ranking when it improved. The
   corner Ranking button opens the list.
 
-## Persistence (partly implemented)
+## Persistence (implemented)
 
 - `timeline_sequence` — the current playlist (JSON list of the chips), written to
   the session by `Timeline.saveSequence()` when the user leaves the screen
-  (`main.qml` `pushTimeline()`, back button). Mirrors Android's
-  `GameController.saveProgress(TIMELINE_GAME_ID)`.
-- **Loading is not wired:** `GameTimelineScreen.loadSequence()` and
-  `Timeline.loadSequence()` exist, but nothing calls them, so the saved sequence
-  is not restored when the screen is opened again from Home (the chips are only
-  kept while the screen stays on the stack, e.g. while a selector is open).
-- Android also cleared it with "Forget playing history"; the Settings option that
-  would do so is still a stub.
+  (`main.qml` `pushTimeline()`, back button) and read back by
+  `Timeline.loadSequence()` from `Component.onCompleted`, before the help dialog
+  decision. Mirrors Android's `GameController.saveProgress` / `loadProgress`
+  (`TIMELINE_GAME_ID`). The "Clear" button empties the list; leaving the screen
+  then saves the empty list.
+- Android also cleared it with "Forget playing history" (Settings → delete
+  achievements); see `SCREEN_SETTINGS.md`.
 
 ## i18n (implemented)
 
@@ -138,7 +137,6 @@ fr_FR, ca_ES, bg_BG): `title`, `subtitle`, `play_button`, `stop_button`,
 
 ## Deferred
 
-- **Restoring the saved sequence on entry** (see *Persistence*).
 - **Per-rep progress:** each repetition is sent as its own step, but the screen
   highlights the whole chip; showing progress inside a multi-rep chip is not done.
 - **Achievements:** `anxious` gating (≥15 commands) reserved for achievements layer.

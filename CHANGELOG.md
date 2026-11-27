@@ -50,6 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the program is about 17 MB smaller and quicker to download and install.
 
 ### Fixed
+- **Timeline remembers your sequence.** The sequence you built was saved when you
+  left the screen but never came back; now it is restored the next time you open
+  Timeline.
 - **The language list shows every language correctly.** On LliureX 25 only the
   selected language was visible when the list was opened, and Valencià, Français and
   Български could appear as blank boxes. The list now shows all languages, and the app
