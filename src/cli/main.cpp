@@ -84,7 +84,7 @@ int main(int argc, char **argv)
     // ── rename subcommand ─────────────────────────────────────
     auto *renameCmd = app.add_subcommand("rename", "Rename the connected Zowi robot\nConnects to the saved device, sends the rename command, and saves the new name.");
     zowi_cli::RenameArgs renameArgs;
-    renameCmd->add_option("name", renameArgs.name, "New name for the robot")->required();
+    renameCmd->add_option("name", renameArgs.name, "New name for the robot: letters only, at most 10 characters (accented letters count as 2)")->required();
     renameCmd->add_option("--timeout,-t", renameArgs.timeout, "Timeout waiting for robot response (seconds)")->default_val(kDefaultRobotTimeout);
     renameCmd->add_option("--backend", renameArgs.backend, "Backend: 'auto' (uses the registered transport), 'bluetooth', or 'usb'")->default_val("auto");
     renameCmd->add_option("--tty", renameArgs.tty, "Serial TTY to use for USB (e.g. /dev/ttyUSB0)")->default_val("");

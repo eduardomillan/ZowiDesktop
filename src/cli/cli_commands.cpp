@@ -349,6 +349,12 @@ int runRename(int argc, char **argv, const RenameArgs &a)
 {
     // The firmware command is space-delimited and the name ends up in EEPROM:
     // only letters are accepted (no digits, spaces or symbols).
+    if (a.name.size() > zowi::kMaxRobotNameBytes) {
+        std::cerr << "Invalid name '" << a.name << "': at most " << zowi::kMaxRobotNameBytes
+                  << " characters (the robot's memory is that small; accented letters count as 2)."
+                  << std::endl;
+        return 1;
+    }
     if (!zowi::isValidRobotName(a.name)) {
         std::cerr << "Invalid name '" << a.name
                   << "': use letters only (no digits, spaces or symbols)." << std::endl;

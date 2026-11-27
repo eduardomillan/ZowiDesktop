@@ -351,6 +351,8 @@ zowi_cli connect B4:9D:0B:32:41:0E
 
 Rename a paired Zowi robot. Connects to the saved device, sends the rename command, and updates the session with the new name.
 
+The name must be **letters only** (no digits, spaces or symbols) and **at most 10 characters**: the firmware (zowiLibs `receiveName`) keeps it in an 11-byte buffer and has no room for the terminator after the tenth byte. Accented letters (á, ñ, ç…) take two bytes each, so they count as 2. A longer or invalid name is rejected before connecting.
+
 The robot reboots and plays its connection animation right after the link
 opens, so the rename is sent only once the robot has answered a request (the
 same readiness gate as `connect`/`status`). If the robot is unreachable or
@@ -361,7 +363,7 @@ the rename (no `&&F`); the command then warns but still counts as sent.
 ### Basic usage
 
 ```bash
-zowi_cli rename "Mi Zowi"
+zowi_cli rename MiZowi
 ```
 
 Output:
@@ -369,7 +371,7 @@ Output:
 ```
 Connecting to B4:9D:0B:32:41:0E...
 Connected. Sending rename command...
-Robot renamed to 'Mi Zowi'.
+Robot renamed to 'MiZowi'.
 Session updated.
 ```
 
@@ -377,7 +379,7 @@ Session updated.
 
 ```bash
 $ zowi_cli session get activeZowiName
-Mi Zowi
+MiZowi
 ```
 
 ### Avoid permission warnings
@@ -385,7 +387,7 @@ Mi Zowi
 Same as `connect` — BlueZ D‑Bus works for normal users:
 
 ```bash
-zowi_cli rename "Mi Zowi"
+zowi_cli rename MiZowi
 ```
 
 ## Restore
@@ -688,7 +690,7 @@ zowi_cli disconnect
 Output:
 
 ```
-Disconnected from Mi Zowi [B4:9D:0B:32:41:0E]
+Disconnected from MiZowi [B4:9D:0B:32:41:0E]
 Pairing data cleared.
 ```
 
@@ -721,7 +723,7 @@ Output when connected:
 
 ```
 Zowi connected:
-  Name:    Mi Zowi
+  Name:    MiZowi
   Address: B4:9D:0B:32:41:0E
   App ID:  1
   Battery: 85%
@@ -1497,10 +1499,10 @@ Connected. Waiting for robot data...
 Pairing saved to session.
 
 # 3. Rename the robot
-$ zowi_cli rename "Mi Zowi"
+$ zowi_cli rename MiZowi
 Connecting to B4:9D:0B:32:41:0E...
 Connected. Sending rename command...
-Robot renamed to 'Mi Zowi'.
+Robot renamed to 'MiZowi'.
 Session updated.
 
 # 4. Restore the original firmware if needed
@@ -1518,12 +1520,12 @@ Session updated.
 # 5. Verify
 $ zowi_cli session list
 activeZowiDeviceAddress=B4:9D:0B:32:41:0E
-activeZowiName=Mi Zowi
+activeZowiName=MiZowi
 wizardDismissed=true
 
 # 6. Disconnect when done
 $ zowi_cli disconnect
-Disconnected from Mi Zowi [B4:9D:0B:32:41:0E]
+Disconnected from MiZowi [B4:9D:0B:32:41:0E]
 Pairing data cleared.
 ```
 

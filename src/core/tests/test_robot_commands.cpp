@@ -120,6 +120,11 @@ int main()
     checkBool(isValidRobotName("Zowi 2"), false, "name with space");
     checkBool(isValidRobotName("Zowi2"), false, "name with digit");
     checkBool(isValidRobotName("Zowi!"), false, "name with symbol");
+    checkBool(isValidRobotName("Abcdefghij"), true, "name of 10 bytes");
+    checkBool(isValidRobotName("Abcdefghijk"), false, "name of 11 bytes (firmware buffer)");
+    checkBool(isValidRobotName("Pe" "\xC3\xB1" "ito"), true, "name with n-tilde, 7 bytes");
+    checkBool(isValidRobotName("Peque" "\xC3\xB1" "ito"), true, "name with n-tilde, 10 bytes");
+    checkBool(isValidRobotName("Peque" "\xC3\xB1" "itos"), false, "name with n-tilde, 11 bytes");
     checkBool(isValidRobotName("Zowi\t"), false, "name with tab");
     checkBool(isValidRobotName("Zowi\xC3\x97"), false, "name with multiplication sign");
     checkBool(isValidRobotName("Zowi\xC3\xB7"), false, "name with division sign");

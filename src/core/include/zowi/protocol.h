@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 
 namespace zowi {
@@ -73,16 +74,25 @@ inline char prefixedCommandChar(const std::string &token)
     return '\0';
 }
 
+// Longest robot name the firmware stores, in BYTES. zowiLibs (ZOWI_BASE_v2,
+// receiveName) keeps the name in `char newZowiName[11]` and copies it with
+// `while (*arg && k < 11)`, which leaves no room for the string terminator at
+// 11, so 10 is the longest safe name. Accented letters are two bytes in UTF-8,
+// so "Pequeñito" (9 letters) already uses 10 and one more letter would not fit.
+inline constexpr size_t kMaxRobotNameBytes = 10;
+
 // True when the name is safe to send as a SetName (R) argument: letters only —
 // ASCII plus the Latin-1 accented letters (á é í ó ú ü ñ ç ...) as UTF-8 —
 // with no digits, spaces, symbols or other scripts. The firmware command is
 // space-delimited, so anything beyond a plain name (spaces included) risks
-// being truncated or mangled by the ZowiSerialCommand parser.
-//   isValidRobotName("Rebecowi") → true
-//   isValidRobotName("Árbol-2")  → false (digit and symbol)
+// being truncated or mangled by the ZowiSerialCommand parser. At most
+// kMaxRobotNameBytes bytes (10): the firmware buffer is that small.
+//   isValidRobotName("Rebecowi")    → true
+//   isValidRobotName("Árbol-2")     → false (digit and symbol)
+//   isValidRobotName("Abcdefghijk") → false (11 bytes)
 inline bool isValidRobotName(const std::string &name)
 {
-    if (name.empty()) return false;
+    if (name.empty() || name.size() > kMaxRobotNameBytes) return false;
     for (size_t i = 0; i < name.size();) {
         const unsigned char c = static_cast<unsigned char>(name[i]);
         if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {

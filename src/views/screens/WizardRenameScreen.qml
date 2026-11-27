@@ -41,8 +41,18 @@ ScreenTemplate {
     // × and ÷ signs). Mirrors zowi::isValidRobotName() in the core, which is
     // the source of truth; this mirror only keeps the field clean while
     // typing (a RegExpValidator would need different type names on Qt 5/6).
+    // The firmware keeps the name in 11 bytes (10 usable); accented letters take
+    // two bytes in UTF-8 (zowi::kMaxRobotNameBytes in the core).
+    readonly property int maxNameBytes: 10
+    function nameBytes(name) {
+        var n = 0
+        for (var i = 0; i < name.length; ++i)
+            n += name.charCodeAt(i) > 0x7F ? 2 : 1
+        return n
+    }
     function isValidName(name) {
         return /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]+$/.test(name)
+               && nameBytes(name) <= maxNameBytes
     }
 
     Column {
@@ -70,6 +80,9 @@ ScreenTemplate {
             // Strip anything that is not a letter while typing/pasting.
             onTextChanged: {
                 var cleaned = text.replace(/[^A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u00FF]/g, "")
+                // ...and stop at the firmware's 10-byte limit.
+                while (cleaned.length > 0 && wizardRename.nameBytes(cleaned) > wizardRename.maxNameBytes)
+                    cleaned = cleaned.slice(0, -1)
                 if (cleaned !== text) {
                     var pos = cursorPosition
                     text = cleaned
