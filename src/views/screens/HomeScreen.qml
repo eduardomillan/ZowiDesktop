@@ -54,7 +54,7 @@ FocusScope {
             return data;
         })()
 
-    // Top bar with Settings and Achievements
+    // Top bar with Settings (left); Ranking + Achievements sit on the right (below)
     Row {
         id: topBar
         anchors {
@@ -84,16 +84,55 @@ FocusScope {
 
             onClicked: homeScope.settingsClicked()
         }
+    }
 
-        Item { width: parent.width - 220; height: 1 }
+    // Ranking + Achievements: same spot and shape as the games' corner buttons
+    // (ScreenTemplate's corner slot: below the status bar, 12 px from the
+    // right edge, spacing -10). The ranking art is a half pill (flat right
+    // edge) and the achievements art a "D" (flat left edge), like ranking +
+    // help in the games. Ranking is hidden when `ranking_enabled` is false.
+    Row {
+        id: rightButtons
+        anchors {
+            top: statusIndicator.bottom
+            right: parent.right
+            margins: 12
+        }
+        spacing: -10
 
+        // Global ranking (same dialog as the games' corner button).
+        Button {
+            id: rankingBtn
+            width: 88
+            height: 88
+            visible: Ranking.enabled
+
+            contentItem: Image {
+                source: "qrc:/images/android/ranking_button.png"
+                sourceSize.width: 56
+                sourceSize.height: 56
+                fillMode: Image.PreserveAspectFit
+            }
+
+            background: Rectangle {
+                radius: 44
+                color: rankingBtn.pressed ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
+            }
+
+            onClicked: rankingDialog.showList()
+        }
+
+        // Greyed out until the achievements exist (M12): the original app
+        // opened an achievements screen from here, ZowiDesktop has none yet.
         Button {
             id: achievementsBtn
             width: 88
             height: 88
+            enabled: false
+            opacity: 0.4
 
             contentItem: Image {
-                source: "qrc:/images/android/achievements_button.png"
+                source: "qrc:/images/android/achievements_d_button.png"
                 sourceSize.width: 56
                 sourceSize.height: 56
                 fillMode: Image.PreserveAspectFit
@@ -491,5 +530,9 @@ FocusScope {
             appsModel.append(apps[i])
 
         homeScope.forceActiveFocus()
+    }
+
+    RankingDialog {
+        id: rankingDialog
     }
 }
