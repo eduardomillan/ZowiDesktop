@@ -214,7 +214,8 @@ unchanged.
    `waitForRobotReady`) gates `connect`, `status` and the one-shot commands,
    which wait for the robot to answer before sending anything. The identity
    is printed, with a warning when the battery is below the low-battery
-   threshold (same threshold as `control`).
+   threshold (`low_battery_threshold` in `config.json`, 50 % by default; the same
+   threshold as `control` and the GUI).
 6. REPL loop (below).
 7. On exit: `commandStop()` if still connected, `disconnect()`, `rfcomm
    release 0` when a TTY was bound.

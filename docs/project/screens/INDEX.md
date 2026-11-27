@@ -65,6 +65,7 @@ SplashScreen ──(hasDismissedWizard || hasDevice)──▶ HomeScreen
 | Home | `timelineClicked` | GameTimeline |
 | Home | `settingsClicked` | Settings |
 | Settings | `calibrationRequested` | Calibration |
+| Settings | `languageRequested` | Splash (replaces the whole stack) |
 | Settings | `forgetCompleted` | Welcome (replace) |
 
 The `DevOverlay` is instantiated at window scope and toggled from any screen

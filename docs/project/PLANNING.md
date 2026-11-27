@@ -235,7 +235,7 @@ src/
 
 - [ ] Achievements layer
 
-- [ ] Enhance renaming, max. length, chars allowed
+- [x] Enhance renaming, max. length, chars allowed — letters only, at most 10 bytes (firmware buffer), validated in core, CLI and the pairing screen
 
 - [ ] Allow renaming with startup names $ and #
 

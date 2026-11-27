@@ -49,7 +49,7 @@
    it to the embedded resource (`firmwarePath` → `qrc:/firmware/…`) and the
    generic `ProjectScreen` shows an **Install firmware** button whenever it is
    non-empty. The flash goes through `Robot.restoreFirmware()` (conn-gated,
-   50 % battery check); progress and the low-battery confirmation render via
+   battery check against `low_battery_threshold`, 50 % by default); progress and the low-battery confirmation render via
    the shared `FirmwareInstallOverlay` component (also used by Settings'
    restore flow). The HEX files remain flashable via the CLI
    (`zowi_cli alarm` / `zowi_cli adivinawi`) and Settings' restore.
@@ -276,3 +276,10 @@ stored in a separate `projects_preferences.json` file via `ProjectsPreferencesSt
   `ProjectsPreferencesStore.blockade_duration_ms`, but not yet displayed in
   `ProjectScreen` (shows a message bar instead). To be completed in a
   follow-up.
+
+## Explanatory text width
+
+The lesson text (and its image) is a column centred in the window and limited to
+`articleWidthRatio` of its width (**0.85** by default, a property on the screen
+root), so the lines are shorter and easier to read on wide windows. The action
+buttons below keep their own layout.

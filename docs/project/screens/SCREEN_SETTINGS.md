@@ -3,8 +3,8 @@
 > App configuration hub. Shows the connection status and **situation-based
 > contextual actions** (retry / forget / register / refresh / USB quick-connect)
 > plus an option list: restore firmware, rename Zowi, search updates (stub),
-> delete achievements (stub), forget Zowi, calibrate and Hospital (external
-> link).
+> **change language**, delete achievements (stub), forget Zowi, calibrate and
+> Hospital (external link).
 
 - **File:** `src/views/screens/SettingsScreen.qml`
 - **i18n context:** `"SettingsScreen.qml"`
@@ -17,6 +17,7 @@
 | `renameRequested()` | "Rename" option | `main.qml`: push→ WizardRename |
 | `forgetCompleted()` | "Forget" flow finished | `main.qml`: replace→ Welcome |
 | `calibrationRequested()` | "Calibrate" option | `main.qml`: push→ Calibration |
+| `languageRequested()` | "Language" option | `main.qml`: replace the **whole stack** (`stack.replace(null, …)`) with Splash, where the language is picked; "Continue" then goes to Home again (registered Zowi, wizard flag and connection untouched) |
 
 ## QML context used
 
@@ -52,4 +53,7 @@
   `needsRegistration` (forget), and `enabledWhen` predicates (restore disabled on
   base firmware; calibrate enabled only on base firmware).
 - Restore shows a live progress bar and a low-battery confirmation dialog
-  (`onFirmwareRestoreBatteryLow` → `confirmRestoreBattery`).
+  (`onFirmwareRestoreBatteryLow` → `confirmRestoreBattery`). The dialog text quotes
+  the real threshold (`Robot.lowBatteryThreshold`, config key
+  `low_battery_threshold`, default 50 %).
+- The "Language" row is text-only like the others, always enabled (`connGated: false`).

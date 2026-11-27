@@ -6,7 +6,9 @@
 
 - **File:** `src/views/screens/SplashScreen.qml`
 - **i18n context:** `"SplashScreen.qml"`
-- **Initial item** of the `StackView` in `main.qml`.
+- **Initial item** of the `StackView` in `main.qml`. It is also reached from
+  **Settings → Language** (the whole stack is replaced with it); picking a language
+  there and pressing Continue goes back to Home.
 
 ## Signals
 
@@ -59,6 +61,14 @@ label and selector. Nothing overlaps at any window size.
 
 - Language `ComboBox` syncs to the current locale on load and persists the
   choice via `Session.saveString("locale", ...)`.
+- **The popup rows are a `Column` + `Repeater`, not a `ListView`.** With Qt 6.9
+  (LliureX 25) the usual `ListView` over `ComboBox.delegateModel` never laid out its
+  delegates: all five rows sat at `y=0` and only the current one (`z=1`) was
+  visible. The popup handles hover, click and the keyboard (↑ ↓ Enter Space) itself
+  (`navIndex`, `commit()`). The palette roles of the `ComboBox` and `Popup` are
+  pinned to the app colours so nothing depends on the system palette.
+- The whole app uses the bundled **Noto Sans** (`fonts/`, loaded in `main.cpp`), so
+  Valencià / Français / Български render the same on every system.
 - `Component.onCompleted: splashScope.forceActiveFocus()`.
 - A banner warns when no transport is available
   (`!Robot.bluetoothAvailable && !Robot.usbAvailable`).

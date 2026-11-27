@@ -23,7 +23,10 @@ Whether you already own a Zowi or you are just curious about robotics, Zowi Desk
 - **Mouth & gesture picker** — open dedicated screens from the gamepad to pick any LED-matrix mouth expression or body gesture (responsive grid, sends `L`/`H` commands) with just a tap.
 - **Servo calibration** — fine-tune the servo trims from the GUI (interactive 4-step wizard) or the CLI (wizard or direct mode) to keep Zowi standing straight.
 - **Firmware flashing** — restore the factory firmware or install alternative firmwares (e.g. Alarm, Adivinawi) over Bluetooth or USB.
-- **Internationalized** — available in Spanish (`es_ES`), Catalan (`ca_ES`), English (`en_US`), French (`fr_FR`) and Bulgarian (`bg_BG`).
+- **Games and ranking** — play Memory (Zowi says), Draw the mouths and Timeline; each adds your best score to a single local ranking of `Player-NNN` players, reachable from the home screen. An optional, opt-in world ranking is available.
+- **Discover projects** — guided lessons about the robot (gravity, eyes, feet, mouth, choreography…) with a quiz, and projects that reprogram the robot.
+- **Low battery warnings** — the status bar flags a low battery and the app asks before installing firmware when the charge is low (threshold configurable).
+- **Internationalized** — available in Spanish (`es_ES`), Catalan (`ca_ES`), English (`en_US`), French (`fr_FR`) and Bulgarian (`bg_BG`); change the language any time from Settings.
 - **Command-line companion** — the included `zowi_cli` tool exposes the same core over a scriptable interface for automation and debugging.
 
 ![Home screen](https://eduardomillan.github.io/ZowiDesktop/screenshots/home_screen.png)
@@ -75,22 +78,30 @@ See [docs/project/ZOWI_CLI_HOWTO.md](docs/project/ZOWI_CLI_HOWTO.md) for the ful
 
 ---
 
-Built with Qt and QML (C++ core, Qt-free business logic).
+Built with Qt and QML (C++ core, Qt-free business logic). The interface uses the
+[Noto Sans](https://fonts.google.com/noto) font (SIL Open Font License 1.1, see
+[fonts/OFL.txt](fonts/OFL.txt)).
 
 Open source — contributions welcome.
 
 ## Privacy
 
-Zowi Desktop works locally: no accounts, advertising, analytics or profiling, and it
-does not send data to the Internet. It never asks for personal data. It only stores
-your robot's pairing details, settings, your Timeline sequence and the local ranking
-(random `Player-NNN` numbers) in files in your user folder, plus technical logs.
-There is nothing to delete inside the app's ranking: only an administrator can
-wipe it (`zowi_cli ranking clear`).
+Zowi Desktop works locally: no accounts, advertising, analytics or profiling. It never
+asks for personal data. It only stores your robot's pairing details, settings, your
+Timeline sequence and the local ranking (random `Player-NNN` numbers) in files in your
+user folder, plus technical logs. The local ranking cannot be deleted from inside the
+app: only an administrator can wipe it (`zowi_cli ranking clear`).
+
+The only thing that uses the Internet is the **optional world ranking**. Opening its
+tab downloads the public top 100. Sharing your score is **off by default**: if you tick
+the box, only your `Player-NNN` and your points are sent, you can delete your entry at
+any time from the same window, and it expires after 30 days without improvement. An
+administrator can switch the ranking, or just its online part, off for a whole
+installation (`ranking_enabled`, `ranking_online_allowed`; see
+[docs/project/CONFIG_HOWTO.md](docs/project/CONFIG_HOWTO.md)).
 
 The full policy (in Spanish and English, **draft pending review**) is in
-[docs/project/PRIVACY.md](docs/project/PRIVACY.md), including the prepared text for
-the future optional online ranking.
+[docs/project/PRIVACY.md](docs/project/PRIVACY.md).
 
 ## Project documentation
 

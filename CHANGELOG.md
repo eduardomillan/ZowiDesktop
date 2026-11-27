@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Change the language from Settings.** A new "Language" option in Settings takes
+  you back to the start screen, where you pick another language and continue as
+  usual. Your registered Zowi and your settings stay as they are.
 - **Low battery warnings.** When Zowi's battery drops below the safe level (50% by
   default) the status bar now says "Low battery!" and a notice appears once, so you
   know to charge it before it stops. The notice comes back only after the battery has
@@ -34,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one without losing your points. Installations can switch it off completely.
 
 ### Changed
+- **Project texts are narrower.** The explanation of each project now uses 85% of the
+  window width, centred, so the lines are shorter and easier to read.
+- **Robot names are limited to 10 characters.** That is all the robot can store (a
+  letter with an accent counts as two). `zowi_cli rename` and the pairing screen now
+  stop you before sending a longer name, instead of risking a garbled one.
 - **Projects are spread evenly across the window.** The project icons on the home
   screen now fill the whole width, like the games, with about the same distance between
   them as before.

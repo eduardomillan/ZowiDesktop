@@ -101,3 +101,16 @@ The API + CLI + Frontend architecture isolates Qt to two layers:
 - `ZowiDesktop` — Qt Quick GUI
 
 If Qt6 causes issues, only `zowi_bt_qt` and `src/gui/` need changes. The core library and CLI's non-BT commands are unaffected.
+
+## Known Qt 6.9 pitfalls (LliureX 25)
+
+Found on the target platform (Plasma 6 on Wayland, Qt 6.9.0 from KDE neon); they do
+not show up with Qt 6.5:
+
+- **`ListView` in a `Popup` over `ComboBox.delegateModel`:** the delegates are
+  created but never laid out — every row sits at `y=0` and only the current one
+  (`z=1`) is visible. The language selector uses a `Column` + `Repeater` instead
+  (`SplashScreen.qml`, `SCREEN_SPLASH.md`). Check any new popup list on a real Qt 6.9.
+- **Stale QML cache between same-version packages:** see the note in
+  [RELEASE.md](RELEASE.md#linux-artifacts) — delete `~/.cache/ZowiDesktop` when
+  testing a rebuilt package that keeps its version number.

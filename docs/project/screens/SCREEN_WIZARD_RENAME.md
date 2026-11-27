@@ -36,6 +36,11 @@
 
 - `isValidName()` mirrors the core `zowi::isValidRobotName()` (ASCII + Latin-1
   accented letters, excludes `×`/`÷`); invalid chars are stripped while typing.
+- **At most 10 bytes** (`zowi::kMaxRobotNameBytes`): the firmware keeps the name in
+  an 11-byte buffer with no room for the terminator after the tenth byte (zowiLibs
+  `receiveName`). Accented letters take two bytes in UTF-8, so the field counts
+  them as 2 (`nameBytes()`), stops accepting characters at 10 and the button stays
+  disabled for a longer name. `zowi_cli rename` applies the same rule.
 - `dataReady` gate: waits for `deviceName !== "" && appId !== "" &&
   battery >= 0` before sending (mirrors the CLI `waitForRobotData`), because the
   robot plays its connection animation right after the link opens.

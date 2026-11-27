@@ -202,14 +202,14 @@ Default values are the ones in `src/config.json`. "Read by" says who uses the ke
 | `connect_timeout` | `10000` | Milliseconds to wait for a connection before giving up. |
 | `rename_lock_ms` | `3000` | Milliseconds the rename screen stays locked while the new name is sent. Invalid values fall back to `1500`. |
 | `zowi_mac_prefix` | `B4:9D:0B:3` | Start of the Bluetooth address of Zowi robots; the scan screen and `zowi_cli scan` use it to show only Zowis. |
-| `zowi_default_name` | `Zowi` | Name proposed for a robot and used as the factory name when forgetting one. |
+| `zowi_default_name` | `Zowi` | Name proposed for a robot and used as the factory name when forgetting one. A robot name is letters only and at most 10 bytes (an accented letter counts as 2): the firmware cannot store more. |
+| `low_battery_threshold` | `50` | Battery percentage below which the robot counts as low: the status bar turns red and says "Low battery!", a warning appears once each time the level drops below it, and installing firmware (restore, projects) asks for confirmation. `zowi_cli` uses it too (`restore`, `alarm`, `adivinawi`, `control`, shell). Replaces `restore_low_battery_threshold`. |
 
 ### Firmware restore
 
 | Key | Default | Meaning and values |
 |-----|---------|--------------------|
 | `factory_firmware_path` | `qrc:/firmware/ZOWI_BASE_v2.hex` | Firmware file used by Settings → restore factory firmware. |
-| `low_battery_threshold` | `50` | Battery percentage below which the robot counts as low: the status bar turns red and says "Low battery!", a warning appears once each time the level drops below it, and installing firmware (restore, projects) asks for confirmation. `zowi_cli` uses it too (`restore`, `alarm`, `adivinawi`, `control`, shell). Replaces `restore_low_battery_threshold`. |
 | `restore_simulate_low_battery` | `false` | `true` forces the low-battery warning, for testing the dialog. |
 
 ### Links and images

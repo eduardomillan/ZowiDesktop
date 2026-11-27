@@ -181,6 +181,12 @@ DISTRO_SUFFIX=noble bash packaging/linux/create-deb.sh   # on Ubuntu 24.04
 - Builds with `dpkg-buildpackage -b -us -uc`.
 - Output: `dist/zowi-desktop_<version>-1+<suffix>_amd64.deb`.
 
+> **Testing a package on another machine:** Qt keeps a compiled-QML cache in
+> `~/.cache/ZowiDesktop/ZowiDesktop/qmlcache`, keyed by the binary's date, and the
+> packages fix that date (reproducible builds). Two builds **with the same version
+> number** therefore run the QML of the first one until the cache is deleted
+> (`rm -rf ~/.cache/ZowiDesktop`). A new version number invalidates it by itself.
+
 > **Note:** packaging scripts disable `dev_mode` in `src/config.json` and
 > restore it afterwards (the Windows scripts back the file up first, the Linux
 > scripts use `git checkout`). Do not run them on a tree with uncommitted
