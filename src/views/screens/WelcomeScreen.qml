@@ -34,7 +34,6 @@ Rectangle {
             color: Config.get("color_primary") || "#2d5a2d"
             font.pixelSize: 36
             font.bold: true
-            font.family: "monospace"
         }
 
         Text {

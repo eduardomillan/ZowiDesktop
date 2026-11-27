@@ -1,6 +1,6 @@
 # src/gui/CMakeLists.txt
 
-# Auto-generate views.qrc, images.qrc, projects.qrc from disk globbing.
+# Auto-generate views.qrc, images.qrc, projects.qrc, fonts.qrc from disk globbing.
 # app.qrc and i18n.qrc remain manually maintained (small, with custom aliases/locales).
 include(${CMAKE_SOURCE_DIR}/cmake/GenerateQrc.cmake)
 
@@ -31,7 +31,14 @@ zowi_generate_qrc(${GENERATED_QRC_DIR}/projects.qrc ${CMAKE_SOURCE_DIR}/projects
     ${CMAKE_SOURCE_DIR}/projects/*/*.html
 )
 
+# Generate fonts.qrc: bundled Noto Sans (OFL) so every translated text renders
+# with full Latin/Cyrillic coverage regardless of the system fonts.
+zowi_generate_qrc(${GENERATED_QRC_DIR}/fonts.qrc ${CMAKE_SOURCE_DIR} "/"
+    ${CMAKE_SOURCE_DIR}/fonts/*.ttf
+)
+
 set(GUI_QRC_FILES
+    ${GENERATED_QRC_DIR}/fonts.qrc
     ${GENERATED_QRC_DIR}/views.qrc
     ${CMAKE_SOURCE_DIR}/app.qrc
     ${GENERATED_QRC_DIR}/images.qrc

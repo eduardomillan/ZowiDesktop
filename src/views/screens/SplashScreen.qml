@@ -108,7 +108,6 @@ FocusScope {
             color: splashScope.primary
             font.pixelSize: splashScope.titleSize
             font.bold: true
-            font.family: "monospace"
         }
 
         Text {
@@ -206,8 +205,19 @@ FocusScope {
             }
             textRole: "text"
 
+            // Precaution: pin every palette role the Controls style may read to
+            // our own colours so nothing here depends on the system palette
+            // (KDE Plasma's platform theme injects its own on LliureX 25).
+            palette.text: splashScope.primary
+            palette.windowText: splashScope.primary
+            palette.buttonText: splashScope.primary
+            palette.highlightedText: splashScope.primary
+            palette.base: "#ffffff"
+            palette.window: "#ffffff"
+            palette.button: "transparent"
+            palette.highlight: Config.get("color_bg_hover") || "#e0f0e0"
+
             font.pixelSize: Math.round(splashScope.clamp(splashScope.unit * 0.025, 14, 18))
-            font.family: "monospace"
 
             Component.onCompleted: {
                 var cur = Translator.currentLocale()
@@ -244,39 +254,78 @@ FocusScope {
                 color: "transparent"
             }
 
-            delegate: ItemDelegate {
-                width: langCombo.width
-                height: langCombo.height
-
-                contentItem: Text {
-                    text: model.text
-                    color: splashScope.primary
-                    verticalAlignment: Text.AlignVCenter
-                    horizontalAlignment: Text.AlignHCenter
-                    font: langCombo.font
-                }
-
-                background: Rectangle {
-                    color: langCombo.highlightedIndex === index ? Config.get("color_bg_hover") || "#e0f0e0" : "transparent"
-                }
-            }
-
-            // In-window popup (the default), opened upwards on purpose: the
-            // selector sits at the bottom, so it never runs off the window and
-            // behaves the same on X11 and Wayland.
+            // In-window popup, opened upwards on purpose: the selector sits at
+            // the bottom, so it never runs off the window and behaves the same
+            // on X11 and Wayland.
+            //
+            // The rows are a Column + Repeater, NOT the usual ListView over
+            // langCombo.delegateModel: with Qt 6.9 (LliureX 25) that ListView
+            // never laid its delegates out, so all five rows sat at y=0 on top
+            // of each other and only the current one (z=1) was visible. With a
+            // handful of fixed entries a plain Column is simpler and robust, but
+            // it must provide hover, click and keyboard handling itself.
             popup: Popup {
+                id: langPopup
                 y: -implicitHeight - 2
                 width: langCombo.width
                 padding: 0
+                focus: true
+                // Row highlighted by hover or keyboard; -1 = follow currentIndex.
+                property int navIndex: -1
+                onAboutToShow: navIndex = langCombo.currentIndex
 
-                contentItem: ListView {
-                    clip: true
-                    implicitHeight: contentHeight
-                    model: langCombo.delegateModel
-                    currentIndex: langCombo.highlightedIndex
+                function commit(i) {
+                    if (i < 0 || i >= langCombo.count) return
+                    langCombo.currentIndex = i
+                    langCombo.activated(i)
+                    close()
+                }
 
-                    ScrollBar.vertical: ScrollBar {
-                        policy: ScrollBar.AsNeeded
+                Keys.onUpPressed: navIndex = Math.max(0, navIndex - 1)
+                Keys.onDownPressed: navIndex = Math.min(langCombo.count - 1, navIndex + 1)
+                Keys.onReturnPressed: commit(navIndex)
+                Keys.onEnterPressed: commit(navIndex)
+                Keys.onSpacePressed: commit(navIndex)
+
+                palette.text: splashScope.primary
+                palette.windowText: splashScope.primary
+                palette.base: "#ffffff"
+                palette.window: "#ffffff"
+
+                contentItem: Column {
+                    Repeater {
+                        model: langCombo.model
+                        delegate: ItemDelegate {
+                            id: langRow
+                            required property var model
+                            required property int index
+
+                            width: langCombo.width
+                            height: langCombo.height
+                            highlighted: langPopup.navIndex === langRow.index
+                            onHoveredChanged: if (hovered) langPopup.navIndex = langRow.index
+
+                            palette.text: splashScope.primary
+                            palette.windowText: splashScope.primary
+                            palette.buttonText: splashScope.primary
+                            palette.highlightedText: splashScope.primary
+
+                            contentItem: Text {
+                                text: langRow.model.text
+                                color: splashScope.primary
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                                font: langCombo.font
+                            }
+
+                            background: Rectangle {
+                                color: langRow.highlighted
+                                       ? (Config.get("color_bg_hover") || "#e0f0e0")
+                                       : "transparent"
+                            }
+
+                            onClicked: langPopup.commit(langRow.index)
+                        }
                     }
                 }
 

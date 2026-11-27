@@ -13,6 +13,8 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QQuickStyle>
+#include <QFont>
+#include <QFontDatabase>
 #ifdef QT_DEBUG
 #include <QFileSystemWatcher>
 #include <QDirIterator>
@@ -142,6 +144,12 @@ int main(int argc, char *argv[])
     app.setApplicationName("ZowiDesktop");
     app.setOrganizationName("ZowiDesktop");
     app.setWindowIcon(QIcon(":/images/app_icon.png"));
+
+    // Bundled Noto Sans as the app-wide font: the system fonts of some
+    // targets (e.g. LliureX monospace) lack accents/Cyrillic glyphs.
+    QFontDatabase::addApplicationFont(":/fonts/NotoSans-Regular.ttf");
+    QFontDatabase::addApplicationFont(":/fonts/NotoSans-Bold.ttf");
+    app.setFont(QFont(QStringLiteral("Noto Sans")));
 
     // Install the log handler early so every message (including ones emitted
     // during setup below) is captured to the daily file.

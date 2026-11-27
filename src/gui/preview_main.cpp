@@ -3,6 +3,8 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QGuiApplication>
+#include <QFont>
+#include <QFontDatabase>
 #include <QImage>
 #include <QQmlContext>
 #include <QQuickStyle>
@@ -242,6 +244,10 @@ int main(int argc, char *argv[])
     QQuickStyle::setStyle(QStringLiteral("Basic"));
     QGuiApplication app(argc, argv);
     app.setApplicationName(QStringLiteral("zowi_screen_preview"));
+    // Same bundled app-wide font as the real app (see main.cpp).
+    QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/NotoSans-Regular.ttf"));
+    QFontDatabase::addApplicationFont(QStringLiteral(":/fonts/NotoSans-Bold.ttf"));
+    app.setFont(QFont(QStringLiteral("Noto Sans")));
 
     const PreviewOptions options = parseOptions(QCoreApplication::arguments());
     if (options.screenPath.isEmpty()) {

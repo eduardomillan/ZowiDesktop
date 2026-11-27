@@ -161,7 +161,6 @@ ScreenTemplate {
                         color: "#ffffff"
                         font.bold: true
                         font.pixelSize: 18
-                        font.family: "monospace"
                     }
                 }
 

@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   original app and robot, kept only as reference) are no longer packed inside it, so
   the program is about 17 MB smaller and quicker to download and install.
 
+### Fixed
+- **The language list shows every language correctly.** On LliureX 25 only the
+  selected language was visible when the list was opened, and Valencià, Français and
+  Български could appear as blank boxes. The list now shows all languages, and the app
+  carries its own font so all texts look the same everywhere.
+- **The app opens right away on computers without Bluetooth.** With a registered Zowi
+  and no Bluetooth available, the window could take about 25 seconds to appear.
+
 ## [0.9.6] - 2026-10-02
 
 ### Added
