@@ -101,7 +101,9 @@ eligible.
   silently not scoring (`ranking_too_short`).
 - `RankingDialog.qml` (shared; i18n context `RankingDialog.qml`): the top 10
   (the active player is always shown, highlighted), "New player" and
-  "Switch player". The corner **Ranking** button of the three games opens it.
+  "Switch player". The corner **Ranking** button of the three games opens it, and so
+  does the **Ranking** button next to Achievements on the **home screen** (both hidden
+  when `ranking_enabled` is `false`).
   **Size:** the dialog takes `sizeRatio` (a property of `RankingDialog.qml`,
   default **0.4**) of the app window: width = 40 % of the window width (at least
   380 px), and a height that follows the content with a **minimum of 40 % of the
@@ -128,6 +130,8 @@ See `CONFIG_HOWTO.md` for the layers and the `allow_*` switches.
 
 ## Deleting rankings (admin only)
 
+### Local ranking
+
 - The app has **no way** to delete players or scores: not the achievements reset
   in Settings (its text says rankings are not affected), not any other button.
 - Admin, local: the CLI.
@@ -140,7 +144,32 @@ See `CONFIG_HOWTO.md` for the layers and the `allow_*` switches.
 
   Removing `ZowiRanking.json` by hand also works. `zowi_cli session clear` does
   not affect the ranking. See `ZOWI_CLI_HOWTO.md`.
-- Online (future): only the maintainer, editing the published JSON on `gh-pages`.
+
+### World ranking
+
+Deleting the local ranking does **not** remove the online entry (and the other way
+round). The online entries live in the Worker's D1 database; the published
+`ranking.json` is generated from it, so editing that file on `gh-pages` by hand is
+pointless: the next publication overwrites it.
+
+- **The player**, from the app: **Delete my entry now** (World tab, shown once
+  registered) removes the entry at once and turns sharing off. Unchecking the box only
+  stops sending. Without an improvement of the total the entry expires after 30 days,
+  and a player pushed out of the top 100 loses the entry (the number is freed).
+- **The maintainer** (e.g. to free a number or remove an entry): delete the row in D1
+  **and mark the list as changed**, otherwise nothing is republished until another
+  change happens (the Worker only publishes when `dirty` is set; the scheduled task
+  then publishes within about 5 minutes):
+
+  ```bash
+  cd server/ranking-worker
+  npx wrangler d1 execute zowi-ranking --remote \
+    --command "DELETE FROM players WHERE number = 123; INSERT OR REPLACE INTO meta (key, value) VALUES ('dirty', '1')"
+  ```
+
+  (Documented from the Worker's schema and code; not run against the production
+  database while writing this.) Old versions of the list stay in the `gh-pages` git
+  history (`Player-NNN` + total, no personal data).
 
 ## Online ranking
 
@@ -255,7 +284,8 @@ only while testing) and remove the throw-away folder:
 
 ```bash
 cd server/ranking-worker
-npx wrangler d1 execute zowi-ranking --remote --command "DELETE FROM players"
+npx wrangler d1 execute zowi-ranking --remote \
+  --command "DELETE FROM players; INSERT OR REPLACE INTO meta (key, value) VALUES ('dirty', '1')"
 rm -rf /tmp/zowitest
 ```
 

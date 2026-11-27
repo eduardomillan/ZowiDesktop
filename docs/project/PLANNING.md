@@ -227,7 +227,7 @@ src/
 
 - [ ] End-to-end manual test of the world ranking (see `RANKING_HOWTO.md`)
 
-- [ ] Access to the ranking from the home screen
+- [x] Access to the ranking from the home screen
 
 - [ ] Low battery management
 

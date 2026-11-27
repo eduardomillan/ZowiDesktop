@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Ranking button on the home screen.** The ranking is now one tap away from the
+  start screen, joined to the Achievements button, without having to open a game
+  first. It is hidden when the ranking is switched off. The Achievements button is
+  greyed out for now, because the achievements themselves are not available yet.
+
 ## [0.10.0] - 2026-11-27
 
 ### Added
