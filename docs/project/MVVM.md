@@ -7,6 +7,7 @@
 - [MVVM (Model-View-ViewModel)](#mvvm-model-view-viewmodel)
   - [Why MVVM fits Qt/QML naturally](#why-mvvm-fits-qtqml-naturally)
   - [Comparison table](#comparison-table)
+- [In Zowi Desktop](#in-zowi-desktop)
 - [Restaurant analogy](#restaurant-analogy)
 
 ## MVC (Model-View-Controller)
@@ -57,12 +58,15 @@ The **ViewModel** is an abstraction of the View that exposes **data and commands
 QML is a declarative binding language. When you write:
 
 ```qml
-opacity: Translator.currentLocale() === modelData.locale ? 1.0 : 0.4
+// StatusBar.qml (simplified)
+color: Robot.connected
+       ? (Robot.batteryLow ? "#fdecea" : "#e8f5e8")
+       : "#fff3e0"
 ```
 
-The View automatically re-evaluates when `currentLocale()` changes. There's no imperative `setOpacity()` call — the binding handles it. This is the essence of MVVM.
+The View automatically re-evaluates when `Robot` emits `connectionChanged` or `batteryChanged`. There's no imperative `setColor()` call — the binding handles it. This is the essence of MVVM.
 
-In MVC, the Controller would need to manually call `view.setOpacity(...)`. In MVP, the Presenter would call `view.updateHighlight(...)`. In MVVM, neither exists — the binding does the work.
+In MVC, the Controller would need to manually call `view.setColor(...)`. In MVP, the Presenter would call `view.showLowBattery()`. In MVVM, neither exists — the binding does the work.
 
 ### Comparison table
 
@@ -74,6 +78,22 @@ In MVC, the Controller would need to manually call `view.setOpacity(...)`. In MV
 | **Testability** | Hard (depends on View) | Easy (mock the interface) | Easy (ViewModel is pure logic) |
 | **Data binding** | Manual | Manual | Declarative |
 | **Boilerplate** | Low | Medium (interface per View) | Low (properties + binding) |
+
+---
+
+## In Zowi Desktop
+
+The desktop app is MVVM-shaped, while the original Android app (ZowiAppReborn) is **MVP** (an `Activity` + `Presenter` + `Wireframe` per screen, with the presenter pushing to the view through an interface):
+
+| Role | Where it lives |
+| :--- | :--- |
+| **Model** | `src/core/` (`SessionStore`, `RankingStore`, `TimelinePlayer`, `ZowiDiceGame`, …): pure C++, no Qt, tested without a GUI |
+| **ViewModel** | `src/gui/controllers/` (`RobotController`, `RankingController`, `ProjectsController`, …): thin `QObject` adapters that expose the model as `Q_PROPERTY` + `Q_INVOKABLE` + signals, registered as context properties (`Robot`, `Ranking`, `Projects`, …) |
+| **View** | `src/views/` (QML): declarative bindings to those properties; screens only emit signals and `main.qml` decides the navigation |
+
+Examples of the pattern: `Robot.batteryLow` (a property) drives the colour and the "Low battery!" text of the status bar with no code in the view, and `Robot.lowBatteryDetected(level)` (a signal) is the only thing `main.qml` listens to in order to show the one-off notice. The business rules stay in the core (e.g. `zowi::isValidRobotName()` for names); QML keeps only a mirror to clean the field while typing.
+
+Rule of thumb (also in `AGENTS.md`): the GUI is an adapter layer, not a second business-logic layer; logic that can live in `src/core/` goes there. See [ARCHITECTURE.md](ARCHITECTURE.md) for the layers and the history of the MVVM → API + CLI + Frontend migration.
 
 ---
 

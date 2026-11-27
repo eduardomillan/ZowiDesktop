@@ -38,14 +38,19 @@ logic:
 
 | Module | Responsibility | Portability |
 |---|---|---|
+| `protocol` | Firmware framing (`&&cmd value%%`), `makeCommand()`, robot-name validation (letters only, 10 bytes) | ✅ std C++ |
 | `robot_commands` | Builds firmware command strings (`M`, `K`, `L`, `S`, `C`, `G`, melodies, mouths) | ✅ std C++ |
 | `message_parser` | Tokenises the robot stream (ACK `A`, battery `B`, alarms `E/I`) | ✅ std C++ |
 | `movement_sequencer` | State machine that times multi-command sequences | ✅ std C++ |
 | `calibration_session` | Servo trims/grades state machine | ✅ std C++ |
-| `robot_state` | Active-session state | ✅ std C++ |
-| `config_store` | JSON key/value config | ✅ std C++ |
+| `robot_state` | Cached robot identity/battery state | ✅ std C++ |
+| `config_store` | JSON key/value config + override layers (system file, environment, user file) | ✅ std C++ |
 | `session_store` | Persistent JSON session (`getDataDir()`-injectable) | ✅ std C++ |
 | `translation_engine` | i18n loading/translation | ✅ std C++ (see loader below) |
+| `projects_store`, `projects_preferences_store`, `project_model` | Discover projects (metadata, pages, quizzes) and their preferences | ✅ std C++ (resource loader injectable) |
+| `zowi_dice`, `mouths_game` | Game logic: Memory ("Zowi says") and Draw the mouths | ✅ std C++ |
+| `timeline_command`, `timeline_player`, `timeline_score` | Timeline chips, playback paced by the robot's acks, score of a completed sequence | ✅ std C++ |
+| `ranking_store`, `ranking_online` | Local `Player-NNN` ranking; parsing/validation of the optional world ranking (no network code: the host owns the transport) | ✅ std C++ |
 
 External dependencies: **none beyond `nlohmann_json`** (header-only) and
 `cxx_std_20`. In particular `src/core` has **no Qt linkage**, no QObject, no
@@ -136,8 +141,10 @@ ctest --test-dir build --output-on-failure
 ## Verification after the refactor
 
 - Core-only build (`-DZOWI_BUILD_GUI=OFF -DZOWI_BUILD_CLI=OFF`) on a machine
-  **without Qt available**: all 8 core tests pass ("100 % tests passed").
-- Full build (GUI + CLI, Qt 6): compiles clean; all 9 tests pass including the
+  **without Qt available**: all the core tests pass ("100 % tests passed"; there
+  were 8 at the time of the refactor, 16 today — see
+  [ARCHITECTURE.md](ARCHITECTURE.md#testing)).
+- Full build (GUI + CLI, Qt 6): compiles clean; all tests pass including the
   CLI black-box suite; `zowi_cli translate` still resolves es_ES/en_US/ca_ES via
   the Qt-aware loader (filesystem + qrc fallback).
 
@@ -159,7 +166,7 @@ ctest --test-dir build --output-on-failure
   this repo stays the desktop app.
 - Keep the i18n JSON format and the `TranslationListener`-style `onChanged`
   callback unchanged — the `TranslationEngine` API is now stable and
-  framework-free, so a mobile host can reuse the same `.ts`-derived `zowi_*.json`
+  framework-free, so a mobile host can reuse the same `zowi_*.json`
   files.
 
 ## See also

@@ -97,8 +97,8 @@ when connected:
 | When | Builder | Wire (medium) |
 |------|---------|----------------|
 | Level start (Zowi shows the target mouth) | `commandMouth(targetPattern)` | `L 00<30 bits>\r` |
-| Correct draw | `commandGesture(Victory)` + `commandStop()` | `K <victory>\r` then `S\r` |
-| Timeout | `commandGesture(Angry)` + `commandStop()` | `K <angry>\r` then `S\r` |
+| Correct draw | `commandGesture(GestureId::Victory)` + `commandStop()` | `H 12\r` then `S\r` |
+| Timeout | `commandGesture(GestureId::Angry)` + `commandStop()` | `H 8\r` then `S\r` |
 
 The controller ticks the countdown every 100 ms and holds a 1.5 s VICTORY
 intermission between a solved round and the next one.
@@ -132,9 +132,10 @@ intermission between a solved round and the next one.
   clear of the level/countdown band on top and the score strip at the bottom,
   so the grid never covers the progress bar at any window size.
 - **Target miniature:** mirrors the mouth shown on the robot. Policy driven by
-  `mouths_target_onscreen`: `"auto"` (default) shows it only while the robot
-  is NOT connected, `"always"` forces it, `"never"` hides it. The score stays
-  centered under the drawing grid in both states.
+  `mouths_target_onscreen`: `"auto"` (the code's fallback) shows it only while
+  the robot is NOT connected, `"always"` (the value shipped in `config.json`)
+  forces it, `"never"` hides it. The score stays centered under the drawing grid
+  in all cases.
 - **Level + countdown bar** above the card (visible while a round runs or its
   victory intermission lasts), styled like the Memory progress bar.
 - Footer (inside `ScreenTemplate`'s real footer area): a single prominent
@@ -143,7 +144,10 @@ intermission between a solved round and the next one.
   (`score_prefix`, bottom-anchored).
 - **Help** ("Cómo jugar") and **Ranking** are **icon buttons top-right**
   (same slot/pattern as the Memory game). Ranking opens the shared global ranking
-  dialog (see `RANKING_HOWTO.md`).
+  dialog (see `RANKING_HOWTO.md`). The help dialog has a second paragraph,
+  `how_to_play_ranking`, on how the game adds points (a point per level, only if
+  the player's best improves); it is hidden when the ranking is switched off. The
+  help dialog's width is `helpDialogWidthRatio` (0.5) of the window.
 - Dialogs are standard `QtQuick.Controls.Dialog`, `modal` and centered, with
   custom content and content-driven height (same treatment as the Memory game).
 - Back button inherited from `ScreenTemplate` (`backClicked` — do **not**
@@ -162,8 +166,9 @@ intermission between a solved round and the next one.
 Keys under `"GameMouthsScreen.qml"` with translations in all 5 locales (es,
 en, fr, ca, bg): `title`, `subtitle`, `play_button`, `help_button`,
 `ranking_button`, `score_prefix` (`%1`), `level_prefix` (`%1`),
-`target_label`, `how_to_play_text`, `close`, `game_over`, `final_score`
-(`%1`), `retry_button`.
+`target_label`, `how_to_play_text`, `how_to_play_ranking`, `close`, `game_over`,
+`final_score` (`%1`), `retry_button`, `total_position` (`%1` player, `%2` total,
+`%3` position).
 
 The Home tile label comes from the Home context key `mouths`
 (*"Pintabocas"* in es_ES).
@@ -201,5 +206,5 @@ until each item lands.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Ranking** | ✅ Implemented | Global ranking shared by all games: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`; delete is admin-only (`zowi_cli ranking`). See `RANKING_HOWTO.md`. Online ranking is still pending. |
+| **Ranking** | ✅ Implemented | Global ranking shared by all games: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`; delete is admin-only (`zowi_cli ranking`); optional opt-in world ranking on top. See `RANKING_HOWTO.md`. |
 | **Achievement `mouths_editor`** (level ≥ 8) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). `achievementLevelThreshold` stays reserved. |

@@ -64,7 +64,8 @@ and implemented in core by a per-action machine built on the shared
   Stop's `&&F` to advance).
 - `Config.get(...)`: theme colors.
 - `Session`: persists the last score (via controller) and the first-play help
-  flag (`zowi_says_help_seen`, read/written from QML for the auto-help).
+  flag (`memory_help_seen`, read/written from QML for the auto-help).
+- `Ranking` (`recordScore()`, `enabled`) and `RankingDialog` (`showList()`).
 - `Translator` (via `tr()`).
 
 `CommandsController` is injected into the controller constructor wiring but is
@@ -103,9 +104,10 @@ our `BendBackward` label is the same physical gesture.
 - **Round:** the game does **not** auto-start on entry — the state is `Idle` and
   a prominent **Play** button is shown so the user can start when they want
   (or go back). The **help dialog** opens on entry according to the config key
-  `zowi_dice_help` in `config.json`: `"always"` opens it every time and
-  `"once"` only the first time (`zowi_says_help_seen` flag in Session); in
-  both cases dismissing it does **not** start the game. Zowi replays the random
+  `memory_help` in `config.json` (shipped as `"always"`; `"once"` is the code
+  fallback): `"always"` opens it every time and `"once"` only the first time
+  (`memory_help_seen` flag in Session); in both cases dismissing it does **not**
+  start the game. Zowi replays the random
   sequence (length 1, growing by 1 per correct repeat). Each action is
   delivered as `[move … &&A] → [stop] → [&&F(move)] → [&&A(stop)] → [&&F(stop)]`:
   the Stop is queued as soon as the move's software ack (`&&A`) arrives, so it
@@ -130,11 +132,12 @@ our `BendBackward` label is the same physical gesture.
   `ShowingSequence` round starts (matching `checkCurrentUserSequece()` in
   Android). Score displayed via `ZowiDice.score` (`score_prefix`, e.g.
   *"Puntuación: %1"*).
-- **Game over dialog** (`game_over`, `final_score` `%1`, *"New best"* line for
-  `score ≥ 12`): custom content like the help dialog — bold title, big final
-  score, a **"Cerrar"** (outlined, → `resetGame()`) and a **"Reintentar"**
-  accent pill (→ `startGame()`) button. The achievement `in_love` stays
-  reserved — see below.
+- **Game over dialog** (`game_over`, `final_score` `%1`): custom content like the
+  help dialog — bold title, big final score, *"New best!"* (`new_best`) when the
+  player's Memory best in the global ranking improved, the ranking line
+  *"Player-123: 150 pts · position 2"* (`total_position`), a **"Cerrar"**
+  (outlined, → `resetGame()`) and a **"Reintentar"** accent pill (→ `startGame()`)
+  button. The achievement `in_love` stays reserved — see below.
 
 ## UI layout
 
@@ -174,18 +177,21 @@ our `BendBackward` label is the same physical gesture.
   `anchors.centerIn` (QQC2 popups are not auto-centered).
 - **Help dialog:** fully custom content (no default header/footer, so the
   rounded corners show). It shows a bold title (`help_button`), the
-  `simon_game_button.png` image at 130 px, `how_to_play_text` (wrapped), and an
-  accent pill **"Cerrar"** button (`close`, already translated in all 5
-  locales) that closes the dialog. Sized `width: 460`, `radius: 20`, accent
-  border. Its **height is content-driven** so it always fits the wrapped text
-  and the Close button never sits on the border, whatever the locale text
-  length. It opens directly in `Component.onCompleted` according to
-  `zowi_dice_help`: `"always"` → every entry, `"once"` → only the first time
-  (`zowi_says_help_seen`).
+  `simon_game_button.png` image at 130 px, `how_to_play_text` (wrapped), a
+  second paragraph `how_to_play_ranking` (rich text, key words in bold) on how
+  the game adds points to the ranking (hidden when the ranking is switched off),
+  and an accent pill **"Cerrar"** button (`close`, already translated in all 5
+  locales) that closes the dialog. Its width is `helpDialogWidthRatio` (**0.5**,
+  a property on the screen) of the window width, `radius: 20`, accent border. Its
+  **height is content-driven** so it always fits the wrapped text and the Close
+  button never sits on the border, whatever the locale text length. It opens
+  directly in `Component.onCompleted` according to `memory_help`: `"always"` →
+  every entry, `"once"` → only the first time (`memory_help_seen`).
 - **Game over dialog:** same custom treatment, `width: 360`, `radius: 20`,
   accent border, `anchors.centerIn: parent`, and the same content-driven height
   with 5% clearance. Content: `game_over` title, `final_score` (big, bold), the
-  `new_best` line (when `score ≥ 12`), and a button row with an outlined
+  `new_best` line (when the ranking best improved), the `total_position` ranking
+  line, and a button row with an outlined
   **"Cerrar"** (→ `resetGame()`) and an accent pill **"Reintentar"**
   (`retry_button`, → `startGame()`).
 - Back button inherited from `ScreenTemplate` (`backClicked` — do **not**
@@ -195,15 +201,19 @@ our `BendBackward` label is the same physical gesture.
 
 - `zowi_says_last_score` — latest score, saved by the controller on game over
   via `SessionController`.
-- `zowi_says_help_seen` — set to `"true"` the first time the game screen loads;
-  controls whether the help dialog auto-opens on entry.
+- `memory_help_seen` — set to `"true"` the first time the game screen loads;
+  controls whether the help dialog auto-opens on entry (when `memory_help` is
+  `"once"`).
+- The score also goes to the global ranking (`Ranking.recordScore("zowi_says", score)`),
+  stored apart in `ZowiRanking.json` — see `RANKING_HOWTO.md`.
 
 ## i18n
 
 Keys under `"GameMemoryScreen.qml"` with translations in all 5 locales (es,
 en, fr, ca, bg): `title`, `subtitle`, `look_at_zowi_text`, `play_button`,
 `help_button`, `ranking_button`, `score_prefix` (`%1`), `how_to_play_text`,
-`close`, `retry_button`, `game_over`, `final_score` (`%1`), `new_best`.
+`how_to_play_ranking`, `close`, `retry_button`, `game_over`, `final_score` (`%1`),
+`new_best`, `total_position` (`%1` player, `%2` total, `%3` position).
 
 The move-name keys (`walk_forward`, `bend_backward`, `jump`,
 `moonwalker_right` — legacy leftovers) also exist in the same context, but are
@@ -250,15 +260,14 @@ player can retry.
 - **Help text does not mention the Zowi's name** (Android interpolates
   `%1$s` with the registered name).
 
-## Planned work (week tracker)
+## Planned work
 
-Remaining items scheduled for implementation this week (see PLANNING.md M10).
-Status is kept here until each item lands; implemented items move to the
+Items still open for this game (see PLANNING.md). Implemented items move to the
 relevant section (with a CHANGELOG entry) and are ticked off.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| **Ranking** | ✅ Implemented | Global ranking shared by all games: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`; delete is admin-only (`zowi_cli ranking`). See `RANKING_HOWTO.md`. Online ranking is still pending. |
+| **Ranking** | ✅ Implemented | Global ranking shared by all games: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`; delete is admin-only (`zowi_cli ranking`); optional opt-in world ranking on top. See `RANKING_HOWTO.md`. |
 | **Achievement `in_love`** (score ≥ 12) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). Today the game-over dialog only shows the *"New best"* / ranking line; `achievementThreshold` stays reserved. |
 | **Adjustable speed** | 🚧 Planned | `ZowiDiceConfig::initialSpeedMs = 1000` is fixed; add a UI speed selector mapping to `MovementSpeed`. |
 | **Help text with the Zowi's name** | 🚧 Planned | Android interpolates `%1$s` with the registered name; ours doesn't. Needs i18n work across the 5 locales. |
