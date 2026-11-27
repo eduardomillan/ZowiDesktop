@@ -155,6 +155,13 @@ ApplicationWindow {
             var calib = stack.push("qrc:/src/views/screens/CalibrationScreen.qml")
             calib.backClicked.connect(function() { stack.pop() })
         })
+        settings.languageRequested.connect(function() {
+            // Back to the splash screen, where the language is chosen. Replace the
+            // whole stack (null target) so "Continue" starts a clean Home -> the
+            // registered Zowi, the wizard flag and the connection are untouched.
+            stack.replace(null, "qrc:/src/views/screens/SplashScreen.qml")
+            connectSplash(stack.currentItem)
+        })
         settings.renameRequested.connect(function() {
             var rename = stack.push("qrc:/src/views/screens/WizardRenameScreen.qml")
             rename.backClicked.connect(function() { stack.pop() })

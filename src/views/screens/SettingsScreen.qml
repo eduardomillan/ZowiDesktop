@@ -17,6 +17,7 @@ ScreenTemplate {
     signal renameRequested()
     signal forgetCompleted()
     signal calibrationRequested()
+    signal languageRequested()      // back to the splash screen to pick another language
 
     property bool forgetting: false
     property bool _forgettingNoZowi: false
@@ -155,6 +156,7 @@ ScreenTemplate {
         { key: "restore",        desc: "restore_desc",        connGated: true,  action: function() { settings.restoreFirmware() }, enabledWhen: function() { return !settings.isBaseFirmware() } },
         { key: "rename",         desc: "rename_desc",         connGated: true,  action: function() { settings.renameRequested() } },
         { key: "update",         desc: "update_desc",         connGated: false, action: function() { msgBar.show(tr("update_stub")) } },
+        { key: "language",       desc: "language_desc",       connGated: false, action: function() { settings.languageRequested() } },
         { key: "achievements",   desc: "achievements_desc",   connGated: false, action: function() { msgBar.show(tr("achievements_stub")) } },
         { key: "forget",         desc: "forget_desc",         connGated: false, needsRegistration: true, action: function() { settings.forgetZowi() } },
         { key: "calibrate",      desc: "calibrate_desc",      connGated: true,  enabledWhen: function() { return settings.isBaseFirmware() }, action: function() { settings.calibrationRequested() } },

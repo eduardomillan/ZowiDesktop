@@ -29,6 +29,8 @@
     "rename_desc": "Donnez un nouveau nom à votre Zowi.",
     "update": "Rechercher des mises à jour",
     "update_desc": "Vérifie si une nouvelle version de l'application est disponible.",
+    "language": "Langue",
+    "language_desc": "Changer la langue de l'application. Vous reviendrez à l'écran d'accueil.",
     "update_stub": "Bientôt disponible : vérifiera si une nouvelle version de l'application est disponible.",
     "achievements": "Supprimer les succès",
     "achievements_desc": "Recommencez à zéro et effacez votre progression.",
