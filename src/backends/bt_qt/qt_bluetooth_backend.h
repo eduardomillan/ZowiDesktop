@@ -98,7 +98,8 @@ private:
     QString adapterPath();
     void ensurePairedAndTrusted(const QString &address);
 
-    QBluetoothLocalDevice m_localDevice;
+    QBluetoothLocalDevice &localDevice(); // created on first use (may block on D-Bus)
+    std::unique_ptr<QBluetoothLocalDevice> m_localDevice;
     QBluetoothDeviceDiscoveryAgent *m_discoveryAgent = nullptr;
     QBluetoothSocket *m_socket = nullptr;
     QTimer *m_reconnectTimer = nullptr;

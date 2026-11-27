@@ -23,7 +23,19 @@ namespace zowi {
 QtBluetoothBackend::QtBluetoothBackend(QObject *parent)
     : QObject(parent)
 {
-    QObject::connect(&m_localDevice, &QBluetoothLocalDevice::pairingFinished,
+    // Deliberately empty: QBluetoothLocalDevice talks to BlueZ over D-Bus
+    // synchronously when constructed, and on a machine where BlueZ is absent
+    // or not running that call blocks for the D-Bus timeout (~25 s). The
+    // backend is built on the GUI thread before the window exists, so the
+    // local device is created lazily (see localDevice()).
+}
+
+QBluetoothLocalDevice &QtBluetoothBackend::localDevice()
+{
+    if (m_localDevice)
+        return *m_localDevice;
+    m_localDevice = std::make_unique<QBluetoothLocalDevice>();
+    QObject::connect(m_localDevice.get(), &QBluetoothLocalDevice::pairingFinished,
             this, [this](const QBluetoothAddress &, QBluetoothLocalDevice::Pairing pairing) {
         if (m_unpairPending && m_onUnpairResult) {
             m_unpairPending = false;
@@ -31,9 +43,9 @@ QtBluetoothBackend::QtBluetoothBackend(QObject *parent)
         }
     });
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    QObject::connect(&m_localDevice, &QBluetoothLocalDevice::errorOccurred,
+    QObject::connect(m_localDevice.get(), &QBluetoothLocalDevice::errorOccurred,
 #else
-    QObject::connect(&m_localDevice,
+    QObject::connect(m_localDevice.get(),
             QOverload<QBluetoothLocalDevice::Error>::of(&QBluetoothLocalDevice::error),
 #endif
             this, [this](QBluetoothLocalDevice::Error) {
@@ -42,6 +54,7 @@ QtBluetoothBackend::QtBluetoothBackend(QObject *parent)
             m_onUnpairResult(false, "failed to unpair device");
         }
     });
+    return *m_localDevice;
 }
 
 QtBluetoothBackend::~QtBluetoothBackend()
@@ -483,13 +496,13 @@ void QtBluetoothBackend::unpair(const std::string &address)
     m_unpairPending = true;
     // If the device is already unpaired at the system level, requestPairing
     // may emit nothing, so report success immediately.
-    if (m_localDevice.pairingStatus(addr) == QBluetoothLocalDevice::Unpaired) {
+    if (localDevice().pairingStatus(addr) == QBluetoothLocalDevice::Unpaired) {
         m_unpairPending = false;
         if (m_onUnpairResult)
             m_onUnpairResult(true, {});
         return;
     }
-    m_localDevice.requestPairing(addr, QBluetoothLocalDevice::Unpaired);
+    localDevice().requestPairing(addr, QBluetoothLocalDevice::Unpaired);
 }
 
 } // namespace zowi
