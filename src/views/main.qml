@@ -340,6 +340,16 @@ ApplicationWindow {
         id: rootNotice
     }
 
+    // Low battery: warn once each time the robot's level drops below the
+    // threshold (Robot re-arms it when the battery recovers or on disconnect).
+    Connections {
+        target: Robot
+        function onLowBatteryDetected(level) {
+            rootNotice.show(tr("low_battery_notice").arg(level),
+                            Config.get("color_error") || "#c0392b")
+        }
+    }
+
     // Hourglass overlay: while `busy` is true the wait cursor is shown and
     // every input event is swallowed, so the user gets feedback instead of a
     // seemingly frozen window.

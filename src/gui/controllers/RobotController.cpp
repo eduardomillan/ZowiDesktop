@@ -123,7 +123,7 @@ RobotController::RobotController(QObject *parent)
         m_simulateLowBattery = (s == "true" || s == "1");
     } catch (...) {}
     try {
-        std::string t = cfg.get("restore_low_battery_threshold");
+        std::string t = cfg.get("low_battery_threshold");
         if (!t.empty()) m_lowBatteryThreshold = std::stof(t);
     } catch (...) {}
     // Start on the Bluetooth backend by default; detection may switch it.
@@ -299,6 +299,7 @@ void RobotController::wireBackend()
                 if (m_backendKind != Usb)
                     m_deviceAddress.clear();
                 m_battery = -1.0f;
+                m_lowBatteryWarned = false;
                 if (!m_appId.isEmpty()) {
                     m_appId.clear();
                     emit appIdChanged();
@@ -411,6 +412,7 @@ void RobotController::parseIncoming()
             if (m_robotState.battery != m_battery) {
                 m_battery = m_robotState.battery;
                 updated = true;
+                checkLowBattery();
             }
         }
         if (upd.name) {
@@ -526,6 +528,7 @@ void RobotController::onConnectTimeout()
         m_backend->disconnect();
     m_deviceName.clear();
     m_battery = -1.0f;
+    m_lowBatteryWarned = false;
     emit deviceChanged();
     emit batteryChanged();
     setConnecting(false);
@@ -549,6 +552,18 @@ QString RobotController::deviceAddress() const
 QString RobotController::appId() const
 {
     return m_appId;
+}
+
+void RobotController::checkLowBattery()
+{
+    if (!isBatteryLow()) {
+        m_lowBatteryWarned = false;  // recovered (or unknown): arm the next warning
+        return;
+    }
+    if (m_lowBatteryWarned) return;
+    m_lowBatteryWarned = true;
+    qInfo() << "[battery] low:" << battery() << "% (threshold" << lowBatteryThreshold() << "%)";
+    emit lowBatteryDetected(battery());
 }
 
 int RobotController::battery() const

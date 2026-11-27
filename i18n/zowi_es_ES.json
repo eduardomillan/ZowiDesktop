@@ -22,7 +22,7 @@
     "restore_failed": "No se pudo restaurar el firmware. Inténtalo de nuevo.",
     "restore_already_base": "Zowi ya tiene el firmware BASE instalado.",
     "restore_progress": "Restaurando… %1%",
-    "restore_battery_low": "La batería está por debajo del 50%. ¿Continuar de todos modos?",
+    "restore_battery_low": "La batería está por debajo del %1%. ¿Continuar de todos modos?",
     "confirm": "Continuar",
     "cancel": "Cancelar",
     "rename": "Renombrar",
@@ -67,6 +67,7 @@
     "connected": "Conectado",
     "connected_name": "Conectado · %1",
     "connected_battery": "Conectado · %1%",
+    "status_low_battery": "¡Batería baja!",
     "connected_name_battery": "Conectado · %1 · %2%",
     "not_connected": "No conectado",
     "status_connecting": "Conectando…",
@@ -180,7 +181,8 @@
     "unpair_app_only": "Dispositivo borrado de la app, pero no se pudo desenlazar del sistema Bluetooth."
   },
   "main.qml": {
-    "already_named": "El robot ya se llama \"%1\". Se mantiene."
+    "already_named": "El robot ya se llama \"%1\". Se mantiene.",
+    "low_battery_notice": "La batería de Zowi está baja (%1%). Cárgala pronto."
   },
   "CalibrationScreen.qml": {
     "calibration": "Calibrar Zowi",

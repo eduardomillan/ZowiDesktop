@@ -22,7 +22,7 @@
     "restore_failed": "No s'ha pogut restaurar el firmware. Torna-ho a provar.",
     "restore_already_base": "Zowi ja disposa del firmware BASE instal·lat.",
     "restore_progress": "Restaurant… %1%",
-    "restore_battery_low": "La bateria està per sota del 50%. Continuar igualment?",
+    "restore_battery_low": "La bateria està per sota del %1%. Continuar igualment?",
     "confirm": "Continuar",
     "cancel": "Cancel·lar",
     "rename": "Anomena",
@@ -76,6 +76,7 @@
     "connected": "Connectat",
     "connected_name": "Connectat · %1",
     "connected_battery": "Connectat · %1%",
+    "status_low_battery": "Bateria baixa!",
     "connected_name_battery": "Connectat · %1 · %2%",
     "not_connected": "No connectat",
     "status_connecting": "Connectant…",
@@ -189,7 +190,8 @@
     "unpair_app_only": "Dispositiu eliminat de l'app, però no s'ha pogut desenllaçar del sistema Bluetooth."
   },
   "main.qml": {
-    "already_named": "El robot ja es diu «%1». Es manté."
+    "already_named": "El robot ja es diu «%1». Es manté.",
+    "low_battery_notice": "La bateria de Zowi està baixa (%1%). Carrega-la aviat."
   },
   "CalibrationScreen.qml": {
     "calibration": "Calibrar Zowi",

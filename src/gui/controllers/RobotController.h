@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+
 #include <QObject>
 #include <QStringList>
 #include <QTimer>
@@ -84,6 +86,11 @@ private:
     // which firmware the connected Zowi is running.
     Q_PROPERTY(QString appId READ appId NOTIFY appIdChanged)
     Q_PROPERTY(int battery READ battery NOTIFY batteryChanged)
+    // Low-battery management: one configurable threshold (`low_battery_threshold`,
+    // default 50 %) shared by the status bar, the one-off warning and the
+    // firmware-install confirmation.
+    Q_PROPERTY(int lowBatteryThreshold READ lowBatteryThreshold CONSTANT)
+    Q_PROPERTY(bool batteryLow READ isBatteryLow NOTIFY batteryChanged)
     Q_PROPERTY(bool restoring READ isRestoring NOTIFY restoringChanged)
     // Situation enum values surfaced to QML (context-property objects can't
     // reference Q_ENUM members directly).
@@ -123,6 +130,9 @@ public:
     QString deviceAddress() const;
     QString appId() const;
     int battery() const;
+    int lowBatteryThreshold() const { return static_cast<int>(std::lround(m_lowBatteryThreshold)); }
+    // True when the robot reported a level and it is below the threshold.
+    bool isBatteryLow() const { return m_battery >= 0.0f && m_battery < m_lowBatteryThreshold; }
     bool isRestoring() const { return m_restoring; }
 
     void setTransport(int transport);
@@ -162,6 +172,9 @@ signals:
     void scanningChanged();
     void deviceChanged();
     void batteryChanged();
+    // Emitted once each time the reported battery drops below the threshold
+    // (re-armed when it recovers or the robot disconnects). `level` is a percent.
+    void lowBatteryDetected(int level);
     void appIdChanged();
     void dataReceived(const QString &data);
     // Emitted when the robot sends &&A%% (command accepted, not yet processed),
@@ -246,6 +259,8 @@ private:
     // GUI checks the reported battery; if it is low it asks the user to confirm
     // via the UI and defers finishing until confirmRestoreBattery() is called.
     bool m_batteryPending = false;
+    bool m_lowBatteryWarned = false;  // lowBatteryDetected() already emitted for this low spell
+    void checkLowBattery();
 
     bool m_verifyPending = false;
     QString m_verifyExpectedName;
@@ -295,7 +310,7 @@ private:
     SessionController *m_session = nullptr;
     bool m_restoring = false;
     bool m_simulateLowBattery = false; // TEMP: force low-battery dialog for testing
-    float m_lowBatteryThreshold = 50.0f; // configurable low-battery threshold
+    float m_lowBatteryThreshold = 50.0f; // `low_battery_threshold` in config.json
 
     // The Bluetooth adapter is probed on a detached background thread: on
     // machines with no Bluetooth hardware the platform query can block for

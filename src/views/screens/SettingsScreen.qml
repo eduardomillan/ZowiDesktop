@@ -421,7 +421,7 @@ ScreenTemplate {
         progress: settings.restoreProgress
         batteryLow: settings.batteryLow
         progressText: tr("restore_progress")
-        titleText: tr("restore_battery_low")
+        titleText: tr("restore_battery_low").arg(Robot.lowBatteryThreshold)
         confirmText: tr("confirm")
         cancelText: tr("cancel")
     }

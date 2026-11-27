@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Low battery warnings.** When Zowi's battery drops below the safe level (50% by
+  default) the status bar now says "Low battery!" and a notice appears once, so you
+  know to charge it before it stops. The notice comes back only after the battery has
+  recovered and dropped again. The level can be changed in the configuration
+  (`low_battery_threshold`), and the confirmation shown before installing firmware
+  now mentions the real level instead of always saying 50%. The command-line tool
+  (`zowi_cli`) uses the same level.
 - **Ranking button on the home screen.** The ranking is now one tap away from the
   start screen, joined to the Achievements button, without having to open a game
   first. It is hidden when the ranking is switched off. The Achievements button is

@@ -209,7 +209,7 @@ Default values are the ones in `src/config.json`. "Read by" says who uses the ke
 | Key | Default | Meaning and values |
 |-----|---------|--------------------|
 | `factory_firmware_path` | `qrc:/firmware/ZOWI_BASE_v2.hex` | Firmware file used by Settings → restore factory firmware. |
-| `restore_low_battery_threshold` | `50` | Battery percentage below which restoring asks for confirmation. |
+| `low_battery_threshold` | `50` | Battery percentage below which the robot counts as low: the status bar turns red and says "Low battery!", a warning appears once each time the level drops below it, and installing firmware (restore, projects) asks for confirmation. `zowi_cli` uses it too (`restore`, `alarm`, `adivinawi`, `control`, shell). Replaces `restore_low_battery_threshold`. |
 | `restore_simulate_low_battery` | `false` | `true` forces the low-battery warning, for testing the dialog. |
 
 ### Links and images

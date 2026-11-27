@@ -11,7 +11,7 @@ Rectangle {
     color: Robot.connecting
           ? (Config.get("color_bg_connecting") || "#eaf2fb")
           : (Robot.connected
-              ? (Robot.battery >= 0 && Robot.battery < 50
+              ? (Robot.batteryLow
                  ? (Config.get("color_bg_low_battery") || "#fdecea")
                  : (Config.get("color_bg_connected") || "#e8f5e8"))
               : (Robot.situation === Robot.SituationTransportLost
@@ -28,7 +28,7 @@ Rectangle {
     property color dotColor: Robot.connecting
         ? (Config.get("color_fg_connecting") || "#2980b9")
         : (Robot.connected
-            ? (Robot.battery >= 0 && Robot.battery < 50
+            ? (Robot.batteryLow
                ? (Config.get("color_error") || "#c0392b")
                : (Config.get("color_primary") || "#2d5a2d"))
             : (Robot.situation === Robot.SituationTransportLost
@@ -49,10 +49,13 @@ Rectangle {
             function withMac(base) {
                 return mac !== "" ? base + " · " + mac : base
             }
-            if (Robot.battery >= 0)
-                return withMac(name !== ""
+            if (Robot.battery >= 0) {
+                var text = withMac(name !== ""
                     ? root.tr("connected_name_battery").arg(name).arg(Robot.battery)
                     : root.tr("connected_battery").arg(Robot.battery))
+                // Low battery: say it in words too, not only with the red colour.
+                return Robot.batteryLow ? text + " · " + root.tr("status_low_battery") : text
+            }
             return withMac(name !== "" ? root.tr("connected_name").arg(name) : root.tr("connected"))
         }
         if (Robot.situation === Robot.SituationTransportLost) {

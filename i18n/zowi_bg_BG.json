@@ -22,7 +22,7 @@
     "restore_failed": "Възстановяването на фърмуера е неуспешно. Опитайте отново.",
     "restore_already_base": "Zowi вече има инсталиран BASE фърмуер.",
     "restore_progress": "Възстановяване… %1%",
-    "restore_battery_low": "Батерията е под 50%. Да се продължи ли?",
+    "restore_battery_low": "Батерията е под %1 %. Да се продължи ли?",
     "confirm": "Продължи",
     "cancel": "Отказ",
     "rename": "Преименуване",
@@ -76,6 +76,7 @@
     "connected": "Свързан",
     "connected_name": "Свързан · %1",
     "connected_battery": "Свързан · %1 %",
+    "status_low_battery": "Слаба батерия!",
     "connected_name_battery": "Свързан · %1 · %2 %",
     "not_connected": "Не е свързан",
     "status_connecting": "Свързване…",
@@ -189,7 +190,8 @@
     "unpair_app_only": "Устройството е премахнато от приложението, но не можа да бъде раздвоено от Bluetooth системата."
   },
   "main.qml": {
-    "already_named": "Роботът вече се казва „%1“. Запазва се."
+    "already_named": "Роботът вече се казва „%1“. Запазва се.",
+    "low_battery_notice": "Батерията на Zowi е слаба (%1 %). Заредете я скоро."
   },
   "CalibrationScreen.qml": {
     "calibration": "Калибриране на Zowi",

@@ -229,7 +229,7 @@ src/
 
 - [x] Access to the ranking from the home screen
 
-- [ ] Low battery management
+- [x] Low battery management — status bar marker, one-off warning, single configurable threshold (`low_battery_threshold`); the robot-side alarm at 20 % belongs to the new firmware
 
 ### M12 — Achievements 🕒
 
