@@ -536,9 +536,9 @@ zowi_cli restore -f /path/to/ZOWI_BASE_v2.hex
 
 ### Low battery handling
 
-The restore flow follows the Android app's battery warning threshold of **50%**.
+The restore flow follows the Android app's battery warning threshold, **50%** by default. It is the `low_battery_threshold` key of `config.json` (the same one the GUI uses; see [CONFIG_HOWTO.md](CONFIG_HOWTO.md)).
 
-If the robot reports less than 50% battery, the command stops unless you explicitly continue:
+If the robot reports less than that battery level, the command stops unless you explicitly continue:
 
 ```bash
 zowi_cli restore --force-low-battery
@@ -596,7 +596,7 @@ zowi_cli alarm -f /path/to/ZOWI_Alarm_v2.hex
 
 ### Low battery handling
 
-The alarm flow follows the same 50% battery warning threshold as restore:
+The alarm flow follows the same battery warning threshold (`low_battery_threshold`, 50% by default) as restore:
 
 ```bash
 zowi_cli alarm --force-low-battery
@@ -654,7 +654,7 @@ zowi_cli adivinawi -f /path/to/ZOWI_Adivinawi_v2.hex
 
 ### Low battery handling
 
-The Adivinawi flow follows the same 50% battery warning threshold as restore:
+The Adivinawi flow follows the same battery warning threshold (`low_battery_threshold`, 50% by default) as restore:
 
 ```bash
 zowi_cli adivinawi --force-low-battery

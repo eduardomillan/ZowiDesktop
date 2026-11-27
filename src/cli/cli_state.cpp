@@ -42,7 +42,6 @@ bool g_debugLog = false;
 // by g_mtx like every other piece of global state.
 static zowi::MessageParser s_parser;
 
-const float kLowBatteryThreshold = 50.0f;
 const char *const kFactoryFirmwarePath = "src/firmware/ZOWI_BASE_v2.hex";
 const char *const kAlarmFirmwarePath = "src/firmware/ZOWI_Alarm_v2.hex";
 const char *const kAdivinawiFirmwarePath = "src/firmware/ZOWI_Adivinawi_v2.hex";
@@ -63,6 +62,21 @@ void resetRobotState()
     g_dataReceived = false;
     g_ack = false;
     g_finalAck = false;
+}
+
+float lowBatteryThreshold()
+{
+    static const float value = [] {
+        zowi::ConfigStore config("src/config.json");
+        config.applyOverrides();
+        try {
+            const float v = std::stof(config.get("low_battery_threshold"));
+            if (v > 0.0f && v <= 100.0f) return v;
+        } catch (...) {
+        }
+        return 50.0f;
+    }();
+    return value;
 }
 
 void loadLogLevel()

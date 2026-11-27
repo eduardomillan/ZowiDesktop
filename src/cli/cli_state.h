@@ -35,7 +35,9 @@ extern int g_stdinFd;
 extern bool g_debugLog;  // true when config log_level == "debug"
 
 // ── Constants ────────────────────────────────────────────────
-extern const float kLowBatteryThreshold;
+// Battery percentage below which the robot counts as low: `low_battery_threshold`
+// in config.json (default 50), the same key the GUI uses. Read once.
+float lowBatteryThreshold();
 extern const char *const kFactoryFirmwarePath;
 extern const char *const kAlarmFirmwarePath;
 extern const char *const kAdivinawiFirmwarePath;

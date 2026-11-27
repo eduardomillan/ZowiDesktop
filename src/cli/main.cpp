@@ -109,7 +109,7 @@ int main(int argc, char **argv)
     restoreCmd->add_option("--firmware,-f", restoreArgs.firmwarePath, "Path to the firmware .hex file to upload")->default_val(zowi_cli::kFactoryFirmwarePath);
     restoreCmd->add_option("--timeout,-t", restoreArgs.timeout, "Seconds to wait for firmware restore confirmation")->default_val(10);
     restoreCmd->add_option("--battery-timeout", restoreArgs.batteryTimeout, "Seconds to wait for a battery reading before uploading")->default_val(2);
-    restoreCmd->add_flag("--force-low-battery", restoreArgs.forceLowBattery, "Continue even if the reported battery level is below 50%");
+    restoreCmd->add_flag("--force-low-battery", restoreArgs.forceLowBattery, "Continue even if the reported battery level is below the low-battery threshold (low_battery_threshold, default 50%)");
     restoreCmd->add_option("--protocol", restoreArgs.protocol, "Upload protocol: 'raw' (stream HEX to custom bootloader) or 'stk' (STK500v1)")->default_val("stk");
     restoreCmd->add_option("--tty", restoreArgs.tty, "Serial TTY to use for flashing (e.g. /dev/rfcomm0 or /dev/ttyUSB0). If omitted, one is bound (serial) or auto-picked (usb).")->default_val("");
     restoreCmd->add_option("--baud", restoreArgs.baud, "Serial baud rate (USB Optiboot default: 115200)")->default_val(115200);
@@ -124,7 +124,7 @@ int main(int argc, char **argv)
     alarmCmd->add_option("--firmware,-f", alarmArgs.firmwarePath, "Path to the alarm firmware .hex file to upload")->default_val(zowi_cli::kAlarmFirmwarePath);
     alarmCmd->add_option("--timeout,-t", alarmArgs.timeout, "Seconds to wait for alarm firmware confirmation")->default_val(10);
     alarmCmd->add_option("--battery-timeout", alarmArgs.batteryTimeout, "Seconds to wait for a battery reading before uploading")->default_val(2);
-    alarmCmd->add_flag("--force-low-battery", alarmArgs.forceLowBattery, "Continue even if the reported battery level is below 50%");
+    alarmCmd->add_flag("--force-low-battery", alarmArgs.forceLowBattery, "Continue even if the reported battery level is below the low-battery threshold (low_battery_threshold, default 50%)");
     alarmCmd->add_option("--protocol", alarmArgs.protocol, "Upload protocol: 'raw' (stream HEX to custom bootloader) or 'stk' (STK500v1)")->default_val("stk");
     alarmCmd->add_option("--tty", alarmArgs.tty, "Serial TTY to use for flashing (e.g. /dev/rfcomm0 or /dev/ttyUSB0). If omitted, one is bound (serial) or auto-picked (usb).")->default_val("");
     alarmCmd->add_option("--baud", alarmArgs.baud, "Serial baud rate (USB Optiboot default: 115200)")->default_val(115200);
@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     adivinawiCmd->add_option("--firmware,-f", adivinawiArgs.firmwarePath, "Path to the adivinawi firmware .hex file to upload")->default_val(zowi_cli::kAdivinawiFirmwarePath);
     adivinawiCmd->add_option("--timeout,-t", adivinawiArgs.timeout, "Seconds to wait for adivinawi firmware confirmation")->default_val(10);
     adivinawiCmd->add_option("--battery-timeout", adivinawiArgs.batteryTimeout, "Seconds to wait for a battery reading before uploading")->default_val(2);
-    adivinawiCmd->add_flag("--force-low-battery", adivinawiArgs.forceLowBattery, "Continue even if the reported battery level is below 50%");
+    adivinawiCmd->add_flag("--force-low-battery", adivinawiArgs.forceLowBattery, "Continue even if the reported battery level is below the low-battery threshold (low_battery_threshold, default 50%)");
     adivinawiCmd->add_option("--protocol", adivinawiArgs.protocol, "Upload protocol: 'raw' (stream HEX to custom bootloader) or 'stk' (STK500v1)")->default_val("stk");
     adivinawiCmd->add_option("--tty", adivinawiArgs.tty, "Serial TTY to use for flashing (e.g. /dev/rfcomm0 or /dev/ttyUSB0). If omitted, one is bound (serial) or auto-picked (usb).")->default_val("");
     adivinawiCmd->add_option("--baud", adivinawiArgs.baud, "Serial baud rate (USB Optiboot default: 115200)")->default_val(115200);

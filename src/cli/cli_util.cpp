@@ -573,13 +573,13 @@ bool installFirmwareToPairedZowi(QCoreApplication &qtApp,
         const bool batteryAvailable = waitForBatteryLevel(qtApp, batteryTimeoutSeconds * 1000);
         if (batteryAvailable) {
             std::cout << "Battery reported: " << g_battery << "%" << std::endl;
-            if (g_battery < kLowBatteryThreshold && !forceLowBattery) {
-                std::cerr << "Battery is below the recommended " << kLowBatteryThreshold
+            if (g_battery < lowBatteryThreshold() && !forceLowBattery) {
+                std::cerr << "Battery is below the recommended " << lowBatteryThreshold()
                           << "% threshold. Re-run with --force-low-battery to continue." << std::endl;
                 bt.disconnect();
                 return false;
             }
-            if (g_battery < kLowBatteryThreshold) {
+            if (g_battery < lowBatteryThreshold()) {
                 std::cout << "Continuing despite low battery because --force-low-battery was provided." << std::endl;
             }
         } else {

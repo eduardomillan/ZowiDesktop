@@ -799,7 +799,7 @@ int runControl(int argc, char **argv, const ControlArgs &a)
         return 1;
     }
 
-    if (waitForBatteryLevel(qtApp, 2000) && g_battery >= 0 && g_battery < kLowBatteryThreshold) {
+    if (waitForBatteryLevel(qtApp, 2000) && g_battery >= 0 && g_battery < lowBatteryThreshold()) {
         std::cout << "Warning: battery is low (" << g_battery << "%). Consider recharging.\n";
     }
 
@@ -990,7 +990,7 @@ int runCalibrate(int argc, char **argv, const CalibrateArgs &a)
     }
 
     const bool lowBattery = waitForBatteryLevel(qtApp, 2000)
-                            && g_battery >= 0 && g_battery < kLowBatteryThreshold;
+                            && g_battery >= 0 && g_battery < lowBatteryThreshold();
 
     // Persist trims with a C command and wait for the EEPROM final ack (&&F).
     auto persistTrims = [&](const std::array<int, 4> &t) -> bool {
@@ -1948,7 +1948,7 @@ int runShell(int argc, char **argv, const ShellArgs &a)
     printShellStatus();
     {
         std::lock_guard<std::mutex> lock(g_mtx);
-        if (g_battery >= 0 && g_battery < kLowBatteryThreshold) {
+        if (g_battery >= 0 && g_battery < lowBatteryThreshold()) {
             std::cout << "Warning: battery is low (" << g_battery << "%). Consider recharging.\n";
         }
     }
