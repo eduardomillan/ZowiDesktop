@@ -295,16 +295,29 @@ FocusScope {
                 height: parent.height * homeScope.projectsHeightPercent
                 clip: true
 
-                Flow {
+                // Same idea as the games row: the icons are spread evenly over
+                // the whole width (equal-width columns, each icon centred in its
+                // column). The number of columns is what the old Flow fitted
+                // with a fixed icon gap (cellSpacing), so the distance between
+                // icons stays about the same; only the leftover width is shared
+                // out instead of being left at the sides.
+                Grid {
+                    id: projectsGrid
+                    readonly property real minCellWidth: homeScope.iconSize + 8
+                    columns: Math.max(1, Math.min(home.projectsData.length,
+                             Math.floor((width + homeScope.cellSpacing)
+                                        / (minCellWidth + homeScope.cellSpacing))))
+                    readonly property real columnWidth: width / columns
                     anchors.centerIn: parent
                     width: parent.width
-                    spacing: homeScope.cellSpacing
+                    columnSpacing: 0
+                    rowSpacing: homeScope.cellSpacing
 
                     Repeater {
                         model: home.projectsData
 
                         Rectangle {
-                            width: homeScope.iconSize + 8
+                            width: projectsGrid.columnWidth
                             height: homeScope.iconSize + 24
                             color: "transparent"
 

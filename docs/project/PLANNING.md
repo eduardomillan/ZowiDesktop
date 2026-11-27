@@ -16,7 +16,9 @@
   - [M7 — Calibration and mouth/gestures in gamepad + editor ✅](#m7--calibration-and-mouthgestures-in-gamepad--editor-)
   - [M8 — Basic projects ✅](#m8--basic-projects-)
   - [M9 — Advanced projects ✅](#m9--advanced-projects-)
-  - [M10 - Games ✅](#m10--games-)
+  - [M10 — Games ✅](#m10--games-)
+  - [M11 — Ranking 🚧](#m11--ranking-)
+  - [M12 — Achievements 🕒](#m12--achievements-)
   - [Future milestones 🕒](#future-milestones-)
   - [Application new features 🕒](#application-new-features-)
 - [Testing](#testing)
@@ -43,7 +45,8 @@ Status:
 | **0.7.0** | M7 | Zowi calibration (servo trims via`C`/`G` protocol commands) | ✅ |
 | **0.8.0** | M8 | Basic projects | ✅ |
 | **0.9.0** | M9 | Advanced projects | ✅ |
-| **0.10.0** | M10 | Games | ✅ |
+| **0.10.0** | M10–M11 | Games; ranking (local global ranking, optional world ranking), per-installation configuration | ✅ |
+| TBD | M12 | Achievements, renaming improvements | 🕒 |
 
 
 ## Architecture
@@ -212,20 +215,33 @@ src/
 
 - [x] Game: Timeline — Persistence is deferred to a future phase
 
+### M11 — Ranking 🚧
 
-### Future milestones 🕒
+- [x] Single local global ranking (Memory, Draw the mouth, Timeline; players `Player-NNN`) — see `RANKING_HOWTO.md`
 
-- [ ] Ranking in games — single local global ranking done (Memory, Draw the mouth, Timeline, players `Player-NNN`); pending: the optional online ranking (`RANKING_HOWTO.md`)
+- [x] Optional world ranking: read-only tab, sharing, delete, taken-number flow, Cloudflare Worker deployed
 
-- [ ] Achievements layer
+- [x] Layered per-installation configuration (system file > environment > user file > defaults), see `CONFIG_HOWTO.md`
+
+- [ ] Review the privacy policy (`PRIVACY.md`, draft) with the Generalitat's data protection office
+
+- [ ] End-to-end manual test of the world ranking (see `RANKING_HOWTO.md`)
+
+- [ ] Access to the ranking from the home screen
 
 - [ ] Low battery management
 
-- [ ] Configure an APT repository
+### M12 — Achievements 🕒
+
+- [ ] Achievements layer
 
 - [ ] Enhance renaming, max. length, chars allowed
 
 - [ ] Allow renaming with startup names $ and #
+
+### Future milestones 🕒
+
+- [ ] Configure an APT repository
 
 - [ ] Design improvements
 
