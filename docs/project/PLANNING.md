@@ -251,6 +251,8 @@ src/
 
 - [ ] Games in CLI
 
+- [ ] Refactor `RobotController`: move its connection, transport and restore logic into Qt-free core classes, keeping a thin `Robot` facade for QML.
+
 
 
 ### Application new features 🕒

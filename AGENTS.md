@@ -2,6 +2,9 @@
 
 Compact guidance for OpenCode sessions in this repo. Read `.github/copilot-instructions.md` for the full architecture and conventions — this file only captures what an agent is likely to miss.
 
+## Direction of the project
+- **The project and its code development must follow what is set out in `docs/project/PLANNING.md` and in `.local/TODO.md`** (milestones, planned features, priorities and decisions). Read both before planning or starting non-trivial work, and do not take the project in a direction that contradicts them. If a request seems to conflict with them, say so before acting.
+
 ## Repo shape
 - C++ core + two consumers: `src/core/` (Qt-free business logic), `src/cli/` (`zowi_cli`), `src/gui/` (Qt/QML app). GUI is an adapter layer, not a second business-logic layer.
 - `src/backends/bt_qt/` is the single Bluetooth backend shared by GUI and CLI.
