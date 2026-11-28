@@ -31,10 +31,14 @@
     "update_desc": "Comprueba si hay una nueva versión de la aplicación.",
     "language": "Idioma",
     "language_desc": "Cambia el idioma de la aplicación. Volverás a la pantalla inicial.",
+    "delete_achievements_title": "Borrar logros",
+    "delete_achievements_message": "¿Estás seguro de que quieres borrar todos los logros que has conseguido jugando con Zowi? Si los borras no podrás recuperarlos y tendrás que volver a empezar, pero... ¡puede ser divertido! Los rankings no se ven afectados.",
+    "delete_achievements_confirm": "Borrar",
+    "delete_achievements_cancel": "No borrar",
+    "delete_achievements_done": "Logros borrados.",
     "update_stub": "Próximamente: comprobará si hay una nueva versión de la aplicación.",
     "achievements": "Borrar logros",
     "achievements_desc": "Empieza de cero y borra tu progreso.",
-    "achievements_stub": "Próximamente: borrará tus logros. Los rankings no se ven afectados.",
     "forget": "Olvidar Zowi",
     "forget_desc": "La aplicación ya no detectará este Zowi.",
     "calibrate": "Calibrar Zowi",
@@ -67,19 +71,23 @@
   },
   "StatusBar.qml": {
     "connected": "Conectado",
-    "connected_name": "Conectado · %1",
-    "connected_battery": "Conectado · %1%",
     "status_low_battery": "¡Batería baja!",
-    "connected_name_battery": "Conectado · %1 · %2%",
     "not_connected": "No conectado",
     "status_connecting": "Conectando…",
     "status_unavailable": "Zowi no disponible",
     "status_reconnect": "Reconectar",
     "via_bluetooth": "Bluetooth",
     "via_usb": "USB",
-    "status_firmware": "%1",
-    "status_demo": "Sin Bluetooth ni USB: modo demo.",
-    "status_transport_lost": "Zowi no disponible (%1)"
+    "status_demo": "Modo demo",
+    "status_transport_lost": "Zowi no disponible (%1)",
+    "status_custom_firmware": "Firmware personalizado",
+    "detail_mac": "Dirección (MAC)",
+    "detail_transport": "Conexión",
+    "detail_firmware": "Firmware",
+    "detail_firmware_base": "%1 (base)",
+    "detail_firmware_custom": "%1 (no es el firmware base)",
+    "detail_battery": "Batería",
+    "detail_battery_value": "%1% (aviso por debajo del %2%)"
   },
   "WizardRenameScreen.qml": {
     "title": "¡Dale un nombre!",
@@ -184,7 +192,60 @@
   },
   "main.qml": {
     "already_named": "El robot ya se llama \"%1\". Se mantiene.",
-    "low_battery_notice": "La batería de Zowi está baja (%1%). Cárgala pronto."
+    "low_battery_notice": "La batería de Zowi está baja (%1%). Cárgala pronto.",
+    "achievement_unlocked_title": "¡Muy bien!",
+    "achievement_unlocked_text": "Has desbloqueado:",
+    "achievement_continue": "Continuar",
+    "achievement_locked_hint": "%1 está bloqueado. %2"
+  },
+  "AchievementsScreen.qml": {
+    "title": "Logros",
+    "subtitle": "Desbloqueados: %1 / %2",
+    "section_movement": "Movimientos",
+    "section_animation": "Animaciones",
+    "section_game": "Juegos",
+    "title_crusaito": "¡El cruzadito!",
+    "title_flapping": "¡Al trote!",
+    "title_shake_leg": "¡Menea el pie!",
+    "title_tip_toe": "¡De puntillas!",
+    "title_jitter": "¡Estoy temblando!",
+    "title_ascending_turn": "¡Ballet clásico!",
+    "title_swing": "¡Swing star!",
+    "title_super_happy": "Súper feliz",
+    "title_sleepy": "Zowi dormilón",
+    "title_fart": "Prrrr",
+    "title_confused": "¡Confundido!",
+    "title_in_love": "¡Zowi es amor!",
+    "title_angry": "Grrr",
+    "title_anxious": "Inquieto",
+    "title_magic": "¡Magia!",
+    "title_wave": "¡Wow!",
+    "title_mouths_editor": "Editor de bocas",
+    "desc_crusaito": "Con este divertido paso Zowi puede bailar hacia los lados.",
+    "desc_flapping": "Zowi ha aprendido otra forma de avanzar, ¡al trote!",
+    "desc_shake_leg": "Zowi agita un pie en el aire.",
+    "desc_tip_toe": "¡Ya conoces Bitbloq! Celébralo con un nuevo paso de baile en la Línea de tiempo.",
+    "desc_jitter": "Mira qué nervioso se pone Zowi con el tembleque.",
+    "desc_ascending_turn": "Un movimiento muy elegante.",
+    "desc_swing": "Otro movimiento para la colección, ¡con este será toda una estrella!",
+    "desc_super_happy": "¡Entra en el mundo de Bitbloq!",
+    "desc_sleepy": "¡Vaya! Zowi puede dormir de pie sin caerse.",
+    "desc_fart": "¿Qué es eso nuevo que hace Zowi?",
+    "desc_confused": "Parece que Zowi está un poco confuso...",
+    "desc_in_love": "¡Qué buena memoria! A Zowi le encanta.",
+    "desc_angry": "Zowi también sabe mostrar enfado.",
+    "desc_anxious": "¡Eres todo un experto en poner a Zowi en acción!",
+    "desc_magic": "Ya tienes la animación mágica.",
+    "desc_wave": "Zowi también sabe hacer la ola.",
+    "desc_mouths_editor": "Con este editor, podrás dibujar cualquier boca que imagines para Zowi.",
+    "cond_start": "Lo tienes desde el principio.",
+    "cond_second_launch": "Entra por segunda vez en la app para conseguirlo.",
+    "cond_days": "Usa la app durante %1 días diferentes.",
+    "cond_both": "Usa el Gamepad y la Línea de tiempo una vez.",
+    "cond_anxious": "Reproduce hasta el final una secuencia de %1 elementos en la Línea de tiempo.",
+    "cond_in_love": "Consigue %1 puntos en Memoria.",
+    "cond_mouths": "Llega al nivel %1 en Pintabocas.",
+    "cond_project": "Supera el cuestionario del proyecto «%1»."
   },
   "CalibrationScreen.qml": {
     "calibration": "Calibrar Zowi",
@@ -203,7 +264,8 @@
     "confirm": "Confirmar"
   },
   "MouthScreen.qml": {
-    "mouths_title": "Bocas"
+    "mouths_title": "Elige una boca",
+    "close": "Cerrar"
   },
   "MouthEditorScreen.qml": {
     "title": "Editor de bocas",
@@ -213,7 +275,8 @@
     "pattern_label": "Patrón"
   },
   "GestureScreen.qml": {
-    "gestures_title": "Gestos"
+    "gestures_title": "Elige un gesto",
+    "close": "Cerrar"
   },
   "SoundsScreen.qml": {
     "sounds_title": "Sonidos",
@@ -324,14 +387,6 @@
   "MovementSelector.qml": {
     "title": "Elige un movimiento",
     "subtitle": "Toca un movimiento para añadirlo a tu línea de tiempo",
-    "close": "Cerrar"
-  },
-  "MouthScreen.qml": {
-    "mouths_title": "Elige una boca",
-    "close": "Cerrar"
-  },
-  "GestureScreen.qml": {
-    "gestures_title": "Elige un gesto",
     "close": "Cerrar"
   },
   "RankingDialog.qml": {

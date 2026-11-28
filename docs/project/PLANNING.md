@@ -18,7 +18,7 @@
   - [M9 — Advanced projects ✅](#m9--advanced-projects-)
   - [M10 — Games ✅](#m10--games-)
   - [M11 — Ranking 🚧](#m11--ranking-)
-  - [M12 — Achievements 🕒](#m12--achievements-)
+  - [M12 — Achievements 🚧](#m12--achievements-)
   - [Future milestones 🕒](#future-milestones-)
   - [Application new features 🕒](#application-new-features-)
 - [Testing](#testing)
@@ -46,7 +46,7 @@ Status:
 | **0.8.0** | M8 | Basic projects | ✅ |
 | **0.9.0** | M9 | Advanced projects | ✅ |
 | **0.10.0** | M10–M11 | Games; ranking (local global ranking, optional world ranking), per-installation configuration | ✅ |
-| TBD | M12 | Achievements, renaming improvements | 🕒 |
+| TBD | M12 | Achievements layer (collection, unlock rules, locked content, on/off switches), renaming improvements | 🚧 |
 
 
 ## Architecture
@@ -231,9 +231,9 @@ src/
 
 - [x] Low battery management — status bar marker, one-off warning, single configurable threshold (`low_battery_threshold`); the robot-side alarm at 20 % belongs to the new firmware
 
-### M12 — Achievements 🕒
+### M12 — Achievements 🚧
 
-- [ ] Achievements layer
+- [x] Achievements layer — 17 achievements, unlock rules, collection screen, unlock notice, locked gamepad movements and Mouths Editor, Settings reset, `zowi_cli achievements`, and the `achievements_*` config switches that turn the layer (or only its locking) on or off; see `ACHIEVEMENTS_HOWTO.md`
 
 - [x] Enhance renaming, max. length, chars allowed — letters only, at most 10 bytes (firmware buffer), validated in core, CLI and the pairing screen
 

@@ -113,6 +113,9 @@ ScreenTemplate {
         quizStarted = false
         if (allCorrect) {
             Projects.setCompleted(projectId)
+            // Passing the quiz awards the project's achievement (no-op when the
+            // layer is off or the project has none).
+            Achievements.projectCompleted(project.achievementId || "")
             msgBar.show(tr("quiz_passed"), Config.get("color_primary") || "#2d5a2d")
         } else {
             var remaining = Projects.getBlockadeRemainingMs(projectId)

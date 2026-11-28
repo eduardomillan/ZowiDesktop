@@ -38,3 +38,10 @@
 - `Component.onCompleted` disables the identity poll
   (`setDataPollingEnabled(false)`) so the `E/I/B` burst never interrupts the
   live mouth stream; re-enabled on destruction.
+
+## Achievement lock
+
+On the home screen the **Mouths Editor** tile is locked until the `mouths_editor`
+achievement is earned (reach level 8 in Draw the mouths), while the achievements layer
+locks content; with the layer off, or `achievements_lock_content` set to `false`, it is
+open from the start. See [../ACHIEVEMENTS_HOWTO.md](../ACHIEVEMENTS_HOWTO.md).

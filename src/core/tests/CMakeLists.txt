@@ -63,3 +63,7 @@ add_test(NAME test_timeline_score COMMAND test_timeline_score)
 add_executable(test_ranking_online test_ranking_online.cpp)
 target_link_libraries(test_ranking_online PRIVATE Zowi::core)
 add_test(NAME test_ranking_online COMMAND test_ranking_online)
+
+add_executable(test_achievements test_achievements.cpp)
+target_link_libraries(test_achievements PRIVATE Zowi::core)
+add_test(NAME test_achievements COMMAND test_achievements)

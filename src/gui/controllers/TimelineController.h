@@ -51,7 +51,7 @@ signals:
     // Emitted once a whole sequence ran to completion with real robot acks
     // (never after Stop or a timeout). `eligible` is false when the sequence
     // is too short for the ranking; the score itself comes from timelineScore().
-    void sequenceCompleted(int score, bool eligible);
+    void sequenceCompleted(int score, bool eligible, int chips);
     void currentChipIndexChanged();
 
 private slots:

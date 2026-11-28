@@ -90,7 +90,9 @@ FocusScope {
     // (ScreenTemplate's corner slot: below the status bar, 12 px from the
     // right edge, spacing -10). The ranking art is a half pill (flat right
     // edge) and the achievements art a "D" (flat left edge), like ranking +
-    // help in the games. Ranking is hidden when `ranking_enabled` is false.
+    // help in the games. Ranking is hidden when `ranking_enabled` is false. With the
+    // achievements layer off (`achievements_enabled`) the Achievements button is
+    // hidden and the ranking one switches to its round art.
     Row {
         id: rightButtons
         anchors {
@@ -108,7 +110,9 @@ FocusScope {
             visible: Ranking.enabled
 
             contentItem: Image {
-                source: "qrc:/images/android/ranking_button.png"
+                // Half pill when paired with the Achievements button, round when alone.
+                source: Achievements.enabled ? "qrc:/images/android/ranking_button.png"
+                                             : "qrc:/images/android/ranking_round_button.png"
                 sourceSize.width: 56
                 sourceSize.height: 56
                 fillMode: Image.PreserveAspectFit
@@ -122,14 +126,12 @@ FocusScope {
             onClicked: rankingDialog.showList()
         }
 
-        // Greyed out until the achievements exist (M12): the original app
-        // opened an achievements screen from here, ZowiDesktop has none yet.
+        // Achievements collection (hidden when `achievements_enabled` is false).
         Button {
             id: achievementsBtn
             width: 88
             height: 88
-            enabled: false
-            opacity: 0.4
+            visible: Achievements.enabled
 
             contentItem: Image {
                 source: "qrc:/images/android/achievements_d_button.png"
@@ -255,8 +257,12 @@ FocusScope {
                             width: (appsRow.width - appsRow.spacing * (appsModel.count - 1)) / appsModel.count
 
                             readonly property real btnSize: Math.min(width * 0.55, 90)
-                            // Grey-shade buttons that are not yet implemented.
-                            readonly property bool isDisabled: !model.enabled
+                            // The Mouths Editor stays locked until its achievement is earned
+                            // (only while the achievements layer locks content).
+                            readonly property bool achievementLocked: model.name === tr("mouths_editor")
+                                && Achievements.locking && Achievements.unlockedIds.indexOf("mouths_editor") < 0
+                            // Grey-shade buttons that are not yet implemented (or locked).
+                            readonly property bool isDisabled: !model.enabled || achievementLocked
 
                             Rectangle {
                                 width: btnSize
@@ -286,8 +292,13 @@ FocusScope {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: (isDisabled || (name !== tr("mouths") && name !== tr("timeline") && !home.robotReady)) ? Qt.ForbiddenCursor : Qt.PointingHandCursor
-                                    enabled: !isDisabled && (name === tr("mouths") || name === tr("timeline") ? true : home.robotReady)
+                                    // A locked tile still takes the click, to explain how to unlock it.
+                                    enabled: achievementLocked || (!isDisabled && (name === tr("mouths") || name === tr("timeline") ? true : home.robotReady))
                                     onClicked: {
+                                        if (achievementLocked) {
+                                            Achievements.showLockedHint("mouths_editor")
+                                            return
+                                        }
                                         if (name === tr("gamepad")) {
                                             homeScope.gamepadClicked()
                                         } else if (name === tr("zowi_says")) {

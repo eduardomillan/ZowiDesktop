@@ -59,9 +59,9 @@ QML is a declarative binding language. When you write:
 
 ```qml
 // StatusBar.qml (simplified)
-color: Robot.connected
-       ? (Robot.batteryLow ? "#fdecea" : "#e8f5e8")
-       : "#fff3e0"
+connected: Robot.connected
+battery: Robot.battery
+// StatusBarView.qml derives the colour and face from those properties
 ```
 
 The View automatically re-evaluates when `Robot` emits `connectionChanged` or `batteryChanged`. There's no imperative `setColor()` call — the binding handles it. This is the essence of MVVM.

@@ -95,13 +95,22 @@ ApplicationWindow {
         mouths.backClicked.connect(function() { stack.pop() })
     }
 
+    // The app start counts once per launch (second launch / days of use), as soon
+    // as the Home screen exists so the unlock notice has somewhere to appear.
+    property bool achievementsStartLogged: false
+
     function connectHome(home) {
+        if (!achievementsStartLogged) {
+            achievementsStartLogged = true
+            Qt.callLater(function() { Achievements.appStarted() })
+        }
         home.settingsClicked.connect(function() {
             var settings = stack.push("qrc:/src/views/screens/SettingsScreen.qml")
             connectSettings(settings)
         })
         home.achievementsClicked.connect(function() {
-            console.log("Home: achievements")
+            var ach = stack.push("qrc:/src/views/screens/AchievementsScreen.qml")
+            ach.backClicked.connect(function() { stack.pop() })
         })
         home.gamepadClicked.connect(function() { pushGamepad() })
         home.zowiSaysClicked.connect(function() { pushZowiDice() })
@@ -345,6 +354,21 @@ ApplicationWindow {
 
     MessageBar {
         id: rootNotice
+    }
+
+    // Achievements layer: the "You have unlocked ..." notice (queued when several
+    // arrive together) and the hint shown when a locked control is pressed.
+    AchievementTexts { id: achievementTexts }
+    AchievementUnlockDialog { id: achievementDialog }
+    Connections {
+        target: Achievements
+        function onAchievementUnlocked(id) {
+            if (Achievements.notifyEnabled) achievementDialog.show(id)
+        }
+        function onLockedHint(id) {
+            rootNotice.show(tr("achievement_locked_hint").arg(achievementTexts.title(id))
+                                .arg(achievementTexts.condition(id)))
+        }
     }
 
     // Low battery: warn once each time the robot's level drops below the

@@ -24,6 +24,13 @@ struct RankingArgs {
     bool clear = false;
 };
 
+struct AchievementsArgs {
+    std::string id = "all";  // unlock target: an achievement id | all
+    bool list = false;
+    bool unlock = false;
+    bool reset = false;
+};
+
 struct TranslateArgs {
     std::string locale;
     std::string context;
@@ -163,6 +170,7 @@ struct ShellArgs {
 
 int runSession(const SessionArgs &a);
 int runRanking(const RankingArgs &a);
+int runAchievements(const AchievementsArgs &a);
 int runTranslate(const TranslateArgs &a);
 int runConfig(const ConfigArgs &a);
 int runPorts();

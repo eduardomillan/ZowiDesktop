@@ -50,6 +50,7 @@ logic:
 | `projects_store`, `projects_preferences_store`, `project_model` | Discover projects (metadata, pages, quizzes) and their preferences | ✅ std C++ (resource loader injectable) |
 | `zowi_dice`, `mouths_game` | Game logic: Memory ("Zowi says") and Draw the mouths | ✅ std C++ |
 | `timeline_command`, `timeline_player`, `timeline_score` | Timeline chips, playback paced by the robot's acks, score of a completed sequence | ✅ std C++ |
+| `achievements` | The 17 achievements, their store and the pure unlock rules (second launch, days of use, first visits, Timeline chips, game thresholds) | ✅ std C++ |
 | `ranking_store`, `ranking_online` | Local `Player-NNN` ranking; parsing/validation of the optional world ranking (no network code: the host owns the transport) | ✅ std C++ |
 
 External dependencies: **none beyond `nlohmann_json`** (header-only) and
@@ -142,7 +143,7 @@ ctest --test-dir build --output-on-failure
 
 - Core-only build (`-DZOWI_BUILD_GUI=OFF -DZOWI_BUILD_CLI=OFF`) on a machine
   **without Qt available**: all the core tests pass ("100 % tests passed"; there
-  were 8 at the time of the refactor, 16 today — see
+  were 8 at the time of the refactor, 17 today — see
   [ARCHITECTURE.md](ARCHITECTURE.md#testing)).
 - Full build (GUI + CLI, Qt 6): compiles clean; all tests pass including the
   CLI black-box suite; `zowi_cli translate` still resolves es_ES/en_US/ca_ES via

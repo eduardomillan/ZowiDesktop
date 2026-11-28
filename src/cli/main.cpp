@@ -45,6 +45,18 @@ int main(int argc, char **argv)
     rankingList->final_callback([&]() { rankingArgs.list = true; });
     rankingClear->final_callback([&]() { rankingArgs.clear = true; });
 
+    // ── achievements subcommand (admin: inspect, unlock or reset the progress) ──
+    auto *achCmd = app.add_subcommand("achievements", "Inspect, unlock or reset the achievements");
+    auto *achList = achCmd->add_subcommand("list", "List every achievement and whether it is unlocked");
+    auto *achUnlock = achCmd->add_subcommand("unlock", "Unlock one achievement or all of them");
+    auto *achReset = achCmd->add_subcommand("reset", "Back to the initial state (rankings are not touched)");
+
+    zowi_cli::AchievementsArgs achArgs;
+    achUnlock->add_option("id", achArgs.id, "Achievement id (e.g. crusaito) | all")->default_val("all");
+    achList->final_callback([&]() { achArgs.list = true; });
+    achUnlock->final_callback([&]() { achArgs.unlock = true; });
+    achReset->final_callback([&]() { achArgs.reset = true; });
+
     // ── translate subcommand ──────────────────────────────────
     auto *translateCmd = app.add_subcommand("translate", "Translate a string");
     zowi_cli::TranslateArgs translateArgs;
@@ -238,6 +250,7 @@ int main(int argc, char **argv)
     // ── Dispatch ──────────────────────────────────────────────────
     if (*sessionCmd)    return zowi_cli::runSession(sessionArgs);
     if (*rankingCmd)    return zowi_cli::runRanking(rankingArgs);
+    if (*achCmd)        return zowi_cli::runAchievements(achArgs);
     if (*translateCmd)  return zowi_cli::runTranslate(translateArgs);
     if (*configCmd)     return zowi_cli::runConfig(configArgs);
     if (*portsCmd)      return zowi_cli::runPorts();

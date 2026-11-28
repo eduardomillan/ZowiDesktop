@@ -21,6 +21,7 @@
 #include "controllers/SessionController.h"
 #include "controllers/TimelineController.h"
 #include "controllers/RankingController.h"
+#include "controllers/AchievementsController.h"
 #include "controllers/OnlineRankingClient.h"
 
 class PreviewSession final : public QObject
@@ -32,7 +33,11 @@ public:
 
     Q_INVOKABLE QString loadActiveZowiDeviceAddress() const { return m_address; }
     Q_INVOKABLE QString loadActiveZowiName() const { return m_name; }
+    Q_INVOKABLE QString loadActiveZowiTransport() const { return QStringLiteral("bt"); }
     Q_INVOKABLE bool hasDismissedWizard() const { return m_wizardDismissed; }
+signals:
+    void sessionChanged();
+public:
 
     Q_INVOKABLE void saveActiveZowiDeviceAddress(const QString &address) { m_address = address; }
     Q_INVOKABLE void saveActiveZowiName(const QString &name) { m_name = name; }
@@ -66,6 +71,17 @@ class PreviewBluetooth final : public QObject
     Q_PROPERTY(bool scanning READ isScanning NOTIFY scanningChanged)
     Q_PROPERTY(QString deviceName READ deviceName NOTIFY deviceChanged)
     Q_PROPERTY(QString deviceAddress READ deviceAddress NOTIFY deviceChanged)
+    // Minimal subset of RobotController's status API, for StatusBar.qml.
+    Q_PROPERTY(bool connecting READ isConnecting CONSTANT)
+    Q_PROPERTY(int battery READ battery NOTIFY connectionChanged)
+    Q_PROPERTY(int lowBatteryThreshold READ lowBatteryThreshold CONSTANT)
+    Q_PROPERTY(QString appId READ appId NOTIFY connectionChanged)
+    Q_PROPERTY(int activeTransport READ activeTransport CONSTANT)
+    Q_PROPERTY(int TransportBluetooth READ transportBluetooth CONSTANT)
+    Q_PROPERTY(int TransportUsb READ transportUsb CONSTANT)
+    Q_PROPERTY(int situation READ situation NOTIFY connectionChanged)
+    Q_PROPERTY(int SituationDemo READ situationDemo CONSTANT)
+    Q_PROPERTY(int SituationTransportLost READ situationTransportLost CONSTANT)
 
 public:
     explicit PreviewBluetooth(QObject *parent = nullptr) : QObject(parent) {}
@@ -74,12 +90,30 @@ public:
     bool isScanning() const { return m_scanning; }
     QString deviceName() const { return m_deviceName; }
     QString deviceAddress() const { return m_deviceAddress; }
+    bool isConnecting() const { return false; }
+    int battery() const { return m_connected ? 80 : -1; }
+    int lowBatteryThreshold() const { return 50; }
+    QString appId() const { return m_connected ? QStringLiteral("ZOWI_BASE_v2") : QString(); }
+    int activeTransport() const { return 1; }
+    int transportBluetooth() const { return 1; }
+    int transportUsb() const { return 2; }
+    // 1 = Unregistered, 3 = Connected (same numbering as RobotController).
+    int situation() const { return m_connected ? 3 : 1; }
+    int situationDemo() const { return 0; }
+    int situationTransportLost() const { return 5; }
 
     void setInitialConnection(const QString &name, const QString &address)
     {
         m_connected = true;
         m_deviceName = name;
         m_deviceAddress = address;
+    }
+
+    // Mirrors RobotController::setDeviceName (used after a successful rename).
+    Q_INVOKABLE void setDeviceName(const QString &name)
+    {
+        m_deviceName = name;
+        emit deviceChanged();
     }
 
     Q_INVOKABLE void startScan()
@@ -268,6 +302,7 @@ int main(int argc, char *argv[])
     MouthsGameController mouths;
     TimelineController timeline;
     RankingController ranking(zowi::ConfigStore::parseBool(config.get("ranking_enabled").toStdString(), true));
+    AchievementsController achievements(AchievementsController::settingsFrom(config));
     OnlineRankingClient onlineRanking(
         &ranking,
         zowi::ConfigStore::parseBool(config.get("ranking_online_allowed").toStdString(), true),
@@ -305,6 +340,7 @@ int main(int argc, char *argv[])
     view.rootContext()->setContextProperty(QStringLiteral("Projects"), &projects);
     view.rootContext()->setContextProperty(QStringLiteral("Timeline"), &timeline);
     view.rootContext()->setContextProperty(QStringLiteral("Ranking"), &ranking);
+    view.rootContext()->setContextProperty(QStringLiteral("Achievements"), &achievements);
     view.rootContext()->setContextProperty(QStringLiteral("OnlineRanking"), &onlineRanking);
     view.rootContext()->setContextProperty(QStringLiteral("AppVersion"), QString(ZOWI_VERSION));
     // Optional: let a screen open on an internal step (e.g. calibration steps
@@ -316,9 +352,13 @@ int main(int argc, char *argv[])
     view.setHeight(600);
     view.setColor(QColor(QStringLiteral("#f4f9f4")));
 
-    QObject::connect(&translator, &TranslatorController::languageChanged, [&view, options]() {
-        loadScreen(view, options);
-    });
+    // PREVIEW_NO_RELOAD=1: keep the screen alive on a language change, to check
+    // that it translates itself in place (as it must in the real app).
+    if (qEnvironmentVariableIsEmpty("PREVIEW_NO_RELOAD")) {
+        QObject::connect(&translator, &TranslatorController::languageChanged, [&view, options]() {
+            loadScreen(view, options);
+        });
+    }
 
     loadScreen(view, options);
     if (view.status() != QQuickView::Ready)

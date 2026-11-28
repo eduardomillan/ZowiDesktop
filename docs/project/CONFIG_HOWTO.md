@@ -17,6 +17,7 @@
 - [Keys](#keys)
   - [Configuration layers](#configuration-layers)
   - [Ranking](#ranking)
+  - [Achievements](#achievements)
   - [Logging and development](#logging-and-development)
   - [Window and messages](#window-and-messages)
   - [Help dialogs and games](#help-dialogs-and-games)
@@ -159,6 +160,19 @@ Default values are the ones in `src/config.json`. "Read by" says who uses the ke
 | `ranking_online_read_url` | *(empty)* | `https://` address of the public world-ranking JSON (or `http://localhost…` for development). While empty, the "World" tab does not exist. |
 | `ranking_online_submit_url` | *(empty)* | Base `https://` address of the ranking server (the Worker, e.g. `https://zowi-ranking.<name>.workers.dev`; the app adds `/submit` and `/delete`), or `http://localhost…` for development. While empty, the "Share my score" checkbox does not exist. Sharing is the user's choice (off by default, session key `ranking_share_online`). |
 
+### Achievements
+
+See [ACHIEVEMENTS_HOWTO.md](ACHIEVEMENTS_HOWTO.md).
+
+| Key | Default | Meaning and values |
+|-----|---------|--------------------|
+| `achievements_enabled` | `true` | `true` / `false`. Master switch of the whole layer. When `false` nothing is recorded, shown or locked: the Home button, the Settings entry and the notices are hidden and every movement and the Mouths Editor are available from the start. Saved progress is kept. |
+| `achievements_lock_content` | `true` | `true` / `false`. When `false` achievements never lock content (the five gamepad movements and the Mouths Editor): they are only collectibles. |
+| `achievements_notify` | `true` | `true` / `false`. Show the "You have unlocked" dialog (the achievement is recorded either way). |
+| `achievements_robot_celebration` | `true` | `true` / `false`. The connected robot plays the VICTORY gesture on every unlock. |
+| `achievements_days_of_use` | `4` | Distinct days the app must be opened to unlock `fart`. Positive integer; invalid values fall back to `4`. |
+| `achievements_easter_egg` | `true` | `true` / `false`. The three hidden corner areas of the achievements screen that unlock everything. |
+
 ### Logging and development
 
 | Key | Default | Meaning and values |
@@ -171,6 +185,7 @@ Default values are the ones in `src/config.json`. "Read by" says who uses the ke
 | Key | Default | Meaning and values |
 |-----|---------|--------------------|
 | `window_size_ratio` | `0.75` | Number. Window size at start as a fraction of the screen (width and height). Invalid values fall back to `0.75`. The window never gets smaller than 480×360. |
+| `status_bar_height` | `64` | Integer, in logical pixels. Height of the status bar at the top of the screens; the face, texts and labels inside scale with it. Values outside 36–96 are clamped; an invalid value falls back to `64`. |
 | `message_duration` | `2000` | Milliseconds a transient message bar stays visible (Settings, Splash, Timeline). Invalid values fall back to `2000`. |
 | `button_quit_visible` | `false` | `true` shows a **Quit** button on the start screen. |
 | `button_scan_visible` | `false` | `true` shows the **Scan** button on the scan screen. |
@@ -200,7 +215,6 @@ Default values are the ones in `src/config.json`. "Read by" says who uses the ke
 | `usb_bootloader_baud` | `115200` | Serial speed used when flashing over USB. Integer. |
 | `transport_timeout` | `1500` | Milliseconds to wait for a transport (Bluetooth / USB) to respond while detecting it. |
 | `connect_timeout` | `10000` | Milliseconds to wait for a connection before giving up. |
-| `rename_lock_ms` | `3000` | Milliseconds the rename screen stays locked while the new name is sent. Invalid values fall back to `1500`. |
 | `zowi_mac_prefix` | `B4:9D:0B:3` | Start of the Bluetooth address of Zowi robots; the scan screen and `zowi_cli scan` use it to show only Zowis. |
 | `zowi_default_name` | `Zowi` | Name proposed for a robot and used as the factory name when forgetting one. A robot name is letters only and at most 10 bytes (an accented letter counts as 2): the firmware cannot store more. |
 | `low_battery_threshold` | `50` | Battery percentage below which the robot counts as low: the status bar turns red and says "Low battery!", a warning appears once each time the level drops below it, and installing firmware (restore, projects) asks for confirmation. `zowi_cli` uses it too (`restore`, `alarm`, `adivinawi`, `control`, shell). Replaces `restore_low_battery_threshold`. |

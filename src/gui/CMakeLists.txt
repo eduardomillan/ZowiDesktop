@@ -70,6 +70,7 @@ add_executable(ZowiDesktop WIN32
     controllers/MouthsGameController.cpp
     controllers/TimelineController.cpp
     controllers/RankingController.cpp
+    controllers/AchievementsController.cpp
     controllers/OnlineRankingClient.cpp
     ${GUI_RESOURCES}
 )
@@ -123,6 +124,7 @@ add_executable(zowi_screen_preview
     controllers/RobotController.cpp
     controllers/TimelineController.cpp
     controllers/RankingController.cpp
+    controllers/AchievementsController.cpp
     controllers/OnlineRankingClient.cpp
     ${GUI_RESOURCES}
 )

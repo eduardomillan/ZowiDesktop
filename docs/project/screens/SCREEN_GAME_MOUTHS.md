@@ -26,8 +26,12 @@
   `VIEWS.md` §MouthsMinigameActivity; ranking under `MOUTHS_GAME_ID`.
 - **Achievement:** `mouths_editor` — **level ≥ 8** at the end of a round; in
   Android this is the unlock for the Mouth Editor tile itself (see
-  SCREEN_MOUTH_EDITOR.md). Reserved for the deferred ACHIEVEMENTS layer
-  (`achievementLevelThreshold = 8` in `MouthsGameConfig`).
+  SCREEN_MOUTH_EDITOR.md). Awarded at game over when the level reached is ≥ 8
+  (`achievementLevelThreshold` in `MouthsGameConfig`):
+  `MouthsGameController::gameOver(score)` is connected to
+  `AchievementsController::onMouthsGameOver` in `main.cpp`. While the layer locks
+  content, the Mouths Editor tile on Home stays locked until it is earned. See
+  `../ACHIEVEMENTS_HOWTO.md`.
 - **Connection:** **fully playable offline** (local pattern compare;
   Zowi show is cosmetic). The Play/round mechanics are not conn-gated; Zowi
   mouth + VICTORY/ANGRY gestures just don't appear if not connected.
@@ -195,9 +199,9 @@ repeated first target over 50 games, and the single-mouth-band fallback.
   On game over the screen records the score (level − 1) for the active player
   (`Player-NNN`) and the dialog shows their total and position. There is no
   per-game list. `rankScoreThreshold` in `MouthsGameConfig` is unused.
-- **Achievements:** `mouths_editor` (level ≥ 8) is not enforced; the game-over
-  dialog simply shows the final score. `achievementLevelThreshold` stays
-  reserved.
+- **Achievements:** `mouths_editor` (level ≥ 8) is awarded through the global
+  achievements layer (unlock dialog + Mouths Editor tile); the game-over dialog itself
+  only shows the score and ranking line.
 
 ## Planned work
 
@@ -207,4 +211,4 @@ until each item lands.
 | Item | Status | Notes |
 |------|--------|-------|
 | **Ranking** | ✅ Implemented | Global ranking shared by all games: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`; delete is admin-only (`zowi_cli ranking`); optional opt-in world ranking on top. See `RANKING_HOWTO.md`. |
-| **Achievement `mouths_editor`** (level ≥ 8) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). `achievementLevelThreshold` stays reserved. |
+| **Achievement `mouths_editor`** (level ≥ 8) | ✅ Implemented | Awarded through the achievements layer (`ACHIEVEMENTS_HOWTO.md`). |

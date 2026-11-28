@@ -57,3 +57,8 @@
   the real threshold (`Robot.lowBatteryThreshold`, config key
   `low_battery_threshold`, default 50 %).
 - The "Language" row is text-only like the others, always enabled (`connGated: false`).
+- **Delete achievements** (key `achievements`) is hidden when the layer is off
+  (`achievements_enabled`). Otherwise it opens a confirmation dialog
+  (`delete_achievements_*` keys) and on "Delete" calls `Achievements.resetAll()`:
+  achievements, usage counters and first visits go back to the initial state; rankings
+  and the rest of the data are untouched.

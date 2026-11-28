@@ -157,11 +157,11 @@ ScreenTemplate {
         { key: "rename",         desc: "rename_desc",         connGated: true,  action: function() { settings.renameRequested() } },
         { key: "update",         desc: "update_desc",         connGated: false, action: function() { msgBar.show(tr("update_stub")) } },
         { key: "language",       desc: "language_desc",       connGated: false, action: function() { settings.languageRequested() } },
-        { key: "achievements",   desc: "achievements_desc",   connGated: false, action: function() { msgBar.show(tr("achievements_stub")) } },
+        { key: "achievements",   desc: "achievements_desc",   connGated: false, action: function() { deleteAchievementsDialog.open() } },
         { key: "forget",         desc: "forget_desc",         connGated: false, needsRegistration: true, action: function() { settings.forgetZowi() } },
         { key: "calibrate",      desc: "calibrate_desc",      connGated: true,  enabledWhen: function() { return settings.isBaseFirmware() }, action: function() { settings.calibrationRequested() } },
         { key: "hospital",       desc: "hospital_desc",       connGated: false, action: function() { Qt.openUrlExternally(Config.get("hospital_url")) } }
-    ]
+    ].filter(function(o) { return o.key !== "achievements" || Achievements.enabled })
 
     function restoreFirmware() {
         if (msgBar.visible) return
@@ -403,6 +403,94 @@ ScreenTemplate {
                         font.pixelSize: 26
                         color: Config.get("color_accent") || "#21a69b"
                         visible: optionRow.effectiveEnabled
+                    }
+                }
+            }
+        }
+    }
+
+    // "Delete achievements": confirmation, then back to the initial state. Rankings
+    // and the rest of the app's data are not affected.
+    Dialog {
+        id: deleteAchievementsDialog
+        modal: true
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: Math.round(Math.min(parent ? parent.width * 0.9 : 440, 440))
+        height: delCol.implicitHeight + 48
+
+        background: Rectangle {
+            radius: 20
+            color: "#ffffff"
+            border.color: Config.get("color_accent") || "#21a69b"
+            border.width: 2
+        }
+
+        contentItem: Column {
+            id: delCol
+            spacing: 14
+            width: parent ? parent.width : 0
+
+            Text {
+                width: parent.width
+                text: settings.tr("delete_achievements_title")
+                horizontalAlignment: Text.AlignHCenter
+                font.pixelSize: 20
+                font.bold: true
+                color: Config.get("color_primary") || "#2d5a2d"
+            }
+            Text {
+                width: parent.width
+                text: settings.tr("delete_achievements_message")
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
+                font.pixelSize: 14
+                color: Config.get("color_primary") || "#2d5a2d"
+            }
+            Row {
+                anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 12
+
+                Button {
+                    width: 150
+                    height: 46
+                    text: settings.tr("delete_achievements_cancel")
+                    onClicked: deleteAchievementsDialog.close()
+                    contentItem: Text {
+                        text: parent.text
+                        color: Config.get("color_primary") || "#2d5a2d"
+                        font.pixelSize: 15
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: height / 2
+                        color: "transparent"
+                        border.color: Config.get("color_accent") || "#21a69b"
+                        border.width: 2
+                    }
+                }
+                Button {
+                    width: 150
+                    height: 46
+                    text: settings.tr("delete_achievements_confirm")
+                    onClicked: {
+                        deleteAchievementsDialog.close()
+                        Achievements.resetAll()
+                        msgBar.show(settings.tr("delete_achievements_done"))
+                    }
+                    contentItem: Text {
+                        text: parent.text
+                        color: "#ffffff"
+                        font.pixelSize: 15
+                        font.bold: true
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    background: Rectangle {
+                        radius: height / 2
+                        color: Config.get("color_error") || "#c0392b"
                     }
                 }
             }

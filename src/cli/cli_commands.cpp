@@ -1,4 +1,5 @@
 #include "cli_commands.h"
+#include <zowi/achievements.h>
 #include <zowi/ranking_store.h>
 #include "cli_state.h"
 #include "cli_util.h"
@@ -117,6 +118,37 @@ int runRanking(const RankingArgs &a)
                   << " - " << p.total << " pts"
                   << "  (Says " << p.zowiSays << ", Mouths " << p.mouths << ", Timeline " << p.timeline << ")"
                   << (p.number == active ? "  [active]" : "") << std::endl;
+    }
+    return 0;
+}
+
+int runAchievements(const AchievementsArgs &a)
+{
+    zowi::AchievementsStore store;  // own file (ZowiAchievements.json), not the session
+
+    if (a.reset) {
+        store.reset();
+        std::cout << "Achievements reset to the initial state." << std::endl;
+        return 0;
+    }
+    if (a.unlock) {
+        if (a.id == "all") {
+            std::cout << "Unlocked " << store.unlockAll() << " achievements." << std::endl;
+            return 0;
+        }
+        if (!zowi::AchievementsStore::isKnown(a.id)) {
+            std::cerr << "Unknown achievement '" << a.id << "'. Run 'zowi_cli achievements list' for the ids." << std::endl;
+            return 1;
+        }
+        std::cout << (store.unlock(a.id) ? "Unlocked " : "Already unlocked: ") << a.id << "." << std::endl;
+        return 0;
+    }
+
+    const auto all = store.list();
+    std::cout << "=== Achievements (" << store.unlockedCount() << "/" << all.size() << " unlocked) ===" << std::endl;
+    for (const auto &item : all) {
+        std::cout << (item.unlocked ? "[x] " : "[ ] ") << item.id
+                  << "  (" << zowi::achievementTypeName(item.type) << ")" << std::endl;
     }
     return 0;
 }

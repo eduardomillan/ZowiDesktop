@@ -310,7 +310,7 @@ the online ranking. This is not legal advice.
 - Scores are produced by the client, so a local ranking can be edited by anyone
   with access to the file. Not a security feature.
 - 900 possible numbers; online only 100 slots at a time.
-- No achievements layer yet ("Delete achievements" in Settings is a placeholder).
+- Rankings and achievements are independent: "Delete achievements" in Settings does not touch the ranking (see `ACHIEVEMENTS_HOWTO.md`).
 
 ## Tests
 

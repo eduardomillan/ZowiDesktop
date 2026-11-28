@@ -13,10 +13,14 @@
   - [Hard constraint: Bluetooth Classic](#hard-constraint-bluetooth-classic)
   - [What the browser can reach](#what-the-browser-can-reach)
 - [Strategy](#strategy)
+- [Frontend options: Qt for WebAssembly vs Vue/React](#frontend-options-qt-for-webassembly-vs-vuereact)
+- [What the web reuses and what it must rewrite](#what-the-web-reuses-and-what-it-must-rewrite)
 - [Roadmap](#roadmap)
+  - [Phase 0 — Move the controller logic into core](#phase-0--move-the-controller-logic-into-core)
   - [Phase 1 — Core to WASM](#phase-1--core-to-wasm)
   - [Phase 2 — Hardware-free web demo](#phase-2--hardware-free-web-demo)
   - [Phase 3 — Real hardware from the browser](#phase-3--real-hardware-from-the-browser)
+- [Effort and what is needed from the maintainer](#effort-and-what-is-needed-from-the-maintainer)
 - [Repository & pipelines](#repository--pipelines)
 - [Relationship with the repository strategy](#relationship-with-the-repository-strategy)
 - [Deferred decisions](#deferred-decisions)
@@ -110,15 +114,124 @@ Key rules:
 - **Core is untouched** for the web; all browser-specific work lives in a
   dedicated web layer (adapters + frontend), the same way the GUI is an adapter
   layer, not a second business-logic layer.
-- **Frontend framework is deferred** (TBD): React + TypeScript + Vite or
-  Vue 3 + TypeScript + Vite, both viable — see
+- **Frontend technology is deferred** (TBD): Qt for WebAssembly (reusing the QML
+  app), or React + TypeScript + Vite, or Vue 3 + TypeScript + Vite, all viable — see
   [Deferred decisions](#deferred-decisions).
 - **Screens are already specified**: the QML screen docs under
   [docs/project/screens/](screens/INDEX.md) (`SCREEN_*.md`) document every
   screen's behaviour, navigation and context objects; they are the spec for the
   web frontend regardless of framework.
 
+## Frontend options: Qt for WebAssembly vs Vue/React
+
+There are two ways to build the Phase 2 frontend. Both sit on top of the same
+WASM core ideas and both need a new robot backend for the browser (see
+[Phase 3](#phase-3--real-hardware-from-the-browser)). This section is analysis
+only; **neither has been tried in this repository**.
+
+### What Qt for WebAssembly is
+
+One of Qt's official platforms: it compiles a Qt application (here the existing
+QML app) to WebAssembly with Emscripten. The result is a `.wasm`, a bit of
+JavaScript glue and an HTML page that loads it; the app runs in the tab like a
+native program, with no rewrite. Traits that drive every trade-off:
+
+- It **draws on a `<canvas>`** (WebGL), not in the DOM: Qt paints its own pixels
+  instead of generating HTML.
+- It is **statically linked**: all of Qt ships inside the package, and each Qt
+  release pins one specific Emscripten version.
+- It is a browser without native hardware: **no Bluetooth, no `QtSerialPort`**,
+  and only a virtual in-memory file system.
+
+### Qt for WebAssembly vs Vue / React
+
+| | Qt for WebAssembly | Vue / React (+ TS, Vite) |
+|---|---|---|
+| Reuse of the current app | The ~20 QML screens, the components (status bar, Splash, flags), the C++ controllers and the translations, almost untouched | Everything rewritten in TypeScript, using `SCREEN_*.md` as the spec |
+| Maintenance | One codebase for desktop and web: a fix or a redesign serves both | Two UIs to keep in sync (and two sets of bugs) |
+| Look | Identical to the desktop; the same preview/capture checks apply | Its own implementation, to be matched by hand |
+| Size and startup | Several MB (probably tens before compression), slow first load | Very light |
+| Accessibility, text selection, page translation | Limited (it is a canvas) | Native browser behaviour |
+| Mobile and virtual keyboard | More problematic | Normal |
+| Web APIs (Web Serial, WebSocket) | Needs a JS<->C++ bridge | Direct |
+| Hosting | Static, but multithreaded builds need special headers (COOP/COEP) | Any static host |
+| Iteration and debugging | Slower | Very fast |
+
+Two further points for Qt: Qt's licence (LGPL) combined with static linking must
+be checked against the project's licence (normally fine for a public repository,
+but to be confirmed), and the desktop Bluetooth/USB backends do not apply: a new
+backend that talks to the browser (Web Serial over USB, or a WebSocket to the
+local bridge) has to be plugged into the same `RobotController`. The same
+backend work is needed with Vue/React; the difference is that with Qt the bridge
+crosses C++ and JavaScript.
+
+### When to choose each
+
+- **Qt for WebAssembly** — a quick demo that is exactly the desktop app, accepting
+  a heavy package. Cheapest way to get something playable.
+- **Vue / React** — the web as a product of its own: fast to load, usable on
+  phones and accessible, accepting the cost of rebuilding the interface.
+
+If undecided, a short spike with Qt for WebAssembly (one screen, for instance the
+Splash) would show its weight and load time quickly, before committing to either.
+
+## What the web reuses and what it must rewrite
+
+Assuming a Vue/React frontend (with Qt for WebAssembly most of the GUI column
+below is reused instead):
+
+| Layer | Web | Notes |
+|---|---|---|
+| `src/core` | **Reused, untouched** | Compiled to WebAssembly and exposed to the browser through a thin wrapper (embind or a C API). Same protocol, commands, calibration, translations, games and achievements as the desktop and the CLI. |
+| `src/firmware` (STK500v1) | **Reusable** | Standard C++ with an injected transport: it could be compiled to WebAssembly and fed by Web Serial to flash over USB from the browser. |
+| `src/gui`, `src/views` | **Rewritten** | The QML screens become Vue components, with `SCREEN_*.md` as the spec. |
+| `src/cli` | **Not used in the browser** | A native program (Qt, system backends). It stays as it is. Indirectly it is the base of the local Bluetooth bridge (see Phase 3): the shell's command execution is extracted and exposed over WebSocket. |
+
+The delicate part is `src/gui/controllers`. They are Qt/C++ and **not in core**, but
+`RobotController` (about 1,400 lines) holds logic the web needs just as much: the
+situation state machine (Demo / Unregistered / Connecting / Connected /
+Disconnected / TransportLost), the identity polling, the connect timeout and the
+USB identity check, the low-battery rule, the transport switching and the firmware
+restore sequence. Most of the other controllers are thin adapters over core
+modules. Two ways to get that logic into the web:
+
+- **Rewrite it in TypeScript:** faster to start, but the logic ends up duplicated
+  and has to be kept in sync.
+- **Move it into core first (recommended):** more up-front work, but desktop,
+  CLI and web then share one copy. It matches the architecture rule that the GUI is
+  an adapter layer and not a second business-logic layer. See
+  [Phase 0](#phase-0--move-the-controller-logic-into-core).
+
+The same applies to flows that live in the CLI today, such as the readiness check
+before sending an order to the robot (`waitForRobotReady`).
+
 ## Roadmap
+
+### Phase 0 — Move the controller logic into core
+
+Prerequisite for any web frontend (and a benefit on its own: more of the logic
+becomes testable without Qt or hardware). The goal is a behaviour-preserving
+refactor: `RobotController` becomes a thin Qt adapter (properties, signals, timers)
+over a Qt-free core class.
+
+- A core class (working name `RobotSession`) built on `BluetoothApi` that owns:
+  the situation state machine (`computeSituation` becomes a pure function of its
+  inputs), the low-battery rule, the connect timeout and the USB identity check, the
+  identity polling cadence, transport selection and the firmware restore sequence
+  (including the battery check).
+- Timers and the clock are **injected** (a small interface), so that the core can
+  run on Qt timers, in a test with a virtual clock, or in the browser.
+- Tests in `src/core/tests/` with a fake `BluetoothApi` and a virtual clock cover the
+  transitions that today can only be checked with a robot (reconnect, timeout,
+  identity mismatch, transport lost, restore).
+- Do it in small steps, each one building and passing the tests: first the pure
+  pieces (situation, low battery, connect timeout), then the transport/USB probe
+  logic, finally the restore orchestration.
+- Out of scope by design: the online ranking network client (the host owns the
+  transport, see `ranking_online`) and anything that talks to Qt or the operating
+  system directly (serial port enumeration, temporary files).
+- Validation gate: besides the automated tests, a manual pass with a real robot
+  over Bluetooth and USB (wizard, reconnect, unregister, restore).
 
 ### Phase 1 — Core to WASM
 
@@ -146,7 +259,9 @@ currently proposed at ~150–250 lines of core code + a robot-side command parse
 
 - Implement `VirtualZowiBackend : BluetoothApi` in core (also benefits the
   desktop: closed round-trip integration tests, GUI demo mode).
-- Web frontend (framework TBD) implementing the screens already specified in
+- Web frontend (Qt for WebAssembly, Vue or React: see
+  [Frontend options](#frontend-options-qt-for-webassembly-vs-vuereact)) implementing
+  the screens already specified in
   `SCREEN_*.md`, starting with the hardware-independent ones:
   - Pad (gamepad), Mouth picker, Gesture picker — via `RobotCommands`.
   - Mouth editor (pintabocas).
@@ -176,6 +291,34 @@ currently proposed at ~150–250 lines of core code + a robot-side command parse
 Deliverable: control a physical Zowi (USB and/or Bluetooth via bridge) from the
 web frontend.
 
+## Effort and what is needed from the maintainer
+
+Rough estimates, expressed in working sessions (not dates: they depend on how many
+review rounds each screen needs, as in the status bar and Splash redesigns):
+
+| Piece | Estimate |
+|---|---|
+| Phase 0 — controller logic into core | Several sessions, in small verified steps (the first one, the situation machine / low battery / connect timeout, is about one session); needs a final test with a real robot |
+| Phase 1 — core to WASM | One or a few sessions |
+| Phase 2 — web demo with Vue/React | The big one (~20 screens): from several long sessions to many more, depending on visual polish |
+| Phase 2 — web demo with Qt for WebAssembly | Considerably less (the UI is reused), plus the browser backend and the packaging |
+| Phase 3 — real hardware | A separate, delicate part, especially flashing over USB |
+
+What the maintainer has to provide:
+
+- **Design decisions:** framework (Qt wasm, Vue or React), where to publish it
+  (`gh-pages/docs/` without touching the apt repo, or another domain), the scope of
+  each phase, and whether to start with the hardware-free demo only.
+- **Environment:** install Emscripten and Node (and, for Qt, the Qt for WebAssembly
+  kit); authorise anything that asks for permissions.
+- **Real-hardware testing:** the UI can be checked with screenshots, but a real
+  robot, Web Serial and the Bluetooth bridge can only be tested by the maintainer,
+  following instructions.
+- **Visual and usability validation:** as with the proofs of concept, the look is
+  approved before going on.
+- **Publishing and versioning:** commits and deployments are made by the maintainer
+  (or explicitly requested), as `AGENTS.md` requires.
+
 ## Repository & pipelines
 
 Proposed layout (final placement to be confirmed with the maintainer):
@@ -184,7 +327,7 @@ Proposed layout (final placement to be confirmed with the maintainer):
 src/web/               # Web layer: WASM build, adapters, frontend app
   ├── wasm/            # Emscripten target for zowi_core + embind wrapper
   ├── adapters/        # browser loaders (fetch, localStorage, console)
-  └── frontend/        # React or Vue + TS app (framework TBD)
+  └── frontend/        # React or Vue + TS app (framework TBD); not needed for Qt wasm
 ```
 
 CI considerations:
@@ -211,7 +354,8 @@ Consistent with [docs/project/PLANNING.md](PLANNING.md) ("Repository strategy"):
 
 | Decision | Options | Status |
 |---|---|---|
-| Frontend framework | **React + TypeScript + Vite** — largest ecosystem, best TS/WASM tooling, Vite makes static multi-page + WASM trivial | TBD |
+| Frontend technology | **Qt for WebAssembly** — reuses the whole QML app; heavy package, canvas rendering (see [Frontend options](#frontend-options-qt-for-webassembly-vs-vuereact)) | TBD |
+| | **React + TypeScript + Vite** — largest ecosystem, best TS/WASM tooling, Vite makes static multi-page + WASM trivial | TBD |
 | | **Vue 3 + TypeScript + Vite** — lighter, simpler to learn, same Vite tooling, good WASM story | TBD |
 | Deployment target | `gh-pages/docs/` sub-path (safe coexistence with apt repo + website) vs. dedicated site / repo (`zowi.app` idea) | TBD |
 | Core exposure | embind wrapper vs. plain C API + `.d.ts` (affects ABI stability and how Android reuses the same lib) | TBD |

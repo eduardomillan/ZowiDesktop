@@ -74,7 +74,7 @@ The implemented projects are **Move** (id: `move`, Home tile: `move_objects`),
 
 4. **Configurable blockade** — Quiz blockade duration (default 10 min) is stored in `ProjectsPreferencesStore` and can be changed at runtime via `Projects.setBlockadeDurationMs(ms)`.
 
-5. **Deferred achievements** — The `achievements_enabled` preference exists but the UI layer is not wired yet.
+5. **Achievements** — Passing a quiz awards the project's `achievement_id` through the achievements layer (`ACHIEVEMENTS_HOWTO.md`), switched by the `achievements_enabled` **config key**. The old `achievements_enabled` *preference* below is legacy and unused.
 
 ---
 

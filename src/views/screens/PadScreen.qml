@@ -14,7 +14,10 @@ ScreenTemplate {
     // The identity poll (E/I/B burst) makes the robot run zowi.home() when
     // it drains its queue, interrupting any movement — pause it while a pad
     // button is held (same as CalibrationScreen does while servoing).
-    Component.onCompleted: Robot.setDataPollingEnabled(true)
+    Component.onCompleted: {
+        Robot.setDataPollingEnabled(true)
+        Achievements.gamepadOpened()   // first visit (counts towards "shake_leg")
+    }
     Component.onDestruction: Robot.setDataPollingEnabled(true)
 
     function tr(source) { return Translator.translate("PadScreen.qml", source) }
@@ -304,13 +307,20 @@ ScreenTemplate {
                     sourceSize.height: 80
                     fillMode: Image.PreserveAspectFit
 
+                    // Locked until its achievement is earned (only while the achievements layer locks content).
+                    readonly property string achievementId: "shake_leg"
+                    readonly property bool unlocked: !Achievements.locking || Achievements.unlockedIds.indexOf(achievementId) >= 0
+                    opacity: unlocked ? 1.0 : 0.35
+
                     MouseArea {
                         anchors.fill: parent
                         onPressed: {
+                            if (!parent.unlocked) { Achievements.showLockedHint(parent.achievementId); return }
                             parent.source = "qrc:/images/android/pressed_pad_shake_leg_button.png"
                             startHold(Commands.shakeLegLeft(currentSpeed), tr("shake_leg"))
                         }
                         onReleased: {
+                            if (!parent.unlocked) return
                             parent.source = "qrc:/images/android/pad_shake_leg_button.png"
                             stopHold()
                         }
@@ -353,13 +363,20 @@ ScreenTemplate {
                     sourceSize.height: 80
                     fillMode: Image.PreserveAspectFit
 
+                    // Locked until its achievement is earned (only while the achievements layer locks content).
+                    readonly property string achievementId: "jitter"
+                    readonly property bool unlocked: !Achievements.locking || Achievements.unlockedIds.indexOf(achievementId) >= 0
+                    opacity: unlocked ? 1.0 : 0.35
+
                     MouseArea {
                         anchors.fill: parent
                         onPressed: {
+                            if (!parent.unlocked) { Achievements.showLockedHint(parent.achievementId); return }
                             parent.source = "qrc:/images/android/pressed_pad_jitter_button.png"
                             startHold(Commands.jitter(currentSpeed, 15), tr("jitter"))
                         }
                         onReleased: {
+                            if (!parent.unlocked) return
                             parent.source = "qrc:/images/android/pad_jitter_button.png"
                             stopHold()
                         }
@@ -375,13 +392,20 @@ ScreenTemplate {
                     sourceSize.height: 80
                     fillMode: Image.PreserveAspectFit
 
+                    // Locked until its achievement is earned (only while the achievements layer locks content).
+                    readonly property string achievementId: "swing"
+                    readonly property bool unlocked: !Achievements.locking || Achievements.unlockedIds.indexOf(achievementId) >= 0
+                    opacity: unlocked ? 1.0 : 0.35
+
                     MouseArea {
                         anchors.fill: parent
                         onPressed: {
+                            if (!parent.unlocked) { Achievements.showLockedHint(parent.achievementId); return }
                             parent.source = "qrc:/images/android/pressed_pad_swing_button.png"
                             startHold(Commands.swing(currentSpeed, 15), tr("swing"))
                         }
                         onReleased: {
+                            if (!parent.unlocked) return
                             parent.source = "qrc:/images/android/pad_swing_button.png"
                             stopHold()
                         }
@@ -402,13 +426,20 @@ ScreenTemplate {
                     sourceSize.height: 80
                     fillMode: Image.PreserveAspectFit
 
+                    // Locked until its achievement is earned (only while the achievements layer locks content).
+                    readonly property string achievementId: "flapping"
+                    readonly property bool unlocked: !Achievements.locking || Achievements.unlockedIds.indexOf(achievementId) >= 0
+                    opacity: unlocked ? 1.0 : 0.35
+
                     MouseArea {
                         anchors.fill: parent
                         onPressed: {
+                            if (!parent.unlocked) { Achievements.showLockedHint(parent.achievementId); return }
                             parent.source = "qrc:/images/android/pressed_pad_flapping_button.png"
                             startHold(Commands.flappingLeft(currentSpeed, 30), tr("flapping"))
                         }
                         onReleased: {
+                            if (!parent.unlocked) return
                             parent.source = "qrc:/images/android/pad_flapping_button.png"
                             stopHold()
                         }
@@ -424,13 +455,20 @@ ScreenTemplate {
                     sourceSize.height: 80
                     fillMode: Image.PreserveAspectFit
 
+                    // Locked until its achievement is earned (only while the achievements layer locks content).
+                    readonly property string achievementId: "crusaito"
+                    readonly property bool unlocked: !Achievements.locking || Achievements.unlockedIds.indexOf(achievementId) >= 0
+                    opacity: unlocked ? 1.0 : 0.35
+
                     MouseArea {
                         anchors.fill: parent
                         onPressed: {
+                            if (!parent.unlocked) { Achievements.showLockedHint(parent.achievementId); return }
                             parent.source = "qrc:/images/android/pressed_pad_crusaito_button.png"
                             startHold(Commands.crusaitoForward(currentSpeed, 30), tr("crusaito"))
                         }
                         onReleased: {
+                            if (!parent.unlocked) return
                             parent.source = "qrc:/images/android/pad_crusaito_button.png"
                             stopHold()
                         }

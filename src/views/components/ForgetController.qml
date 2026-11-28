@@ -121,8 +121,10 @@ Item {
                 sendRename()
             }
         }
-        function onDataReceived(data) {
-            if (_waitingAck && data.indexOf("&&F") !== -1)
+        // Parsed final ack (&&F). Not a search in the raw chunks: Bluetooth may
+        // split the frame ("&" then "&F%%") and the ack would be missed.
+        function onFinalAckReceived() {
+            if (_waitingAck)
                 onRenameAcked()
         }
         function onUnpairFinished(success, message) {

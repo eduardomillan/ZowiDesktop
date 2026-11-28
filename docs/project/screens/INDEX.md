@@ -18,6 +18,7 @@
 | Scan | `src/views/screens/ScanScreen.qml` | [SCREEN_SCAN.md](SCREEN_SCAN.md) |
 | Home | `src/views/screens/HomeScreen.qml` | [SCREEN_HOME.md](SCREEN_HOME.md) |
 | Settings | `src/views/screens/SettingsScreen.qml` | [SCREEN_SETTINGS.md](SCREEN_SETTINGS.md) |
+| Achievements | `src/views/screens/AchievementsScreen.qml` | [SCREEN_ACHIEVEMENTS.md](SCREEN_ACHIEVEMENTS.md) |
 | Calibration | `src/views/screens/CalibrationScreen.qml` | [SCREEN_CALIBRATION.md](SCREEN_CALIBRATION.md) |
 | Mouth editor (pintabocas) | `src/views/screens/MouthEditorScreen.qml` | [SCREEN_MOUTH_EDITOR.md](SCREEN_MOUTH_EDITOR.md) |
 | Draw the mouths (pintabocas game) | `src/views/screens/GameMouthsScreen.qml` | [SCREEN_GAME_MOUTHS.md](SCREEN_GAME_MOUTHS.md) |
@@ -64,6 +65,7 @@ SplashScreen ──(hasDismissedWizard || hasDevice)──▶ HomeScreen
 | Home | `zowiSaysClicked` | GameMemory |
 | Home | `timelineClicked` | GameTimeline |
 | Home | `settingsClicked` | Settings |
+| Home | `achievementsClicked` | Achievements (button hidden when `achievements_enabled` is `false`) |
 | Settings | `calibrationRequested` | Calibration |
 | Settings | `languageRequested` | Splash (replaces the whole stack) |
 | Settings | `forgetCompleted` | Welcome (replace) |

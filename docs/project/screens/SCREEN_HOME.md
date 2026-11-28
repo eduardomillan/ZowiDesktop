@@ -14,7 +14,7 @@
 | Signal | Emitted by | Consumed in |
 |--------|-----------|-------------|
 | `settingsClicked()` | Settings button | `main.qml`: push→ Settings |
-| `achievementsClicked()` | Achievements button | currently a stub (`console.log`); the button is **disabled and greyed out** until the achievements exist (M12) |
+| `achievementsClicked()` | Achievements button | `main.qml`: push→ Achievements (`SCREEN_ACHIEVEMENTS.md`); the button is hidden when `achievements_enabled` is `false` |
 | `gamepadClicked()` | Gamepad app card | `main.qml`: push→ Pad |
 | `zowiSaysClicked()` | Memory app card | `main.qml`: push→ Memory (`pushZowiDice`) |
 | `timelineClicked()` | Timeline app card | `main.qml`: push→ GameTimeline (`pushTimeline`) |
@@ -91,3 +91,15 @@ columns is what fits with `cellSpacing` (60 px) between the icons
 (`floor((width + cellSpacing) / (iconSize + 8 + cellSpacing))`), so the distance
 between icons stays about that value and only the leftover width is shared out.
 Rows are separated by `cellSpacing`; the last row is left-aligned in the same columns.
+
+### Achievements on the home screen
+
+- The **Achievements** button (the "D" half of the pair) opens the collection and is
+  hidden when the layer is off (`achievements_enabled`); then the Ranking button swaps to
+  its round art (`ranking_round_button.png`) so it does not look cut in half.
+- The **Mouths Editor** tile stays greyed out until the `mouths_editor` achievement is
+  earned (`achievementLocked`), only while the layer locks content
+  (`achievements_lock_content`); pressing it shows how to unlock it
+  (`Achievements.showLockedHint("mouths_editor")`) instead of opening the editor.
+- The first Home screen of each launch logs the app start
+  (`Achievements.appStarted()`, from `main.qml`): second launch / days of use.

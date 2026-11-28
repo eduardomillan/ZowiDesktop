@@ -10,6 +10,7 @@ The `zowi_cli` tool provides terminal access to Zowi Desktop's core functionalit
 - [Help](#help)
 - [Session](#session)
 - [Ranking (admin)](#ranking-admin)
+- [Achievements (admin)](#achievements-admin)
 - [Config](#config)
 - [Ports](#ports)
 - [Translate](#translate)
@@ -187,6 +188,20 @@ players.
 zowi_cli ranking list                # every player: total, per-game bests, [active]
 zowi_cli ranking clear Player-123    # remove one player (also: clear 123)
 zowi_cli ranking clear all           # wipe the whole ranking
+```
+
+## Achievements (admin)
+
+The achievements progress is stored in its own file, `ZowiAchievements.json` (same
+config directory as the session file), so `session clear` never touches it. The GUI
+unlocks achievements by playing; these commands inspect or change the progress (see
+[ACHIEVEMENTS_HOWTO.md](ACHIEVEMENTS_HOWTO.md)).
+
+```bash
+zowi_cli achievements list             # the 17 achievements: [x] unlocked / [ ] locked, with their kind
+zowi_cli achievements unlock crusaito  # unlock one (an unknown id is an error)
+zowi_cli achievements unlock all       # unlock everything
+zowi_cli achievements reset            # back to the initial state (only ascending_turn is unlocked)
 ```
 
 ## Config

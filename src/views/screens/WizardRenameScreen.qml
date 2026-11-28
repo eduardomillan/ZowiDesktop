@@ -17,16 +17,17 @@ ScreenTemplate {
     property string robotName: Robot.deviceName || defaultName
     property bool renaming: false
     property bool renameDone: false
+    // The command is re-sent once if nothing confirms it in time (see retryTimer).
+    property bool _retried: false
     // Set when reached over a USB-only connection; the rename is best-effort
     // there because the robot may not ACK it (no &&F).
     property bool usbMode: false
-    // The robot performs a welcome gesture right after connecting; lock the
-    // rename controls briefly so the user doesn't type/confirm into a busy link.
-    property bool _lockExpired: false
-    property bool locked: !_lockExpired || !dataReady
-    property int lockMs: parseInt(Config.get("rename_lock_ms")) || 1500
-    // Wait for the robot to report name, appId and battery before enabling
-    // the rename controls (mirrors waitForRobotData in the CLI).
+    // The rename controls stay locked until the robot has answered the identity
+    // requests (name, appId, battery): it only answers once its welcome gesture
+    // is over, so this is the readiness gate (same as the CLI's
+    // waitForRobotData). No extra fixed delay: this screen is only opened after
+    // the robot has already reported its name.
+    property bool locked: !dataReady
     property bool dataReady: Robot.connected
                              && Robot.deviceName !== ""
                              && Robot.appId !== ""
@@ -129,10 +130,12 @@ ScreenTemplate {
                     return
                 }
                 wizardRename.renaming = true
+                wizardRename._retried = false
                 statusText.text = tr("sending")
                 statusText.color = Config.get("color_primary") || "#2d5a2d"
                 statusText.visible = true
                 renameTimer.restart()
+                retryTimer.restart()
                 // Firmware command: "R <name>\r"
                 Robot.sendData("R " + name + "\r")
             }
@@ -160,11 +163,31 @@ ScreenTemplate {
         }
     }
 
+    // A command sent while the robot is busy (e.g. a welcome gesture or a stalled
+    // link) can be swallowed. If neither the ack nor the new name has shown up
+    // after 2.5 s, send it once more: renaming twice to the same name is
+    // harmless, and the user no longer has to press the button a second time.
+    Timer {
+        id: retryTimer
+        interval: 2500
+        onTriggered: {
+            if (!wizardRename.renaming || wizardRename.renameDone || wizardRename._retried)
+                return
+            wizardRename._retried = true
+            var name = nameField.text.trim()
+            console.log("WizardRenameScreen: no confirmation yet, re-sending the rename")
+            Robot.sendData("R " + name + "\r")
+        }
+    }
+
     Timer {
         id: renameTimer
-        interval: 8000
+        // Bluetooth: the ack arrives within ~100 ms, so 5 s leaves room for a few
+        // identity polls (the lost-ack fallback). USB often sends no ack: 8 s.
+        interval: wizardRename.usbMode ? 8000 : 5000
         onTriggered: {
             if (wizardRename.renameDone) return
+            retryTimer.stop()
             wizardRename.renaming = false
             // Over USB the robot often does not ACK the rename (no &&F), so the
             // registration must not get stuck. Treat the timeout as best-effort:
@@ -182,9 +205,20 @@ ScreenTemplate {
         }
     }
 
-    Component.onCompleted: {
-        wizardRename._lockExpired = false
-        lockTimer.restart()
+    // Completes the rename once the robot confirmed it, whichever way we found
+    // out (see the Connections below). Idempotent.
+    function completeRename() {
+        if (!wizardRename.renaming || wizardRename.renameDone) return
+        var name = nameField.text.trim()
+        wizardRename.renameDone = true
+        renameTimer.stop()
+        retryTimer.stop()
+        wizardRename.renaming = false
+        statusText.text = tr("done").arg(name)
+        statusText.color = Config.get("color_primary") || "#2d5a2d"
+        statusText.visible = true
+        Robot.setDeviceName(name)
+        wizardRename.renamed(name)
     }
 
     onVisibleChanged: {
@@ -201,18 +235,12 @@ ScreenTemplate {
         }
     }
 
-    // The rename field is disabled while locked (welcome gesture or waiting for
-    // robot data). Once both conditions are satisfied, grab focus so the user
-    // can type the name immediately.
-    Timer {
-        id: lockTimer
-        interval: wizardRename.lockMs
-        onTriggered: {
-            wizardRename._lockExpired = true
-            if (!wizardRename.locked) {
-                nameField.selectAll()
-                nameField.forceActiveFocus()
-            }
+    // Focus the field as soon as the screen is ready (also when it already is
+    // at creation: onLockedChanged would not fire then).
+    Component.onCompleted: {
+        if (!wizardRename.locked) {
+            nameField.selectAll()
+            nameField.forceActiveFocus()
         }
     }
 
@@ -222,17 +250,25 @@ ScreenTemplate {
         function onDataReceived(data) {
             if (wizardRename.renaming)
                 console.log("WizardRenameScreen: recv", JSON.stringify(data))
+        }
+
+        // The final ack (&&F). Use the controller's parsed signal, NOT a search
+        // for "&&F" in the raw chunks: Bluetooth may split the frame ("&" then
+        // "&F%%"), which made a successful rename look like a failure.
+        function onFinalAckReceived() {
+            wizardRename.completeRename()
+        }
+
+        // Safety net for a lost ack (also over USB, where the robot often does
+        // not send it): the periodic identity poll reports the robot's name, and
+        // when it is the requested one the rename has taken effect. (The click
+        // handler skips the rename when the robot already has that name, so an
+        // equal name while renaming can only come from our command.)
+        function onDeviceChanged() {
             if (wizardRename.renaming && !wizardRename.renameDone
-                    && data.indexOf("&&F") !== -1) {
-                wizardRename.renameDone = true
-                renameTimer.stop()
-                wizardRename.renaming = false
-                statusText.text = tr("done").arg(nameField.text.trim())
-                statusText.color = Config.get("color_primary") || "#2d5a2d"
-                statusText.visible = true
-                Robot.setDeviceName(nameField.text.trim())
-                wizardRename.renamed(nameField.text.trim())
-            }
+                    && Robot.deviceName
+                    && Robot.deviceName.toLowerCase() === nameField.text.trim().toLowerCase())
+                wizardRename.completeRename()
         }
     }
 }

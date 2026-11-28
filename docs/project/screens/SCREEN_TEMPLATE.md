@@ -19,7 +19,7 @@
 
 - `title` / `subtitle` — set `tr()`-translated text.
 - `showBackButton`, `showDisconnectButton` — corner buttons.
-- `showStatusBar` (default `true`).
+- `showStatusBar` (default `true`): the `StatusBar` (`status_bar_height`, 64 px by default) ([STATUSBAR_HOWTO.md](../STATUSBAR_HOWTO.md)).
 - `footerHeight` — reserves space for the `footer` alias (e.g. MessageBar or a
   button row).
 

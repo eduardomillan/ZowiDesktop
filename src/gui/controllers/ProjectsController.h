@@ -19,6 +19,8 @@ public:
 
     Q_INVOKABLE QVariant getProject(const QString &id) const;
     Q_INVOKABLE bool isCompleted(const QString &id) const;
+    // Title of the project that awards `achievementId` ("" when none does).
+    Q_INVOKABLE QString projectTitleForAchievement(const QString &achievementId) const;
     Q_INVOKABLE bool isQuizBlocked(const QString &id) const;
     Q_INVOKABLE int getBlockadeRemainingMs(const QString &id) const;
     Q_INVOKABLE void blockQuiz(const QString &id, int durationMs);

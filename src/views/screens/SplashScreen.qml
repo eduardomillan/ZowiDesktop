@@ -1,19 +1,18 @@
-// SplashScreen: Initial screen shown on app launch.
-// Displays the Zowi logo and provides Continue/Quit buttons along with the
-// language selector (ES, CA, EN, FR, BG).
-//
-// Layout: a single ColumnLayout (connection notice, logo, title, buttons,
-// language selector) instead of absolutely offset layers, so nothing overlaps
-// at any window size. Sizes scale with the window (see `unit`) between sane
-// limits. Everything is in logical pixels and the popup stays inside the
-// window, so it behaves the same on X11 and Wayland (incl. fractional scaling).
+// SplashScreen: initial screen shown on app launch (also reached from
+// Settings -> Language). Same look and structure as WelcomeScreen: one compact
+// group centred in the window (Zowi image, title, "Desktop", Continue / Quit
+// pills, a row of language pills with their flag, and the "no connection"
+// notice), with the image as the only elastic piece. Sizes scale with the
+// window (see `unit`) between sane limits. Everything is in logical pixels and
+// there is no popup, so it behaves the same on X11 and Wayland (incl.
+// fractional scaling).
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import "../components"
 
 FocusScope {
-    id: splashScope
+    id: splash
 
     signal splashFinished()
     signal quitRequested()
@@ -21,70 +20,57 @@ FocusScope {
     // Read by main.qml for the window title.
     property string screenName: "SplashScreen"
     property bool _resetNoZowi: false
-
     focus: true
 
-    // ── Palette ─────────────────────────────────────────────────────────
     readonly property color primary: Config.get("color_primary") || "#2d5a2d"
     readonly property color accent: Config.get("color_accent") || "#21a69b"
     readonly property color accentPressed: Config.get("color_accent_pressed") || "#17736c"
+    readonly property color hover: Config.get("color_bg_hover") || "#e0f0e0"
 
-    // ── Scale: derived from the smaller window side ─────────────────────
-    function clamp(value, low, high) { return Math.max(low, Math.min(high, value)) }
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)) }
     readonly property real unit: Math.min(width, height)
-    readonly property int pageMargin: Math.round(clamp(unit * 0.04, 12, 32))
-    readonly property int gap: Math.round(clamp(unit * 0.025, 8, 24))
-    readonly property real logoMax: clamp(unit * 0.30, 96, 380)
-    readonly property int titleSize: Math.round(clamp(unit * 0.08, 28, 96))
-    readonly property int subtitleSize: Math.round(clamp(unit * 0.03, 14, 30))
-    readonly property int buttonHeight: Math.round(clamp(unit * 0.08, 44, 64))
-    readonly property int buttonWidth: Math.round(clamp(width * 0.25, 160, 300))
-    readonly property int buttonFont: Math.round(clamp(unit * 0.03, 16, 24))
-    readonly property int smallFont: Math.round(clamp(unit * 0.022, 13, 18))
-    // Continue and Quit stack in a column when they do not fit side by side.
-    readonly property bool narrow: width < 2 * buttonWidth + gap + 2 * pageMargin
+    readonly property int margin: Math.round(clamp(unit * 0.03, 10, 28))
+    readonly property int gap: Math.round(clamp(unit * 0.025, 8, 20))      // 15 at 600
+    readonly property int imageSize: Math.round(clamp(unit * 0.44, 110, 420)) // 264 at 600 (max; shrinks if short)
+    readonly property int titleSize: Math.round(clamp(unit * 0.06, 26, 64))  // 36 at 600
+    readonly property int taglineSize: Math.round(clamp(unit * 0.027, 13, 24)) // 16 at 600
+    readonly property int pillHeight: Math.round(clamp(unit * 0.075, 38, 52)) // 45 at 600
+    readonly property int pillWidth: Math.round(clamp(width * 0.15, 130, 200)) // 154 at 1024
+    readonly property int chipHeight: Math.round(clamp(unit * 0.058, 30, 40))
+    readonly property int chipFont: Math.round(clamp(unit * 0.023, 12, 17))
+    readonly property bool stackButtons: width < 2 * pillWidth + gap + 2 * margin
+    readonly property bool wideChips: width - 2 * margin >= 640
 
-    function tr(source) { return Translator.translate("SplashScreen.qml", source) }
+    readonly property var languages: [
+        { text: "Español", locale: "es_ES" },
+        { text: "Valencià", locale: "ca_ES" },
+        { text: "English", locale: "en_US" },
+        { text: "Français", locale: "fr_FR" },
+        { text: "Български", locale: "bg_BG" }
+    ]
+    property string currentLocale: Translator.currentLocale()
+    // No Bluetooth and no USB: show the notice. (A property so previews can force it.)
+    property bool noticeVisible: !Robot.bluetoothAvailable && !Robot.usbAvailable
 
-    Keys.onReturnPressed: splashScope.splashFinished()
-    Keys.onEnterPressed: splashScope.splashFinished()
+    // Reading `_rev` makes every text binding that calls tr() re-evaluate when
+    // the language changes, so the screen is translated in place (no reload).
+    property int _rev: 0
+    function tr(source) { var r = _rev; return Translator.translate("SplashScreen.qml", source) }
+
+    Keys.onReturnPressed: splash.splashFinished()
+    Keys.onEnterPressed: splash.splashFinished()
 
     Rectangle {
         anchors.fill: parent
         color: Config.get("color_bg_app") || "#f4f9f4"
     }
 
+    // One group, centred: equal flexible gaps above and below. When the window
+    // is short the image (the only elastic piece) gives way first.
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: splashScope.pageMargin
-        spacing: splashScope.gap
-
-        // No connection notice: part of the flow, so it pushes the content down
-        // instead of covering the logo.
-        Rectangle {
-            id: noBtBanner
-            visible: !Robot.bluetoothAvailable && !Robot.usbAvailable
-            Layout.alignment: Qt.AlignHCenter
-            Layout.fillWidth: true
-            Layout.maximumWidth: 520
-            Layout.preferredHeight: noBtText.implicitHeight + 24
-            radius: 12
-            color: "#fff4e5"
-            border.color: Config.get("color_warning") || "#e67e22"
-            border.width: 1
-
-            Text {
-                id: noBtText
-                anchors.fill: parent
-                anchors.margins: 12
-                text: splashScope.tr("no_connection")
-                color: "#a0522d"
-                font.pixelSize: splashScope.smallFont
-                wrapMode: Text.WordWrap
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-        }
+        anchors.margins: splash.margin
+        spacing: splash.gap
 
         Item { Layout.fillHeight: true }
 
@@ -92,10 +78,12 @@ FocusScope {
             Layout.alignment: Qt.AlignHCenter
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: splashScope.logoMax
-            Layout.maximumHeight: splashScope.logoMax
-            Layout.minimumHeight: 48
+            Layout.preferredHeight: splash.imageSize
+            Layout.maximumHeight: splash.imageSize
+            Layout.minimumHeight: 40
             source: Config.get("splash_image")
+            sourceSize.width: 960   // keep it sharp (hi-dpi / fractional scaling)
+            sourceSize.height: 960
             fillMode: Image.PreserveAspectFit
             horizontalAlignment: Image.AlignHCenter
             verticalAlignment: Image.AlignVCenter
@@ -104,238 +92,184 @@ FocusScope {
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: splashScope.tr("zowi")
-            color: splashScope.primary
-            font.pixelSize: splashScope.titleSize
+            text: splash.tr("zowi")
+            color: splash.primary
+            font.pixelSize: splash.titleSize
             font.bold: true
         }
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: splashScope.tr("desktop")
-            color: splashScope.primary
-            font.pixelSize: splashScope.subtitleSize
-            opacity: 0.7
+            text: splash.tr("desktop")
+            color: splash.primary
+            font.pixelSize: splash.taglineSize
+            opacity: 0.8
         }
 
+        // Primary / secondary pills, exactly the WelcomeScreen ones.
         GridLayout {
             Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: splashScope.gap
-            columns: splashScope.narrow ? 1 : 2
-            columnSpacing: splashScope.gap
-            rowSpacing: splashScope.gap
+            Layout.topMargin: Math.round(splash.gap / 2)
+            columns: splash.stackButtons ? 1 : 2
+            columnSpacing: splash.gap
+            rowSpacing: splash.gap
 
             Button {
                 id: continueButton
                 Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: splashScope.buttonWidth
-                Layout.preferredHeight: splashScope.buttonHeight
-                text: splashScope.tr("continue")
+                Layout.preferredWidth: splash.pillWidth
+                Layout.preferredHeight: splash.pillHeight
+                text: splash.tr("continue")
 
                 contentItem: Text {
                     text: continueButton.text
-                    font.pixelSize: splashScope.buttonFont
+                    font.pixelSize: Math.round(splash.pillHeight * 0.36)
                     font.bold: true
                     color: "#ffffff"
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
-
                 background: Rectangle {
                     radius: height / 2
-                    color: continueButton.pressed ? splashScope.accentPressed : splashScope.accent
+                    color: continueButton.pressed ? splash.accentPressed : splash.accent
                 }
-
-                onClicked: splashScope.splashFinished()
+                onClicked: splash.splashFinished()
             }
 
             Button {
                 id: quitButton
                 visible: Config.get("button_quit_visible") === "true"
                 Layout.alignment: Qt.AlignHCenter
-                Layout.preferredWidth: splashScope.buttonWidth
-                Layout.preferredHeight: splashScope.buttonHeight
-                text: splashScope.tr("quit")
+                Layout.preferredWidth: splash.pillWidth
+                Layout.preferredHeight: splash.pillHeight
+                text: splash.tr("quit")
 
                 contentItem: Text {
                     text: quitButton.text
-                    font.pixelSize: Math.round(splashScope.buttonFont * 0.8)
+                    font.pixelSize: Math.round(splash.pillHeight * 0.30)
                     font.bold: true
-                    color: splashScope.primary
+                    color: splash.primary
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     opacity: 0.8
                 }
-
                 background: Rectangle {
                     radius: height / 2
                     color: "transparent"
-                    border.color: splashScope.primary
+                    border.color: splash.primary
                     border.width: 2
                     opacity: 0.5
                 }
+                onClicked: splash.quitRequested()
+            }
+        }
 
-                onClicked: splashScope.quitRequested()
+        // Language pills: the selected one is highlighted.
+        ColumnLayout {
+            Layout.alignment: Qt.AlignHCenter
+            spacing: Math.round(splash.gap / 2)
+
+            Text {
+                Layout.alignment: Qt.AlignHCenter
+                text: splash.tr("select_language")
+                color: splash.primary
+                font.pixelSize: splash.chipFont
+                opacity: 0.7
+            }
+
+            GridLayout {
+                Layout.alignment: Qt.AlignHCenter
+                columns: splash.wideChips ? 5 : 3
+                columnSpacing: 8
+                rowSpacing: 8
+
+                Repeater {
+                    model: splash.languages
+                    delegate: Button {
+                        id: chip
+                        readonly property bool selected: splash.currentLocale === modelData.locale
+                        Layout.preferredHeight: splash.chipHeight
+                        Layout.preferredWidth: chipContent.implicitWidth + 2 * Math.round(splash.chipHeight * 0.5)
+                        Layout.alignment: Qt.AlignHCenter
+                        text: modelData.text
+
+                        // Flag first, then the language name.
+                        contentItem: Item {
+                            implicitWidth: chipContent.implicitWidth
+                            Row {
+                                id: chipContent
+                                anchors.centerIn: parent
+                                spacing: Math.round(splash.chipHeight * 0.25)
+
+                                FlagIcon {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    locale: modelData.locale
+                                    width: Math.round(splash.chipHeight * 0.72)
+                                    height: Math.round(width * 2 / 3)
+                                    opacity: chip.selected ? 1.0 : 0.85
+                                }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: chip.text
+                                    font.pixelSize: splash.chipFont
+                                    font.bold: chip.selected
+                                    color: splash.primary
+                                    opacity: chip.selected ? 1.0 : 0.8
+                                }
+                            }
+                        }
+                        background: Rectangle {
+                            radius: height / 2
+                            color: chip.selected ? splash.hover : (chip.hovered ? Qt.lighter(splash.hover, 1.15) : "transparent")
+                            border.color: splash.primary
+                            border.width: chip.selected ? 2 : 1
+                            opacity: chip.selected ? 0.9 : 0.5
+                        }
+                        onClicked: {
+                            if (Translator.currentLocale() !== modelData.locale) {
+                                Translator.load(modelData.locale)
+                                Session.saveString("locale", modelData.locale)
+                            }
+                            splash.currentLocale = Translator.currentLocale()
+                        }
+                    }
+                }
+            }
+        }
+
+        // No-connection notice: inside the group (it never covers anything and
+        // the group stays centred), same style as before.
+        Rectangle {
+            visible: splash.noticeVisible
+            Layout.alignment: Qt.AlignHCenter
+            Layout.preferredWidth: Math.min(520, splash.width - 2 * splash.margin)
+            Layout.preferredHeight: noConnText.implicitHeight + 14
+            radius: 12
+            color: "#fff4e5"
+            border.color: Config.get("color_warning") || "#e67e22"
+            border.width: 1
+
+            Text {
+                id: noConnText
+                anchors.fill: parent
+                anchors.margins: 7
+                text: splash.tr("no_connection")
+                color: "#a0522d"
+                font.pixelSize: splash.chipFont
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
         }
 
         Item { Layout.fillHeight: true }
+    }
 
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: splashScope.tr("select_language")
-            color: splashScope.primary
-            font.pixelSize: splashScope.smallFont
-            opacity: 0.8
-        }
-
-        ComboBox {
-            id: langCombo
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: Math.round(splashScope.clamp(splashScope.width * 0.2, 160, 220))
-            Layout.preferredHeight: Math.round(splashScope.clamp(splashScope.unit * 0.06, 36, 48))
-            Layout.bottomMargin: 4
-
-            model: ListModel {
-                ListElement { text: "Español"; locale: "es_ES" }
-                ListElement { text: "Valencià"; locale: "ca_ES" }
-                ListElement { text: "English"; locale: "en_US" }
-                ListElement { text: "Français"; locale: "fr_FR" }
-                ListElement { text: "Български"; locale: "bg_BG" }
-            }
-            textRole: "text"
-
-            // Precaution: pin every palette role the Controls style may read to
-            // our own colours so nothing here depends on the system palette
-            // (KDE Plasma's platform theme injects its own on LliureX 25).
-            palette.text: splashScope.primary
-            palette.windowText: splashScope.primary
-            palette.buttonText: splashScope.primary
-            palette.highlightedText: splashScope.primary
-            palette.base: "#ffffff"
-            palette.window: "#ffffff"
-            palette.button: "transparent"
-            palette.highlight: Config.get("color_bg_hover") || "#e0f0e0"
-
-            font.pixelSize: Math.round(splashScope.clamp(splashScope.unit * 0.025, 14, 18))
-
-            Component.onCompleted: {
-                var cur = Translator.currentLocale()
-                for (var i = 0; i < model.count; ++i) {
-                    if (model.get(i).locale === cur) {
-                        currentIndex = i
-                        return
-                    }
-                }
-                currentIndex = 2 // fallback: English
-            }
-
-            onActivated: {
-                var loc = model.get(currentIndex).locale
-                if (Translator.currentLocale() !== loc) {
-                    Translator.load(loc)
-                    Session.saveString("locale", loc)
-                }
-            }
-
-            contentItem: Text {
-                text: langCombo.displayText
-                color: splashScope.primary
-                verticalAlignment: Text.AlignVCenter
-                horizontalAlignment: Text.AlignHCenter
-                font: langCombo.font
-            }
-
-            background: Rectangle {
-                radius: height / 2
-                border.color: splashScope.primary
-                border.width: 1
-                opacity: 0.5
-                color: "transparent"
-            }
-
-            // In-window popup, opened upwards on purpose: the selector sits at
-            // the bottom, so it never runs off the window and behaves the same
-            // on X11 and Wayland.
-            //
-            // The rows are a Column + Repeater, NOT the usual ListView over
-            // langCombo.delegateModel: with Qt 6.9 (LliureX 25) that ListView
-            // never laid its delegates out, so all five rows sat at y=0 on top
-            // of each other and only the current one (z=1) was visible. With a
-            // handful of fixed entries a plain Column is simpler and robust, but
-            // it must provide hover, click and keyboard handling itself.
-            popup: Popup {
-                id: langPopup
-                y: -implicitHeight - 2
-                width: langCombo.width
-                padding: 0
-                focus: true
-                // Row highlighted by hover or keyboard; -1 = follow currentIndex.
-                property int navIndex: -1
-                onAboutToShow: navIndex = langCombo.currentIndex
-
-                function commit(i) {
-                    if (i < 0 || i >= langCombo.count) return
-                    langCombo.currentIndex = i
-                    langCombo.activated(i)
-                    close()
-                }
-
-                Keys.onUpPressed: navIndex = Math.max(0, navIndex - 1)
-                Keys.onDownPressed: navIndex = Math.min(langCombo.count - 1, navIndex + 1)
-                Keys.onReturnPressed: commit(navIndex)
-                Keys.onEnterPressed: commit(navIndex)
-                Keys.onSpacePressed: commit(navIndex)
-
-                palette.text: splashScope.primary
-                palette.windowText: splashScope.primary
-                palette.base: "#ffffff"
-                palette.window: "#ffffff"
-
-                contentItem: Column {
-                    Repeater {
-                        model: langCombo.model
-                        delegate: ItemDelegate {
-                            id: langRow
-                            required property var model
-                            required property int index
-
-                            width: langCombo.width
-                            height: langCombo.height
-                            highlighted: langPopup.navIndex === langRow.index
-                            onHoveredChanged: if (hovered) langPopup.navIndex = langRow.index
-
-                            palette.text: splashScope.primary
-                            palette.windowText: splashScope.primary
-                            palette.buttonText: splashScope.primary
-                            palette.highlightedText: splashScope.primary
-
-                            contentItem: Text {
-                                text: langRow.model.text
-                                color: splashScope.primary
-                                verticalAlignment: Text.AlignVCenter
-                                horizontalAlignment: Text.AlignHCenter
-                                font: langCombo.font
-                            }
-
-                            background: Rectangle {
-                                color: langRow.highlighted
-                                       ? (Config.get("color_bg_hover") || "#e0f0e0")
-                                       : "transparent"
-                            }
-
-                            onClicked: langPopup.commit(langRow.index)
-                        }
-                    }
-                }
-
-                background: Rectangle {
-                    color: "#ffffff"
-                    radius: 8
-                    border.color: splashScope.primary
-                    border.width: 1
-                }
-            }
+    Connections {
+        target: Translator
+        function onLanguageChanged() {
+            splash.currentLocale = Translator.currentLocale()
+            splash._rev++
         }
     }
 
@@ -359,7 +293,7 @@ FocusScope {
             }
             implicitWidth: 90
             height: 32
-            text: splashScope.tr("reset")
+            text: splash.tr("reset")
 
             contentItem: Text {
                 text: parent.text
@@ -381,7 +315,7 @@ FocusScope {
                 if (msgBar.visible) return
                 var addr = Session.loadActiveZowiDeviceAddress()
                 if (!addr) addr = Robot.deviceAddress
-                splashScope._resetNoZowi = (addr === "")
+                splash._resetNoZowi = (addr === "")
                 // Forget the registered Zowi. The controller also tries a
                 // factory rename (zowi_default_name) if it can reach the robot.
                 forgetter.forget(addr)
@@ -392,15 +326,15 @@ FocusScope {
     ForgetController {
         id: forgetter
         onForgetFinished: function(unpaired, message) {
-            if (splashScope._resetNoZowi)
-                msgBar.show(splashScope.tr("reset_no_zowi"), Config.get("color_error") || "#c0392b")
+            if (splash._resetNoZowi)
+                msgBar.show(splash.tr("reset_no_zowi"), Config.get("color_error") || "#c0392b")
             else if (unpaired)
-                msgBar.show(splashScope.tr("unpair_success"))
+                msgBar.show(splash.tr("unpair_success"))
             else
-                msgBar.show(splashScope.tr("unpair_app_only"))
+                msgBar.show(splash.tr("unpair_app_only"))
         }
         onStatusMessage: function(text) { msgBar.show(text) }
     }
 
-    Component.onCompleted: splashScope.forceActiveFocus()
+    Component.onCompleted: splash.forceActiveFocus()
 }

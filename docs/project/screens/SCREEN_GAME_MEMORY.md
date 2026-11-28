@@ -137,7 +137,7 @@ our `BendBackward` label is the same physical gesture.
   player's Memory best in the global ranking improved, the ranking line
   *"Player-123: 150 pts · position 2"* (`total_position`), a **"Cerrar"**
   (outlined, → `resetGame()`) and a **"Reintentar"** accent pill (→ `startGame()`)
-  button. The achievement `in_love` stays reserved — see below.
+  button. The achievement `in_love` is awarded through the achievements layer — see below.
 
 ## UI layout
 
@@ -253,8 +253,11 @@ player can retry.
   the active player (`Player-NNN`); the game-over dialog shows their total and
   position, and *"New best"* when their Memory best improved. There is no
   per-game list. `rankThreshold` in `ZowiDiceConfig` is unused.
-- **Achievements:** `in_love` (score ≥ 12) is not enforced; the game-over
-  dialog only shows the *"New best"* / ranking line. `achievementThreshold` is reserved.
+- **Achievements:** `in_love` (score ≥ 12, `ZowiDiceConfig::achievementThreshold`) is
+  awarded at game over through the achievements layer: `ZowiDiceController::gameOver(score)`
+  is connected to `AchievementsController::onMemoryGameOver` in `main.cpp`, and the
+  global unlock dialog appears (`../ACHIEVEMENTS_HOWTO.md`). The game-over dialog itself
+  only shows the *"New best"* / ranking line.
 - **Speed is fixed** (1000 ms) via `ZowiDiceConfig::initialSpeedMs`; not
   adjustable in the UI.
 - **Help text does not mention the Zowi's name** (Android interpolates
@@ -268,7 +271,7 @@ relevant section (with a CHANGELOG entry) and are ticked off.
 | Item | Status | Notes |
 |------|--------|-------|
 | **Ranking** | ✅ Implemented | Global ranking shared by all games: core `RankingStore` (own file `ZowiRanking.json`), `RankingController`, `RankingDialog.qml`; delete is admin-only (`zowi_cli ranking`); optional opt-in world ranking on top. See `RANKING_HOWTO.md`. |
-| **Achievement `in_love`** (score ≥ 12) | ⏸ Deferred | Real achievement once the Achievements layer exists (future milestone). Today the game-over dialog only shows the *"New best"* / ranking line; `achievementThreshold` stays reserved. |
+| **Achievement `in_love`** (score ≥ 12) | ✅ Implemented | Awarded through the achievements layer (`ACHIEVEMENTS_HOWTO.md`). |
 | **Adjustable speed** | 🚧 Planned | `ZowiDiceConfig::initialSpeedMs = 1000` is fixed; add a UI speed selector mapping to `MovementSpeed`. |
 | **Help text with the Zowi's name** | 🚧 Planned | Android interpolates `%1$s` with the registered name; ours doesn't. Needs i18n work across the 5 locales. |
 | **Dead i18n keys cleanup** | 🧹 Cleanup | `walk_forward`, `bend_backward`, `jump`, `moonwalker_right` under `"GameMemoryScreen.qml"` (5 locales) are unused (image-only buttons). Kept as documented legacy for now; remove during cleanup. |

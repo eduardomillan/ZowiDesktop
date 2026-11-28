@@ -28,8 +28,11 @@
 - **Source of truth (Android):** GAME_ID `TIMELINE_GAME_ID`;
   `TimelineActivity` / `TimelinePresenterImpl`, `VIEWS.md` §TimelineActivity;
   ranking under `TIMELINE_GAME_ID`.
-- **Achievement:** `anxious` — Score ≥ 15 **commands in the sequence** at play.
-  Reserved for the deferred ACHIEVEMENTS layer, exactly like the projects.
+- **Achievement:** `anxious` — a sequence of **15 or more chips** played to the end.
+  `TimelineController::sequenceCompleted(score, eligible, chips)` is connected to
+  `AchievementsController::onTimelineCompleted` in `main.cpp`. Opening the screen also
+  counts as the first visit towards `shake_leg` (`Achievements.timelineOpened()`).
+  See `../ACHIEVEMENTS_HOWTO.md`.
 - **Connection:** interactive screen. **Play is conn-gated** (ship *Stop*, the
   add buttons and the list itself ungated, as on Android). No battery check.
 - Reached from Home *Timeline* tile → `main.qml` `pushTimeline()` → push; back →
@@ -96,7 +99,7 @@
 - **Help:** opens on entry according to `timeline_help` (`"always"`, as shipped in
   `config.json`, or `"once"` → first visit only, `timeline_help_seen`). It has a
   second paragraph, `how_to_play_ranking`, on how the sequence scores. ✅ Done.
-- **Achievements:** `anxious` (15+ commands) reserved for achievements layer.
+- **Achievements:** `anxious` (15+ chips) is awarded when a sequence completes (see above).
 
 ## Ranking (implemented)
 
@@ -139,4 +142,3 @@ fr_FR, ca_ES, bg_BG): `title`, `subtitle`, `play_button`, `stop_button`,
 
 - **Per-rep progress:** each repetition is sent as its own step, but the screen
   highlights the whole chip; showing progress inside a multi-rep chip is not done.
-- **Achievements:** `anxious` gating (≥15 commands) reserved for achievements layer.

@@ -1,184 +1,43 @@
-// Reusable connection status bar. Shows connecting / connected / unavailable
-// state and, when connected, the robot's remaining battery percentage. Bind it
-// wherever a status bar is needed (it reads the global `Bluetooth` and
-// `Session` context properties).
+// Connection status bar shown at the top of the screens. Thin adapter: it maps
+// the global `Robot` and `Session` context properties onto StatusBarView, which
+// does the drawing (face icon, name, state, chips, detail panel).
+// See docs/project/STATUSBAR_HOWTO.md.
 import QtQuick 2.15
-import QtQuick.Controls 2.15
 
-Rectangle {
+StatusBarView {
     id: root
-    height: 36
-    color: Robot.connecting
-          ? (Config.get("color_bg_connecting") || "#eaf2fb")
-          : (Robot.connected
-              ? (Robot.batteryLow
-                 ? (Config.get("color_bg_low_battery") || "#fdecea")
-                 : (Config.get("color_bg_connected") || "#e8f5e8"))
-              : (Robot.situation === Robot.SituationTransportLost
-                 || Robot.situation === Robot.SituationDemo
-                  ? (Config.get("color_bg_low_battery") || "#fdecea")
-                  : (Config.get("color_bg_disconnected") || "#fff3e0")))
 
-    function tr(source) { return Translator.translate("StatusBar.qml", source) }
+    // Saved (registered) Zowi. `Session` offers load functions, not bindable
+    // properties, so they are refreshed on the signals below.
+    property string savedName: ""
+    property string savedAddress: ""
+    property string savedTransport: ""
 
-    property bool hasSavedZowi: Session.loadActiveZowiDeviceAddress() !== ""
-    property bool canReconnect: !Robot.connected && !Robot.connecting && root.hasSavedZowi
-        && Robot.situation !== Robot.SituationTransportLost
-
-    property color dotColor: Robot.connecting
-        ? (Config.get("color_fg_connecting") || "#2980b9")
-        : (Robot.connected
-            ? (Robot.batteryLow
-               ? (Config.get("color_error") || "#c0392b")
-               : (Config.get("color_primary") || "#2d5a2d"))
-            : (Robot.situation === Robot.SituationTransportLost
-               || Robot.situation === Robot.SituationDemo
-                ? (Config.get("color_error") || "#c0392b")
-                : (Config.get("color_warning") || "#e67e22")))
-
-    function withName(base) {
-        var n = Session.loadActiveZowiName() || ""
-        return n !== "" ? base + " " + n : base
+    function refresh() {
+        savedName = Session.loadActiveZowiName() || ""
+        savedAddress = Session.loadActiveZowiDeviceAddress() || ""
+        savedTransport = Session.loadActiveZowiTransport() || ""
     }
+    Component.onCompleted: refresh()
 
-    function statusText() {
-        if (Robot.connecting) return root.tr("status_connecting")
-        if (Robot.connected) {
-            var name = Session.loadActiveZowiName() || Robot.deviceName || ""
-            var mac = Robot.deviceAddress ? Robot.deviceAddress : ""
-            function withMac(base) {
-                return mac !== "" ? base + " · " + mac : base
-            }
-            if (Robot.battery >= 0) {
-                var text = withMac(name !== ""
-                    ? root.tr("connected_name_battery").arg(name).arg(Robot.battery)
-                    : root.tr("connected_battery").arg(Robot.battery))
-                // Low battery: say it in words too, not only with the red colour.
-                return Robot.batteryLow ? text + " · " + root.tr("status_low_battery") : text
-            }
-            return withMac(name !== "" ? root.tr("connected_name").arg(name) : root.tr("connected"))
-        }
-        if (Robot.situation === Robot.SituationTransportLost) {
-            var t = Session.loadActiveZowiTransport()
-            var label = (t === "usb") ? root.tr("via_usb") : root.tr("via_bluetooth")
-            return root.withName(root.tr("status_transport_lost").arg(label))
-        }
-        if (Robot.situation === Robot.SituationDemo) return root.withName(root.tr("status_demo"))
-        if (root.hasSavedZowi) return root.withName(root.tr("status_unavailable"))
-        return root.tr("not_connected")
-    }
+    connected: Robot.connected
+    connecting: Robot.connecting
+    demo: Robot.situation === Robot.SituationDemo
+    transportLost: Robot.situation === Robot.SituationTransportLost
+    hasSaved: savedAddress !== ""
+    name: connected ? (savedName || Robot.deviceName || "") : savedName
+    mac: connected ? (Robot.deviceAddress || "") : savedAddress
+    battery: Robot.battery !== undefined ? Robot.battery : -1
+    lowBatteryThreshold: Robot.lowBatteryThreshold !== undefined ? Robot.lowBatteryThreshold : 50
+    transport: connected
+        ? (Robot.activeTransport === Robot.TransportUsb ? "usb" : "bt")
+        : (savedTransport === "usb" ? "usb" : "bt")
+    appId: connected ? (Robot.appId || "") : ""
 
-    property string statusLabel: root.statusText()
-
-    Row {
-        anchors.centerIn: parent
-        spacing: 8
-
-        Rectangle {
-            width: 8
-            height: 8
-            radius: 4
-            anchors.verticalCenter: parent.verticalCenter
-            color: root.dotColor
-        }
-
-        Text {
-            anchors.verticalCenter: parent.verticalCenter
-            color: root.dotColor
-            font.pixelSize: 12
-            opacity: 0.8
-            text: root.statusLabel
-        }
-
-        // Active transport pill (only meaningful while connected).
-        Rectangle {
-            visible: Robot.connected
-            anchors.verticalCenter: parent.verticalCenter
-            radius: 8
-            height: 16
-            width: transportText.implicitWidth + 14
-            color: "#ffffff"
-            border.color: root.dotColor
-            border.width: 1
-            opacity: 0.75
-
-            Text {
-                id: transportText
-                anchors.centerIn: parent
-                font.pixelSize: 10
-                font.bold: true
-                color: root.dotColor
-                text: Robot.activeTransport === Robot.TransportUsb
-                      ? root.tr("via_usb")
-                      : root.tr("via_bluetooth")
-            }
-        }
-
-        // Firmware (appId) pill, shown when the robot reported its firmware id.
-        Rectangle {
-            visible: Robot.connected && Robot.appId !== ""
-            anchors.verticalCenter: parent.verticalCenter
-            radius: 8
-            height: 16
-            width: fwText.implicitWidth + 14
-            color: "#ffffff"
-            border.color: Config.get("color_firmware") || "#8a6d1f"
-            border.width: 1
-            opacity: 0.75
-
-            Text {
-                id: fwText
-                anchors.centerIn: parent
-                font.pixelSize: 10
-                font.bold: true
-                color: Config.get("color_firmware") || "#8a6d1f"
-                text: root.tr("status_firmware").arg(Robot.appId)
-            }
-        }
-    }
-
-    Text {
-        visible: root.canReconnect
-        anchors {
-            verticalCenter: parent.verticalCenter
-            right: parent.right
-            rightMargin: 12
-        }
-        text: root.tr("status_reconnect")
-        color: Config.get("color_fg_connecting") || "#2980b9"
-        font.pixelSize: 12
-        font.bold: true
-        font.underline: true
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: Robot.connectToDevice(Session.loadActiveZowiDeviceAddress())
-        }
-    }
+    onReconnectClicked: Robot.connectToDevice(savedAddress)
 
     Connections {
         target: Session
-        function onSessionChanged() { root.statusLabel = root.statusText() }
-    }
-
-    Connections {
-        target: Robot
-        function onConnectionChanged() { root.statusLabel = root.statusText() }
-    }
-
-    Connections {
-        target: Robot
-        function onConnectingChanged() { root.statusLabel = root.statusText() }
-    }
-
-    Connections {
-        target: Robot
-        function onAppIdChanged() { root.statusLabel = root.statusText() }
-    }
-
-    Connections {
-        target: Robot
-        function onBatteryChanged() { root.statusLabel = root.statusText() }
+        function onSessionChanged() { root.refresh() }
     }
 }

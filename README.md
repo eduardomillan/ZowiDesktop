@@ -25,6 +25,7 @@ Whether you already own a Zowi or you are just curious about robotics, Zowi Desk
 - **Firmware flashing** — restore the factory firmware or install alternative firmwares (e.g. Alarm, Adivinawi) over Bluetooth or USB.
 - **Games and ranking** — play Memory (Zowi says), Draw the mouths and Timeline; each adds your best score to a single local ranking of `Player-NNN` players, reachable from the home screen. An optional, opt-in world ranking is available.
 - **Discover projects** — guided lessons about the robot (gravity, eyes, feet, mouth, choreography…) with a quiz, and projects that reprogram the robot.
+- **Achievements** — 17 collectible achievements (movements, animations, a game) earned by playing, passing project quizzes and using the app; some unlock gamepad movements and the Mouths Editor. An administrator can switch the layer off or stop it from locking content.
 - **Low battery warnings** — the status bar flags a low battery and the app asks before installing firmware when the charge is low (threshold configurable).
 - **Internationalized** — available in Spanish (`es_ES`), Catalan (`ca_ES`), English (`en_US`), French (`fr_FR`) and Bulgarian (`bg_BG`); change the language any time from Settings.
 - **Command-line companion** — the included `zowi_cli` tool exposes the same core over a scriptable interface for automation and debugging.

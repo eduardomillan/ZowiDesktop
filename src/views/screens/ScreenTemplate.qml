@@ -44,7 +44,7 @@ Rectangle {
     StatusBar {
         id: statusBar
         visible: root.showStatusBar
-        height: root.showStatusBar ? 36 : 0
+        height: root.showStatusBar ? statusBar.barHeight : 0
         anchors {
             top: parent.top
             left: parent.left

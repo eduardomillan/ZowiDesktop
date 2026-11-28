@@ -74,6 +74,7 @@ Core business logic. Zero Qt dependency. Testable on any platform.
 | `ZowiDiceGame` | Logic of the Memory game ("Zowi says"): the random action sequence and the rounds |
 | `MouthsGame` | Logic of the Draw-the-mouths game: rounds, levels and matching |
 | `TimelineCommand`, `TimelinePlayer`, `timelineScore()` | Timeline chips, their step-by-step playback paced by the robot's acks, and the score of a completed sequence |
+| `AchievementsStore`, `achievements.h` | The 17 achievements, their persistence (own `ZowiAchievements.json`), usage counters and the pure unlock rules (see `ACHIEVEMENTS_HOWTO.md`) |
 | `RankingStore` | Global ranking of local players (`Player-NNN`) in its own `ZowiRanking.json` (see `RANKING_HOWTO.md`) |
 | `ranking_online.h` | Parsing/validation of the public world ranking JSON (no network code) |
 | `transport_constants.h` | `usb` / `bt` transport identifiers stored in the session |
@@ -104,6 +105,7 @@ Qt Quick application. Controllers wrap core classes and expose them to QML via c
 | `MouthsGameController` | `MouthsGame` (Draw the mouths) | `Mouths` |
 | `TimelineController` | `TimelinePlayer`, `timelineScore()` | `Timeline` |
 | `RankingController` | `RankingStore` (read, create/switch players, record scores; no delete) | `Ranking` |
+| `AchievementsController` | `AchievementsStore` (unlock events, thresholds, locked-content queries, notice/celebration; the layer is switched by the `achievements_*` config keys) | `Achievements` |
 | `OnlineRankingClient` | `ranking_online` + `QNetworkAccessManager` (world ranking read/share/delete) | `OnlineRanking` |
 
 `main.cpp` also exposes the plain string `AppVersion`.
@@ -130,6 +132,7 @@ CLI11-based tool. Directly instantiates core classes. No QML involved.
 | `session get/set/clear/list` | `SessionStore` |
 | `config get/list` | `ConfigStore` |
 | `ranking list/clear` | `RankingStore` (admin only; the GUI has no delete) |
+| `achievements list/unlock/reset` | `AchievementsStore` (admin: inspect, unlock or reset the progress) |
 | `translate` | `TranslationEngine` |
 | `ports`, `scan` | serial port listing, `QtBluetoothBackend` |
 | `connect`, `disconnect`, `status`, `rename` | transport backends, `SessionStore`, `protocol.h` |
@@ -270,13 +273,13 @@ picked there and "Continue" goes back to Home.
 | `SplashViewActivity` | `SplashScreen.qml` | Done |
 | `WelcomeViewActivity` | `WelcomeScreen.qml` | Done |
 | `WizardViewActivity` | `WizardScreen.qml`, `ScanScreen.qml`, `WizardFoundScreen.qml`, `WizardRenameScreen.qml` | Done |
-| `HomeViewActivity` | `HomeScreen.qml` | Done (ranking button added; the achievements button is greyed out) |
+| `HomeViewActivity` | `HomeScreen.qml` | Done (plus a ranking button) |
 | `SettingsViewActivity` | `SettingsScreen.qml` | Done (plus Language, which the original lacks) |
 | `PadViewActivity` | `PadScreen.qml` (+ gesture/mouth/sounds screens, calibration) | Done |
 | `TimelineActivity` | `GameTimelineScreen.qml` | Done |
 | Zowi says / Mouths minigames | `GameMemoryScreen.qml`, `GameMouthsScreen.qml` | Done |
 | `ProjectViewActivity`, `ProjectQuizViewActivity` | `ProjectScreen.qml` + `QuizComponent.qml` | Done |
-| `AchievementsViewActivity` | — | Not started (M12) |
+| `AchievementsViewActivity` | `AchievementsScreen.qml` + `AchievementUnlockDialog.qml` | Done |
 
 ## QML Hot-Reload
 
@@ -292,12 +295,12 @@ cmake --build build
 ctest --test-dir build
 ```
 
-16 tests, all Qt-free (`ctest --test-dir build -N` lists them): `test_session_store`,
+17 tests, all Qt-free (`ctest --test-dir build -N` lists them): `test_session_store`,
 `test_config_store`, `test_translation_engine`, `test_robot_commands`,
 `test_calibration_session`, `test_message_parser`, `test_movement_sequencer`,
 `test_robot_state`, `test_projects_store`, `test_zowi_dice`, `test_mouths_game`,
 `test_timeline_command`, `test_timeline_player`, `test_timeline_score`,
-`test_ranking_store` and `test_ranking_online`. The CLI also ships a black-box test
+`test_ranking_store`, `test_ranking_online` and `test_achievements`. The CLI also ships a black-box test
 (`cli_blackbox`). The Cloudflare Worker has its own tests:
 `node --test server/ranking-worker/test/ranking.test.js`.
 

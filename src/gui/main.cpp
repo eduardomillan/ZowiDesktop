@@ -109,6 +109,7 @@ QString openLogFile()
 #include "controllers/MouthsGameController.h"
 #include "controllers/TimelineController.h"
 #include "controllers/RankingController.h"
+#include "controllers/AchievementsController.h"
 #include "controllers/OnlineRankingClient.h"
 
 static QQmlApplicationEngine *s_engine = nullptr;
@@ -182,6 +183,12 @@ int main(int argc, char *argv[])
     MouthsGameController mouths;
     TimelineController timeline;
     RankingController ranking(zowi::ConfigStore::parseBool(config.get("ranking_enabled").toStdString(), true));
+    AchievementsController achievements(AchievementsController::settingsFrom(config));
+    achievements.setRobotController(&robot);
+    // Game results that can unlock achievements (Memory, Draw the mouths, Timeline).
+    QObject::connect(&zowiDice, &ZowiDiceController::gameOver, &achievements, &AchievementsController::onMemoryGameOver);
+    QObject::connect(&mouths, &MouthsGameController::gameOver, &achievements, &AchievementsController::onMouthsGameOver);
+    QObject::connect(&timeline, &TimelineController::sequenceCompleted, &achievements, &AchievementsController::onTimelineCompleted);
     OnlineRankingClient onlineRanking(
         &ranking,
         zowi::ConfigStore::parseBool(config.get("ranking_online_allowed").toStdString(), true),
@@ -236,6 +243,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("Mouths", &mouths);
     engine.rootContext()->setContextProperty("Timeline", &timeline);
     engine.rootContext()->setContextProperty("Ranking", &ranking);
+    engine.rootContext()->setContextProperty("Achievements", &achievements);
     engine.rootContext()->setContextProperty("OnlineRanking", &onlineRanking);
     engine.rootContext()->setContextProperty("AppVersion", QString(ZOWI_VERSION));
 
@@ -250,8 +258,12 @@ int main(int argc, char *argv[])
     s_qmlPath = "qrc:/src/views/main.qml";
 #endif
 
-    QObject::connect(&translator, &TranslatorController::languageChanged,
-                     &reloadQml);
+    // No QML reload on a language change: that destroyed and recreated the
+    // window. The language is only changed on the splash screen (and nothing
+    // else is alive then but main.qml), and both rebuild their texts on
+    // TranslatorController::languageChanged instead. A screen created later
+    // already reads the new language. (Debug builds still hot-reload on file
+    // changes, see below.)
 
     reloadQml();
 

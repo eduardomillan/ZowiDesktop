@@ -21,6 +21,7 @@
 
 - `Robot`: `connected`, `sendData(cmd)`, `setDataPollingEnabled(false/true)`.
 - `Commands`: the builder object — every movement/stop command goes through it.
+- `Achievements`: `locking`, `unlockedIds`, `gamepadOpened()`, `showLockedHint(id)`.
 - `Config.get(...)`: theme colors (`color_bg_connected`, `color_primary`).
 - `Translator` (via `tr()`); speed names come from `PadScreen.qml` keys.
 
@@ -49,6 +50,12 @@ All **hold-repeating**: `startHold()` sends immediately and restarts
 - **Speed modes** (`MovementSpeed`): slow = 2000 ms, medium = 1000 ms, fast =
   700 ms (larger period = slower gait). The speed button is an overlay of three
   images toggled by `visible`.
+- **Achievements lock five movement buttons:** Shake leg (`shake_leg`), Jitter
+  (`jitter`), Swing (`swing`), Flapping (`flapping`) and Crusaito (`crusaito`) are
+  drawn at 35 % opacity and ignore presses until their achievement is earned (only
+  while `Achievements.locking`); pressing one shows how to unlock it. See
+  [../ACHIEVEMENTS_HOWTO.md](../ACHIEVEMENTS_HOWTO.md). `Component.onCompleted` also
+  calls `Achievements.gamepadOpened()` (first visit, counts for `shake_leg`).
 - Central column order (top → bottom): **mouthsBtn → animsBtn → soundsBtn → speedControl**.
 - `Component.onCompleted`: `Robot.setDataPollingEnabled(true)` (PadScreen
   pauses the poll while a button is held so the `E/I/B` burst never interrupts

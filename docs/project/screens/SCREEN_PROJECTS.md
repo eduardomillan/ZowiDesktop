@@ -37,10 +37,11 @@
    *Projects* page tile) and **pop** back. There is no per-project QML screen:
    adding a project is purely adding data under `projects/<id>/` + enabling its
    tile.
-2. **ACHIEVEMENTS layer is deferred to the end.** The quiz only marks the
-   project complete; no achievement unlock is wired yet. The feature is kept
-   behind an **enable/disable switch** (a `Config` flag), so the unlock hooks
-   can be added later without touching the screens.
+2. **Achievements layer (implemented).** Passing the quiz marks the project
+   complete **and** awards its achievement: `ProjectScreen.onQuizFinished` calls
+   `Achievements.projectCompleted(project.achievementId)` (a no-op when the layer is
+   off or the id is not one of the 17). The switch is the `achievements_enabled`
+   config key; see `../ACHIEVEMENTS_HOWTO.md`.
 3. **Firmware is flashed from the project's own window.** Reprogram flashes
    `ZOWI_Alarm_v2.hex`, Adivinawi flashes `ZOWI_Adivinawi_v2.hex` — both from
    the same generic `ProjectScreen` (there is no per-project screen). The hex
@@ -88,9 +89,9 @@ The metadata `project.json` mirrors the Android `com.bq.zowi.models.Project`:
 - `hex_path` — optional firmware to flash from the project window (design,
   see decision 3); currently only Reprogram (Alarm) and Adivinawi carry a
   non-empty value, more can be added later.
-- `achievement_id` — achievement associated with the project. **Reserved for
-  the deferred ACHIEVEMENTS layer** (see decision 2): parsed and stored, but
-  not acted upon until the toggle is enabled.
+- `achievement_id` — achievement awarded when the quiz is passed (see decision 2).
+  An id that is not one of the 17 achievements (e.g. the "mouth" project's)
+  awards nothing.
 - `action_target` — optional in-app navigation target for the third footer
   button (e.g. `"gamepad"` in `move`); empty/absent hides the button. Mapped
   to a concrete screen in `main.qml`; the localized label is `action_label` in
@@ -119,8 +120,8 @@ Tile images live under `qrc:/images/android/`. Detail images live under
 `qrc:/images/projects/` and are only assigned once a project's data folder
 exists (the `image_key` is set in its `project.json`. The Android
 counterpart artwork (`qrc:/images/android/project_*.png`) is already bundled
-and can be reused. Achievements are **reserved for the deferred ACHIEVEMENTS
-layer** (see decision 2).
+and can be reused. Each project awards the achievement of its `achievement_id`
+(decision 2).
 
 
 **Firmware (design, not yet implemented in `ProjectScreen`):** both HEX files are
@@ -141,7 +142,7 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
 - **Pop:** the `ScreenTemplate` back button pops the stack to Home. (A future
   firmware install/failure dialog would also return to the project window —
   see decision 3.)
-- Achievements toasts are **not** part of this cycle yet (deferred layer).
+- The unlock notice is the global "You have unlocked" dialog owned by `main.qml`.
 
 ## ProjectScreen.qml — contents
 
@@ -173,7 +174,8 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
   from the shared `FirmwareInstallOverlay`.
 - **Result handling** — all correct → `<id>_project_completeness = true` + done
   icon; wrong answer → blockade + failure feedback.
-  No achievement dialog until the toggle in decision 2 is enabled.
+  Passing also awards the project's achievement (decision 2), which opens the global
+  unlock dialog.
 
 ## Signals
 
@@ -194,7 +196,9 @@ HomeScreen (Projects page, tile "XXX") ──projectRequested("xxx")──▶ Pr
   `getBlockadeDurationMs()`, `setBlockadeDurationMs(ms)`,
   `isAchievementsEnabled()`, `setAchievementsEnabled(bool)`,
   `isQuizEnabled()`, `setQuizEnabled(bool)` — implemented in `ProjectsController`.
-  The `achievement` field is returned but currently ignored.
+  `achievementId` is returned and used by the screen to award the achievement. The
+  achievements layer itself is switched by the `achievements_enabled` config key, not
+  by this preferences flag.
 - `Translator` (via `tr()`), for the screen title and shared UI strings.
 - `Config.get(...)` — theme colors (e.g. `color_primary`, `color_warning`,
   `color_accent`).
@@ -269,9 +273,10 @@ stored in a separate `projects_preferences.json` file via `ProjectsPreferencesSt
 
 - Run Test as an in-screen mode vs a shared pop-up quiz component — **decided:
   reusable `QuizComponent` used inline in the single generic `ProjectScreen`**.
-- ACHIEVEMENTS toggle: currently implemented in `ProjectsPreferencesStore`
-  (`isAchievementsEnabled`/`setAchievementsEnabled`), exposed via `Projects`
-  context. Not yet wired to UI or CLI.
+- ACHIEVEMENTS toggle: the old `ProjectsPreferencesStore` flag
+  (`isAchievementsEnabled`/`setAchievementsEnabled`, exposed via `Projects`) is
+  **legacy and unused**; the layer is switched by the `achievements_enabled` config key
+  (`../ACHIEVEMENTS_HOWTO.md`).
 - Quiz blockade countdown UI: documented and configurable via
   `ProjectsPreferencesStore.blockade_duration_ms`, but not yet displayed in
   `ProjectScreen` (shows a message bar instead). To be completed in a

@@ -180,6 +180,15 @@ QVariant ProjectsController::getProject(const QString &id) const {
     return map;
 }
 
+QString ProjectsController::projectTitleForAchievement(const QString &achievementId) const {
+    if (achievementId.isEmpty()) return QString();
+    for (const auto &p : m_projectsStore.getAllProjects()) {
+        if (QString::fromStdString(p.achievementId) == achievementId)
+            return getProject(QString::fromStdString(p.id)).toMap().value(QStringLiteral("title")).toString();
+    }
+    return QString();
+}
+
 bool ProjectsController::isCompleted(const QString &id) const {
     std::string key = id.toStdString() + "_project_completeness";
     return m_session->getString(QString::fromStdString(key)) == "true";

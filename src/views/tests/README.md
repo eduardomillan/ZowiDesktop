@@ -85,6 +85,9 @@ These options are forwarded to the `zowi_screen_preview` executable:
   `<dir>/<ScreenName>_step<N>.png` and exits (headless layout checks), instead
   of showing an interactive window. Good for iterating on layout in CI or
   without a display.
+- `PREVIEW_NO_RELOAD` — If set, the preview does not reload the screen when the
+  language changes, to check that a screen translates itself in place (as the Splash
+  must in the real app).
 
 **Example:**
 ```bash
@@ -114,6 +117,7 @@ The preview executable loads the QML screen in isolation, providing mock context
 | `preview-sounds.sh` | SoundsScreen | `--connected` |
 | `preview-calibration.sh` | CalibrationScreen | `--connected` |
 | `preview-moutheditor.sh` | MouthEditorScreen | `--connected` |
+| `preview-statusbar.sh` | StatusBarPreviewScreen | — (state and width selectors on screen) |
 
 ## Adding a New Preview Script
 

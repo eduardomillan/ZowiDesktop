@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Achievements.** There are now 17 achievements to collect: movements, animations
+  and one game. You earn them by using the app on a second day, trying the gamepad
+  and the timeline, passing a project quiz, playing a long timeline, or doing well in
+  the Memory and Draw-the-mouths games. When you earn one, a window shows its badge
+  and the connected Zowi celebrates. The new Achievements button on the home screen
+  opens the collection, with how to get the ones you still miss. Some achievements
+  also open things: five gamepad movements and the Mouths Editor stay locked until you
+  earn theirs. "Delete achievements" in Settings starts again from zero (the ranking
+  is not touched), and `zowi_cli achievements` lets an administrator list, unlock or
+  reset them.
+- **Achievements can be switched off.** An administrator can turn the whole layer off
+  (nothing is shown, saved or locked), or keep it but stop it from locking anything,
+  and also hide the notice or Zowi's celebration, with the new `achievements_*`
+  settings. The configuration guide lists them.
+- **Ranking button on the home screen.** The ranking is now one tap away from the
+  start screen, joined to the Achievements button, without having to open a game
+  first. It is hidden when the ranking is switched off.
 - **Change the language from Settings.** A new "Language" option in Settings takes
   you back to the start screen, where you pick another language and continue as
   usual. Your registered Zowi and your settings stay as they are.
@@ -18,10 +35,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`low_battery_threshold`), and the confirmation shown before installing firmware
   now mentions the real level instead of always saying 50%. The command-line tool
   (`zowi_cli`) uses the same level.
-- **Ranking button on the home screen.** The ranking is now one tap away from the
-  start screen, joined to the Achievements button, without having to open a game
-  first. It is hidden when the ranking is switched off. The Achievements button is
-  greyed out for now, because the achievements themselves are not available yet.
+
+### Changed
+- **New status bar.** The bar at the top of the screens now shows, centred, Zowi's
+  face as in the original app: smiling when connected, sad when disconnected, red when
+  the battery is low, orange when the robot runs a custom firmware, and a green outline
+  in demo mode. Next to it you see the robot's name and its state in words, and right
+  after them small labels with the battery (green, or red when low), the connection (BT or
+  USB), the firmware and the address of the robot. If the window gets narrow, the
+  labels disappear from the right until only the face, the name and the state are
+  left. Click the bar to see all the details, and to reconnect when there is no room
+  for the button. An administrator can change the height of the bar with the new
+  `status_bar_height` setting (64 by default).
+- **New start screen.** The first screen now looks like the welcome screen: Zowi,
+  bigger than before, with the title, a smaller Continue button and everything
+  grouped in the middle of the window. The language is chosen with a row of buttons,
+  each with its flag, always visible instead of a drop-down list.
+- **Project texts are narrower.** The explanation of each project now uses 85% of the
+  window width, centred, so the lines are shorter and easier to read.
+- **Robot names are limited to 10 characters.** That is all the robot can store (a
+  letter with an accent counts as two). `zowi_cli rename` and the pairing screen now
+  stop you before sending a longer name, instead of risking a garbled one.
+
+### Fixed
+- **Renaming a new Zowi no longer fails the first time.** The robot was renamed, but
+  the app sometimes missed its confirmation and showed an error after waiting; trying
+  again then "worked" only because the name was already there. The app now recognises
+  the confirmation reliably and also notices when the robot reports the new name.
+  If the robot was busy and ignored the order, the app now sends it again once on its
+  own. Forgetting a Zowi had the same problem with the confirmation and is fixed too.
+- **No more waiting on the rename screen.** The name field was locked for 3 seconds
+  every time the screen opened; it now unlocks as soon as the robot has answered.
+- **Changing the language no longer blinks the window.** Picking a language on the
+  start screen used to close and reopen the whole window; now the texts change in
+  place.
+- **Timeline remembers your sequence.** The sequence you built was saved when you
+  left the screen but never came back; now it is restored the next time you open
+  Timeline.
 
 ## [0.10.0] - 2026-11-27
 
@@ -37,11 +87,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one without losing your points. Installations can switch it off completely.
 
 ### Changed
-- **Project texts are narrower.** The explanation of each project now uses 85% of the
-  window width, centred, so the lines are shorter and easier to read.
-- **Robot names are limited to 10 characters.** That is all the robot can store (a
-  letter with an accent counts as two). `zowi_cli rename` and the pairing screen now
-  stop you before sending a longer name, instead of risking a garbled one.
 - **Projects are spread evenly across the window.** The project icons on the home
   screen now fill the whole width, like the games, with about the same distance between
   them as before.
@@ -50,9 +95,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the program is about 17 MB smaller and quicker to download and install.
 
 ### Fixed
-- **Timeline remembers your sequence.** The sequence you built was saved when you
-  left the screen but never came back; now it is restored the next time you open
-  Timeline.
 - **The language list shows every language correctly.** On LliureX 25 only the
   selected language was visible when the list was opened, and Valencià, Français and
   Български could appear as blank boxes. The list now shows all languages, and the app

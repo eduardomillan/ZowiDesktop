@@ -115,6 +115,21 @@ int main()
         checkBool(p.idle(), true, "idle after chunked frame");
     }
 
+    // ── Ack split right after the first '&' (seen on real Bluetooth links) ─
+    // The rename screen used to look for "&&F" inside one raw chunk and so
+    // missed this; the parser must still deliver a single final ack.
+    {
+        MessageParser p;
+        p.feed("&");
+        checkBool(p.drain().empty(), true, "lone '&' yields nothing");
+        p.feed("&F%%\r\n");
+        auto msgs = p.drain();
+        checkBool(msgs.size() == 1, true, "&& split in two chunks gives one message");
+        if (msgs.size() == 1)
+            checkBool(msgs[0].cmd == 'F' && !msgs[0].legacy, true, "it is the final ack (F)");
+        checkBool(p.idle(), true, "idle after the split ack");
+    }
+
     // ── Mixed prefixed + legacy, order preserved ───────────────────────────
     {
         MessageParser p;

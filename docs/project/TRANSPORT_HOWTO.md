@@ -237,10 +237,10 @@ Both GUI and CLI share these keys (namespace `ZowiDesktop` / `ZowiApp`):
 
 - **SettingsScreen** — shows current `situation` + contextual actions
   (retry, forget, connect USB, register). No transport picker.
-- **StatusBar** — shows connection state, battery (red with "Low battery!" below
-  `low_battery_threshold`, 50 % by default), active transport pill, firmware pill
-  (`FW <appId>`). A one-off notice also appears when the level drops below the
-  threshold (`Robot.lowBatteryDetected`).
+- **StatusBar** — Zowi face + name + state, and chips for battery (red below
+  `low_battery_threshold`, 50 % by default), MAC, active transport (BT/USB) and
+  firmware `appId`. See [STATUSBAR_HOWTO.md](STATUSBAR_HOWTO.md). A one-off notice
+  also appears when the level drops below the threshold (`Robot.lowBatteryDetected`).
 - **DevOverlay** — shows `Firmware (appId)` line.
 - **WizardRenameScreen** — auto-skipped if robot name ≠ default.
 

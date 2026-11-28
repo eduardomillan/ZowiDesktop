@@ -411,7 +411,7 @@ void TimelineController::sendNextCommand() {
         const int score = zowi::timelineScore(m_playedCommands);
         const bool eligible = zowi::timelineQualifiesForRanking(m_playedCommands);
         qInfo() << "[Timeline] Sequence completed; score" << score << "eligible" << eligible;
-        emit sequenceCompleted(score, eligible);
+        emit sequenceCompleted(score, eligible, static_cast<int>(m_playedCommands.size()));
     }
 }
 

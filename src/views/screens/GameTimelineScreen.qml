@@ -109,6 +109,8 @@ ScreenTemplate {
         // (main.qml pushTimeline() saves it on back).
         loadSequence()
 
+        Achievements.timelineOpened()   // first visit (counts towards "shake_leg")
+
         var helpMode = Config.get("timeline_help") || "once"
         var helpSeen = Session.getString("timeline_help_seen", "false") === "true"
         if (helpMode === "always") {
